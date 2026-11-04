@@ -106,7 +106,8 @@ IG_VER = os.environ.get("IG_API_VERSION", "v23.0")
 
 
 def instagram(video: Path, meta: dict) -> dict:
-    user, token = _env("IG_USER_ID", "IG_ACCESS_TOKEN")
+    (token,) = _env("IG_ACCESS_TOKEN")
+    user = os.environ.get("IG_USER_ID", "").strip() or "me"  # numara verilmezse anahtarın sahibi kullanılır
     # 60 günlük anahtarı her paylaşımda tazele (24 saatten eski olmalı; olmazsa sorun değil)
     rr = requests.get(f"{IG_GRAPH}/refresh_access_token",
                       params={"grant_type": "ig_refresh_token", "access_token": token}, timeout=30)
@@ -256,7 +257,7 @@ if __name__ == "__main__":
         name = sys.argv[2]
         try:
             for n in {"youtube": ["YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"],
-                      "instagram": ["IG_USER_ID", "IG_ACCESS_TOKEN"],
+                      "instagram": ["IG_ACCESS_TOKEN"],
                       "tiktok": ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET", "TIKTOK_REFRESH_TOKEN"]}[name]:
                 if not os.environ.get(n):
                     raise Skip(f"{n} GitHub Secrets'ta tanımlı değil")
@@ -275,13 +276,14 @@ if __name__ == "__main__":
             title = ch.json().get("items", [{}])[0].get("snippet", {}).get("title") if ch.ok else None
             print("YouTube bağlantısı çalışıyor." + (f" Kanal: {title}" if title else ""))
         elif name == "instagram":
-            user, token = _env("IG_USER_ID", "IG_ACCESS_TOKEN")
+            (token,) = _env("IG_ACCESS_TOKEN")
+            user = os.environ.get("IG_USER_ID", "").strip()
             r = requests.get(f"{IG_GRAPH}/{IG_VER}/me", params={"fields": "user_id,username", "access_token": token}, timeout=30)
             if not r.ok:
                 sys.exit(f"HATA: Instagram {r.status_code}: {r.text[:400]}")
             me = r.json()
             print("Instagram bağlantısı çalışıyor:", me.get("username"))
-            if str(me.get("user_id")) != user.strip() and str(me.get("id")) != user.strip():
+            if user and str(me.get("user_id")) != user and str(me.get("id")) != user:
                 print(f"UYARI: IG_USER_ID eşleşmiyor. Doğru değer: {me.get('user_id')}")
         elif name == "tiktok":
             h = {"Authorization": f"Bearer {_tt_token()}"}
