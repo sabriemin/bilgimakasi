@@ -135,5 +135,16 @@
     "schedule": null,
     "decided": "2026-11-04T23:38:00+03:00",
     "published": "2026-11-04T23:40:30+03:00"
+  },
+  {
+    "tag": "short-20261104-2048",
+    "title": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu",
+    "topic": "Suzanne Collins'in Açlık Oyunları fikrini realite şovla savaş haberleri arasında kanal değiştirirken ve Theseus ile Minotor mitini hatırlayarak bulması",
+    "category": "sanat ve müzik",
+    "template": "retro",
+    "created": "2026-11-04T20:48:24",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 56,
+    "platforms": {}
   }
 ]
