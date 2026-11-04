@@ -24,8 +24,10 @@ Claude, claude.ai aboneliğiyle kullanılır. Aylık eşdeğer harcama `CLAUDE_M
 
 Günde 2 video için zamanlayıcıya (cron, Windows Görev Zamanlayıcı veya GitHub Actions) günde iki çalıştırma eklenir.
 
-## Sonraki aşama: yükleme
-Onaylanan videoların YouTube Data API, Instagram Graph API ve TikTok Content Posting API ile yüklenmesi. Her platform için uygulama kaydı ve OAuth onayı gerekir.
+## Onay ve otomatik paylaşım
+Her video Telegram'a gelir. **Onayla** denince saat seçilir (Şimdi / Bugün 19:00 / Yarın 12:00 / Yarın 19:00); saati gelince
+`shortgen/publish.py` videoyu YouTube Shorts, Instagram Reels ve TikTok'a yükler ve linkleri Telegram'a yazar.
+Hata olan platform için "Hatalıları tekrar dene" düğmesi çıkar. Platform bağlantıları: `docs/PAYLASIM_KURULUM.md`.
 
 ## Şablonlar
 `templates/` klasöründe her şablon bir JSON dosyasıdır: renkler, fontlar, altyazı boyutu ve konumu, başlık ölçeği.
