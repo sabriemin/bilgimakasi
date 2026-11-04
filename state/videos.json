@@ -110,8 +110,30 @@
     "category": "spor",
     "template": "retro",
     "created": "2026-11-04T20:33:53",
-    "status": "onay_bekliyor",
+    "status": "yayinlandi",
     "telegram_message_id": 46,
-    "platforms": {}
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "9zGedhZWxTU",
+        "url": "https://youtube.com/shorts/9zGedhZWxTU"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18113249528221697",
+        "url": "https://www.instagram.com/reel/DfVVZfnjn91/"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704418294937307143",
+        "draft": true,
+        "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
+        "caption": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı #fenerbahçe #manchesterunited #şampiyonlarligi #ilginçbilgiler #keşfet"
+      }
+    },
+    "publish_at": "2026-11-04T20:38:00+00:00",
+    "schedule": null,
+    "decided": "2026-11-04T23:38:00+03:00",
+    "published": "2026-11-04T23:40:30+03:00"
   }
 ]
