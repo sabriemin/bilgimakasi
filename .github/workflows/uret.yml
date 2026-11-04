@@ -17,8 +17,10 @@ permissions:
   contents: write
   actions: write
 
+# Onay dinleme oturumu (group: state) 30 dk sürebildiği için üretim ayrı grupta çalışır;
+# durum dosyaları git pull --rebase ile birleştirilir.
 concurrency:
-  group: state
+  group: uret
   cancel-in-progress: false
 
 jobs:
