@@ -1,0 +1,32 @@
+{
+ "time": "2026-11-04T22:07+03:00",
+ "platforms": {
+  "youtube": {
+   "error": "YouTube okuma izni yok (anahtar yalnız yükleme izniyle alınmış)"
+  },
+  "instagram": {
+   "account": {
+    "followers": 4,
+    "videos": 21,
+    "views": 0,
+    "likes": 1,
+    "comments": 0,
+    "saves": 0,
+    "shares": 0
+   },
+   "videos": {
+    "short-20261104-1307": {
+     "likes": 1,
+     "comments": 0
+    }
+   },
+   "note": "izlenme/kaydetme için Instagram içgörü izni gerekli"
+  },
+  "tiktok": {
+   "error": "TikTok istatistik izni yok (user.info.stats / video.list eklenmeli)"
+  }
+ },
+ "titles": {
+  "short-20261104-1307": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi"
+ }
+}
