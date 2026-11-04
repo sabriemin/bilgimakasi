@@ -1,0 +1,20 @@
+dil: tr (0.99)
+[  0.00-  2.70] Cloud Code'a bana uygulama yap demeden önce
+[  2.70-  5.60] Github'da 400.000 yıldız almış şu dört reko yukur.
+[  5.60-  7.60] Ponytail 165.000 yıldız.
+[  7.60- 10.20] Cloud'u tembel bir kıdemli yazılımcı gibi düşündürüyor.
+[ 10.20- 12.90] Daha az satır, aynı iş çok daha az tokat.
+[ 12.90- 14.90] Graphify 127.000 yıldız.
+[ 14.90- 17.20] Bütün projeni bir bilgi haritasına çeviriyor.
+[ 17.20- 20.30] Cloud dosyaları tekrar tekrar okumak yerine haritaya soruyor.
+[ 20.30- 22.00] Ama asıl şaşırtıcı olan şu.
+[ 22.00- 24.10] Agent Skills 108.000 yıldız.
+[ 24.10- 26.30] Google'dan Eddie Osmani'nin skill paketi.
+[ 26.30- 28.20] Plan, Code, Test, Yayın.
+[ 28.20- 30.90] Her aşamada doğru skill kendiliğinden devreye giriyor.
+[ 30.90- 32.10] Ve Clodex Loop.
+[ 32.10- 34.60] Cloud planı yazıyor, Codex açıklarını arıyor.
+[ 34.60- 36.90] Onay çıkana kadar birbirlerini denetliyorlar.
+[ 36.90- 38.00] Sonra Code yazılıyor.
+[ 38.00- 40.10] Dördünün kurulum komutlarını Türkçe hazırladım.
+[ 40.10- 42.50] Yoruma Code yaz, DM'den göndereyim.
