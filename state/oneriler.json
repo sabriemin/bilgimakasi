@@ -2,27 +2,27 @@
   "date": "2026-11-04",
   "items": [
     {
-      "topic": "Anfield'ın aslında Everton'ın stadı olması: 1892'de kira anlaşmazlığıyla Everton'ın taşınması ve boş kalan stada Houlding'in Liverpool FC'yi kurması",
-      "hook": "Liverpool'un efsanevi stadı Anfield aslında ezeli rakibinin eviydi.",
-      "trend": "Fenerbahçe bu akşam Şampiyonlar Ligi'nde Liverpool'la tarihinde ilk kez karşılaşıyor",
-      "scope": "TR",
-      "category": "spor",
-      "score": 9
-    },
-    {
-      "topic": "4 Kasım 1922'de Tutankamon mezarının ilk basamağının bulunuşu ve bunu bulduğu anlatılan 12 yaşındaki su taşıyıcı Hüseyin Abdurrasul'un tartışmalı hikâyesi",
-      "hook": "Yüzyılın keşfini bir arkeolog değil, su taşıyan bir çocuk yapmış olabilir.",
-      "trend": "Bugün Tutankamon mezarının keşfinin 104. yıl dönümü",
+      "topic": "4 Kasım 1922'de bulunan Tutankamon mezarının Anadolu'yla bağı: Hattuşa'dan çıkan Hitit kayıtlarına göre büyük ihtimalle Tutankamon'un dul eşi Ankhesenamun, Hitit kralı I. Şuppiluliuma'ya 'Bana oğullarından birini gönder, onunla evleneyim' diye mektup yazdı; gönderilen prens Zannanza Mısır'a hiç varamadı",
+      "hook": "Tutankamon'un dul eşi, Anadolu'daki Hitit kralına evlilik mektubu yazdı.",
+      "trend": "Bugün Tutankamon mezarının bulunuşunun 104. yıl dönümü; Büyük Mısır Müzesi ilgisi sürüyor",
       "scope": "Global",
-      "category": "az bilinen insan hikâyeleri",
+      "category": "tarih",
       "score": 8
     },
     {
-      "topic": "1967'de Avrupa Kupası'nı kazanan Celtic kadrosundaki 11 oyuncunun hepsinin stadın 30 mil çevresinde doğmuş olması (Lizbon Aslanları)",
-      "hook": "Avrupa şampiyonu olan bu takımın bütün oyuncuları aynı mahallelerdendi.",
-      "trend": "Beşiktaş 5 Kasım'da Avrupa Ligi'nde Glasgow'da Celtic'e konuk oluyor",
+      "topic": "'Kasım' adının hikâyesi: Ayın adı 1945'e kadar Teşrinisani'ydi; yeni adı, halk takviminde yılı Hızır (6 Mayıs) ve Kasım (8 Kasım) diye ikiye bölen ve kışın başladığı kabul edilen 'Kasım günü'nden geliyor",
+      "hook": "Kasım, 1945'e kadar bir ayın adı bile değildi.",
+      "trend": "Kasım başı ve 8 Kasım halk takviminde kışın başladığı 'Kasım günü'",
       "scope": "TR",
-      "category": "spor",
+      "category": "dil ve kültür",
+      "score": 8
+    },
+    {
+      "topic": "Efsane-gerçek: Kış lastiği kar için değil sıcaklık için var; yaz lastiğinin kauçuğu yaklaşık 7°C'nin altında sertleşip tutunmayı kaybediyor, kış lastiğindeki silika ve yumuşak karışım ise soğukta esnek kalıyor",
+      "hook": "Kış lastiği kar için değil. Asıl sihirli sayı 7 derece.",
+      "trend": "15 Kasım'da başlayan kış lastiği uygulaması gündemde, fiyatlar ve sıralar konuşuluyor",
+      "scope": "TR",
+      "category": "bilim",
       "score": 7
     }
   ]
