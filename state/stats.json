@@ -1,5 +1,5 @@
 {
- "time": "2026-11-04T22:39+03:00",
+ "time": "2026-11-04T23:01+03:00",
  "platforms": {
   "youtube": {
    "account": {
@@ -24,7 +24,7 @@
    "account": {
     "followers": 4,
     "videos": 21,
-    "views": 76,
+    "views": 114,
     "likes": 1,
     "comments": 0,
     "saves": 0,
@@ -32,14 +32,14 @@
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 66,
+     "views": 90,
      "likes": 1,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 10,
+     "views": 24,
      "likes": 0,
      "comments": 0,
      "saves": 0,
@@ -48,7 +48,31 @@
    }
   },
   "tiktok": {
-   "error": "TikTok istatistik izni yok (user.info.stats / video.list eklenmeli)"
+   "account": {
+    "followers": 17,
+    "likes": 228,
+    "videos": 2,
+    "views": 309,
+    "comments": 0,
+    "shares": 0
+   },
+   "videos": {},
+   "list": [
+    {
+     "title": "You'll Never Walk Alone, Liverpool tribünlerinden önce 1945'",
+     "views": 41,
+     "likes": 2,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "1904 St. Louis Olimpiyatları'ndaki maratonda bir koşucu yolu",
+     "views": 268,
+     "likes": 5,
+     "comments": 0,
+     "shares": 0
+    }
+   ]
   }
  },
  "titles": {
