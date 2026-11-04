@@ -317,23 +317,28 @@ if __name__ == "__main__":
         with tempfile.TemporaryDirectory() as d:
             v, m = fetch_release(sys.argv[2], Path(d))
             size = v.stat().st_size
-            for auth in ("OAuth",):
-                c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
+            data = v.read_bytes()
+            for ver, mode in (("v26.0", "bytes"), ("v26.0", "bytes-ct"), ("v23.0", "bytes")):
+                c = requests.post(f"{G}/{ver}/{user}/media", data={
                     "media_type": "REELS", "upload_type": "resumable", "caption": "test",
                     "access_token": token}, timeout=60)
-                print("kapsayıcı:", c.status_code, c.text[:300])
+                print(f"[{ver} {mode}] kapsayıcı:", c.status_code, c.text[:200])
                 if not c.ok:
-                    break
+                    continue
                 cid = c.json()["id"]
-                with v.open("rb") as f:
-                    up = requests.post(c.json().get("uri") or f"https://rupload.facebook.com/ig-api-upload/{IG_VER}/{cid}", data=f,
-                                       headers={"Authorization": f"{auth} {token}", "offset": "0",
-                                                "file_size": str(size)}, timeout=900)
-                print(f"yükleme ({auth}):", up.status_code, up.text[:500])
-                time.sleep(15)
-                st = requests.get(f"{G}/{IG_VER}/{cid}", params={"fields": "status_code,status",
-                                                                 "access_token": token}, timeout=30)
-                print("durum:", st.status_code, st.text[:400])
+                hdr = {"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(size)}
+                if mode == "bytes-ct":
+                    hdr["Content-Type"] = "application/octet-stream"
+                up = requests.post(c.json().get("uri") or f"https://rupload.facebook.com/ig-api-upload/{ver}/{cid}",
+                                   data=data, headers=hdr, timeout=900)
+                print(f"[{ver} {mode}] yükleme:", up.status_code, up.text[:300])
+                time.sleep(10)
+                st = requests.get(f"{G}/{ver}/{cid}", params={"fields": "status_code,status",
+                                                               "access_token": token}, timeout=30)
+                print(f"[{ver} {mode}] durum:", st.text[:300])
+            pe = requests.get(f"{G}/v26.0/{user}", params={"fields": "username,account_type",
+                                                          "access_token": token}, timeout=30)
+            print("hesap:", pe.text[:300])
         sys.exit(0)
     if sys.argv[1] == "check":
         name = sys.argv[2]
