@@ -232,7 +232,8 @@ def publish_due() -> None:
         for p, r in platforms.items():
             name = PLATFORM_NAMES[p]
             if r["status"] == "ok":
-                lines.append(f"✅ {name}: {r.get('url') or ('taslak olarak gönderildi' if r.get('draft') else 'paylaşıldı')}" + (f"\n   ⚠️ {r['note']}" if r.get("note") else ""))
+                lines.append(f"✅ {name}: {r.get('url') or ('taslak olarak gönderildi' if r.get('draft') else 'paylaşıldı')}" + (f"\n   ⚠️ {r['note']}" if r.get("note") else "")
+                             + (f"\n\n{r['caption']}\n" if r.get("caption") else ""))
             elif r["status"] == "hata":
                 lines.append(f"❌ {name}: {r['error'][:300]}")
             else:

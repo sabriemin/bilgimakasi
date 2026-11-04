@@ -227,14 +227,14 @@ def tiktok(video: Path, meta: dict) -> dict:
                 "Content-Range": f"bytes {start}-{end}/{size}"})
             if u.status_code not in (200, 201, 206):
                 raise RuntimeError(f"TikTok parça yükleme hatası: {u.status_code} {u.text[:300]}")
-    draft_note = ("Uygulama TikTok incelemesinden geçene kadar video taslak olarak gönderilir: "
-                  "TikTok'taki bildirime dokunup açıklamayı yapıştır ve Paylaş de")
+    draft_note = ("TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de "
+                  "(uygulama incelemeden geçince bu adım kalkacak)")
     for _ in range(60):
         s = requests.post(f"{TT}/post/publish/status/fetch/", headers=h, json={"publish_id": pid},
                           timeout=30).json().get("data", {})
         st = s.get("status")
         if draft and st == "SEND_TO_USER_INBOX":
-            return {"id": pid, "draft": True, "note": draft_note}
+            return {"id": pid, "draft": True, "note": draft_note, "caption": title}
         if st == "PUBLISH_COMPLETE":
             ids = s.get("publicaly_available_post_id") or s.get("publicly_available_post_id") or []
             res = {"id": str(ids[0]) if ids else pid, "privacy": privacy}
