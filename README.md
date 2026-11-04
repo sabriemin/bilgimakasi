@@ -55,4 +55,4 @@ Depo ayarlarında **Settings → Secrets and variables → Actions** altına şu
 - Açılışta ekranı kesen makas ve yerine düşen filigran
 - Her 4 sahnede bir makasla kesme geçişi
 - Altyazı kutusunun köşesinde @bilgimakasi (altyazıyı kırpmadan silinemez)
-- Sonda 2,4 saniyelik "TAKİP ET" kapanış kartı
+- Kapanış kartı varsayılan olarak kapalı (`brand.json` → `outro_seconds: 0`); video son sözden hemen sonra biter ki başa sarınca döngü kopmasın
