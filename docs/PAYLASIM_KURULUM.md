@@ -45,7 +45,9 @@ Hesap **Profesyonel** olmalı (İşletme veya İçerik üreticisi). Bu yöntemde
    - Çıkan uzun anahtarı ve hesabın kullanıcı numarasını (Instagram user ID) not al.
 3. GitHub Secrets'a şu iki değeri ekle: `IG_ACCESS_TOKEN`, `IG_USER_ID`.
 
-Anahtar 60 gün geçerlidir ve her paylaşımda yenilenir.
+Meta'nın yeni "Birleşik giriş" (Unified login) ekranında üretilen anahtar `EAA` ile başlar; kod bunu da tanır (graph.facebook.com üzerinden çalışır).
+Bu ekranda işletme portföyü seçmek zorunludur. Anahtar **Generate token** linkiyle üretilir ve yalnızca bir kez gösterilir.
+`IG` ile başlayan anahtar 60 gün geçerlidir ve her paylaşımda yenilenir.
 Yenilenen anahtarın GitHub'a otomatik kaydedilmesi için aşağıdaki **GH_SECRETS_PAT** adımını da yap. Yapmazsan 60 günde bir 2. adımı tekrarlaman gerekir.
 
 ## 3. TikTok
