@@ -20,5 +20,16 @@
     "status": "onay_bekliyor",
     "telegram_message_id": 4,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261104-1307",
+    "title": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi",
+    "topic": "1904 St. Louis Olimpiyat Maratonu: Arabayla \"koşan\" birinci, fare zehriyle kazanan şampiyon",
+    "category": "spor",
+    "template": "retro",
+    "created": "2026-11-04T13:07:12",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 8,
+    "platforms": {}
   }
 ]
