@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 STATE = ROOT / "state" / "oneriler.json"
 
 SYSTEM = """Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için gündem editörüsün. Görevin, BUGÜN Türkiye'de ve
-dünyada çok konuşulan, aranan konuları bulmak ve her birini 60-70 saniyelik bir "bunu biliyor muydun?" short'una
+dünyada çok konuşulan, aranan konuları bulmak ve her birini 40-50 saniyelik bir "bunu biliyor muydun?" short'una
 dönüştürecek şaşırtıcı, doğrulanabilir bir açı önermek.
 Kurallar:
 - Web araması yap: Google Trends Türkiye günlük aramaları, Türkiye ve dünya haber manşetleri, X/Twitter Türkiye

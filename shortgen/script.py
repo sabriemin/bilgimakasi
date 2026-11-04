@@ -69,11 +69,17 @@ class ShortScript(BaseModel):
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
-Biçim: 60-70 saniye. Seslendirme yavaş ve tane tane olduğu için toplam dış ses 120-135 kelimeyi GEÇMESİN.
-16-22 sahne, her sahne 2-4 saniye.
-Yapı: 1) İlk 1-2 sahnede güçlü bir merak kancası (şaşırtıcı bir durum veya soru),
-2) bağlam (yıl, yer, kişi), 3) gerilim veya şaşırtıcı dönüm noktası, 4) vurucu cümle/alıntı,
-5) bugüne bağlama, 6) son sahnede izleyiciye açık uçlu soru ve "Yorumlarda buluşalım." çağrısı.
+Biçim: 40-50 saniye. Seslendirme yavaş ve tane tane olduğu için toplam dış ses 85-105 kelime olsun, 105'i GEÇMESİN.
+12-16 sahne, her sahne 2-4 saniye. Platformlar videoyu izlenme oranına göre dağıttığı için her saniye hak edilmeli; dolgu cümle yok.
+Yapı:
+1) KANCA (ilk sahne, ilk 2 saniye, en önemli kısım): En şaşırtıcı sonucu ya da çelişkiyi doğrudan söyle; giriş, selam,
+   "biliyor muydunuz" veya bağlam cümlesi YOK. İlk cümle en fazla 10 kelime olsun. İlk sahnenin headline'ı tek başına
+   okunduğunda merak uyandıran 2-3 satırlık güçlü bir iddia olsun (videonun kapağı ve önizlemesi bu karedir).
+   Örnek: "Bir mahalleyi tsunami değil, melas yuttu." / "Olimpiyat maratonunu kazanan adam yolun yarısını arabayla gitti."
+2) Bağlam (yıl, yer, kişi) en fazla 2-3 sahnede, 3) gerilim veya şaşırtıcı dönüm noktası, 4) vurucu cümle/alıntı,
+5) bugüne bağlama (kısa), 6) KAPANIŞ VE DÖNGÜ: Son sahnede izleyiciye kısa, açık uçlu bir soru sor ve "Yorumlara yaz." gibi
+   en fazla 3 kelimelik bir çağrı ekle. Son cümle, video başa sardığında ilk cümleyle anlamlı biçimde birleşebilecek şekilde
+   kurulursa izleyici fark etmeden ikinci kez izler; uygun düşüyorsa böyle bitir. "Takip et", "beğen" gibi istekler YAZMA.
 DİL VE ANLATIM (en önemli kural): Metin bir TÜRK BELGESEL ANLATICISININ ağzından, doğal ve kusursuz Türkçeyle yazılsın.
 - Önce dış sesi baştan sona TEK BİR AKICI METİN olarak düşün, sonra sahnelere böl. Bir cümle iki üç sahneye yayılabilir;
   sahneleri art arda okuyunca metin hiç kesilmeden akmalı.
@@ -188,7 +194,7 @@ def verify_script(script: ShortScript) -> ShortScript:
     review = ask_claude(
         "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
         "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
-        "(özellikle toplam dış ses 135 kelimeyi geçmesin; boş sahne kalmasın). "
+        "(özellikle toplam dış ses 105 kelimeyi geçmesin, ilk cümle en fazla 10 kelimelik doğrudan bir kanca olsun; boş sahne kalmasın). "
         "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
         "alanında döndür.\n\n" + script.model_dump_json(indent=1),
         Review, SYSTEM + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
@@ -203,7 +209,8 @@ EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün.
   parçaları tam cümlelere çevir; cümleleri bağlaçlarla birbirine bağla; çeviri kokan ifadeleri doğal Türkçeyle değiştir.
 - Yazım, noktalama, ek ve zaman uyumunu düzelt. Anlatı zamanı tutarlı olsun.
 - YENİ BİLGİ EKLEME, hiçbir olguyu (tarih, sayı, isim) değiştirme ya da çıkarma. Sahne sayısını ve sırasını koru.
-- Toplam dış ses 120-135 kelime arasında kalsın.
+- Toplam dış ses 85-105 kelime arasında kalsın.
+- İlk cümle (kanca) en fazla 10 kelime, doğrudan ve şaşırtıcı kalsın; önüne giriş cümlesi ekleme.
 - headline satırları, değişen narration'da geçen kelimelerden oluşsun (BÜYÜK HARF, satır başı 1-3 kelime).
 - Görsel alanlarına (theme, image_mode, image_queries, illustration, motion, trail, icon) DOKUNMA.
 Düzeltilmiş tam senaryoyu döndür."""
