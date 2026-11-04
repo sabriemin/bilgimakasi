@@ -28,7 +28,7 @@
     "category": "spor",
     "template": "retro",
     "created": "2026-11-04T13:07:12",
-    "status": "kismen",
+    "status": "yayinlandi",
     "telegram_message_id": 8,
     "platforms": {
       "youtube": {
@@ -37,8 +37,9 @@
         "url": "https://youtube.com/shorts/UFpdmPmentg"
       },
       "instagram": {
-        "status": "hata",
-        "error": "Instagram işleme zaman aşımı"
+        "status": "ok",
+        "id": "18127462714925413",
+        "url": "https://www.instagram.com/reel/DfU5Y9xDChS/"
       },
       "tiktok": {
         "status": "ok",
@@ -47,8 +48,8 @@
         "note": "Uygulama TikTok incelemesinden geçene kadar video taslak olarak gönderilir: TikTok'taki bildirime dokunup açıklamayı yapıştır ve Paylaş de"
       }
     },
-    "publish_at": "2026-11-04T15:38:46+00:00",
+    "publish_at": "2026-11-04T16:33:59+00:00",
     "decided": "2026-11-04T17:27:09+03:00",
-    "published": "2026-11-04T18:50:10+03:00"
+    "published": "2026-11-04T19:35:04+03:00"
   }
 ]
