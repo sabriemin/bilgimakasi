@@ -1,5 +1,5 @@
 {
- "time": "2026-11-04T22:31+03:00",
+ "time": "2026-11-04T22:39+03:00",
  "platforms": {
   "youtube": {
    "account": {
@@ -9,12 +9,12 @@
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 38,
+     "views": 40,
      "likes": 0,
      "comments": 0
     },
     "short-20261104-1839": {
-     "views": 0,
+     "views": 1,
      "likes": 0,
      "comments": 0
     }
@@ -24,20 +24,28 @@
    "account": {
     "followers": 4,
     "videos": 21,
+    "views": 76,
     "likes": 1,
-    "comments": 0
+    "comments": 0,
+    "saves": 0,
+    "shares": 0
    },
    "videos": {
     "short-20261104-1307": {
+     "views": 66,
      "likes": 1,
-     "comments": 0
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
     },
     "short-20261104-1839": {
+     "views": 10,
      "likes": 0,
-     "comments": 0
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
     }
-   },
-   "note": "izlenme ve kaydetme için Instagram içgörü izni gerekli"
+   }
   },
   "tiktok": {
    "error": "TikTok istatistik izni yok (user.info.stats / video.list eklenmeli)"
