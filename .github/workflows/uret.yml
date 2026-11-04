@@ -18,7 +18,7 @@ permissions:
   actions: write
 
 # Onay dinleme oturumu (group: state) 30 dk sürebildiği için üretim ayrı grupta çalışır;
-# durum dosyaları git pull --rebase ile birleştirilir.
+# durum dosyaları shortgen.state_sync ile içerik düzeyinde birleştirilir.
 concurrency:
   group: uret
   cancel-in-progress: false
@@ -85,9 +85,7 @@ jobs:
         run: |
           git config user.name "shortgen-bot"
           git config user.email "shortgen-bot@users.noreply.github.com"
-          git add history.jsonl state/
-          git commit -m "Yeni video: $TAG" || exit 0
-          for i in 1 2 3 4; do git pull --rebase && git push && break; sleep $((i*5)); done
+          python -m shortgen.state_sync "Yeni video: $TAG"
       - name: Onay düğmelerini 30 dakika anında dinle
         env:
           GH_TOKEN: ${{ github.token }}
@@ -99,7 +97,5 @@ jobs:
           [ -n "$S" ] && [ -f "${S}script.json" ] && cp "${S}script.json" state/bekleyen_senaryo.json
           git config user.name "shortgen-bot"
           git config user.email "shortgen-bot@users.noreply.github.com"
-          git add state/ || true
-          git commit -m "Yarım kalan üretim: senaryo saklandı" || exit 0
-          for i in 1 2 3 4; do git pull --rebase && git push && break; sleep $((i*5)); done
+          python -m shortgen.state_sync "Yarım kalan üretim: senaryo saklandı"
 
