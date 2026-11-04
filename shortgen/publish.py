@@ -203,10 +203,13 @@ def tiktok(video: Path, meta: dict) -> dict:
                             "total_chunk_count": count}}, timeout=60)
     init = _init(privacy)
     d = init.json()
-    # incelemeden geçmemiş (sandbox) uygulamalar yalnızca gizli paylaşabilir
-    if "unaudited" in str(d.get("error", {}).get("code", "")) and privacy != "SELF_ONLY":
-        privacy = "SELF_ONLY"
-        init = _init(privacy)
+    draft = False
+    # incelemeden geçmemiş uygulamalar doğrudan paylaşamaz: videoyu TikTok gelen kutusuna taslak olarak gönder
+    if "unaudited" in str(d.get("error", {}).get("code", "")):
+        draft = True
+        init = requests.post(f"{TT}/post/publish/inbox/video/init/", headers=h, json={
+            "source_info": {"source": "FILE_UPLOAD", "video_size": size, "chunk_size": chunk,
+                            "total_chunk_count": count}}, timeout=60)
         d = init.json()
     if not init.ok or d.get("error", {}).get("code") not in (None, "ok"):
         raise RuntimeError(f"TikTok yükleme başlatılamadı: {init.status_code} {str(d)[:400]}")
@@ -221,22 +224,26 @@ def tiktok(video: Path, meta: dict) -> dict:
                 "Content-Range": f"bytes {start}-{end}/{size}"})
             if u.status_code not in (200, 201, 206):
                 raise RuntimeError(f"TikTok parça yükleme hatası: {u.status_code} {u.text[:300]}")
+    draft_note = ("Uygulama TikTok incelemesinden geçene kadar video taslak olarak gönderilir: "
+                  "TikTok'taki bildirime dokunup açıklamayı yapıştır ve Paylaş de")
     for _ in range(60):
         s = requests.post(f"{TT}/post/publish/status/fetch/", headers=h, json={"publish_id": pid},
                           timeout=30).json().get("data", {})
         st = s.get("status")
+        if draft and st == "SEND_TO_USER_INBOX":
+            return {"id": pid, "draft": True, "note": draft_note}
         if st == "PUBLISH_COMPLETE":
             ids = s.get("publicaly_available_post_id") or s.get("publicly_available_post_id") or []
             res = {"id": str(ids[0]) if ids else pid, "privacy": privacy}
             if ids:
                 res["url"] = f"https://www.tiktok.com/@{os.environ.get('TIKTOK_HANDLE', 'bilgimakasi')}/video/{ids[0]}"
             if privacy == "SELF_ONLY":
-                res["note"] = "TikTok uygulaması incelemeden geçene kadar video 'yalnızca ben' olarak paylaşılır"
+                res["note"] = "Video 'yalnızca ben' olarak paylaşıldı"
             return res
         if st == "FAILED":
             raise RuntimeError(f"TikTok paylaşımı başarısız: {s.get('fail_reason')}")
         time.sleep(10)
-    return {"id": pid, "privacy": privacy, "note": "TikTok hâlâ işliyor, birkaç dakika içinde profilde görünür"}
+    return {"id": pid, "note": draft_note if draft else "TikTok hâlâ işliyor, birkaç dakika içinde profilde görünür"}
 
 
 PLATFORMS = {"youtube": youtube, "instagram": instagram, "tiktok": tiktok}
@@ -300,6 +307,32 @@ if __name__ == "__main__":
         if not _rotate_secret("TIKTOK_REFRESH_TOKEN", d["refresh_token"]):
             sys.exit("HATA: anahtar alındı ama GitHub'a kaydedilemedi (GH_SECRETS_PAT izinlerini kontrol et)")
         print("TikTok anahtarı kaydedildi. İzinler:", d.get("scope"))
+        sys.exit(0)
+    if sys.argv[1] == "ig-upload-test":
+        # paylaşım yapmadan Instagram yüklemesini dener ve ayrıntıları yazar
+        (token,) = _env("IG_ACCESS_TOKEN")
+        user = os.environ.get("IG_USER_ID", "").strip() or "me"
+        G = _ig_base(token)
+        with tempfile.TemporaryDirectory() as d:
+            v, m = fetch_release(sys.argv[2], Path(d))
+            size = v.stat().st_size
+            for auth in ("OAuth", "Bearer"):
+                c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
+                    "media_type": "REELS", "upload_type": "resumable", "caption": "test",
+                    "access_token": token}, timeout=60)
+                print("kapsayıcı:", c.status_code, c.text[:300])
+                if not c.ok:
+                    break
+                cid = c.json()["id"]
+                with v.open("rb") as f:
+                    up = requests.post(f"https://rupload.facebook.com/ig-api-upload/{IG_VER}/{cid}", data=f,
+                                       headers={"Authorization": f"{auth} {token}", "offset": "0",
+                                                "file_size": str(size)}, timeout=900)
+                print(f"yükleme ({auth}):", up.status_code, up.text[:500])
+                time.sleep(15)
+                st = requests.get(f"{G}/{IG_VER}/{cid}", params={"fields": "status_code,status",
+                                                                 "access_token": token}, timeout=30)
+                print("durum:", st.status_code, st.text[:400])
         sys.exit(0)
     if sys.argv[1] == "check":
         name = sys.argv[2]
