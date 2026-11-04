@@ -1,0 +1,79 @@
+name: Referans videoyu incele
+
+# Örnek alınacak bir videonun (Instagram/TikTok/YouTube bağlantısı) karelerini, süresini, açıklamasını ve
+# dış sesinin yazıya dökümünü çıkarır; videonun kendisini saklamaz. Sonuç özel depodaki "referans" dalına yazılır.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Video bağlantısı"
+        required: true
+      ad:
+        description: "Klasör adı (ör. reel-DelpQz3jpZG)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  incele:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Araçlar
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          pip install -q -U yt-dlp faster-whisper
+      - name: İndir ve incele
+        env:
+          URL: ${{ inputs.url }}
+          AD: ${{ inputs.ad }}
+        run: |
+          set -e
+          OUT="/tmp/ref/$AD"; mkdir -p "$OUT/kareler"
+          yt-dlp --no-playlist -f "mp4/best" -o /tmp/ref/video.%(ext)s --write-info-json "$URL"
+          V=$(ls /tmp/ref/video.* | grep -v json | head -1)
+          python3 - "$V" "$OUT" <<'PY'
+          import json, subprocess, sys, glob
+          v, out = sys.argv[1], sys.argv[2]
+          info = json.load(open(glob.glob("/tmp/ref/*.info.json")[0]))
+          keep = {k: info.get(k) for k in ("title", "description", "uploader", "channel", "duration", "view_count",
+                                           "like_count", "comment_count", "upload_date", "width", "height", "fps", "webpage_url")}
+          json.dump(keep, open(f"{out}/bilgi.json", "w"), ensure_ascii=False, indent=1)
+          print(json.dumps(keep, ensure_ascii=False, indent=1))
+          PY
+          ffprobe -v error -show_entries format=duration:stream=codec_type,width,height,r_frame_rate -of json "$V" > "$OUT/ffprobe.json"
+          # her 1 saniyede bir kare (ilk 3 saniyede 4 kare/sn), küçük boyut
+          ffmpeg -v error -i "$V" -t 3 -vf "fps=4,scale=480:-2" -q:v 4 "$OUT/kareler/a_%03d.jpg"
+          ffmpeg -v error -ss 3 -i "$V" -vf "fps=1,scale=480:-2" -q:v 4 "$OUT/kareler/b_%03d.jpg"
+          # sahne değişimleri (kesme sıklığı)
+          ffmpeg -v info -i "$V" -vf "select='gt(scene,0.3)',showinfo" -f null - 2>&1 | grep -o "pts_time:[0-9.]*" > "$OUT/kesmeler.txt" || true
+          ffmpeg -v error -i "$V" -vn -ac 1 -ar 16000 /tmp/ref/ses.wav
+          python3 - "$OUT" <<'PY'
+          import sys
+          from faster_whisper import WhisperModel
+          out = sys.argv[1]
+          m = WhisperModel("small", device="cpu", compute_type="int8")
+          segs, info = m.transcribe("/tmp/ref/ses.wav", vad_filter=True)
+          with open(f"{out}/dokum.txt", "w") as f:
+              f.write(f"dil: {info.language} ({info.language_probability:.2f})\n")
+              for s in segs:
+                  f.write(f"[{s.start:6.2f}-{s.end:6.2f}] {s.text.strip()}\n")
+          print(open(f"{out}/dokum.txt").read())
+          PY
+          ls -la "$OUT" "$OUT/kareler" | head -80
+      - name: Referans dalına yaz
+        env:
+          AD: ${{ inputs.ad }}
+        run: |
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          git fetch -q origin referans && git checkout -q referans || git checkout -q --orphan referans
+          git rm -rq --cached . > /dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name referans -exec rm -rf {} +
+          mkdir -p referans && rm -rf "referans/$AD" && cp -r "/tmp/ref/$AD" "referans/$AD"
+          git add referans && git commit -qm "Referans: $AD" && git push -q origin referans
