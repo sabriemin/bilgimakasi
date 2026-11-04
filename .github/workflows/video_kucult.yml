@@ -1,0 +1,34 @@
+name: Video küçült (Drive)
+
+on:
+  workflow_dispatch:
+    inputs:
+      drive_id:
+        description: "Herkese açık Google Drive dosya kimliği"
+        required: true
+      hedef_mb:
+        description: "Hedef boyut (MB)"
+        default: "45"
+
+jobs:
+  kucult:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: İndir
+        run: |
+          curl -sSL -o in.mp4 "https://drive.usercontent.google.com/download?id=${{ inputs.drive_id }}&export=download&confirm=t"
+          file in.mp4; ls -la in.mp4
+      - name: Küçült
+        run: |
+          sudo apt-get install -y ffmpeg >/dev/null 2>&1 || true
+          DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 in.mp4)
+          KBPS=$(python3 -c "print(int(${{ inputs.hedef_mb }}*8192/$DUR - 96))")
+          echo "süre=$DUR sn, video=${KBPS}k"
+          ffmpeg -y -i in.mp4 -vf "scale='min(1080,iw)':-2" -c:v libx264 -preset medium -b:v ${KBPS}k -maxrate ${KBPS}k -bufsize $((KBPS*2))k -c:a aac -b:a 96k -movflags +faststart demo.mp4
+          ls -la demo.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo
+          path: demo.mp4
+          retention-days: 3
