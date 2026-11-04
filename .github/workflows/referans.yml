@@ -52,13 +52,15 @@ jobs:
           ffmpeg -v error -ss 3 -i "$V" -vf "fps=1,scale=480:-2" -q:v 4 "$OUT/kareler/b_%03d.jpg"
           # sahne değişimleri (kesme sıklığı)
           ffmpeg -v info -i "$V" -vf "select='gt(scene,0.3)',showinfo" -f null - 2>&1 | grep -o "pts_time:[0-9.]*" > "$OUT/kesmeler.txt" || true
-          ffmpeg -v error -i "$V" -vn -ac 1 -ar 16000 /tmp/ref/ses.wav
-          python3 - "$OUT" <<'PY'
+          ffmpeg -v error -i "$V" -vn -ac 1 -ar 16000 -f f32le /tmp/ref/ses.raw
+          python3 - "$OUT" <<'PY' || echo "döküm çıkarılamadı"
           import sys
+          import numpy as np
           from faster_whisper import WhisperModel
           out = sys.argv[1]
+          audio = np.fromfile("/tmp/ref/ses.raw", dtype=np.float32)
           m = WhisperModel("small", device="cpu", compute_type="int8")
-          segs, info = m.transcribe("/tmp/ref/ses.wav", vad_filter=True)
+          segs, info = m.transcribe(audio, vad_filter=True)
           with open(f"{out}/dokum.txt", "w") as f:
               f.write(f"dil: {info.language} ({info.language_probability:.2f})\n")
               for s in segs:
