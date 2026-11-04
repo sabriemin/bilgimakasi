@@ -205,6 +205,7 @@ COMMANDS = [
     {"command": "oneri", "description": "Türkiye ve dünya gündeminden 5 konu önerisi"},
     {"command": "uret", "description": "Hemen yeni video üret (ör. /uret kara delikler)"},
     {"command": "durum", "description": "Bekleyen ve zamanlanan videolar"},
+    {"command": "rapor", "description": "İzlenme, takipçi, beğeni, kaydetme raporu"},
     {"command": "saatler", "description": "Platformların en iyi paylaşım saatleri"},
     {"command": "yardim", "description": "Komut listesi"},
 ]
@@ -253,6 +254,12 @@ def poll(wait: int = 0) -> int:
                 ok = _dispatch("", "oneri.yml")
                 api("sendMessage", data={"chat_id": chat, "text": "🔎 Gündem taranıyor, öneriler 2-3 dakikada gelir."
                                          if ok else "Öneri başlatılamadı."})
+            elif text.startswith("/rapor"):
+                try:
+                    from . import stats
+                    stats.report()
+                except Exception as e:  # noqa: BLE001
+                    api("sendMessage", data={"chat_id": chat, "text": f"Rapor hazırlanamadı: {str(e)[:200]}"})
             elif text.startswith("/saatler"):
                 lines = ["Platformların en iyi paylaşım saatleri (Türkiye):"]
                 lines += [f"• {PLATFORM_NAMES[p]}: {', '.join(t)}" for p, t in BEST_TIMES.items()]
@@ -263,6 +270,7 @@ def poll(wait: int = 0) -> int:
                                          "/oneri: gündemden 5 konu önerisi (butonla üret)\n"
                                          "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n"
                                          "/durum: bekleyen ve zamanlanan videolar\n"
+                                         "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n"
                                          "/saatler: platformların en iyi paylaşım saatleri\n"
                                          "/yardim: bu liste"})
     save(OFFSET, off)
