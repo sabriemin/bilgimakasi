@@ -39,6 +39,22 @@ jobs:
           GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: python -m shortgen.stats report
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Claude Code kur
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Yeni yorumlara cevap taslağı
+        continue-on-error: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '100' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID || vars.IG_USER_ID || '17841475131862440' }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: python -m shortgen.comments check
       - name: Kaydet
         run: |
           git config user.name "shortgen-bot"

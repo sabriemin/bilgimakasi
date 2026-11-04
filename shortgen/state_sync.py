@@ -42,6 +42,15 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
                 out[v["tag"]] = v
         order = [v["tag"] for v in r] + [v["tag"] for v in l if v["tag"] not in {x["tag"] for x in r}]
         return json.dumps([out[t] for t in order], ensure_ascii=False, indent=2)
+    if path.endswith("yorumlar.json"):
+        r, l = json.loads(remote), json.loads(local)
+        b = json.loads(base) if base else {"seen": [], "pending": {}}
+        seen = list(dict.fromkeys(r.get("seen", []) + l.get("seen", [])))
+        pend = {**r.get("pending", {}), **l.get("pending", {})}
+        for k in b.get("pending", {}):  # iki taraftan birinde işlenip silinen taslak silinmiş kalır
+            if k not in r.get("pending", {}) or k not in l.get("pending", {}):
+                pend.pop(k, None)
+        return json.dumps({"seen": seen, "pending": pend}, ensure_ascii=False, indent=1)
     if path.endswith("telegram_offset.json"):
         return local if json.loads(local).get("offset", 0) >= json.loads(remote).get("offset", 0) else remote
     if path.endswith(".jsonl"):

@@ -23,6 +23,7 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
           IG_USER_ID: ${{ secrets.IG_USER_ID || vars.IG_USER_ID || '17841475131862440' }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
@@ -34,6 +35,7 @@ jobs:
           P="${{ github.event.inputs.platform }}"
           case "$P" in
             instagram-yukleme:*) python -m shortgen.publish ig-upload-test "${P#instagram-yukleme:}" ;;
+            yorum-izin) python -m shortgen.comments izin ;;
             instagram-durum:*) python -m shortgen.publish ig-status "${P#instagram-durum:}" ;;
             *) python -m shortgen.publish check "$P" ;;
           esac

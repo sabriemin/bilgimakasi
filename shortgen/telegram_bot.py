@@ -134,6 +134,13 @@ def _kb(rows: list[list[tuple[str, str]]]) -> str:
 def _handle_callback(cq: dict, chat: str) -> None:
     action, _, rest = cq["data"].partition(":")
     tag, _, arg = rest.partition(":")
+    if action == "cm":  # yorum cevabı: cm:ok:<anahtar> / cm:no:<anahtar>
+        from . import comments
+        note = comments.handle(tag, arg, chat, cq["message"]["message_id"])
+        api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": note[:190]})
+        if note.startswith(("✅", "Gönderilemedi")):
+            api("sendMessage", data={"chat_id": chat, "text": note, "reply_to_message_id": cq["message"]["message_id"]})
+        return
     if action == "tp":  # gündem önerisinden üretim
         from .trends import load_saved
         items = load_saved()
@@ -242,6 +249,14 @@ def poll(wait: int = 0) -> int:
                     print("Düğme işlenemedi:", e)
         elif (m := u.get("message")) and str(m["chat"]["id"]) == chat:
             text = (m.get("text") or "").strip()
+            rep = (m.get("reply_to_message") or {}).get("message_id")
+            if rep and text and not text.startswith("/"):
+                from . import comments
+                key = comments.by_message(rep)
+                if key:  # taslak yerine Sabri'nin kendi yazdığı cevap
+                    api("sendMessage", data={"chat_id": chat, "text": comments.handle("ok", key, chat, rep, custom=text),
+                                             "reply_to_message_id": m["message_id"]})
+                    continue
             if text.startswith("/durum"):
                 vs = load(VIDEOS, [])
                 bekleyen = [v for v in vs if v["status"] == "onay_bekliyor"]

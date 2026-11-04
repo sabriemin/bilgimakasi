@@ -81,6 +81,17 @@ jobs:
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, bildirim atlandı."; exit 0; fi
           python -m shortgen.telegram_bot notify "$OUT_DIR" "$TAG"
+      - name: Yeni yorumlara cevap taslağı
+        continue-on-error: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '100' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID || vars.IG_USER_ID || '17841475131862440' }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: python -m shortgen.comments check
       - name: Geçmişi kaydet
         run: |
           git config user.name "shortgen-bot"
