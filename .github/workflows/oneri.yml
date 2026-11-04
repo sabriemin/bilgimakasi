@@ -1,0 +1,43 @@
+name: Gündemden konu öner
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  oneri:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Claude Code kur
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Gündemi tara ve Telegram'a gönder
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '100' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m shortgen.trends notify
+      - name: Kaydet
+        run: |
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          git add state/
+          git commit -m "Gündem önerileri" || true
+          for i in 1 2 3 4; do git pull --rebase && git push && break; sleep $((i*5)); done
+      - name: Butonları 30 dakika dinle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run onay.yml -f dakika=30 || true

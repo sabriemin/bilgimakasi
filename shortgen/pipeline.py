@@ -162,7 +162,16 @@ def main() -> None:
         print("Önceki çalışmadan kalan senaryo kullanılıyor.")
         script = load_script(pending)
     else:
-        script = generate_script(history, a.topic, template_catalog() if m.get("claude_secsin") else None)
+        topic = a.topic
+        if not topic and os.environ.get("AUTO_TREND", "1") != "0":
+            try:  # konu verilmediyse gündemden en yüksek puanlı öneriyi seç
+                from .trends import suggest
+                s0 = suggest(3)[0]
+                topic = f"{s0.topic} (kanca: {s0.hook}; gündem: {s0.trend})"
+                print("Gündemden seçilen konu:", topic)
+            except Exception as e:  # noqa: BLE001
+                print("Gündem önerisi alınamadı, serbest konu seçilecek:", e)
+        script = generate_script(history, topic, template_catalog() if m.get("claude_secsin") else None)
     template = pick_template(script, a.template)
     print(f"Şablon: {template}")
     music = a.music or (Path(os.environ["MUSIC_FILE"]) if os.environ.get("MUSIC_FILE") else None)

@@ -134,6 +134,20 @@ def _kb(rows: list[list[tuple[str, str]]]) -> str:
 def _handle_callback(cq: dict, chat: str) -> None:
     action, _, rest = cq["data"].partition(":")
     tag, _, arg = rest.partition(":")
+    if action == "tp":  # gündem önerisinden üretim
+        from .trends import load_saved
+        items = load_saved()
+        i = int(arg) if arg.isdigit() else -1
+        if not 0 <= i < len(items):
+            api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Öneri bulunamadı."})
+            return
+        it = items[i]
+        topic = f"{it['topic']} (kanca: {it['hook']}; gündem: {it['trend']})"
+        ok = _dispatch(topic)
+        api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Üretim başladı" if ok else "Başlatılamadı"})
+        api("sendMessage", data={"chat_id": chat, "text": (f"🎬 Üretim başladı: {it['topic']}\nYaklaşık 15 dakikada gelir."
+                                                          if ok else "Üretim başlatılamadı.")})
+        return
     videos = load(VIDEOS, [])
     v = _find(videos, tag)
     if not v:
@@ -188,6 +202,7 @@ def _handle_callback(cq: dict, chat: str) -> None:
 
 
 COMMANDS = [
+    {"command": "oneri", "description": "Türkiye ve dünya gündeminden 5 konu önerisi"},
     {"command": "uret", "description": "Hemen yeni video üret (ör. /uret kara delikler)"},
     {"command": "durum", "description": "Bekleyen ve zamanlanan videolar"},
     {"command": "saatler", "description": "Platformların en iyi paylaşım saatleri"},
@@ -234,6 +249,10 @@ def poll(wait: int = 0) -> int:
                 ok = _dispatch(topic)
                 api("sendMessage", data={"chat_id": chat, "text": "Üretim başlatıldı, birkaç dakika içinde gelir." if ok
                                          else "Üretim başlatılamadı."})
+            elif text.startswith("/oneri"):
+                ok = _dispatch("", "oneri.yml")
+                api("sendMessage", data={"chat_id": chat, "text": "🔎 Gündem taranıyor, öneriler 2-3 dakikada gelir."
+                                         if ok else "Öneri başlatılamadı."})
             elif text.startswith("/saatler"):
                 lines = ["Platformların en iyi paylaşım saatleri (Türkiye):"]
                 lines += [f"• {PLATFORM_NAMES[p]}: {', '.join(t)}" for p, t in BEST_TIMES.items()]
@@ -241,6 +260,7 @@ def poll(wait: int = 0) -> int:
                 api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
             elif text.startswith("/start") or text.startswith("/yardim"):
                 api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
+                                         "/oneri: gündemden 5 konu önerisi (butonla üret)\n"
                                          "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n"
                                          "/durum: bekleyen ve zamanlanan videolar\n"
                                          "/saatler: platformların en iyi paylaşım saatleri\n"
@@ -318,13 +338,14 @@ def publish_due() -> None:
                                  "reply_to_message_id": v["telegram_message_id"], "disable_web_page_preview": "true"})
 
 
-def _dispatch(topic: str) -> bool:
+def _dispatch(topic: str, workflow: str = "uret.yml") -> bool:
     repo, token = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN")
     if not (repo and token):
         return False
-    r = requests.post(f"https://api.github.com/repos/{repo}/actions/workflows/uret.yml/dispatches",
+    inputs = {"topic": topic} if workflow == "uret.yml" else {}
+    r = requests.post(f"https://api.github.com/repos/{repo}/actions/workflows/{workflow}/dispatches",
                       headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
-                      json={"ref": os.environ.get("GITHUB_REF_NAME", "main"), "inputs": {"topic": topic}}, timeout=30)
+                      json={"ref": os.environ.get("GITHUB_REF_NAME", "main"), "inputs": inputs}, timeout=30)
     return r.status_code == 204
 
 
