@@ -143,7 +143,8 @@ def instagram(video: Path, meta: dict) -> dict:
                            headers={"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(size)},
                            timeout=900)
     if not up.ok:
-        raise RuntimeError(f"Instagram yükleme hatası: {up.status_code} {up.text[:400]}")
+        # Meta bazen video alındığı hâlde 400 ProcessingFailedError döndürüyor; karar kapsayıcı durumuna göre verilir
+        print(f"Instagram yükleme yanıtı {up.status_code}: {up.text[:200]} (durum kontrol ediliyor)")
     for _ in range(60):  # işlenmesini bekle (en fazla ~10 dk)
         s = requests.get(f"{G}/{IG_VER}/{cid}", params={"fields": "status_code,status",
                                                                "access_token": token}, timeout=30).json()
