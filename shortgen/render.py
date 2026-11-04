@@ -377,6 +377,9 @@ class SceneRenderer:
         if self.anim is not None:
             self.anim.draw(img, p, lt, dur)
         for im, (x, y), delay in self.labels:
+            if self.idx == 0:  # kanca: ilk karede (önizleme/kapak) başlık hazır görünsün
+                img.alpha_composite(im, (x, y))
+                continue
             a = (lt - delay) / (0.14 if TEXT_ENTRY == "pop" else 0.22)
             if a <= 0:
                 continue
@@ -473,7 +476,8 @@ def render(scenes: list[SceneSpec], words: list[Word], out_mp4: Path, voice_mp3:
     brand = Brand(bcfg, {})
     SUB_HANDLE = bcfg.get("handle", "") if brand.on and bcfg.get("subtitle_handle", True) else ""
     _sub_cache.clear()
-    outro = bcfg.get("outro_seconds", 2.4) if brand.on else 0.0
+    outro = bcfg.get("outro_seconds", 0.0) if brand.on else 0.0
+    tail = bcfg.get("end_tail_seconds", tail)  # döngü: son sözden sonra kısa bekleme, video başa sarınca akış kopmasın
     content_end = (words[-1].end if words else scenes[-1].end) + (0.7 if outro else tail)
     total = content_end + outro
     scenes[-1].end = content_end

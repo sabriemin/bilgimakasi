@@ -9,5 +9,7 @@
   "intro_cut": true,
   "cut_transition_every": 4,
   "subtitle_handle": true,
-  "outro_seconds": 2.4
+  "outro_seconds": 0,
+  "_outro_notu": "Kapanış kartı izlenme oranını düşürdüğü için kapalı (0). Açmak için 2.4 yaz.",
+  "end_tail_seconds": 0.35
 }
