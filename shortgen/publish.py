@@ -105,7 +105,7 @@ def youtube(video: Path, meta: dict) -> dict:
 
 # ------------------------------------------------------------------ Instagram (Instagram ile giriş API'si)
 IG_GRAPH = "https://graph.instagram.com"
-IG_VER = os.environ.get("IG_API_VERSION", "v23.0")
+IG_VER = os.environ.get("IG_API_VERSION", "v26.0")  # v23 kapsayıcıları yüklemeden sonra işlenmiyor
 
 
 def _ig_base(token: str) -> str:
@@ -138,7 +138,8 @@ def instagram(video: Path, meta: dict) -> dict:
     cid = c.json()["id"]
     size = video.stat().st_size
     up_url = c.json().get("uri") or f"https://rupload.facebook.com/ig-api-upload/{IG_VER}/{cid}"
-    with video.open("rb") as f:
+    if True:  # gövde akış (stream) yerine tek parça bayt olarak gönderilmeli; testte yalnız bu çalıştı
+        f = video.read_bytes()
         up = requests.post(up_url, data=f,
                            headers={"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(size)},
                            timeout=900)
