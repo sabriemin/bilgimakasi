@@ -153,5 +153,16 @@
       "tiktok": "2026-11-05T19:00:00+00:00"
     },
     "decided": "2026-11-04T23:49:08+03:00"
+  },
+  {
+    "tag": "short-20261104-2100",
+    "title": "Galatasaray 100 Günde Avrupa'nın İki Devini Nasıl Devirdi?",
+    "topic": "Galatasaray'ın 2000'de 100 gün arayla Arsenal'i (UEFA Kupası finali, penaltılar 4-1) ve Real Madrid'i (UEFA Süper Kupası, altın golle 2-1) yenmesi",
+    "category": "spor",
+    "template": "retro",
+    "created": "2026-11-04T21:00:44",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 61,
+    "platforms": {}
   }
 ]
