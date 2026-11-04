@@ -2,7 +2,7 @@
 
 Kullanım:
     python -m shortgen.publish <etiket>          # GitHub Release'teki videoyu indirip tüm bağlı platformlara yükler
-    python -m shortgen.publish youtube-check     # YouTube anahtarlarını dener (yükleme yapmaz)
+    python -m shortgen.publish check youtube     # bağlantıyı dener, yükleme yapmaz (youtube/instagram/tiktok)
 
 Her platform yalnızca anahtarları tanımlıysa denenir; tanımlı olmayan platform atlanır.
 Gerekli GitHub Secrets (kurulum: docs/PAYLASIM_KURULUM.md):
@@ -246,11 +246,39 @@ def fetch_release(tag: str, dest: Path) -> tuple[Path, dict]:
 
 
 if __name__ == "__main__":
-    from .pipeline import load_env
-    load_env(ROOT / ".env")
-    if sys.argv[1] == "youtube-check":
-        _yt_token()
-        print("YouTube bağlantısı çalışıyor.")
+    env = ROOT / ".env"  # yerel çalıştırma için (Actions'ta anahtarlar ortam değişkeninden gelir)
+    if env.exists():
+        for line in env.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip('"'))
+    if sys.argv[1] == "check":
+        name = sys.argv[2]
+        try:
+            for n in {"youtube": ["YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"],
+                      "instagram": ["IG_USER_ID", "IG_ACCESS_TOKEN"],
+                      "tiktok": ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET", "TIKTOK_REFRESH_TOKEN"]}[name]:
+                if not os.environ.get(n):
+                    raise Skip(f"{n} GitHub Secrets'ta tanımlı değil")
+        except Skip as e:
+            sys.exit(f"HATA: {e}")
+        if name == "youtube":
+            tok = _yt_token()
+            ch = requests.get("https://www.googleapis.com/youtube/v3/channels", params={"part": "snippet", "mine": "true"},
+                              headers={"Authorization": f"Bearer {tok}"}, timeout=30)
+            # youtube.upload kapsamı kanal okumaya izin vermeyebilir; oturumun yenilenmesi yeterli kanıt
+            title = ch.json().get("items", [{}])[0].get("snippet", {}).get("title") if ch.ok else None
+            print("YouTube bağlantısı çalışıyor." + (f" Kanal: {title}" if title else ""))
+        elif name == "instagram":
+            user, token = _env("IG_USER_ID", "IG_ACCESS_TOKEN")
+            r = requests.get(f"{IG_GRAPH}/{IG_VER}/me", params={"fields": "user_id,username", "access_token": token}, timeout=30)
+            r.raise_for_status()
+            print("Instagram bağlantısı çalışıyor:", r.json().get("username"))
+        elif name == "tiktok":
+            h = {"Authorization": f"Bearer {_tt_token()}"}
+            r = requests.post(f"{TT}/post/publish/creator_info/query/", headers=h, timeout=30)
+            print("TikTok:", r.status_code, r.json().get("data", {}).get("creator_username"),
+                  r.json().get("data", {}).get("privacy_level_options"))
     else:
         with tempfile.TemporaryDirectory() as d:
             v, m = fetch_release(sys.argv[1], Path(d))

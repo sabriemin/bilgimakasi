@@ -244,6 +244,8 @@ class SceneSpec:
     icon: str
     sprite: Path | None = None
     motion: str = "none"
+    trail: bool = True
+    drawn: bool = False  # sprite bir çizim mi (fotoğraf kesiti değil)
     start: float = 0.0
     end: float = 0.0
     words: list[Word] = field(default_factory=list)
@@ -276,16 +278,19 @@ class SceneRenderer:
             self.base.paste(ic[0], ic[1], ic[0])
         self.anim = None
         if s.sprite is not None and s.motion != "none":
-            from .anim import Animator, prepare_sprite
+            from .anim import Animator, prepare_drawing, prepare_sprite
             trail = (235, 235, 235) if theme != "paper" or sum(PAPER) < 380 else (120, 120, 120)
-            self.anim = Animator(prepare_sprite(s.sprite), s.motion, trail, cy=1050)
+            spr = prepare_drawing(s.sprite) if s.drawn else prepare_sprite(s.sprite)
+            self.anim = Animator(spr, s.motion, trail, cy=1060, trail=s.trail)
 
         # başlık satırları
         lines = [tr_upper(x) for x in s.headline if x.strip()]
-        big = len(lines) == 1 and len(lines[0]) <= 6 and s.image_mode == "none"
-        font = fit_font(lines, 960, int((330 if big else (190 if s.image_mode == "none" else 160)) * HEAD_SCALE))
+        drawing = self.anim is not None and s.drawn and s.image_mode == "none"
+        big = len(lines) == 1 and len(lines[0]) <= 6 and s.image_mode == "none" and not drawing
+        size = 330 if big else (140 if drawing else (190 if s.image_mode == "none" else 160))
+        font = fit_font(lines, 960, int(size * HEAD_SCALE))
         self.labels = []
-        y = {"full": 1000, "framed": 300}.get(s.image_mode, 380)
+        y = {"full": 1000, "framed": 300}.get(s.image_mode, 300 if drawing else 380)
         if s.image_mode == "full":
             y = 1330 - sum(font.getbbox(x)[3] + 40 for x in lines)
         x0 = 54
@@ -323,6 +328,16 @@ class SceneRenderer:
             im = label(tr_upper(line), sf, BLACK, WHITE, pad=(18, 8), shadow=BLACK, rot=r.uniform(-2, 2), strike=True)
             self.labels.append((im, (x0 + 30, y + 30), 0.5 + j * 0.35))
             y += im.height + 18
+        if self.anim is not None and s.drawn and s.image_mode == "none" and \
+                self.anim.motion in ("still", "float", "pulse", "zoom_in", "spin", "shake", "rise", "drop_in"):
+            # çizimi başlığın altına, altyazının üstüne sığdır
+            top, bottom = y + 10, SUB_Y - 60
+            spr = self.anim.sprite
+            room = max(560, bottom - top)
+            if spr.height > room:
+                k = room / spr.height
+                self.anim.sprite = spr.resize((int(spr.width * k), int(spr.height * k)), Image.LANCZOS)
+            self.anim.cy = top + max(room, self.anim.sprite.height) / 2
 
     @staticmethod
     def _plain(text: str, font, fg, rot: float) -> Image.Image:

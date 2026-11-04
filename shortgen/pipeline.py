@@ -8,7 +8,7 @@ import os
 import re
 from pathlib import Path
 
-from . import images, render, voice
+from . import illustrate, images, render, voice
 from .script import ShortScript, generate_script, load_script
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -50,50 +50,53 @@ def pick_template(script: ShortScript, override: str | None = None) -> str:
 
 
 def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | None,
-          template: str = "kolaj") -> Path:
+          template: str = "kolaj", use_drawings: bool = True) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "script.json").write_text(script.model_dump_json(indent=2), encoding="utf-8")
     cache = ROOT / "cache" / "images"
     cache.mkdir(parents=True, exist_ok=True)
 
-    # 1) görseller
+    render.apply_template(template)  # çizim paleti şablon renklerinden gelsin
+    # 1) fotoğraflar (birden çok sorgu, Wikimedia + Openverse, alaka kontrolü)
     credits, used = [], set()
+    photos: dict[int, Path] = {}
+    for i, sc in enumerate(script.scenes):
+        queries = sc.image_queries or ([sc.image_query] if sc.image_query else [])
+        if sc.image_mode == "none" or not queries:
+            continue
+        if queries[0].startswith("local:"):
+            photos[i] = ROOT / queries[0][6:]
+            continue
+        found = images.find_any(queries, cache, used)
+        if found:
+            photos[i], cr = found
+            used.update({"File:" + cr.title, cr.page})
+            credits.append(cr)
+        else:
+            print(f"Sahne {i}: uygun fotoğraf bulunamadı ({queries})")
+
+    # 2) çizimler: animasyonlu sahneler + fotoğrafı bulunamayan veya fotoğrafsız sahneler
+    want: dict[int, str] = {}
+    for i, sc in enumerate(script.scenes):
+        desc = sc.illustration.strip() or (sc.anim_query.strip() if sc.motion != "none" else "")
+        if desc and (sc.motion != "none" or i not in photos):
+            want[i] = desc
+    drawings = illustrate.draw_scenes(want, script.topic, out_dir / "cizimler") if use_drawings else {}
+
     specs: list[render.SceneSpec] = []
-    for sc in script.scenes:
-        img = None
-        if sc.image_mode != "none" and sc.image_query:
-            if sc.image_query.startswith("local:"):
-                img = ROOT / sc.image_query[6:]
-            else:
-                try:
-                    found = images.find_image(sc.image_query, cache, used)
-                except Exception as e:  # ağ hatası vb.: tipografik sahneye düş
-                    print(f"Görsel aranamadı ({sc.image_query}): {e}")
-                    found = None
-                if found:
-                    img, cr = found
-                    used.add("File:" + cr.title)
-                    credits.append(cr)
-        sprite = None
-        if sc.motion != "none" and sc.anim_query:
-            if sc.anim_query.startswith("local:"):
-                sprite = ROOT / sc.anim_query[6:]
-            else:
-                try:
-                    found = images.find_cutout(sc.anim_query, cache)
-                except Exception as e:
-                    print(f"Animasyon nesnesi aranamadı ({sc.anim_query}): {e}")
-                    found = None
-                if found:
-                    sprite, cr = found
-                    credits.append(cr)
+    for i, sc in enumerate(script.scenes):
+        img = photos.get(i)
+        sprite = drawings.get(i)
+        motion = sc.motion if sc.motion != "none" else "still"
+        if sprite and img and sc.image_mode == "full" and sc.motion == "none":
+            sprite = None  # tam ekran fotoğraf varken hareketsiz çizim üst üste binmesin
         specs.append(render.SceneSpec(
             narration=sc.narration, kicker=sc.kicker, headline=sc.headline,
             highlight_line=sc.highlight_line, strike=sc.strike, theme=sc.theme,
-            image_mode=sc.image_mode if img else "none", image=img, icon=sc.icon,
-            sprite=sprite, motion=sc.motion if sprite else "none"))
+            image_mode=sc.image_mode if img else "none", image=img, icon=sc.icon if not sprite else "none",
+            sprite=sprite, motion=motion if sprite else "none", trail=sc.trail, drawn=True))
 
-    # 2) ses ve kelime zamanları
+    # 3) ses ve kelime zamanları
     text = " ".join(sc.narration.strip() for sc in script.scenes)
     mp3 = out_dir / "voice.mp3"
     if use_voice:
@@ -101,7 +104,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
     else:
         words, mp3 = voice.estimate(text), None
 
-    # 3) kelimeleri sahnelere dağıt
+    # 4) kelimeleri sahnelere dağıt
     counts = [len(sc.narration.split()) for sc in script.scenes]
     if sum(counts) != len(words):  # hizalama farklı bölündüyse oranla
         scale = len(words) / max(1, sum(counts))
@@ -117,11 +120,11 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         b.start = max(b.start - 0.12, a.start + 0.5)  # görsel, sözden bir tık önce değişsin
         a.end = b.start
 
-    # 4) kurgu
+    # 5) kurgu
     video = out_dir / "video.mp4"
     render.render(specs, words, video, mp3, music, template=template)
 
-    # 5) yayın paketi
+    # 6) yayın paketi
     desc = "\n\n".join(filter(None, [
         script.description,
         " ".join("#" + h.lstrip("#").replace(" ", "") for h in script.hashtags),

@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 W, H = 1080, 1920
 
-MOTIONS = ["fly_up", "fly_right", "fly_left", "drop_in", "zoom_in", "float", "spin", "shake", "orbit", "pulse"]
+MOTIONS = ["fly_up", "fly_right", "fly_left", "drop_in", "zoom_in", "float", "spin", "shake", "orbit", "pulse", "rise", "still"]
 
 
 def ease_in_out(x: float) -> float:
@@ -68,13 +68,19 @@ def pose(motion: str, p: float, lt: float, cy: float = 1000) -> tuple[float, flo
     if motion == "orbit":
         a = lt * 1.8
         return cx + 300 * math.cos(a), cy + 120 * math.sin(a), 0.75 + 0.15 * math.sin(a), 0
+    if motion == "rise":  # aşağıdan yükselip yerine oturur (sel, dalga, bina)
+        e = 1 - (1 - min(1.0, p * 1.8)) ** 3
+        return cx + 12 * math.sin(lt * 1.5), cy + (1 - e) * 900, 1.0, 2 * math.sin(lt * 1.2)
+    if motion == "still":  # çizim sahnesi: hafif içeri girip çok az salınır
+        e = ease_out_back(min(1.0, p * 4))
+        return cx, cy + 8 * math.sin(lt * 1.6), 0.85 + 0.15 * e, 1.2 * math.sin(lt * 1.1)
     if motion == "pulse":
         beat = abs(math.sin(lt * math.pi * 1.4)) ** 6
         return cx, cy, 1.0 + 0.12 * beat, 0
     return cx, cy, 1.0, 0
 
 
-def prepare_sprite(path: Path, target_w: int = 560) -> Image.Image:
+def prepare_sprite(path: Path, target_w: int = 560, max_h: int = 780) -> Image.Image:
     """Şeffaf PNG ise olduğu gibi; değilse rembg ile arka planı siler; o da yoksa çerçeveli fotoğraf yapar."""
     im = Image.open(path)
     if im.mode in ("RGBA", "LA") and im.getchannel("A").getextrema()[0] < 250:
@@ -92,7 +98,7 @@ def prepare_sprite(path: Path, target_w: int = 560) -> Image.Image:
     bbox = im.getchannel("A").getbbox()
     if bbox:
         im = im.crop(bbox)
-    s = target_w / im.width if im.width >= im.height else min(780 / im.height, 900 / im.width)
+    s = min(target_w / im.width, max_h / im.height) if im.width >= im.height else min(max_h / im.height, 900 / im.width)
     im = im.resize((max(1, int(im.width * s)), max(1, int(im.height * s))), Image.LANCZOS)
     # hafif gölge, kolaja oturması için
     sh = Image.new("RGBA", (im.width + 40, im.height + 40), (0, 0, 0, 0))
@@ -103,9 +109,31 @@ def prepare_sprite(path: Path, target_w: int = 560) -> Image.Image:
     return sh
 
 
+def prepare_drawing(path: Path, max_w: int = 820, max_h: int = 720, border: int = 14) -> Image.Image:
+    """Çizimi kâğıttan kesilmiş çıkartma gibi hazırlar: beyaz kenar + hafif gölge (koyu zeminde de okunur)."""
+    im = Image.open(path).convert("RGBA")
+    bbox = im.getchannel("A").getbbox()
+    if bbox:
+        im = im.crop(bbox)
+    s = min(max_w / im.width, max_h / im.height)
+    im = im.resize((max(1, int(im.width * s)), max(1, int(im.height * s))), Image.LANCZOS)
+    pad = border + 30
+    a = Image.new("L", (im.width + 2 * pad, im.height + 2 * pad), 0)
+    a.paste(im.getchannel("A"), (pad, pad))
+    edge = a.filter(ImageFilter.MaxFilter(border * 2 + 1)).filter(ImageFilter.GaussianBlur(1.2))
+    out = Image.new("RGBA", a.size, (0, 0, 0, 0))
+    shadow = edge.point(lambda v: int(v * 0.4)).filter(ImageFilter.GaussianBlur(9))
+    out.paste((0, 0, 0, 255), (10, 14), shadow)
+    out = Image.composite(Image.new("RGBA", a.size, (250, 249, 245, 255)), out, edge)
+    out.alpha_composite(im, (pad, pad))
+    return out
+
+
 class Animator:
-    def __init__(self, sprite: Image.Image, motion: str, trail_color=(255, 255, 255), cy: float = 1000):
+    def __init__(self, sprite: Image.Image, motion: str, trail_color=(255, 255, 255), cy: float = 1000,
+                 trail: bool = True):
         self.sprite, self.motion, self.trail_color, self.cy = sprite, motion, trail_color, cy
+        self.trail = trail
         self._rot_cache: dict = {}
 
     def _transformed(self, scale: float, angle: float) -> Image.Image:
@@ -122,7 +150,7 @@ class Animator:
         return self._rot_cache[key]
 
     def draw(self, img: Image.Image, p: float, lt: float, dur: float) -> None:
-        if self.motion in ("fly_up", "fly_right", "fly_left"):
+        if self.trail and self.motion in ("fly_up", "fly_right", "fly_left"):
             self._trail(img, p, lt, dur)
         x, y, s, a = pose(self.motion, p, lt, self.cy)
         im = self._transformed(s, a)

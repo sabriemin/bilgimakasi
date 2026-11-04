@@ -1,0 +1,449 @@
+{
+  "topic": "1919 Boston melas seli (Great Molasses Flood)",
+  "category": "tarih",
+  "template": "",
+  "title": "1919'da Bir Boston Mahallesini Melas Dalgası Yuttu",
+  "description": "15 Ocak 1919'da Boston'un North End mahallesinde, yıllardır sızdıran dev bir tank yarıldı. Yaklaşık 8,7 milyon litre melas sokaklara yayıldı; 21 kişi öldü, yaklaşık 150 kişi yaralandı. Sizce bugün hangi gizli tehlikeyi göz ardı ediyoruz?",
+  "hashtags": [
+    "#bilgimakası",
+    "#tarih",
+    "#boston",
+    "#melasseli",
+    "#ilginçbilgiler",
+    "#shorts",
+    "#bilgi",
+    "#keşfet"
+  ],
+  "scenes": [
+    {
+      "narration": "Bu sokağı bir dalga yuttu. Ama su değildi.",
+      "kicker": "BOSTON, 1919",
+      "headline": [
+        "BİR DALGA",
+        "AMA SU",
+        "DEĞİLDİ"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "full",
+      "image_query": "",
+      "image_queries": [
+        "Boston Molasses Disaster 1919",
+        "Great Molasses Flood wreckage",
+        "North End Boston 1919 destruction"
+      ],
+      "icon": "none",
+      "illustration": "a ruined city street in 1919 Boston covered in thick dark-brown sticky molasses, wrecked wooden buildings",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Peki bir mahalle neden şekerle boğuldu?",
+      "kicker": "",
+      "headline": [
+        "NEDEN",
+        "ŞEKERLE",
+        "BOĞULDU?"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "black",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "question",
+      "illustration": "small old brick city buildings half-submerged in glossy dark-brown syrup, a lone street lamp sticking out",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "15 Ocak 1919, Boston, North End.",
+      "kicker": "BAĞLAM",
+      "headline": [
+        "15 OCAK 1919",
+        "NORTH END"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "full",
+      "image_query": "",
+      "image_queries": [
+        "North End Boston 1910s",
+        "Boston waterfront Commercial Street historic",
+        "Boston harbor early 20th century"
+      ],
+      "icon": "none",
+      "illustration": "a busy early 1900s Boston harbor neighborhood with brick buildings, horse carts and an elevated railway",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Limanda dev bir melas tankı vardı.",
+      "kicker": "PURITY DISTILLING",
+      "headline": [
+        "DEV BİR",
+        "MELAS TANKI"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "framed",
+      "image_query": "",
+      "image_queries": [
+        "Purity Distilling Company molasses tank",
+        "Boston molasses tank 1919",
+        "large riveted steel storage tank historic"
+      ],
+      "icon": "none",
+      "illustration": "a huge cylindrical riveted steel storage tank standing by the harbor, towering over small houses",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "İçinde yaklaşık 8,7 milyon litre melas.",
+      "kicker": "İÇİNDEKİ",
+      "headline": [
+        "8,7 MİLYON",
+        "LİTRE"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Tank yapıldığından beri sızdırıyordu.",
+      "kicker": "İLK İŞARET",
+      "headline": [
+        "SIZDIRIYORDU"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "black",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "close-up of a riveted steel tank wall with dark-brown molasses oozing and dripping from the seams",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Çözüm? Sızıntılar görünmesin diye kahverengiye boyandı.",
+      "kicker": "ŞİRKETİN ÇÖZÜMÜ",
+      "headline": [
+        "KAHVERENGİYE",
+        "BOYANDI"
+      ],
+      "highlight_line": 0,
+      "strike": [
+        "TAMİR EDİLDİ"
+      ],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "a worker on a ladder painting a leaking steel tank brown with a large brush to hide the drips",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "O gün hava aniden ısınmıştı.",
+      "kicker": "15 OCAK",
+      "headline": [
+        "HAVA ANİDEN",
+        "ISINMIŞTI"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "an old mercury thermometer with the red line climbing from freezing to mild, pale winter sun behind",
+      "motion": "rise",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Öğle saatlerinde tank yarıldı.",
+      "kicker": "DÖNÜM NOKTASI",
+      "headline": [
+        "TANK",
+        "YARILDI"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "framed",
+      "image_query": "",
+      "image_queries": [
+        "Boston molasses tank collapse remains 1919",
+        "Great Molasses Flood tank ruins",
+        "Boston Molasses Disaster aftermath"
+      ],
+      "icon": "none",
+      "illustration": "a giant steel tank bursting apart, rivets flying, a torrent of dark-brown molasses gushing out",
+      "motion": "shake",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Yedi metreyi aşan bir melas dalgası sokaklara yayıldı.",
+      "kicker": "",
+      "headline": [
+        "YEDİ METRE",
+        "MELAS DALGASI"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "black",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "a towering dark-brown wave of sticky molasses with thick drips, sweeping forward down a narrow old city street",
+      "motion": "fly_right",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Tahminen saatte elli altı kilometre hızla.",
+      "kicker": "HIZI",
+      "headline": [
+        "SAATTE",
+        "56 KM"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Havai demiryoluna çarptı, binaları yıktı.",
+      "kicker": "YIKIM",
+      "headline": [
+        "DEMİRYOLUNA",
+        "ÇARPTI"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "full",
+      "image_query": "",
+      "image_queries": [
+        "Atlantic Avenue elevated railway molasses 1919",
+        "Boston Molasses Disaster elevated railway damage",
+        "Boston Elevated Railway Atlantic Avenue historic"
+      ],
+      "icon": "none",
+      "illustration": "damaged steel girders of an elevated railway hit by a flood of molasses, collapsed wooden buildings below",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Hava soğudukça melas koyulaştı.",
+      "kicker": "ASIL TEHLİKE",
+      "headline": [
+        "MELAS",
+        "KOYULAŞTI"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "a street at dusk where the molasses flood thickens into a glossy, heavy, tar-like layer, frost on windows",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Kurtulmaya çalışanlar yapışkan çamura hapsoldu.",
+      "kicker": "",
+      "headline": [
+        "YAPIŞKAN",
+        "ÇAMURA",
+        "HAPSOLDU"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "black",
+      "image_mode": "framed",
+      "image_query": "",
+      "image_queries": [
+        "Boston molasses flood rescue workers 1919",
+        "Great Molasses Flood cleanup",
+        "Boston 1919 rescuers"
+      ],
+      "icon": "none",
+      "illustration": "rescuers wading knee-deep in thick sticky brown molasses, struggling to pull their boots free",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Yirmi bir kişi öldü, yaklaşık yüz elli kişi yaralandı.",
+      "kicker": "BİLANÇO",
+      "headline": [
+        "21 ÖLÜ",
+        "~150 YARALI"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Yıllar süren davanın sonucu: Suçlu şirketti.",
+      "kicker": "DAVA, 1925",
+      "headline": [
+        "SUÇLU",
+        "ŞİRKETTİ"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "framed",
+      "image_query": "",
+      "image_queries": [
+        "Great Molasses Flood newspaper 1919",
+        "Boston Post January 1919 molasses",
+        "Suffolk County Courthouse Boston historic"
+      ],
+      "icon": "none",
+      "illustration": "a 1920s courtroom with a judge's gavel striking down beside a stack of legal documents",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Felaketin ardından mühendis onayı zorunlu hale geldi.",
+      "kicker": "SONUÇ",
+      "headline": [
+        "MÜHENDİS ONAYI",
+        "ZORUNLU"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "an engineering blueprint of a storage tank with calculations, receiving an engineer's signature and a red official approval stamp",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Yerliler, sıcak günlerde onlarca yıl melas koktuğunu anlatır.",
+      "kicker": "BİR İZ",
+      "headline": [
+        "ONLARCA YIL",
+        "MELAS KOKTU"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "black",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "a sunny summer street in an old harbor neighborhood with faint sweet brown scent swirls rising from the cobblestones",
+      "motion": "float",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Bugün olay yerinde küçük bir anma plaketi var.",
+      "kicker": "BUGÜN",
+      "headline": [
+        "KÜÇÜK BİR",
+        "PLAKET"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "framed",
+      "image_query": "",
+      "image_queries": [
+        "Great Molasses Flood plaque Boston",
+        "Langone Park Boston",
+        "North End Boston waterfront park"
+      ],
+      "icon": "none",
+      "illustration": "a small bronze memorial plaque on a low stone wall in a quiet waterfront park",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    },
+    {
+      "narration": "Sizce bugün hangi tehlike göz ardı ediliyor? Yorumlarda buluşalım.",
+      "kicker": "SİZCE?",
+      "headline": [
+        "HANGİ TEHLİKE",
+        "GÖZ ARDI",
+        "EDİLİYOR?"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_query": "",
+      "image_queries": [],
+      "icon": "question",
+      "illustration": "a modern city skyline with one old rusty tank in the foreground showing a tiny dark leak, a question mark in the sky",
+      "motion": "none",
+      "trail": false,
+      "anim_query": ""
+    }
+  ],
+  "sources": [
+    "https://wikipedia.com/wiki/Great_Molasses_Flood",
+    "https://britannica.com/topic/Great-Molasses-Flood",
+    "https://www.history.com/news/the-great-molasses-flood-of-1919",
+    "https://aps.org/publications/apsnews/201701/physicshistory.cfm",
+    "https://www.sciencedaily.com/releases/2016/11/161121090721.htm",
+    "https://www.boston.com/news/history/2019/01/13/victims-great-boston-molasses-flood-1919/?amp=1",
+    "https://www.boston25news.com/news/massachusetts/100-years-ago-in-boston-the-day-molasses-was-deadly-fast/904231962/?outputType=amp",
+    "https://bostonmagazine.com/?p=2480900",
+    "https://www.wgbh.org/news/local/2015-01-16/this-week-in-history-the-great-molasses-flood-drowns-bostons-north-end",
+    "https://newengland.com/today/living/new-england-history/great-molasses-flood/",
+    "https://history.howstuffworks.com/historical-events/ridiculous-history-boston-molasses-flood.htm"
+  ]
+}

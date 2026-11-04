@@ -34,10 +34,18 @@ class Scene(BaseModel):
     strike: List[str] = Field(description="Üstü kırmızıyla çizilecek ek satırlar (BÜYÜK HARF). Çoğu sahnede boş.")
     theme: Literal["red", "yellow", "black", "paper"]
     image_mode: Literal["full", "framed", "none"]
-    image_query: str = Field(description="Wikimedia Commons'ta aranacak İngilizce sorgu. image_mode none ise boş.")
+    image_query: str = Field(default="", description="(Eski alan) Tek arama sorgusu. Yeni senaryolarda image_queries kullan.")
+    image_queries: List[str] = Field(default_factory=list, description=(
+        "Wikimedia Commons / Openverse'te aranacak 2-3 İngilizce sorgu, en özelden en genele. "
+        "Özel isimleri (kişi, yer, olay) içersin. image_mode none ise boş liste."))
     icon: Literal["none", "question", "arrow", "door", "letter", "record"]
-    anim_query: str = Field(default="", description="Hareket edecek TEK nesnenin İngilizce adı (ör. 'space shuttle', 'hot air balloon'). Animasyon yoksa boş.")
-    motion: Literal["none", "fly_up", "fly_right", "fly_left", "drop_in", "zoom_in", "float", "spin", "shake", "orbit", "pulse"] = "none"
+    illustration: str = Field(default="", description=(
+        "Bu sahnede gösterilecek ÇİZİMİN İngilizce tarifi (tek nesne veya küçük sahne, anlamı tam versin; ör. "
+        "'a towering dark-brown wave of sticky molasses with drips, sweeping forward'). Animasyonlu sahnelerde zorunlu; "
+        "fotoğraflı sahnelerde fotoğraf bulunamazsa yedek olarak kullanılır. Saf sayı/istatistik sahnelerinde boş."))
+    motion: Literal["none", "fly_up", "fly_right", "fly_left", "drop_in", "zoom_in", "float", "spin", "shake", "orbit", "pulse", "rise"] = "none"
+    trail: bool = Field(default=False, description="Hareket eden nesnenin arkasında duman/iz olsun mu (roket, uçak için true; dalga, hayvan için false).")
+    anim_query: str = Field(default="", description="(Eski alan) Kullanma.")
 
 
 class ShortScript(BaseModel):
@@ -52,20 +60,26 @@ class ShortScript(BaseModel):
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
-Biçim: 60-70 saniye, toplam 150-175 kelime dış ses, 18-28 sahne. Her sahne 1,5-3,5 saniye.
+Biçim: 60-70 saniye. Seslendirme yavaş ve tane tane olduğu için toplam dış ses 120-135 kelimeyi GEÇMESİN.
+16-22 sahne, her sahne 2-4 saniye.
 Yapı: 1) İlk 2 sahnede güçlü merak kancası (bir fotoğrafa/duruma işaret eden, "Peki neden...?" sorusu),
 2) bağlam (yıl, yer, kişi), 3) gerilim veya şaşırtıcı dönüm noktası, 4) vurucu cümle/alıntı,
-5) bugüne bağlama, 6) son sahnelerde izleyiciye açık uçlu soru ve "Yorumlarda buluşalım." çağrısı.
+5) bugüne bağlama, 6) son sahnede izleyiciye açık uçlu soru ve "Yorumlarda buluşalım." çağrısı.
 Ton: sakin, hikâye anlatıcısı, kısa cümleler, abartısız. Sadece doğrulanabilir bilgiler kullan;
 emin olmadığın tarih, sayı veya alıntıyı kullanma. Tartışmalı siyasi, dinî, sağlıkla ilgili iddialardan,
 yaşayan özel kişileri hedef alan içerikten kaçın.
-Görsel: Sahnelerin yaklaşık yarısında gerçek fotoğraf (image_mode full veya framed) iste; sorgu, Wikimedia Commons'ta
-kamu malı/özgür lisanslı karşılığı bulunabilecek şeyleri tarif etmeli (tarihî kişi, yer, nesne, hayvan, tablo).
-Yakın dönem ünlü fotoğrafları, film/dizi kareleri, logolar isteme. Diğer sahneler tipografik olsun.
-Animasyon: Sahnelerin yaklaşık beşte birinde, anlatılan şey doğal olarak hareket ediyorsa bir nesneyi canlandır:
-roket/mekik fırlatılıyorsa fly_up, uçak/kuş/tren geçiyorsa fly_right veya fly_left, bir şey düşüyorsa drop_in,
-ortaya çıkış/keşif anında zoom_in, gezegen/dünya için spin veya orbit, kalp/beyin için pulse, deprem/çarpışma için shake,
-balon/astronot/su altı için float. anim_query tek, somut, fotoğrafı bulunabilir bir nesne olsun. Animasyonlu sahnede image_mode none olsun.
+Görsel kuralı: HİÇBİR sahne boş kalmasın. Her sahnede ya gerçek fotoğraf ya çizim olsun; yalnızca büyük bir sayı/istatistik
+gösteren sahneler (en fazla 3 tane) saf tipografik olabilir.
+- Fotoğraf: Sahnelerin yaklaşık yarısında (image_mode full veya framed). image_queries'e 2-3 sorgu yaz, en özelden en genele
+  (ör. ["Boston Molasses Disaster 1919", "Great Molasses Flood wreckage", "North End Boston 1919"]). Sorgular Wikimedia Commons'ta
+  kamu malı/özgür lisanslı karşılığı bulunabilecek şeyleri tarif etsin (tarihî kişi, yer, olay, nesne, hayvan, tablo).
+  Yakın dönem ünlü fotoğrafları, film/dizi kareleri, logolar isteme. Fotoğraflı sahnelere de yedek 'illustration' tarifi yaz.
+- Çizim: Diğer sahnelerde image_mode none ve 'illustration' alanına anlamı tam veren bir çizim tarifi yaz. Kelimeyi değil anlamı
+  tarif et: 'melas dalgası' için deniz dalgası değil, koyu kahverengi yapışkan bir melas dalgası.
+- Animasyon: Anlatılan şey doğal olarak hareket ediyorsa çizime 'motion' ver: roket/mekik fırlatılıyorsa fly_up (trail true),
+  uçak/kuş/tren geçiyorsa fly_right veya fly_left, sel/dalga/akıntı ilerliyorsa fly_right veya rise (trail false),
+  bir şey düşüyorsa drop_in, ortaya çıkış/keşif anında zoom_in, gezegen için spin veya orbit, kalp/beyin için pulse,
+  patlama/deprem/yarılma için shake, balon/astronot/su altı için float. Hareketsiz çizimlerde motion none.
 headline kelimeleri narration içinde geçen en vurucu kelimeler olsun. Temaları çeşitlendir, art arda aynı temayı
 en fazla iki kez kullan. icon sadece gerçekten anlam katıyorsa."""
 
@@ -155,7 +169,8 @@ def verify_script(script: ShortScript) -> ShortScript:
     """İkinci geçiş: bilgileri web aramasıyla doğrular, hataları düzeltir veya çıkarır."""
     review = ask_claude(
         "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
-        "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt. "
+        "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
+        "(özellikle toplam dış ses 135 kelimeyi geçmesin; boş sahne kalmasın). "
         "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
         "alanında döndür.\n\n" + script.model_dump_json(indent=1),
         Review, SYSTEM + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
