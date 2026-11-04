@@ -35,7 +35,7 @@ jobs:
         run: |
           set -e
           OUT="/tmp/ref/$AD"; mkdir -p "$OUT/kareler"
-          yt-dlp --no-playlist -f "mp4/best" -o /tmp/ref/video.%(ext)s --write-info-json "$URL"
+          yt-dlp --no-playlist -f "mp4/best" -o "/tmp/ref/video.%(ext)s" --write-info-json "$URL"
           V=$(ls /tmp/ref/video.* | grep -v json | head -1)
           python3 - "$V" "$OUT" <<'PY'
           import json, subprocess, sys, glob
