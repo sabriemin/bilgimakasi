@@ -9,5 +9,16 @@
     "status": "onay_bekliyor",
     "telegram_message_id": 2,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261104-1057",
+    "title": "1919'da Bir Boston Mahallesini Melas Dalgası Yuttu",
+    "topic": "1919 Boston melas seli (Great Molasses Flood)",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T10:57:10",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 4,
+    "platforms": {}
   }
 ]
