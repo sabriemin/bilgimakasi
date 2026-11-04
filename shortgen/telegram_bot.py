@@ -27,7 +27,16 @@ VIDEOS = STATE / "videos.json"
 OFFSET = STATE / "telegram_offset.json"
 
 
+_QUIET = {"Ne zaman paylaşılsın?", "Üretim başladı", ""}
+
+
 def api(method: str, **kw):
+    if method == "answerCallbackQuery" and os.environ.get("TG_WEBHOOK") == "1":
+        # düğmeye anında "⏳ Alındı" cevabını Cloudflare kapısı verdi; buradaki bilgi notunu mesaj olarak gönder
+        text = (kw.get("data") or {}).get("text", "")
+        if text not in _QUIET:
+            return api("sendMessage", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": text})
+        return None
     r = requests.post(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/{method}", timeout=120, **kw)
     if not r.ok:
         desc = r.json().get("description", "") if r.headers.get("content-type", "").startswith("application/json") else ""
@@ -126,15 +135,15 @@ def _best_schedule(now: dt.datetime | None = None) -> dict[str, str]:
     return out
 
 
-def _slots(now: dt.datetime | None = None) -> list[tuple[str, str, dt.datetime]]:
-    """Saat seçenekleri: (kod, düğme yazısı, UTC zamanı). Geçmişte kalan saatler gösterilmez."""
+def _slots(now: dt.datetime | None = None, all_: bool = False) -> list[tuple[str, str, dt.datetime]]:
+    """Saat seçenekleri: (kod, düğme yazısı, UTC zamanı). Geçmişte kalan saatler gösterilmez (all_=True hariç)."""
     now = now or dt.datetime.now(TR)
     today, tomorrow = now.date(), now.date() + dt.timedelta(days=1)
     out = [("best", "🎯 Her platform en iyi saatinde", now), ("now", "⚡ Şimdi", now)]
     for code, label, day, hour in (("b12", "Bugün 12:00", today, 12), ("b19", "Bugün 19:00", today, 19),
                                    ("y12", "Yarın 12:00", tomorrow, 12), ("y19", "Yarın 19:00", tomorrow, 19)):
         t = dt.datetime.combine(day, dt.time(hour), TR)
-        if t > now + dt.timedelta(minutes=15):
+        if all_ or t > now + dt.timedelta(minutes=15):
             out.append((code, "🕒 " + label, t))
     return out
 
@@ -155,9 +164,11 @@ def _handle_callback(cq: dict, chat: str) -> None:
     if action == "cm":  # yorum cevabı: cm:ok:<anahtar> / cm:no:<anahtar>
         from . import comments
         note = comments.handle(tag, arg, chat, cq["message"]["message_id"])
-        api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": note[:190]})
         if note.startswith(("✅", "Gönderilemedi")):
+            api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": ""})
             api("sendMessage", data={"chat_id": chat, "text": note, "reply_to_message_id": cq["message"]["message_id"]})
+        else:
+            api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": note[:190]})
         return
     if action == "tp":  # gündem önerisinden üretim
         from .trends import load_saved
@@ -200,7 +211,10 @@ def _handle_callback(cq: dict, chat: str) -> None:
             detail = "\n".join(f"• {PLATFORM_NAMES[p]}: {_fmt(t)}" for p, t in sorted(sched.items(), key=lambda x: x[1]))
             note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + detail
         else:
-            when = next((t for code, _, t in _slots() if code == arg), dt.datetime.now(TR))
+            # düğme gösterildikten sonra saat 15 dk sınırına girmiş olabilir: seçilen saati yine de kullan
+            when = next((t for code, _, t in _slots(all_=True) if code == arg), dt.datetime.now(TR))
+            if when < dt.datetime.now(TR):
+                when = dt.datetime.now(TR)
             iso = when.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
             sched = None
             note = "✅ Onaylandı. " + ("Birkaç dakika içinde paylaşılacak." if arg == "now"
@@ -218,6 +232,8 @@ def _handle_callback(cq: dict, chat: str) -> None:
             note = "Paylaşım iptal edildi, video yeniden onay bekliyor."
         else:
             note = "Bu video zaten paylaşıldı veya paylaşılıyor."
+            if os.environ.get("TG_WEBHOOK") == "1":
+                _restore_kb(tag, chat)
     elif action == "no":
         _update(tag, status="reddedildi", decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb([])})
@@ -234,7 +250,11 @@ def _handle_callback(cq: dict, chat: str) -> None:
         _update(tag, status="zamanlandi", schedule=None,
                 publish_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"))
         note = "Hatalı platformlar birkaç dakika içinde yeniden denenecek."
-    api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": note[:190]})
+        if os.environ.get("TG_WEBHOOK") == "1":
+            api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": cq["message"]["message_id"],
+                                                "reply_markup": _kb([])})
+    # "at" ve "no" notu zaten mesaj olarak gönderildi: baloncukta tekrar gösterme
+    api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "" if action in ("at", "no") else note[:190]})
 
 
 COMMANDS = [
@@ -248,6 +268,94 @@ COMMANDS = [
 _menu_set = False
 
 
+def _restore_kb(tag: str, chat: str) -> None:
+    """Webhook modunda kapı düğmeyi '⏳ İşleniyor' yaptı; hata olursa videonun durumuna uygun düğmeleri geri koy."""
+    v = _find(load(VIDEOS, []), tag)
+    if not v or not v.get("telegram_message_id"):
+        return
+    rows = {"onay_bekliyor": [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]],
+            "zamanlandi": [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]]}.get(v["status"], [])
+    try:
+        api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"],
+                                            "reply_markup": _kb(rows)})
+    except Exception as e:  # noqa: BLE001
+        print("Düğmeler geri konamadı:", e)
+
+
+_wh: list = []
+
+
+def _webhook_mode() -> bool:
+    """Bot Cloudflare kapısına bağlıysa (webhook) getUpdates kullanılamaz; olaylar işle.yml ile tek tek gelir."""
+    if not _wh:
+        try:
+            _wh.append(bool(api("getWebhookInfo").get("url")))
+        except Exception:  # noqa: BLE001
+            _wh.append(False)
+    return _wh[0]
+
+
+def process_update(u: dict, chat: str) -> None:
+    """Tek bir Telegram olayını (düğme veya mesaj) işler. Hem dinleme (getUpdates) hem webhook yolu bunu kullanır."""
+    if cq := u.get("callback_query"):
+        if str(cq["from"]["id"]) == chat:
+            try:
+                _handle_callback(cq, chat)
+            except Exception as e:  # noqa: BLE001
+                print("Düğme işlenemedi:", e)
+                if os.environ.get("TG_WEBHOOK") == "1":
+                    _restore_kb(cq["data"].partition(":")[2].partition(":")[0], chat)
+                    api("sendMessage", data={"chat_id": chat, "text": f"⚠️ Düğme işlenemedi: {str(e)[:200]}"})
+    elif (m := u.get("message")) and str(m["chat"]["id"]) == chat:
+        text = (m.get("text") or "").strip()
+        rep = (m.get("reply_to_message") or {}).get("message_id")
+        if rep and text and not text.startswith("/"):
+            from . import comments
+            key = comments.by_message(rep)
+            if key:  # taslak yerine Sabri'nin kendi yazdığı cevap
+                api("sendMessage", data={"chat_id": chat, "text": comments.handle("ok", key, chat, rep, custom=text),
+                                         "reply_to_message_id": m["message_id"]})
+                return
+        if text.startswith("/durum"):
+            vs = load(VIDEOS, [])
+            bekleyen = [v for v in vs if v["status"] == "onay_bekliyor"]
+            plan = [v for v in vs if v["status"] == "zamanlandi"]
+            lines = [f"Toplam video: {len(vs)}", f"Onay bekleyen: {len(bekleyen)}"]
+            lines += [f"• {v['title']}" for v in bekleyen[-10:]]
+            if plan:
+                lines += ["", f"Zamanlanan: {len(plan)}"]
+                lines += [f"• {_fmt(v['publish_at'])}: {v['title']}" for v in plan]
+            api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
+        elif text.startswith("/uret"):
+            topic = text[5:].strip()
+            ok = _dispatch(topic)
+            api("sendMessage", data={"chat_id": chat, "text": "Üretim başlatıldı, birkaç dakika içinde gelir." if ok
+                                     else "Üretim başlatılamadı."})
+        elif text.startswith("/oneri"):
+            ok = _dispatch("", "oneri.yml")
+            api("sendMessage", data={"chat_id": chat, "text": "🔎 Gündem taranıyor, öneriler 2-3 dakikada gelir."
+                                     if ok else "Öneri başlatılamadı."})
+        elif text.startswith("/rapor"):
+            try:
+                from . import stats
+                stats.report()
+            except Exception as e:  # noqa: BLE001
+                api("sendMessage", data={"chat_id": chat, "text": f"Rapor hazırlanamadı: {str(e)[:200]}"})
+        elif text.startswith("/saatler"):
+            lines = ["Platformların en iyi paylaşım saatleri (Türkiye):"]
+            lines += [f"• {PLATFORM_NAMES[p]}: {', '.join(t)}" for p, t in BEST_TIMES.items()]
+            lines += ["", "Onaylarken '🎯 Her platform en iyi saatinde' seçersen her biri kendi saatinde paylaşılır."]
+            api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
+        elif text.startswith("/start") or text.startswith("/yardim"):
+            api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
+                                     "/oneri: gündemden 5 konu önerisi (butonla üret)\n"
+                                     "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n"
+                                     "/durum: bekleyen ve zamanlanan videolar\n"
+                                     "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n"
+                                     "/saatler: platformların en iyi paylaşım saatleri\n"
+                                     "/yardim: bu liste"})
+
+
 def poll(wait: int = 0) -> int:
     """Yeni düğme basışlarını ve komutları işler. wait>0 ise o kadar saniye yeni olay bekler (long polling)."""
     global _menu_set
@@ -258,73 +366,42 @@ def poll(wait: int = 0) -> int:
         except Exception as e:  # noqa: BLE001
             print("Komut menüsü ayarlanamadı:", e)
         _menu_set = True
+    if _webhook_mode():
+        return 0
     off = load(OFFSET, {"offset": 0})
     updates = api("getUpdates", data={"offset": off["offset"], "timeout": wait}) or []
     for u in updates:
         off["offset"] = u["update_id"] + 1
         save(OFFSET, off)  # bir olay hata verse bile tekrar tekrar işlenmesin
-        if cq := u.get("callback_query"):
-            if str(cq["from"]["id"]) == chat:
-                try:
-                    _handle_callback(cq, chat)
-                except Exception as e:  # noqa: BLE001
-                    print("Düğme işlenemedi:", e)
-        elif (m := u.get("message")) and str(m["chat"]["id"]) == chat:
-            text = (m.get("text") or "").strip()
-            rep = (m.get("reply_to_message") or {}).get("message_id")
-            if rep and text and not text.startswith("/"):
-                from . import comments
-                key = comments.by_message(rep)
-                if key:  # taslak yerine Sabri'nin kendi yazdığı cevap
-                    api("sendMessage", data={"chat_id": chat, "text": comments.handle("ok", key, chat, rep, custom=text),
-                                             "reply_to_message_id": m["message_id"]})
-                    continue
-            if text.startswith("/durum"):
-                vs = load(VIDEOS, [])
-                bekleyen = [v for v in vs if v["status"] == "onay_bekliyor"]
-                plan = [v for v in vs if v["status"] == "zamanlandi"]
-                lines = [f"Toplam video: {len(vs)}", f"Onay bekleyen: {len(bekleyen)}"]
-                lines += [f"• {v['title']}" for v in bekleyen[-10:]]
-                if plan:
-                    lines += ["", f"Zamanlanan: {len(plan)}"]
-                    lines += [f"• {_fmt(v['publish_at'])}: {v['title']}" for v in plan]
-                api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
-            elif text.startswith("/uret"):
-                topic = text[5:].strip()
-                ok = _dispatch(topic)
-                api("sendMessage", data={"chat_id": chat, "text": "Üretim başlatıldı, birkaç dakika içinde gelir." if ok
-                                         else "Üretim başlatılamadı."})
-            elif text.startswith("/oneri"):
-                ok = _dispatch("", "oneri.yml")
-                api("sendMessage", data={"chat_id": chat, "text": "🔎 Gündem taranıyor, öneriler 2-3 dakikada gelir."
-                                         if ok else "Öneri başlatılamadı."})
-            elif text.startswith("/rapor"):
-                try:
-                    from . import stats
-                    stats.report()
-                except Exception as e:  # noqa: BLE001
-                    api("sendMessage", data={"chat_id": chat, "text": f"Rapor hazırlanamadı: {str(e)[:200]}"})
-            elif text.startswith("/saatler"):
-                lines = ["Platformların en iyi paylaşım saatleri (Türkiye):"]
-                lines += [f"• {PLATFORM_NAMES[p]}: {', '.join(t)}" for p, t in BEST_TIMES.items()]
-                lines += ["", "Onaylarken '🎯 Her platform en iyi saatinde' seçersen her biri kendi saatinde paylaşılır."]
-                api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
-            elif text.startswith("/start") or text.startswith("/yardim"):
-                api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
-                                         "/oneri: gündemden 5 konu önerisi (butonla üret)\n"
-                                         "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n"
-                                         "/durum: bekleyen ve zamanlanan videolar\n"
-                                         "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n"
-                                         "/saatler: platformların en iyi paylaşım saatleri\n"
-                                         "/yardim: bu liste"})
+        process_update(u, chat)
     save(OFFSET, off)
     return len(updates)
 
 
+def _next_due() -> dt.datetime | None:
+    """Zamanlanmış videolardaki en yakın paylaşım anı (platform bazlı saatler dahil)."""
+    times = []
+    for v in load(VIDEOS, []):
+        if v["status"] != "zamanlandi":
+            continue
+        done = {k for k, r in (v.get("platforms") or {}).items() if r.get("status") == "ok"}
+        sched = {k: t for k, t in (v.get("schedule") or {}).items() if k not in done}
+        times += [dt.datetime.fromisoformat(t) for t in (sched.values() if sched else [v["publish_at"]]) if t]
+    return min(times) if times else None
+
+
 def listen(minutes: float) -> None:
-    """Belirtilen süre boyunca düğmelere anında yanıt verir ve saati gelenleri hemen paylaşır."""
+    """Belirtilen süre boyunca düğmelere anında yanıt verir ve saati gelenleri hemen paylaşır.
+    Webhook modunda düğmeleri Cloudflare kapısı karşılar; burada yalnız pencere içindeki paylaşımlar beklenir."""
     import time
     end = time.time() + minutes * 60
+    if _webhook_mode():
+        while True:
+            publish_due()
+            nxt = _next_due()
+            if not nxt or nxt.timestamp() > end or time.time() > end:
+                return  # pencerede başka paylaşım yok: Actions dakikası harcama
+            time.sleep(max(5, nxt.timestamp() - time.time() + 5))
     while time.time() < end:
         try:
             poll(wait=int(max(1, min(50, end - time.time()))))
@@ -402,9 +479,15 @@ def _dispatch(topic: str, workflow: str = "uret.yml") -> bool:
 
 
 if __name__ == "__main__":
-    from .pipeline import load_env
-    load_env(ROOT / ".env")
-    if sys.argv[1] == "notify":
+    try:
+        from .pipeline import load_env
+        load_env(ROOT / ".env")
+    except ImportError:  # hafif ortam (işle.yml yalnız requests + pydantic kurar)
+        pass
+    if sys.argv[1] == "handle-update":  # Cloudflare kapısından gelen tek olay (UPDATE ortam değişkeninde)
+        process_update(json.loads(os.environ["UPDATE"]), str(os.environ["TELEGRAM_CHAT_ID"]))
+        publish_due()
+    elif sys.argv[1] == "notify":
         notify(Path(sys.argv[2]), sys.argv[3])
     elif sys.argv[1] == "poll":
         poll()

@@ -203,6 +203,8 @@ def handle(action: str, key: str, chat: str, mid: int, custom: str | None = None
     try:
         send_reply(item, text)
     except Exception as e:  # noqa: BLE001
+        api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": item["message_id"], "reply_markup": _kb(
+            [[("✅ Gönder", f"cm:ok:{key}"), ("❌ Geç", f"cm:no:{key}")]])})
         return f"Gönderilemedi: {str(e)[:200]}"
     st["pending"].pop(key)
     save(st)
