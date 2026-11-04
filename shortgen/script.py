@@ -36,8 +36,8 @@ STRUCTURES = {
     "neden": ("NEDEN BÖYLE?", "NEDEN SORUSU: gündelik ya da tanıdık bir şeyin şaşırtıcı nedenini sor ('X neden Y?') → "
               "çoğu kişinin tahmin ettiği yanlış cevabı söyle → gerçek nedeni adım adım aç → sonuç."),
     "sayac": ("3 ŞAŞIRTICI BİLGİ", "3 ŞAŞIRTICI BİLGİ: tek konu hakkında giderek şaşırtıcılaşan 3 bilgi; en şaşırtıcısı en "
-              "sonda. Geçişler 'Birincisi... İkincisi... Ama en tuhafı...' gibi doğal olsun; kanca üçüncü bilgiye merak "
-              "uyandırsın."),
+              "sonda. Kuru sayım ('Birincisi, ikincisi') YAPMA; bilgiler akıcı bir anlatıyla bağlansın ('Üstelik...', "
+              "'Ama asıl tuhaf olan...') ve izleyici üç ayrı bilgiyi rahatça seçebilsin. Kanca en tuhaf bilgiye merak uyandırsın."),
 }
 
 
@@ -269,9 +269,11 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
     script = ask_claude(ask, ShortScript, SYSTEM)
     part, brief = (2, "") if series_prev else (script.series_part if allow_series else 0, script.next_part_brief)
-    structure = series_prev.get("structure", script.structure) if series_prev else script.structure
     phrase = script.search_phrase
-    out = polish_script(verify_script(script))
+    checked = verify_script(script)
+    # doğrulayıcı kalıbı gerekçeyle değiştirebilir: etiket son metne uysun diye doğrulanmış hâlin kalıbı kullanılır
+    structure = series_prev.get("structure", checked.structure) if series_prev else checked.structure
+    out = polish_script(checked)
     out.series_part, out.next_part_brief = part, (brief if part == 1 else "")
     out.structure, out.search_phrase = structure, out.search_phrase or phrase
     return out
@@ -289,7 +291,8 @@ def verify_script(script: ShortScript) -> ShortScript:
         "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
         "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
         "(özellikle toplam dış ses 78 kelimeyi geçmesin, ilk cümle en fazla 10 kelimelik doğrudan bir kanca olsun, search_phrase "
-        "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). "
+        "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). Seçilen anlatım kalıbını (structure) koru; yalnız konu o "
+        "kalıba gerçekten uymuyorsa değiştir ve structure alanını da buna göre güncelle. "
         "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
         "alanında döndür.\n\n" + script.model_dump_json(indent=1),
         Review, SYSTEM + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
