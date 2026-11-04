@@ -95,5 +95,16 @@
     "status": "onay_bekliyor",
     "telegram_message_id": 44,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261104-2033",
+    "title": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı",
+    "topic": "30 Ekim 1996: Fenerbahçe'nin Old Trafford'da Elvir Bolić'in sekerek giren golüyle Manchester United'ı 1-0 yenip kulübün Avrupa'da evinde 40 yıllık yenilmezliğini bitirmesi",
+    "category": "spor",
+    "template": "retro",
+    "created": "2026-11-04T20:33:53",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 46,
+    "platforms": {}
   }
 ]
