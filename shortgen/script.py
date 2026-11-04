@@ -27,7 +27,9 @@ CATEGORIES = [
 
 
 class Scene(BaseModel):
-    narration: str = Field(description="Dış seste okunacak Türkçe cümle(ler). 4-14 kelime.")
+    narration: str = Field(description=(
+        "Bu sahnede okunacak metin parçası: bir cümle ya da uzun bir cümlenin bir bölümü. Tüm sahnelerin narration'ları "
+        "art arda okunduğunda kusursuz, akıcı tek bir belgesel metni oluşturmalı."))
     kicker: str = Field(description="Üstte küçük daktilo etiketi, BÜYÜK HARF, 1-5 kelime. Boş olabilir.")
     headline: List[str] = Field(description="Ekranda büyük yazılacak 1-3 satır, BÜYÜK HARF, satır başı 1-3 kelime.")
     highlight_line: int = Field(description="Sarı kutuda gösterilecek headline satır indeksi, yoksa -1.")
@@ -62,12 +64,21 @@ class ShortScript(BaseModel):
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
 Biçim: 60-70 saniye. Seslendirme yavaş ve tane tane olduğu için toplam dış ses 120-135 kelimeyi GEÇMESİN.
 16-22 sahne, her sahne 2-4 saniye.
-Yapı: 1) İlk 2 sahnede güçlü merak kancası (bir fotoğrafa/duruma işaret eden, "Peki neden...?" sorusu),
+Yapı: 1) İlk 1-2 sahnede güçlü bir merak kancası (şaşırtıcı bir durum veya soru),
 2) bağlam (yıl, yer, kişi), 3) gerilim veya şaşırtıcı dönüm noktası, 4) vurucu cümle/alıntı,
 5) bugüne bağlama, 6) son sahnede izleyiciye açık uçlu soru ve "Yorumlarda buluşalım." çağrısı.
-Ton: sakin, hikâye anlatıcısı, kısa cümleler, abartısız. Sadece doğrulanabilir bilgiler kullan;
-emin olmadığın tarih, sayı veya alıntıyı kullanma. Tartışmalı siyasi, dinî, sağlıkla ilgili iddialardan,
-yaşayan özel kişileri hedef alan içerikten kaçın.
+DİL VE ANLATIM (en önemli kural): Metin bir TÜRK BELGESEL ANLATICISININ ağzından, doğal ve kusursuz Türkçeyle yazılsın.
+- Önce dış sesi baştan sona TEK BİR AKICI METİN olarak düşün, sonra sahnelere böl. Bir cümle iki üç sahneye yayılabilir;
+  sahneleri art arda okuyunca metin hiç kesilmeden akmalı.
+- Tam ve bağlantılı cümleler kur: "ise, oysa, üstelik, ne var ki, tam da bu sırada, bu yüzden" gibi bağlaçlarla olayları birbirine bağla.
+  Telgraf üslubu yok: "İçinde 8,7 milyon litre melas." veya "Saatte 56 kilometre hızla." gibi yüklemsiz parçalar KULLANMA.
+- Çeviri kokan kalıplardan kaçın ("Yerliler ... anlatır", "Peki ... neden ...?" tekrarı, "Ama gerçek başkaydı" gibi klişeler,
+  İngilizce söz dizimi). Türkçede doğal duran fiil ve deyimleri seç; zamanlar tutarlı olsun (anlatı için -di'li/-miş'li geçmiş).
+- Ton: sakin, ağırbaşlı, merak uyandıran; abartısız ama canlı. Sayıları okunduğu gibi yaz (sekiz virgül yedi milyon değil, "8,7 milyon").
+- İyi örnek: "15 Ocak 1919'da Boston'ın North End mahallesi sıradan bir kış gününe uyanmıştı. Limanın hemen yanında, içinde 8,7 milyon
+  litre melas bulunan dev bir tank yükseliyordu. Tank ilk günden beri sızdırıyordu; şirket ise sorunu gidermek yerine tankı kahverengiye boyatmayı seçti."
+Sadece doğrulanabilir bilgiler kullan; emin olmadığın tarih, sayı veya alıntıyı kullanma. Tartışmalı siyasi, dinî, sağlıkla ilgili
+iddialardan, yaşayan özel kişileri hedef alan içerikten kaçın.
 Görsel kuralı: HİÇBİR sahne boş kalmasın. Her sahnede ya gerçek fotoğraf ya çizim olsun; yalnızca büyük bir sayı/istatistik
 gösteren sahneler (en fazla 3 tane) saf tipografik olabilir.
 - Fotoğraf: Sahnelerin yaklaşık yarısında (image_mode full veya framed). image_queries'e 2-3 sorgu yaz, en özelden en genele
@@ -156,7 +167,7 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     if used:
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
     script = ask_claude(ask, ShortScript, SYSTEM)
-    return verify_script(script)
+    return polish_script(verify_script(script))
 
 
 class Review(BaseModel):
@@ -177,6 +188,38 @@ def verify_script(script: ShortScript) -> ShortScript:
     if review.problems:
         print("Doğrulama notları:", *review.problems, sep="\n - ")
     return review.fixed
+
+
+EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün. Görevin, sana verilen kısa video senaryosunun dış sesini
+(narration alanları) Türkçe dil ve akış açısından kusursuz hâle getirmek.
+- Sahnelerin narration'larını art arda okuyunca TEK, akıcı bir belgesel metni çıkmalı. Kopuk, yüklemsiz, telgraf üslubu
+  parçaları tam cümlelere çevir; cümleleri bağlaçlarla birbirine bağla; çeviri kokan ifadeleri doğal Türkçeyle değiştir.
+- Yazım, noktalama, ek ve zaman uyumunu düzelt. Anlatı zamanı tutarlı olsun.
+- YENİ BİLGİ EKLEME, hiçbir olguyu (tarih, sayı, isim) değiştirme ya da çıkarma. Sahne sayısını ve sırasını koru.
+- Toplam dış ses 120-135 kelime arasında kalsın.
+- headline satırları, değişen narration'da geçen kelimelerden oluşsun (BÜYÜK HARF, satır başı 1-3 kelime).
+- Görsel alanlarına (theme, image_mode, image_queries, illustration, motion, trail, icon) DOKUNMA.
+Düzeltilmiş tam senaryoyu döndür."""
+
+
+class Polished(BaseModel):
+    notes: List[str] = Field(description="Yapılan önemli dil düzeltmeleri, kısa")
+    fixed: ShortScript
+
+
+def polish_script(script: ShortScript) -> ShortScript:
+    """Üçüncü geçiş: belgesel dili ve akış için Türkçe editör (web araması yok)."""
+    res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + script.model_dump_json(indent=1), Polished, EDITOR)
+    if res.notes:
+        print("Dil düzeltmeleri:", *res.notes[:12], sep="\n - ")
+    fixed = res.fixed
+    if len(fixed.scenes) != len(script.scenes):  # güvenlik: sahne yapısı bozulduysa yalnız metinleri al
+        return script
+    for a, b in zip(script.scenes, fixed.scenes):  # görsel alanları kesin olarak koru
+        for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon", "anim_query"):
+            setattr(b, f, getattr(a, f))
+    fixed.sources, fixed.category = script.sources, script.category
+    return fixed
 
 
 def load_script(path: Path) -> ShortScript:
