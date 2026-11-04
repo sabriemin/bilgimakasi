@@ -277,8 +277,12 @@ if __name__ == "__main__":
         elif name == "instagram":
             user, token = _env("IG_USER_ID", "IG_ACCESS_TOKEN")
             r = requests.get(f"{IG_GRAPH}/{IG_VER}/me", params={"fields": "user_id,username", "access_token": token}, timeout=30)
-            r.raise_for_status()
-            print("Instagram bağlantısı çalışıyor:", r.json().get("username"))
+            if not r.ok:
+                sys.exit(f"HATA: Instagram {r.status_code}: {r.text[:400]}")
+            me = r.json()
+            print("Instagram bağlantısı çalışıyor:", me.get("username"))
+            if str(me.get("user_id")) != user.strip() and str(me.get("id")) != user.strip():
+                print(f"UYARI: IG_USER_ID eşleşmiyor. Doğru değer: {me.get('user_id')}")
         elif name == "tiktok":
             h = {"Authorization": f"Bearer {_tt_token()}"}
             r = requests.post(f"{TT}/post/publish/creator_info/query/", headers=h, timeout=30)
