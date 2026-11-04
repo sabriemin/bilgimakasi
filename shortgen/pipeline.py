@@ -134,6 +134,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         "title": script.title, "description": desc, "hashtags": script.hashtags,
         "topic": script.topic, "category": script.category, "template": template,
         "credits": [images.credit_dict(c) for c in credits], "ai_voice": use_voice,
+        "series_part": script.series_part,
         "status": "onay_bekliyor", "created": dt.datetime.now().isoformat(timespec="seconds"),
     }
     (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -154,12 +155,20 @@ def main() -> None:
     history = ROOT / "history.jsonl"
     m = json.loads((ROOT / "templates" / "eslesme.json").read_text(encoding="utf-8"))
     pending = ROOT / "state" / "bekleyen_senaryo.json"
+    seri_file = ROOT / "state" / "seri.json"
+    seri = json.loads(seri_file.read_text(encoding="utf-8")) if seri_file.exists() else {}
+    open_part = seri.get("bekleyen")
+    # 2. bölüm, 1. bölümden en az 12 saat sonra gelen ilk konusuz üretimde çekilir
+    part2_due = bool(open_part) and dt.datetime.now() >= dt.datetime.fromisoformat(open_part["created"]) + dt.timedelta(hours=12)
     if a.script:
         script = load_script(a.script)
     elif pending.exists() and not a.topic:
         # önceki çalışma ses/kurgu aşamasında düştüyse senaryoyu yeniden üretme (Claude bütçesi harcanmasın)
         print("Önceki çalışmadan kalan senaryo kullanılıyor.")
         script = load_script(pending)
+    elif part2_due and not a.topic:
+        print("Serinin 2. bölümü üretiliyor:", open_part["title"])
+        script = generate_script(history, None, None, series_prev=open_part)
     else:
         topic = a.topic
         if not topic and os.environ.get("AUTO_TREND", "1") != "0":
@@ -170,7 +179,11 @@ def main() -> None:
                 print("Gündemden seçilen konu:", topic)
             except Exception as e:  # noqa: BLE001
                 print("Gündem önerisi alınamadı, serbest konu seçilecek:", e)
-        script = generate_script(history, topic, template_catalog() if m.get("claude_secsin") else None)
+        allow = os.environ.get("SERIES", "1") != "0" and not open_part
+        script = generate_script(history, topic, template_catalog() if m.get("claude_secsin") else None,
+                                 allow_series=allow)
+    if script.series_part == 2 and open_part and open_part.get("template") and not a.template:
+        a.template = open_part["template"]
     template = pick_template(script, a.template)
     print(f"Şablon: {template}")
     music = a.music or (Path(os.environ["MUSIC_FILE"]) if os.environ.get("MUSIC_FILE") else None)
@@ -180,6 +193,17 @@ def main() -> None:
         f.write(json.dumps({"date": str(dt.date.today()), "topic": script.topic, "dir": str(out_dir)},
                            ensure_ascii=False) + "\n")
     pending.unlink(missing_ok=True)
+    if script.series_part == 1 and script.next_part_brief:
+        seri["bekleyen"] = {"title": script.title, "topic": script.topic, "brief": script.next_part_brief,
+                            "narration": " ".join(sc.narration for sc in script.scenes),
+                            "category": script.category, "template": template,
+                            "created": dt.datetime.now().isoformat(timespec="seconds")}
+    elif script.series_part == 2:
+        seri.pop("bekleyen", None)
+        seri.setdefault("biten", []).append(script.title)
+    if script.series_part:
+        seri_file.parent.mkdir(exist_ok=True)
+        seri_file.write_text(json.dumps(seri, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Hazır: {video}")
 
 

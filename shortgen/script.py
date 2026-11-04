@@ -66,6 +66,10 @@ class ShortScript(BaseModel):
         "Instagram en fazla 5 etiket kabul ettiği için 5'i geçme."))
     scenes: List[Scene]
     sources: List[str] = Field(description="İddiaları destekleyen güvenilir kaynak başlıkları veya URL'leri.")
+    series_part: int = Field(default=0, description="0 = tek video, 1 = iki bölümlük serinin 1. bölümü, 2 = 2. bölümü.")
+    next_part_brief: str = Field(default="", description=(
+        "Yalnız series_part=1 ise: 2. bölümde anlatılacak, doğrulanmış ve 1. bölümde HİÇ söylenmemiş bilgiler "
+        "(olaylar, sayılar, isimler, final/çözüm) ve 2. bölümün kancası. Diğer durumlarda boş."))
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
@@ -166,21 +170,48 @@ def ask_claude(prompt: str, schema: type[BaseModel], system: str, web: bool = Fa
     raise RuntimeError(f"Claude yanıtı alınamadı: {last_err}")
 
 
+SERIES_START = """
+SERİ KURALI: Konu tek videoya sığmayacak kadar zengin ve merak uyandıran bir devamı varsa (gizem, dönüm noktası, beklenmedik final)
+bunu İKİ BÖLÜMLÜK seri yap: series_part=1, başlığın sonuna " (1. Bölüm)" ekle, hikâyeyi en heyecanlı yerde kes ve son sahnede
+çözümü SÖYLEME; son cümle merak bırakan bir soru ya da yarım kalan bir an olsun, ardından "Devamı ikinci bölümde." de
+(bu bölümde yorum çağrısı yerine bu cümleyi kullan). next_part_brief alanına 2. bölümün içeriğini yaz.
+Konu tek videoda doyurucu biçimde bitiyorsa series_part=0 bırak; seriyi zorlama."""
+
+
+def series_ask(prev: dict) -> str:
+    return (f"Bu video iki bölümlük serinin 2. BÖLÜMÜ. 1. bölümün başlığı: {prev['title']}\n"
+            f"1. bölümün konusu: {prev['topic']}\n1. bölümün dış sesi: {prev.get('narration', '')}\n"
+            f"2. bölümde anlatılacaklar: {prev['brief']}\n"
+            "Kurallar: series_part=2, başlığın sonuna \" (2. Bölüm)\" ekle. İlk cümle 1. bölümün kaldığı yeri tek bir vurucu "
+            "cümleyle hatırlatsın (ör. 'Tank patladığında asıl felaket daha yeni başlıyordu.'), 1. bölümü yeniden anlatma; "
+            "videonun çoğu yeni bilgi ve final olsun. Sonda normal yorum çağrısı yap. Kategori ve şablon 1. bölümle aynı kalsın: "
+            f"category={prev.get('category', '')}, template={prev.get('template', '')}.")
+
+
 def generate_script(history_file: Path, topic_hint: str | None = None,
-                    templates: dict[str, str] | None = None) -> ShortScript:
+                    templates: dict[str, str] | None = None, series_prev: dict | None = None,
+                    allow_series: bool = False) -> ShortScript:
     used = _history(history_file)[-200:]
-    ask = (
-        f"Bugün için yeni bir short senaryosu yaz. Konu önerisi: {topic_hint}." if topic_hint else
-        "Bugün için yeni bir short senaryosu yaz. Şu kategorilerden birini seç ve az bilinen, şaşırtıcı, "
-        f"doğrulanabilir bir hikâye bul: {', '.join(CATEGORIES)}."
-    )
+    if series_prev:
+        ask = series_ask(series_prev)
+    else:
+        ask = (
+            f"Bugün için yeni bir short senaryosu yaz. Konu önerisi: {topic_hint}." if topic_hint else
+            "Bugün için yeni bir short senaryosu yaz. Şu kategorilerden birini seç ve az bilinen, şaşırtıcı, "
+            f"doğrulanabilir bir hikâye bul: {', '.join(CATEGORIES)}."
+        )
+        if allow_series:
+            ask += SERIES_START
     if templates:
         ask += "\nGörsel şablonlardan konuya en uygun olanını 'template' alanına yaz:\n" + "\n".join(
             f"- {k}: {v}" for k, v in templates.items())
-    if used:
+    if used and not series_prev:
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
     script = ask_claude(ask, ShortScript, SYSTEM)
-    return polish_script(verify_script(script))
+    part, brief = (2, "") if series_prev else (script.series_part if allow_series else 0, script.next_part_brief)
+    out = polish_script(verify_script(script))
+    out.series_part, out.next_part_brief = part, (brief if part == 1 else "")
+    return out
 
 
 class Review(BaseModel):

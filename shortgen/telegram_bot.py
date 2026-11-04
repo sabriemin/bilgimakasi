@@ -193,6 +193,13 @@ def _handle_callback(cq: dict, chat: str) -> None:
         _update(tag, status="reddedildi", decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb([])})
         note = "❌ Reddedildi."
+        seri_file = STATE / "seri.json"
+        if "(1. Bölüm)" in v.get("title", "") and seri_file.exists():  # 1. bölüm reddedilirse 2. bölüm üretilmesin
+            seri = json.loads(seri_file.read_text(encoding="utf-8"))
+            if seri.get("bekleyen", {}).get("title") == v["title"]:
+                seri.pop("bekleyen")
+                seri_file.write_text(json.dumps(seri, ensure_ascii=False, indent=2), encoding="utf-8")
+                note += " Serinin 2. bölümü de iptal edildi."
         api("sendMessage", data={"chat_id": chat, "text": f"{note}\n{v['title']}", "reply_to_message_id": mid})
     elif action == "rt":  # hatalı platformları yeniden dene
         _update(tag, status="zamanlandi", schedule=None,
