@@ -23,8 +23,9 @@ ROOT = Path(__file__).resolve().parent.parent
 STATE = ROOT / "state" / "oneriler.json"
 
 SYSTEM = """Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için gündem editörüsün. Görevin, BUGÜN Türkiye'de ve
-dünyada çok konuşulan, aranan konuları bulmak ve her birini 40-50 saniyelik bir "bunu biliyor muydun?" short'una
-dönüştürecek şaşırtıcı, doğrulanabilir bir açı önermek.
+dünyada çok konuşulan, aranan konuları bulmak ve her birini 30-35 saniyelik bir short'a dönüştürecek şaşırtıcı,
+doğrulanabilir bir açı önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa
+gönderilmesi, bu yüzden "bunu görünce birine atarım" dedirten açıları seç.
 Kurallar:
 - Web araması yap: Google Trends Türkiye günlük aramaları, Türkiye ve dünya haber manşetleri, X/Twitter Türkiye
   gündemi, YouTube'da yükselen konular, yaklaşan önemli günler/yıl dönümleri, vizyondaki film/dizi/oyunlar, spor olayları.
@@ -33,7 +34,11 @@ Kurallar:
 - Siyasi kutuplaştırıcı, trajik (ölüm, afet, suç mağdurları), sağlık iddiası ve magazin dedikodusu konularını ÖNERME.
 - Doğrulanabilir olmalı; güvenilir kaynakta geçmeli.
 - Daha önce işlenen konuları tekrar etme.
-- Çeşitlilik: en az 2 öneri Türkiye gündeminden, en az 2'si küresel gündemden olsun."""
+- Çeşitlilik: en az 3 öneri Türkiye bağlantılı olsun (Türk kişi, takım, şehir, marka, kelime kökeni, Türkiye'deki yansıması);
+  küresel gündemde de Türkiye bağlantısı varsa onu öne çıkar.
+- Paylaşılan türler: efsane-gerçek (yaygın yanlışı çürütmek), futbol ve spor, gündelik bir şeyin şaşırtıcı nedeni,
+  şehirlerin ve kelimelerin bilinmeyen hikâyeleri.
+- Son işlenen konulara bakıp aynı alanı (ör. art arda futbol) üst üste önerme."""
 
 
 class Suggestion(BaseModel):
@@ -42,7 +47,8 @@ class Suggestion(BaseModel):
     trend: str = Field(description="Bağlı olduğu gündem ve neden şu an popüler, en fazla 15 kelime")
     scope: Literal["TR", "Global"]
     category: str = Field(description=f"Şunlardan biri: {', '.join(CATEGORIES)}")
-    score: int = Field(description="Tahmini izlenme potansiyeli 1-10 (gündem sıcaklığı x merak x görsel zenginlik)")
+    score: int = Field(description="Tahmini izlenme potansiyeli 1-10 (gündem sıcaklığı x merak x arkadaşa gönderilme "
+                                   "ihtimali x Türkiye bağlantısı x görsel zenginlik)")
 
 
 class Suggestions(BaseModel):

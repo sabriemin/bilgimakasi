@@ -35,7 +35,32 @@ def _words_from_alignment(al: dict) -> list[Word]:
 
 
 def synthesize(text: str, out_mp3: Path) -> list[Word]:
-    """Metni seslendirir, mp3 yazar ve kelime zamanlarını döndürür."""
+    """Metni seslendirir, mp3 yazar ve kelime zamanlarını döndürür (tempo ve baştaki sessizlik ayarı uygulanmış)."""
+    return _tighten(_synthesize(text, out_mp3), out_mp3)
+
+
+def _tighten(words: list[Word], mp3: Path) -> list[Word]:
+    """Kısa videoda her saniye önemli: baştaki sessizliği kırpar ve sesi perdesini bozmadan hızlandırır.
+    VOICE_TEMPO=1 ile kapatılır (varsayılan 1.08)."""
+    import subprocess
+    tempo = float(os.environ.get("VOICE_TEMPO", "1.08"))
+    cut = max(0.0, (words[0].start if words else 0.0) - 0.05)
+    if abs(tempo - 1.0) < 0.01 and cut < 0.1:
+        return words
+    tmp = mp3.with_name(mp3.stem + "_ham.mp3")
+    mp3.replace(tmp)
+    r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{cut:.3f}", "-i", str(tmp),
+                        "-filter:a", f"atempo={tempo}", "-b:a", "128k", str(mp3)], capture_output=True, text=True)
+    if r.returncode != 0:  # ayar başarısızsa ham sesi kullan
+        print("Ses hızlandırılamadı:", r.stderr[:300])
+        tmp.replace(mp3)
+        return words
+    tmp.unlink(missing_ok=True)
+    print(f"Ses: baştan {cut:.2f} sn kırpıldı, tempo x{tempo}")
+    return [Word(w.text, max(0.0, (w.start - cut) / tempo), max(0.0, (w.end - cut) / tempo)) for w in words]
+
+
+def _synthesize(text: str, out_mp3: Path) -> list[Word]:
     key = os.environ["ELEVENLABS_API_KEY"]
     voice = os.environ.get("ELEVENLABS_VOICE_ID", "")
     if not voice:

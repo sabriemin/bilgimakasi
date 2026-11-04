@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from . import illustrate, images, render, voice
-from .script import ShortScript, generate_script, load_script
+from .script import STRUCTURES, ShortScript, generate_script, load_script
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -47,6 +47,20 @@ def pick_template(script: ShortScript, override: str | None = None) -> str:
         return script.template
     t = m.get("kategoriler", {}).get(script.category.strip().lower(), m.get("varsayilan", "kolaj"))
     return t if t in cat else "kolaj"
+
+
+def series_label(script: ShortScript, history: Path) -> str:
+    """İlk sahnenin üstündeki format etiketi: 'EFSANE Mİ, GERÇEK Mİ? #4'. Tanıdık format izleyiciye takip sebebi verir."""
+    if script.series_part == 2:
+        return "2. BÖLÜM"
+    n = 1
+    if history.exists():
+        for line in history.read_text(encoding="utf-8").splitlines():
+            try:
+                n += json.loads(line).get("structure") == script.structure
+            except Exception:  # noqa: BLE001
+                pass
+    return f"{STRUCTURES.get(script.structure, STRUCTURES['hikaye'])[0]} #{n}"
 
 
 def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | None,
@@ -134,7 +148,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         "title": script.title, "description": desc, "hashtags": script.hashtags,
         "topic": script.topic, "category": script.category, "template": template,
         "credits": [images.credit_dict(c) for c in credits], "ai_voice": use_voice,
-        "series_part": script.series_part,
+        "series_part": script.series_part, "structure": script.structure, "search_phrase": script.search_phrase,
         "status": "onay_bekliyor", "created": dt.datetime.now().isoformat(timespec="seconds"),
     }
     (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -182,6 +196,9 @@ def main() -> None:
         allow = os.environ.get("SERIES", "1") != "0" and not open_part
         script = generate_script(history, topic, template_catalog() if m.get("claude_secsin") else None,
                                  allow_series=allow)
+    if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":
+        script.scenes[0].kicker = series_label(script, history)
+        print("Format etiketi:", script.scenes[0].kicker)
     if script.series_part == 2 and open_part and open_part.get("template") and not a.template:
         a.template = open_part["template"]
     template = pick_template(script, a.template)
@@ -190,13 +207,14 @@ def main() -> None:
     out_dir = a.out / f"{dt.datetime.now():%Y-%m-%d_%H%M}_{slugify(script.topic)}"
     video = build(script, out_dir, use_voice=not a.no_voice, music=music, template=template)
     with history.open("a", encoding="utf-8") as f:
-        f.write(json.dumps({"date": str(dt.date.today()), "topic": script.topic, "dir": str(out_dir)},
+        f.write(json.dumps({"date": str(dt.date.today()), "topic": script.topic, "dir": str(out_dir),
+                            "structure": script.structure, "search_phrase": script.search_phrase},
                            ensure_ascii=False) + "\n")
     pending.unlink(missing_ok=True)
     if script.series_part == 1 and script.next_part_brief:
         seri["bekleyen"] = {"title": script.title, "topic": script.topic, "brief": script.next_part_brief,
                             "narration": " ".join(sc.narration for sc in script.scenes),
-                            "category": script.category, "template": template,
+                            "category": script.category, "template": template, "structure": script.structure,
                             "created": dt.datetime.now().isoformat(timespec="seconds")}
     elif script.series_part == 2:
         seri.pop("bekleyen", None)

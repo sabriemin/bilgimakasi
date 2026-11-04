@@ -78,8 +78,7 @@ def _yt_token() -> str:
 def youtube(video: Path, meta: dict) -> dict:
     token = _yt_token()
     title = meta["title"].replace("<", "").replace(">", "")
-    if "#shorts" not in title.lower() and len(title) <= 92:
-        title += " #Shorts"
+    # #Shorts artık gerekmiyor (dikey ve kısa video otomatik Short sayılır); başlıkta arama kelimesine yer kalsın
     desc = _clean_desc(meta["description"]).replace("<", "").replace(">", "")[:4900]
     body = {
         "snippet": {"title": title[:100], "description": desc, "categoryId": "27",  # Eğitim
@@ -245,7 +244,10 @@ def tiktok(video: Path, meta: dict) -> dict:
     opts = info.get("data", {}).get("privacy_level_options", [])
     want = os.environ.get("TIKTOK_PRIVACY", "PUBLIC_TO_EVERYONE")
     privacy = want if want in opts else ("SELF_ONLY" if "SELF_ONLY" in opts else (opts or ["SELF_ONLY"])[0])
-    title = (meta["title"] + " " + " ".join(_hashtags(meta, 5)))[:2200]
+    # TikTok aramayı açıklama metninden de okur: başlık + bilgi cümleleri (arama ifadesi burada) + görsel kaynağı + etiketler
+    body = re.sub(r"\n{3,}", "\n\n", re.sub(r"#\w+", "", _clean_desc(meta.get("description", "")))).strip()
+    tags = " ".join(_hashtags(meta, 5))
+    title = "\n\n".join(x for x in (meta["title"], body, tags) if x)[:2200]
     size = video.stat().st_size
     if size <= 64 * 1024 * 1024:
         chunk, count = size, 1

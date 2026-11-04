@@ -26,6 +26,21 @@ CATEGORIES = [
 ]
 
 
+# Anlatım kalıpları: aynı şablonun tekrarı "seri üretim" gibi görünmesin diye dönüşümlü kullanılır.
+# label: ilk sahnenin üstündeki seri etiketi (ör. "EFSANE Mİ, GERÇEK Mİ? #4"), izleyiciye tanıdık bir format verir.
+STRUCTURES = {
+    "hikaye": ("BİLİNMEYEN HİKÂYE", "MİNİ HİKÂYE: kanca → çok kısa bağlam (yıl, yer, kişi) → gerilim ya da dönüm noktası → "
+               "vurucu sonuç."),
+    "efsane": ("EFSANE Mİ, GERÇEK Mİ?", "EFSANE Mİ GERÇEK Mİ: herkesin doğru sandığı yaygın bir inanışla aç → kısa bir "
+               "'aslında' dönüşüyle çürüt (ya da şaşırtıcı biçimde doğrula) → kanıtı ve hikâyesi → doğrusu tek cümlede."),
+    "neden": ("NEDEN BÖYLE?", "NEDEN SORUSU: gündelik ya da tanıdık bir şeyin şaşırtıcı nedenini sor ('X neden Y?') → "
+              "çoğu kişinin tahmin ettiği yanlış cevabı söyle → gerçek nedeni adım adım aç → sonuç."),
+    "sayac": ("3 ŞAŞIRTICI BİLGİ", "3 ŞAŞIRTICI BİLGİ: tek konu hakkında giderek şaşırtıcılaşan 3 bilgi; en şaşırtıcısı en "
+              "sonda. Geçişler 'Birincisi... İkincisi... Ama en tuhafı...' gibi doğal olsun; kanca üçüncü bilgiye merak "
+              "uyandırsın."),
+}
+
+
 class Scene(BaseModel):
     narration: str = Field(description=(
         "Bu sahnede okunacak metin parçası: bir cümle ya da uzun bir cümlenin bir bölümü. Tüm sahnelerin narration'ları "
@@ -60,12 +75,16 @@ class ShortScript(BaseModel):
         "konunun aranan anahtar kelimelerini doğal biçimde içerir; ikinci cümle izleyiciye yorum yaptıran bir soru. "
         "Kaynak, link, emoji yığını veya etiket YAZMA."))
     hashtags: List[str] = Field(description=(
-        "Tam 5 etiket, # olmadan, Türkçe karakterli olabilir, boşluksuz. Sıra önemli: önce konuya özel ve "
-        "aranma hacmi yüksek 3 etiket (ör. kişi/olay/yer adı, 'olimpiyat', 'tarih'), sonra Türkiye'de keşfet "
-        "algoritmasında en çok kullanılan geniş 2 etiket (ör. 'bilgi', 'ilginçbilgiler', 'keşfet', 'bunlarıbiliyormuydun'). "
-        "Instagram en fazla 5 etiket kabul ettiği için 5'i geçme."))
+        "Tam 5 etiket, # olmadan, Türkçe karakterli olabilir, boşluksuz. Sıra: 1) search_phrase'in boşluksuz hâli, "
+        "2-4) konuya özel ve aranan 3 etiket (kişi/olay/yer/takım adı, alan: 'tarih', 'futbol', 'uzay'), 5) 'bilgimakasi'. "
+        "'keşfet', 'fyp', 'viral' gibi genel etiketler ve konuyla ilgisi olmayan trend etiketleri KULLANMA: video yanlış "
+        "kitleye test edilir. Instagram en fazla 5 etiket kabul ettiği için 5'i geçme."))
     scenes: List[Scene]
     sources: List[str] = Field(description="İddiaları destekleyen güvenilir kaynak başlıkları veya URL'leri.")
+    search_phrase: str = Field(default="", description=(
+        "Bu konuyu merak eden birinin TikTok/YouTube/Instagram aramasına yazacağı 2-5 kelimelik Türkçe ifade "
+        "(ör. 'Titanik neden battı', 'Galatasaray UEFA Kupası', 'GTA nasıl doğdu')."))
+    structure: Literal[tuple(STRUCTURES)] = Field(default="hikaye", description="Seçilen anlatım kalıbı.")  # type: ignore[valid-type]
     series_part: int = Field(default=0, description="0 = tek video, 1 = iki bölümlük serinin 1. bölümü, 2 = 2. bölümü.")
     next_part_brief: str = Field(default="", description=(
         "Yalnız series_part=1 ise: 2. bölümde anlatılacak, doğrulanmış ve 1. bölümde HİÇ söylenmemiş bilgiler "
@@ -73,17 +92,28 @@ class ShortScript(BaseModel):
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
-Biçim: 40-50 saniye. Seslendirme yavaş ve tane tane olduğu için toplam dış ses 85-105 kelime olsun, 105'i GEÇMESİN.
-12-16 sahne, her sahne 2-4 saniye. Platformlar videoyu izlenme oranına göre dağıttığı için her saniye hak edilmeli; dolgu cümle yok.
-Yapı:
+Biçim: 30-35 saniye. Seslendirme yavaş ve tane tane olduğu için toplam dış ses 65-75 kelime olsun, 78'i GEÇMESİN.
+9-12 sahne, her sahne 2-4 saniye. Kısa videolar sonuna kadar izlenip tekrar izlendiği için daha çok dağıtılır; her saniye hak
+edilmeli, dolgu cümle ve gereksiz bağlam yok. Hikâye bu süreye sığmıyorsa en ilginç tek açıyı anlat.
+Yapı (seçilen anlatım kalıbının gövdesiyle birlikte):
 1) KANCA (ilk sahne, ilk 2 saniye, en önemli kısım): En şaşırtıcı sonucu ya da çelişkiyi doğrudan söyle; giriş, selam,
    "biliyor muydunuz" veya bağlam cümlesi YOK. İlk cümle en fazla 10 kelime olsun. İlk sahnenin headline'ı tek başına
    okunduğunda merak uyandıran 2-3 satırlık güçlü bir iddia olsun (videonun kapağı ve önizlemesi bu karedir).
    Örnek: "Bir mahalleyi tsunami değil, melas yuttu." / "Olimpiyat maratonunu kazanan adam yolun yarısını arabayla gitti."
-2) Bağlam (yıl, yer, kişi) en fazla 2-3 sahnede, 3) gerilim veya şaşırtıcı dönüm noktası, 4) vurucu cümle/alıntı,
-5) bugüne bağlama (kısa), 6) KAPANIŞ VE DÖNGÜ: Son sahnede izleyiciye kısa, açık uçlu bir soru sor ve "Yorumlara yaz." gibi
+2) GÖVDE: seçilen anlatım kalıbına uy (bağlam en fazla 1-2 sahne). Videonun yaklaşık yarısında izleyiciyi tutan ikinci bir
+   merak anı olsun: somut yeni bir bilgi ya da beklenmedik dönüş (kalıp cümle değil).
+3) MAKAS'IN YORUMU: sonda kanalın kendi sesiyle tek kısa cümlelik bir çıkarım ya da bugüne bağlantı
+   (ör. "Yani bazen bir yazılım hatası, bir efsanenin ta kendisidir."); vaaz ve klişe yok.
+4) KAPANIŞ VE DÖNGÜ: Son sahnede izleyiciye kısa, açık uçlu bir soru sor ve "Yorumlara yaz." gibi
    en fazla 3 kelimelik bir çağrı ekle. Son cümle, video başa sardığında ilk cümleyle anlamlı biçimde birleşebilecek şekilde
    kurulursa izleyici fark etmeden ikinci kez izler; uygun düşüyorsa böyle bitir. "Takip et", "beğen" gibi istekler YAZMA.
+ARAMA (izlenmenin önemli kısmı aramadan gelir): search_phrase alanına insanların arama kutusuna yazacağı 2-5 kelimelik
+Türkçe ifadeyi yaz. Bu ifade (ya da çok yakın hâli) dış sesin ilk iki cümlesinde doğal biçimde söylensin, başlıkta geçsin,
+açıklamanın ilk cümlesinde geçsin ve ilk etiket bu ifadenin boşluksuz hâli olsun. Başlık tıklama tuzağı değil, merak + arama
+kelimesi olsun.
+PAYLAŞILABİLİRLİK: En güçlü sinyal izleyicinin videoyu bir arkadaşına göndermesidir. Bunu bilen kişiyi "ilginç" gösteren,
+sohbet açtıran bilgiyi öne çıkar. Konuda Türkiye bağlantısı varsa (Türk kişi, takım, yer, marka, kelime kökeni, Türkiye'deki
+yansıması) mutlaka kullan; hedef kitle Türkiye'deki 15-34 yaş.
 DİL VE ANLATIM (en önemli kural): Metin bir TÜRK BELGESEL ANLATICISININ ağzından, doğal ve kusursuz Türkçeyle yazılsın.
 - Önce dış sesi baştan sona TEK BİR AKICI METİN olarak düşün, sonra sahnelere böl. Bir cümle iki üç sahneye yayılabilir;
   sahneleri art arda okuyunca metin hiç kesilmeden akmalı.
@@ -184,8 +214,36 @@ def series_ask(prev: dict) -> str:
             f"2. bölümde anlatılacaklar: {prev['brief']}\n"
             "Kurallar: series_part=2, başlığın sonuna \" (2. Bölüm)\" ekle. İlk cümle 1. bölümün kaldığı yeri tek bir vurucu "
             "cümleyle hatırlatsın (ör. 'Tank patladığında asıl felaket daha yeni başlıyordu.'), 1. bölümü yeniden anlatma; "
-            "videonun çoğu yeni bilgi ve final olsun. Sonda normal yorum çağrısı yap. Kategori ve şablon 1. bölümle aynı kalsın: "
-            f"category={prev.get('category', '')}, template={prev.get('template', '')}.")
+            "videonun çoğu yeni bilgi ve final olsun. Sonda normal yorum çağrısı yap. Kategori, şablon ve anlatım kalıbı 1. "
+            f"bölümle aynı kalsın: category={prev.get('category', '')}, template={prev.get('template', '')}, "
+            f"structure={prev.get('structure', 'hikaye')}.")
+
+
+def recent_structures(history_file: Path, n: int = 3) -> list[str]:
+    out = []
+    if history_file.exists():
+        for line in history_file.read_text(encoding="utf-8").splitlines():
+            try:
+                st = json.loads(line).get("structure")
+            except Exception:  # noqa: BLE001
+                continue
+            out.append(st or "hikaye")  # eski videolar kalıp kaydı yokken hep hikâye anlatımıydı
+    return out[-n:]
+
+
+def allowed_structures(history_file: Path) -> list[str]:
+    """Son kullanılan kalıp tekrar edilmez; 'hikaye' son 3 videonun 2'sinde kullanıldıysa o da dışarıda kalır."""
+    last = recent_structures(history_file)
+    out = [k for k in STRUCTURES if not (last and k == last[-1])]
+    if last.count("hikaye") >= 2:
+        out = [k for k in out if k != "hikaye"]
+    return out or list(STRUCTURES)
+
+
+def structure_ask(keys: list[str]) -> str:
+    return ("\nANLATIM KALIBI: Şu kalıplardan konuya en uygun olanını seç, 'structure' alanına anahtarını yaz ve gövdeyi "
+            "ona göre kur (kanca, Makas'ın yorumu ve kapanış kuralları her kalıpta geçerli):\n"
+            + "\n".join(f"- {k}: {STRUCTURES[k][1]}" for k in keys))
 
 
 def generate_script(history_file: Path, topic_hint: str | None = None,
@@ -198,8 +256,10 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
         ask = (
             f"Bugün için yeni bir short senaryosu yaz. Konu önerisi: {topic_hint}." if topic_hint else
             "Bugün için yeni bir short senaryosu yaz. Şu kategorilerden birini seç ve az bilinen, şaşırtıcı, "
-            f"doğrulanabilir bir hikâye bul: {', '.join(CATEGORIES)}."
+            f"doğrulanabilir bir hikâye bul: {', '.join(CATEGORIES)}. Konuların yaklaşık yarısı Türkiye bağlantılı olmalı; "
+            "izleyicinin arkadaşına göndereceği türden bir konu seç (efsane-gerçek, futbol, gündelik hayattan şaşırtıcı nedenler)."
         )
+        ask += structure_ask(allowed_structures(history_file))
         if allow_series:
             ask += SERIES_START
     if templates:
@@ -209,8 +269,11 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
     script = ask_claude(ask, ShortScript, SYSTEM)
     part, brief = (2, "") if series_prev else (script.series_part if allow_series else 0, script.next_part_brief)
+    structure = series_prev.get("structure", script.structure) if series_prev else script.structure
+    phrase = script.search_phrase
     out = polish_script(verify_script(script))
     out.series_part, out.next_part_brief = part, (brief if part == 1 else "")
+    out.structure, out.search_phrase = structure, out.search_phrase or phrase
     return out
 
 
@@ -225,7 +288,8 @@ def verify_script(script: ShortScript) -> ShortScript:
     review = ask_claude(
         "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
         "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
-        "(özellikle toplam dış ses 105 kelimeyi geçmesin, ilk cümle en fazla 10 kelimelik doğrudan bir kanca olsun; boş sahne kalmasın). "
+        "(özellikle toplam dış ses 78 kelimeyi geçmesin, ilk cümle en fazla 10 kelimelik doğrudan bir kanca olsun, search_phrase "
+        "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). "
         "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
         "alanında döndür.\n\n" + script.model_dump_json(indent=1),
         Review, SYSTEM + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
@@ -240,7 +304,8 @@ EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün.
   parçaları tam cümlelere çevir; cümleleri bağlaçlarla birbirine bağla; çeviri kokan ifadeleri doğal Türkçeyle değiştir.
 - Yazım, noktalama, ek ve zaman uyumunu düzelt. Anlatı zamanı tutarlı olsun.
 - YENİ BİLGİ EKLEME, hiçbir olguyu (tarih, sayı, isim) değiştirme ya da çıkarma. Sahne sayısını ve sırasını koru.
-- Toplam dış ses 85-105 kelime arasında kalsın.
+- Toplam dış ses 65-75 kelime arasında kalsın (78'i geçmesin).
+- search_phrase ifadesi ilk iki cümlede geçiyorsa koru, çıkarma.
 - İlk cümle (kanca) en fazla 10 kelime, doğrudan ve şaşırtıcı kalsın; önüne giriş cümlesi ekleme.
 - headline satırları, değişen narration'da geçen kelimelerden oluşsun (BÜYÜK HARF, satır başı 1-3 kelime).
 - Görsel alanlarına (theme, image_mode, image_queries, illustration, motion, trail, icon) DOKUNMA.
@@ -264,6 +329,7 @@ def polish_script(script: ShortScript) -> ShortScript:
         for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon", "anim_query"):
             setattr(b, f, getattr(a, f))
     fixed.sources, fixed.category = script.sources, script.category
+    fixed.search_phrase, fixed.structure = script.search_phrase, script.structure
     return fixed
 
 
