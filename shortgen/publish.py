@@ -263,6 +263,11 @@ if __name__ == "__main__":
         except Skip as e:
             sys.exit(f"HATA: {e}")
         if name == "youtube":
+            cid, sec, ref = (os.environ[k].strip() for k in ("YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"))
+            # sırları göstermeden biçim kontrolü
+            print(f"Client ID: {cid[:16]}... ({len(cid)} karakter, doğru bitiş: {cid.endswith('.apps.googleusercontent.com')})")
+            print(f"Client secret: {sec[:7]}... ({len(sec)} karakter)")
+            print(f"Refresh token: {ref[:4]}... ({len(ref)} karakter)")
             tok = _yt_token()
             ch = requests.get("https://www.googleapis.com/youtube/v3/channels", params={"part": "snippet", "mine": "true"},
                               headers={"Authorization": f"Bearer {tok}"}, timeout=30)
