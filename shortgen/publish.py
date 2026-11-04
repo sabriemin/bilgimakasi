@@ -126,7 +126,7 @@ def instagram(video: Path, meta: dict) -> dict:
             _rotate_secret("IG_ACCESS_TOKEN", token)
 
     caption = meta["title"] + "\n\n" + meta["description"]
-    tags = _hashtags(meta, 30)
+    tags = _hashtags(meta, 5)  # Instagram en fazla 5 etiket
     caption = re.sub(r"(#\w+\s*)+$", "", caption).strip()  # açıklamanın sonundaki etiketleri tekrar etme
     caption = (caption[:2150 - len(" ".join(tags))] + "\n\n" + " ".join(tags)).strip()
 
@@ -191,7 +191,7 @@ def tiktok(video: Path, meta: dict) -> dict:
     opts = info.get("data", {}).get("privacy_level_options", [])
     want = os.environ.get("TIKTOK_PRIVACY", "PUBLIC_TO_EVERYONE")
     privacy = want if want in opts else ("SELF_ONLY" if "SELF_ONLY" in opts else (opts or ["SELF_ONLY"])[0])
-    title = (meta["title"] + " " + " ".join(_hashtags(meta, 8)))[:2200]
+    title = (meta["title"] + " " + " ".join(_hashtags(meta, 5)))[:2200]
     size = video.stat().st_size
     if size <= 64 * 1024 * 1024:
         chunk, count = size, 1

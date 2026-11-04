@@ -157,13 +157,15 @@ def find_image(query: str, cache_dir: Path, exclude: set[str] | None = None,
 
 
 def credits_text(credits: list[ImageCredit]) -> str:
-    seen, lines = set(), []
+    """Tek satırlık kısa görsel atfı. Kamu malı/CC0 görseller atıf gerektirmediği için yazılmaz."""
+    seen, parts = set(), []
     for c in credits:
-        if c.page in seen:
+        lic = (c.license or "").lower()
+        if c.page in seen or any(k in lic for k in ("public domain", "pd", "cc0", "kamu")):
             continue
         seen.add(c.page)
-        lines.append(f"{c.title}, {c.author}, {c.license}, {c.source}")
-    return "Görseller: " + " | ".join(lines) if lines else ""
+        parts.append(f"{(c.author or 'bilinmiyor')[:40]} ({c.license})")
+    return "📷 " + ", ".join(parts) if parts else ""
 
 
 def credit_dict(c: ImageCredit) -> dict:

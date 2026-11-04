@@ -55,8 +55,15 @@ class ShortScript(BaseModel):
     category: Literal[tuple(CATEGORIES)] = Field(description="Konunun kategorisi.")  # type: ignore[valid-type]
     template: str = Field(default="", description="Önerilen görsel şablon adı (listeden) veya boş.")
     title: str = Field(description="Platform başlığı, en fazla 70 karakter, merak uyandıran.")
-    description: str = Field(description="2-3 cümlelik açıklama + soru.")
-    hashtags: List[str]
+    description: str = Field(description=(
+        "Kısa platform açıklaması: en fazla 2 kısa cümle (toplam ~200 karakter). İlk cümle merak uyandıran kanca, "
+        "konunun aranan anahtar kelimelerini doğal biçimde içerir; ikinci cümle izleyiciye yorum yaptıran bir soru. "
+        "Kaynak, link, emoji yığını veya etiket YAZMA."))
+    hashtags: List[str] = Field(description=(
+        "Tam 5 etiket, # olmadan, Türkçe karakterli olabilir, boşluksuz. Sıra önemli: önce konuya özel ve "
+        "aranma hacmi yüksek 3 etiket (ör. kişi/olay/yer adı, 'olimpiyat', 'tarih'), sonra Türkiye'de keşfet "
+        "algoritmasında en çok kullanılan geniş 2 etiket (ör. 'bilgi', 'ilginçbilgiler', 'keşfet', 'bunlarıbiliyormuydun'). "
+        "Instagram en fazla 5 etiket kabul ettiği için 5'i geçme."))
     scenes: List[Scene]
     sources: List[str] = Field(description="İddiaları destekleyen güvenilir kaynak başlıkları veya URL'leri.")
 

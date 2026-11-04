@@ -128,9 +128,8 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
     desc = "\n\n".join(filter(None, [
         script.description,
         " ".join("#" + h.lstrip("#").replace(" ", "") for h in script.hashtags),
-        "Kaynaklar: " + "; ".join(script.sources) if script.sources else "",
         images.credits_text(credits),
-        "Bu videoda yapay zekâ ile üretilmiş seslendirme kullanılmıştır (ElevenLabs)." if use_voice else "",
+        "🎙️ Yapay zekâ seslendirme" if use_voice else "",
     ]))
     meta = {
         "title": script.title, "description": desc, "hashtags": script.hashtags,
