@@ -215,11 +215,18 @@ def _handle_callback(cq: dict, chat: str) -> None:
         return
     videos = load(VIDEOS, [])
     v = _find(videos, tag)
-    if not v:  # dinleme başladıktan sonra üretilmiş olabilir
+    tries = 6 if os.environ.get("TG_WEBHOOK") == "1" else 1
+    for i in range(tries):  # yeni video henüz depoya yazılmamış olabilir (üretim işi birkaç saniye sonra iter)
+        if v:
+            break
+        if i:
+            import time
+            time.sleep(15)
         _refresh_videos()
         videos = load(VIDEOS, [])
         v = _find(videos, tag)
     if not v:
+        _put_back(cq, chat)
         api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Video bulunamadı."})
         return
     mid = v["telegram_message_id"]
@@ -297,13 +304,27 @@ COMMANDS = [
 _menu_set = False
 
 
+def _put_back(cq: dict, chat: str) -> None:
+    """Webhook modunda kapı düğmeyi '⏳ İşleniyor' yaptı; işlem yapılamadıysa basılan klavyeyi aynen geri koy."""
+    if os.environ.get("TG_WEBHOOK") != "1":
+        return
+    try:
+        api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": cq["message"]["message_id"],
+                                            "reply_markup": json.dumps(cq["message"].get("reply_markup")
+                                                                       or {"inline_keyboard": []})})
+    except Exception as e:  # noqa: BLE001
+        print("Klavye geri konamadı:", e)
+
+
 def _restore_kb(tag: str, chat: str) -> None:
     """Webhook modunda kapı düğmeyi '⏳ İşleniyor' yaptı; hata olursa videonun durumuna uygun düğmeleri geri koy."""
     v = _find(load(VIDEOS, []), tag)
     if not v or not v.get("telegram_message_id"):
         return
     rows = {"onay_bekliyor": [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]],
-            "zamanlandi": [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]]}.get(v["status"], [])
+            "zamanlandi": [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]],
+            "hata": [[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]],
+            "kismen": [[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]]}.get(v["status"], [])
     try:
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"],
                                             "reply_markup": _kb(rows)})
@@ -333,7 +354,11 @@ def process_update(u: dict, chat: str) -> None:
             except Exception as e:  # noqa: BLE001
                 print("Düğme işlenemedi:", e)
                 if os.environ.get("TG_WEBHOOK") == "1":
-                    _restore_kb(cq["data"].partition(":")[2].partition(":")[0], chat)
+                    tag = cq["data"].partition(":")[2].partition(":")[0]
+                    if _find(load(VIDEOS, []), tag):
+                        _restore_kb(tag, chat)
+                    else:
+                        _put_back(cq, chat)
                     api("sendMessage", data={"chat_id": chat, "text": f"⚠️ Düğme işlenemedi: {str(e)[:200]}"})
     elif (m := u.get("message")) and str(m["chat"]["id"]) == chat:
         text = (m.get("text") or "").strip()
@@ -425,11 +450,18 @@ def listen(minutes: float) -> None:
     import time
     end = time.time() + minutes * 60
     if _webhook_mode():
+        # Düğmeleri kapı + işle.yml karşılar. Burada (state grubunda, tek başına) yalnız pencere içindeki
+        # paylaşımlar yapılır; her paylaşımdan önce en güncel durum alınır (iptal edilenler paylaşılmasın).
+        from . import state_sync
         while True:
+            state_sync.sync("Zamanlanmış paylaşımlar")
+            state_sync.refresh()
             publish_due()
+            state_sync.sync("Zamanlanmış paylaşımlar")
+            state_sync.refresh()
             nxt = _next_due()
             if not nxt or nxt.timestamp() > end or time.time() > end:
-                return  # pencerede başka paylaşım yok: Actions dakikası harcama
+                return
             time.sleep(max(5, nxt.timestamp() - time.time() + 5))
     while time.time() < end:
         try:
@@ -514,8 +546,14 @@ if __name__ == "__main__":
     except ImportError:  # hafif ortam (işle.yml yalnız requests + pydantic kurar)
         pass
     if sys.argv[1] == "handle-update":  # Cloudflare kapısından gelen tek olay (UPDATE ortam değişkeninde)
+        # Paylaşım burada yapılmaz (aynı anda iki iş aynı videoyu yüklemesin); bkz. dispatch-if-due.
         process_update(json.loads(os.environ["UPDATE"]), str(os.environ["TELEGRAM_CHAT_ID"]))
-        publish_due()
+    elif sys.argv[1] == "dispatch-if-due":
+        # Durum kaydedildikten SONRA çağrılır: şimdi paylaşılacak bir şey varsa tek sıra hâlinde çalışan
+        # onay.yml'i (state grubu) başlatır.
+        nxt = _next_due()
+        if nxt and nxt <= dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=2):
+            print("Paylaşım işi başlatıldı:", _dispatch("", "onay.yml"))
     elif sys.argv[1] == "notify":
         notify(Path(sys.argv[2]), sys.argv[3])
     elif sys.argv[1] == "poll":

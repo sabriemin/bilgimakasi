@@ -193,6 +193,7 @@ def handle(action: str, key: str, chat: str, mid: int, custom: str | None = None
     st = load()
     item = st["pending"].get(key)
     if not item:
+        api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb([])})
         return "Bu yorum zaten işlenmiş."
     if action == "no":
         st["pending"].pop(key)

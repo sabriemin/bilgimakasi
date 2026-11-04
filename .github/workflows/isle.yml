@@ -19,13 +19,18 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: En güncel durumu al
+        run: |
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          git fetch -q origin main && git reset -q --hard origin/main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-bot.txt
       - run: pip install -r requirements-bot.txt
-      - name: Olayı işle ve saati gelenleri paylaş
+      - name: Olayı işle
         env:
           UPDATE: ${{ inputs.update }}
           TG_WEBHOOK: "1"
@@ -50,17 +55,31 @@ jobs:
         run: python -m shortgen.telegram_bot handle-update
       - name: Durumu kaydet
         if: always()
-        run: |
-          git config user.name "shortgen-bot"
-          git config user.email "shortgen-bot@users.noreply.github.com"
-          python -m shortgen.state_sync "Telegram olayı işlendi"
+        run: python -m shortgen.state_sync "Telegram olayı işlendi"
+      - name: Şimdi paylaşılacak varsa paylaşım işini başlat
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m shortgen.telegram_bot dispatch-if-due
       - name: Hata bildir
         if: failure()
         env:
+          UPDATE: ${{ inputs.update }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          # kapı düğmeyi '⏳ İşleniyor' yapmıştı: basılan klavyeyi geri koy ki tekrar denenebilsin
+          python3 - <<'PY' || true
+          import json, os, urllib.request, urllib.parse
+          u = json.loads(os.environ.get("UPDATE") or "{}")
+          m = (u.get("callback_query") or {}).get("message")
+          if m:
+              data = urllib.parse.urlencode({"chat_id": m["chat"]["id"], "message_id": m["message_id"],
+                                             "reply_markup": json.dumps(m.get("reply_markup") or {"inline_keyboard": []})}).encode()
+              urllib.request.urlopen(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/editMessageReplyMarkup", data, timeout=20)
+          PY
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
             --data-urlencode "text=⚠️ Son işlem sırasında hata oluştu. Ayrıntı: ${RUN_URL}" > /dev/null

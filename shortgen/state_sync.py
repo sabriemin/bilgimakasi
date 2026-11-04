@@ -63,21 +63,31 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
     return local
 
 
+def _tracked(rev: str) -> set[str]:
+    out = set()
+    for p in PATHS:
+        out |= set(_git("ls-tree", "-r", "--name-only", rev, "--", p, check=False).split())
+    return out
+
+
 def sync(message: str) -> None:
-    for attempt in range(5):
+    # Bu çalışmanın değişikliklerini BİR KEZ yakala: itme reddedilip tekrar denenirse taban ve yerel içerik
+    # değişmemeli (yoksa ikinci denemede yerel == taban görünür ve değişiklikler sessizce kaybolur).
+    base_rev = _git("rev-parse", "HEAD").strip()
+    snap: dict[str, str | None] = {}
+    files = _tracked(base_rev)
+    for p in PATHS:
+        for f in (ROOT / p).rglob("*") if (ROOT / p).is_dir() else [ROOT / p]:
+            if f.is_file():
+                files.add(str(f.relative_to(ROOT)))
+    for f in files:
+        lp = ROOT / f
+        snap[f] = lp.read_text(encoding="utf-8") if lp.exists() else None
+    for attempt in range(6):
         _git("fetch", "-q", "origin", "main")
-        files = set()
-        for p in PATHS:
-            for rev in ("HEAD", "origin/main"):
-                files |= set(_git("ls-tree", "-r", "--name-only", rev, "--", p, check=False).split())
-            for f in (ROOT / p).rglob("*") if (ROOT / p).is_dir() else [ROOT / p]:
-                if f.is_file():
-                    files.add(str(f.relative_to(ROOT)))
         merged = {}
-        for f in sorted(files):
-            lp = ROOT / f
-            local = lp.read_text(encoding="utf-8") if lp.exists() else None
-            merged[f] = _merge(f, _show("HEAD", f), _show("origin/main", f), local)
+        for f in sorted(files | _tracked("origin/main")):
+            merged[f] = _merge(f, _show(base_rev, f), _show("origin/main", f), snap.get(f))
         _git("reset", "-q", "--mixed", "origin/main")
         for f, content in merged.items():
             lp = ROOT / f
@@ -96,6 +106,12 @@ def sync(message: str) -> None:
             return
         time.sleep(3 * (attempt + 1))
     raise SystemExit("Durum kaydedilemedi")
+
+
+def refresh() -> None:
+    """Yerel durumu uzak depodaki en güncel hâline getirir. Önce sync() çağrılmış olmalı (yerel değişiklik kalmamalı)."""
+    _git("fetch", "-q", "origin", "main")
+    _git("reset", "-q", "--hard", "origin/main")
 
 
 if __name__ == "__main__":

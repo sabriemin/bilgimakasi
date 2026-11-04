@@ -81,6 +81,10 @@ jobs:
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, bildirim atlandı."; exit 0; fi
           python -m shortgen.telegram_bot notify "$OUT_DIR" "$TAG"
+          # videoyu hemen kaydet: Telegram'da düğmeye basıldığında işle.yml onu bulabilsin
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          python -m shortgen.state_sync "Yeni video: $TAG"
       - name: Yeni yorumlara cevap taslağı
         continue-on-error: true
         env:

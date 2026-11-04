@@ -87,11 +87,20 @@ async function handle(update, env) {
     }
     // durum değiştiren adımlar: anında geri bildirim + çift basışı engelle + GitHub'a ilet
     await tg(env, "answerCallbackQuery", { callback_query_id: cq.id, text: "⏳ Alındı, işleniyor (30-60 sn)…" });
-    if (["at", "no", "cancel", "cm"].includes(action)) {
+    const lock = ["at", "no", "cancel", "cm", "rt"].includes(action); // tp (öneri listesi) kilitlenmez
+    if (lock) {
       await tg(env, "editMessageReplyMarkup", { chat_id: chat, message_id: mid,
         reply_markup: kb([[["⏳ İşleniyor…", "noop:x"]]]) });
-    } // tp (öneri listesi) dokunulmaz: başka öneriye de basılabilsin
-    await dispatch(env, update);
+    }
+    let ok = false;
+    try { ok = await dispatch(env, update); } catch (e) {
+      console.log("dispatch hata", e && e.stack);
+      await tg(env, "sendMessage", { chat_id: env.CHAT_ID, text: "⚠️ İşlem GitHub'a iletilemedi. Birazdan tekrar dene." });
+    }
+    if (!ok && lock) { // basılan klavyeyi geri koy ki tekrar denenebilsin
+      await tg(env, "editMessageReplyMarkup", { chat_id: chat, message_id: mid,
+        reply_markup: cq.message.reply_markup || { inline_keyboard: [] } });
+    }
     return;
   }
   const m = update.message;
