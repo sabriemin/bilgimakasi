@@ -85,3 +85,13 @@ jobs:
           git add history.jsonl state/
           git commit -m "Yeni video: $TAG" || exit 0
           git pull --rebase && git push
+      - name: Hata olursa senaryoyu ve bütçe kaydını sakla
+        if: failure()
+        run: |
+          S=$(ls -td output/*/ 2>/dev/null | head -1)
+          [ -n "$S" ] && [ -f "${S}script.json" ] && cp "${S}script.json" state/bekleyen_senaryo.json
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          git add state/ || true
+          git commit -m "Yarım kalan üretim: senaryo saklandı" || exit 0
+          git pull --rebase && git push

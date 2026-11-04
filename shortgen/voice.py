@@ -40,22 +40,33 @@ def synthesize(text: str, out_mp3: Path) -> list[Word]:
     voice = os.environ.get("ELEVENLABS_VOICE_ID", "")
     if not voice:
         raise RuntimeError("ELEVENLABS_VOICE_ID tanımlı değil (.env dosyasına ekleyin).")
-    r = requests.post(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps",
-        params={"output_format": "mp3_44100_128"},
-        headers={"xi-api-key": key, "Content-Type": "application/json"},
-        json={
-            "text": text,
-            "model_id": os.environ.get("ELEVENLABS_MODEL", "eleven_v3"),
-            "language_code": "tr",
-            "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "style": 0.15, "speed": 1.0},
-        },
-        timeout=300,
-    )
-    if r.status_code == 400 and "language_code" in r.text:  # bazı modeller language_code kabul etmez
-        r = requests.post(r.request.url, headers={"xi-api-key": key}, json={
-            "text": text, "model_id": os.environ.get("ELEVENLABS_MODEL", "eleven_v3")}, timeout=300)
-    r.raise_for_status()
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps"
+    model = os.environ.get("ELEVENLABS_MODEL", "eleven_v3")
+    body = {
+        "text": text, "model_id": model, "language_code": "tr",
+        "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "style": 0.15, "speed": 1.0},
+    }
+    if model == "eleven_v3":  # v3 yalnızca 0.0 / 0.5 / 1.0 stability kabul eder, style/speed desteklemez
+        body["voice_settings"] = {"stability": 0.5, "similarity_boost": 0.8}
+    attempts = [body, {"text": text, "model_id": model}]
+    if model != "eleven_multilingual_v2":  # son çare: zaman damgası kesin destekli model
+        attempts.append({"text": text, "model_id": "eleven_multilingual_v2", "language_code": "tr"})
+    errors = []
+    for b in attempts:
+        r = requests.post(url, params={"output_format": "mp3_44100_128"},
+                          headers={"xi-api-key": key, "Content-Type": "application/json"}, json=b, timeout=300)
+        if r.ok:
+            if b["model_id"] != model:
+                print(f"UYARI: {model} reddetti, {b['model_id']} ile seslendirildi.")
+            break
+        errors.append(f"{b['model_id']} -> {r.status_code}: {r.text[:500]}")
+        print("ElevenLabs hatası:", errors[-1])
+        if r.status_code in (401, 402, 403, 429):  # anahtar/kredi/plan sorunu: başka deneme fayda etmez
+            break
+    else:
+        raise RuntimeError("ElevenLabs seslendirme başarısız:\n" + "\n".join(errors))
+    if not r.ok:
+        raise RuntimeError("ElevenLabs seslendirme başarısız:\n" + "\n".join(errors))
     data = r.json()
     out_mp3.write_bytes(base64.b64decode(data["audio_base64"]))
     al = data.get("normalized_alignment") or data.get("alignment")

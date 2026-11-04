@@ -152,8 +152,15 @@ def main() -> None:
 
     history = ROOT / "history.jsonl"
     m = json.loads((ROOT / "templates" / "eslesme.json").read_text(encoding="utf-8"))
-    script = load_script(a.script) if a.script else generate_script(
-        history, a.topic, template_catalog() if m.get("claude_secsin") else None)
+    pending = ROOT / "state" / "bekleyen_senaryo.json"
+    if a.script:
+        script = load_script(a.script)
+    elif pending.exists() and not a.topic:
+        # önceki çalışma ses/kurgu aşamasında düştüyse senaryoyu yeniden üretme (Claude bütçesi harcanmasın)
+        print("Önceki çalışmadan kalan senaryo kullanılıyor.")
+        script = load_script(pending)
+    else:
+        script = generate_script(history, a.topic, template_catalog() if m.get("claude_secsin") else None)
     template = pick_template(script, a.template)
     print(f"Şablon: {template}")
     music = a.music or (Path(os.environ["MUSIC_FILE"]) if os.environ.get("MUSIC_FILE") else None)
@@ -162,6 +169,7 @@ def main() -> None:
     with history.open("a", encoding="utf-8") as f:
         f.write(json.dumps({"date": str(dt.date.today()), "topic": script.topic, "dir": str(out_dir)},
                            ensure_ascii=False) + "\n")
+    pending.unlink(missing_ok=True)
     print(f"Hazır: {video}")
 
 
