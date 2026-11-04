@@ -1,0 +1,34 @@
+name: TikTok hesabını bağla
+
+on:
+  workflow_dispatch:
+    inputs:
+      adim:
+        description: "link (giriş linkini üret) veya kod (TIKTOK_AUTH_CODE'u anahtara çevir)"
+        required: true
+        default: link
+
+jobs:
+  baglan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests pydantic
+      - name: Giriş linki
+        if: ${{ github.event.inputs.adim == 'link' }}
+        env:
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+        run: python -m shortgen.publish tiktok-login-url
+      - name: Kodu anahtara çevir ve kaydet
+        if: ${{ github.event.inputs.adim == 'kod' }}
+        env:
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_AUTH_CODE: ${{ secrets.TIKTOK_AUTH_CODE }}
+          TIKTOK_REFRESH_TOKEN: x
+          GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
+        run: python -m shortgen.publish tiktok-exchange

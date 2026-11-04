@@ -38,13 +38,16 @@ def _env(*names: str) -> list[str]:
     return vals
 
 
-def _rotate_secret(name: str, value: str) -> None:
+def _rotate_secret(name: str, value: str) -> bool:
     """Yenilenen anahtarı GitHub Secrets'a geri yazar (GH_SECRETS_PAT varsa). Değer hiçbir yere yazdırılmaz."""
     pat, repo = os.environ.get("GH_SECRETS_PAT"), os.environ.get("GITHUB_REPOSITORY")
     if not (pat and repo and value):
-        return
-    subprocess.run(["gh", "secret", "set", name, "--repo", repo], input=value, text=True, check=False,
-                   env={**os.environ, "GH_TOKEN": pat}, capture_output=True)
+        return False
+    r = subprocess.run(["gh", "secret", "set", name, "--repo", repo], input=value, text=True, check=False,
+                       env={**os.environ, "GH_TOKEN": pat}, capture_output=True)
+    if r.returncode:
+        print(f"{name} GitHub'a kaydedilemedi: {r.stderr.strip()[:200]}")
+    return r.returncode == 0
 
 
 def _hashtags(meta: dict, limit: int) -> list[str]:
@@ -162,6 +165,7 @@ def instagram(video: Path, meta: dict) -> dict:
 
 # ------------------------------------------------------------------ TikTok (Content Posting API, doğrudan paylaşım)
 TT = "https://open.tiktokapis.com/v2"
+TT_REDIRECT = os.environ.get("TIKTOK_REDIRECT_URI", "https://sabriemin.github.io/tiktok/")
 
 
 def _tt_token() -> str:
@@ -260,6 +264,29 @@ if __name__ == "__main__":
             if "=" in line and not line.lstrip().startswith("#"):
                 k, v = line.split("=", 1)
                 os.environ.setdefault(k.strip(), v.strip().strip('"'))
+    if sys.argv[1] == "tiktok-login-url":
+        from urllib.parse import urlencode
+        print("https://www.tiktok.com/v2/auth/authorize/?" + urlencode({
+            "client_key": os.environ["TIKTOK_CLIENT_KEY"].strip(), "response_type": "code",
+            "scope": "user.info.basic,video.publish,video.upload",
+            "redirect_uri": TT_REDIRECT, "state": "bilgimakasi"}))
+        sys.exit(0)
+    if sys.argv[1] == "tiktok-exchange":
+        key, secret, code = _env("TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET", "TIKTOK_AUTH_CODE")
+        if not os.environ.get("GH_SECRETS_PAT"):
+            sys.exit("HATA: GH_SECRETS_PAT tanımlı değil; anahtar GitHub'a kaydedilemez")
+        from urllib.parse import unquote
+        r = requests.post(f"{TT}/oauth/token/", data={
+            "client_key": key, "client_secret": secret, "code": unquote(code), "grant_type": "authorization_code",
+            "redirect_uri": TT_REDIRECT}, headers={"Content-Type": "application/x-www-form-urlencoded"}, timeout=30)
+        d = r.json()
+        if not r.ok or "refresh_token" not in d:
+            sys.exit(f"HATA: TikTok kodu anahtara çevrilemedi: {r.status_code} "
+                     f"{ {k: v for k, v in d.items() if 'token' not in k} }")
+        if not _rotate_secret("TIKTOK_REFRESH_TOKEN", d["refresh_token"]):
+            sys.exit("HATA: anahtar alındı ama GitHub'a kaydedilemedi (GH_SECRETS_PAT izinlerini kontrol et)")
+        print("TikTok anahtarı kaydedildi. İzinler:", d.get("scope"))
+        sys.exit(0)
     if sys.argv[1] == "check":
         name = sys.argv[2]
         try:
