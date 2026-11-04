@@ -197,11 +197,30 @@
     "category": "tarih",
     "template": "kolaj",
     "created": "2026-11-04T21:29:00",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 70,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "pMZcuAmelOE",
+        "url": "https://youtube.com/shorts/pMZcuAmelOE"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18136662547660176",
+        "url": "https://www.instagram.com/reel/DfVbaghjtZ_/"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704432131140831252",
+        "draft": true,
+        "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
+        "caption": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi\n\nTutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kraldan oğullarından birini koca olarak istedi. Sence prens Mısır'a varsaydı ne olurdu?\n\n    \n\n📷 Scan by Pataki Márta (CC BY-SA 3.0), Celpunken (CC BY 3.0), Bernard Gagnon (CC BY-SA 3.0)\n\n#TutankamonHititMektubu #Hititler #Hattuşa #tarih #bilgimakasi"
+      }
+    },
     "publish_at": "2026-11-04T21:30:56+00:00",
     "schedule": null,
-    "decided": "2026-11-05T00:30:56+03:00"
+    "decided": "2026-11-05T00:30:56+03:00",
+    "published": "2026-11-05T00:32:48+03:00"
   }
 ]
