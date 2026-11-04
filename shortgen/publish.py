@@ -137,8 +137,9 @@ def instagram(video: Path, meta: dict) -> dict:
         raise RuntimeError(f"Instagram kapsayıcı oluşturulamadı: {c.status_code} {c.text[:400]}")
     cid = c.json()["id"]
     size = video.stat().st_size
+    up_url = c.json().get("uri") or f"https://rupload.facebook.com/ig-api-upload/{IG_VER}/{cid}"
     with video.open("rb") as f:
-        up = requests.post(f"https://rupload.facebook.com/ig-api-upload/{IG_VER}/{cid}", data=f,
+        up = requests.post(up_url, data=f,
                            headers={"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(size)},
                            timeout=900)
     if not up.ok:
@@ -316,7 +317,7 @@ if __name__ == "__main__":
         with tempfile.TemporaryDirectory() as d:
             v, m = fetch_release(sys.argv[2], Path(d))
             size = v.stat().st_size
-            for auth in ("OAuth", "Bearer"):
+            for auth in ("OAuth",):
                 c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
                     "media_type": "REELS", "upload_type": "resumable", "caption": "test",
                     "access_token": token}, timeout=60)
@@ -325,7 +326,7 @@ if __name__ == "__main__":
                     break
                 cid = c.json()["id"]
                 with v.open("rb") as f:
-                    up = requests.post(f"https://rupload.facebook.com/ig-api-upload/{IG_VER}/{cid}", data=f,
+                    up = requests.post(c.json().get("uri") or f"https://rupload.facebook.com/ig-api-upload/{IG_VER}/{cid}", data=f,
                                        headers={"Authorization": f"{auth} {token}", "offset": "0",
                                                 "file_size": str(size)}, timeout=900)
                 print(f"yükleme ({auth}):", up.status_code, up.text[:500])
