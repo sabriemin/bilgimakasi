@@ -72,3 +72,4 @@ jobs:
           git add state/
           git commit -m "Onay durumları güncellendi" || exit 0
           for i in 1 2 3 4; do git pull --rebase && git push && break; sleep $((i*5)); done
+
