@@ -310,6 +310,14 @@ if __name__ == "__main__":
             sys.exit("HATA: anahtar alındı ama GitHub'a kaydedilemedi (GH_SECRETS_PAT izinlerini kontrol et)")
         print("TikTok anahtarı kaydedildi. İzinler:", d.get("scope"))
         sys.exit(0)
+    if sys.argv[1] == "ig-status":
+        (token,) = _env("IG_ACCESS_TOKEN")
+        G = _ig_base(token)
+        for cid in sys.argv[2].split(","):
+            st = requests.get(f"{G}/{IG_VER}/{cid}", params={"fields": "status_code,status", "access_token": token},
+                              timeout=30)
+            print(cid, st.text[:300])
+        sys.exit(0)
     if sys.argv[1] == "ig-upload-test":
         # paylaşım yapmadan Instagram yüklemesini dener ve ayrıntıları yazar
         (token,) = _env("IG_ACCESS_TOKEN")

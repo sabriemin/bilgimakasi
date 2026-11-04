@@ -33,5 +33,6 @@ jobs:
           P="${{ github.event.inputs.platform }}"
           case "$P" in
             instagram-yukleme:*) python -m shortgen.publish ig-upload-test "${P#instagram-yukleme:}" ;;
+            instagram-durum:*) python -m shortgen.publish ig-status "${P#instagram-durum:}" ;;
             *) python -m shortgen.publish check "$P" ;;
           esac
