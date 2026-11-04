@@ -347,7 +347,7 @@ if __name__ == "__main__":
         from urllib.parse import urlencode
         url = "https://www.tiktok.com/v2/auth/authorize/?" + urlencode({
             "client_key": os.environ["TIKTOK_CLIENT_KEY"].strip(), "response_type": "code",
-            "scope": "user.info.basic,video.publish,video.upload",
+            "scope": "user.info.basic,user.info.stats,video.list,video.publish,video.upload",
             "redirect_uri": TT_REDIRECT, "state": "bilgimakasi"})
         # Actions günlükleri secret değerlerini maskelediği için link Telegram'dan gönderilir
         r = requests.post(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendMessage", data={

@@ -43,12 +43,24 @@ def _int(x) -> int:
 
 # ------------------------------------------------------------------ YouTube
 def youtube(videos: list[dict]) -> dict:
-    h = {"Authorization": f"Bearer {P._yt_token()}"}
     base = "https://www.googleapis.com/youtube/v3"
     out = {"account": {}, "videos": {}}
+    key = os.environ.get("YT_API_KEY", "").strip()
+    h, auth = {"Authorization": f"Bearer {P._yt_token()}"}, {}
     ch = requests.get(f"{base}/channels", headers=h, params={"part": "statistics", "mine": "true"}, timeout=30)
     if ch.status_code == 403:
-        raise PermissionError("YouTube okuma izni yok (anahtar yalnız yükleme izniyle alınmış)")
+        if not key:
+            raise PermissionError("YouTube okuma izni yok: YT_API_KEY eklenmeli")
+        # herkese açık istatistikler API anahtarıyla okunur
+        h, auth = {}, {"key": key}
+        cid = os.environ.get("YT_CHANNEL_ID", "").strip()
+        if not cid:
+            first = next((x["platforms"]["youtube"]["id"] for x in videos
+                          if x["platforms"].get("youtube", {}).get("status") == "ok"), None)
+            r = requests.get(f"{base}/videos", params={"part": "snippet", "id": first, **auth}, timeout=30)
+            r.raise_for_status()
+            cid = r.json()["items"][0]["snippet"]["channelId"]
+        ch = requests.get(f"{base}/channels", params={"part": "statistics", "id": cid, **auth}, timeout=30)
     ch.raise_for_status()
     st = (ch.json().get("items") or [{}])[0].get("statistics", {})
     out["account"] = {"followers": _int(st.get("subscriberCount")), "views": _int(st.get("viewCount")),
@@ -57,7 +69,7 @@ def youtube(videos: list[dict]) -> dict:
            if x["platforms"].get("youtube", {}).get("status") == "ok"}
     for i in range(0, len(ids), 50):
         chunk = list(ids)[i:i + 50]
-        r = requests.get(f"{base}/videos", headers=h, params={"part": "statistics", "id": ",".join(chunk)}, timeout=30)
+        r = requests.get(f"{base}/videos", headers=h, params={"part": "statistics", "id": ",".join(chunk), **auth}, timeout=30)
         r.raise_for_status()
         for it in r.json().get("items", []):
             s = it["statistics"]
@@ -87,16 +99,18 @@ def instagram(videos: list[dict]) -> dict:
                 val = (m.get("values") or [{}])[0].get("value", m.get("total_value", {}).get("value"))
                 row[{"saved": "saves"}.get(m["name"], m["name"])] = _int(val)
         else:
-            missing = True
+            missing = (r.json().get("error", {}).get("message") or r.text)[:150]
             b = requests.get(f"{g}/{p['id']}", params={"fields": "like_count,comments_count", "access_token": token},
                              timeout=30)
             if b.ok:
                 row = {"likes": _int(b.json().get("like_count")), "comments": _int(b.json().get("comments_count"))}
         out["videos"][x["tag"]] = row
     for k in KEYS:
-        out["account"][k] = sum(v.get(k, 0) for v in out["videos"].values())
+        if any(k in v for v in out["videos"].values()):
+            out["account"][k] = sum(v.get(k, 0) for v in out["videos"].values())
     if missing:
-        out["note"] = "izlenme/kaydetme için Instagram içgörü izni gerekli"
+        print("Instagram içgörü hatası:", missing)
+        out["note"] = "izlenme ve kaydetme için Instagram içgörü izni gerekli"
     return out
 
 
@@ -183,7 +197,7 @@ def render(snap: dict, prev: dict | None) -> str:
         for name in ("youtube", "instagram"):
             v = snap["platforms"].get(name, {}).get("videos", {}).get(tag)
             if v:
-                per.append(f"{NAMES[name][:2]} " + " ".join(f"{LABEL[k]}{_n(v[k])}" for k in KEYS if k in v))
+                per.append({"youtube": "▶️", "instagram": "📸"}[name] + " " + " ".join(f"{LABEL[k]}{_n(v[k])}" for k in KEYS if k in v))
         if per:
             rows.append((sum(snap["platforms"].get(n, {}).get("videos", {}).get(tag, {}).get("views", 0)
                              for n in ("youtube", "instagram")), f"🎬 {title[:45]}\n   " + " | ".join(per)))
