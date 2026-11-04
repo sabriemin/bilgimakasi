@@ -2,44 +2,28 @@
   "date": "2026-11-04",
   "items": [
     {
-      "topic": "30 Ekim 1996'da Fenerbahçe'nin Old Trafford'da Elvir Bolić'in sapan golüyle Manchester United'ı 1-0 yenip kulübün Avrupa'da evinde 40 yıllık yenilmezliğini bitirmesi",
-      "hook": "Manchester United evinde 40 yıl yenilmedi… ta ki bir Türk takımı gelene kadar.",
-      "trend": "Fenerbahçe bu akşam Kadıköy'de Liverpool'u ağırlıyor, İngiliz devlerine karşı geçmiş zaferler konuşuluyor",
+      "topic": "Anfield'ın aslında Everton'ın stadı olması: 1892'de kira anlaşmazlığıyla Everton'ın taşınması ve boş kalan stada Houlding'in Liverpool FC'yi kurması",
+      "hook": "Liverpool'un efsanevi stadı Anfield aslında ezeli rakibinin eviydi.",
+      "trend": "Fenerbahçe bu akşam Şampiyonlar Ligi'nde Liverpool'la tarihinde ilk kez karşılaşıyor",
       "scope": "TR",
       "category": "spor",
       "score": 9
     },
     {
-      "topic": "GTA serisinin 'Race'n'Chase' adlı neredeyse iptal edilen bir oyundan doğması ve polis arabalarının oyuncuya çarpmasına yol açan yapay zekâ hatasının oyunu kurtarması",
-      "hook": "Dünyanın en çok satan oyun serilerinden biri bir yazılım hatası sayesinde doğdu.",
-      "trend": "GTA 6'nın 19 Kasım 2026'daki çıkışına iki hafta kaldı, heyecan zirvede",
+      "topic": "4 Kasım 1922'de Tutankamon mezarının ilk basamağının bulunuşu ve bunu bulduğu anlatılan 12 yaşındaki su taşıyıcı Hüseyin Abdurrasul'un tartışmalı hikâyesi",
+      "hook": "Yüzyılın keşfini bir arkeolog değil, su taşıyan bir çocuk yapmış olabilir.",
+      "trend": "Bugün Tutankamon mezarının keşfinin 104. yıl dönümü",
       "scope": "Global",
-      "category": "teknoloji",
-      "score": 9
-    },
-    {
-      "topic": "Liverpool'un efsanevi 'Kop' tribününün adını 1900'deki Boer Savaşı'nda pek çok Liverpoollu askerin öldüğü Güney Afrika'daki Spion Kop tepesinden alması",
-      "hook": "Liverpool'un en ünlü tribünü adını Afrika'daki kanlı bir tepeden alıyor.",
-      "trend": "Liverpool bu akşam Şampiyonlar Ligi'nde Fenerbahçe deplasmanında; Anfield kültürü gündemde",
-      "scope": "Global",
-      "category": "tarih",
+      "category": "az bilinen insan hikâyeleri",
       "score": 8
     },
     {
-      "topic": "4 Kasım 1922'de Tutankamon mezarına inen ilk basamağın bulunması ve bu keşfi bir su taşıyıcı çocuğun yaptığına dair popüler anlatı ile Carter'ın günlüğü arasındaki fark",
-      "hook": "Tarihin en büyük arkeolojik keşfi tek bir basamakla başladı.",
-      "trend": "Tutankamon mezarının ilk basamağının bulunmasının 104. yıl dönümü bugün",
-      "scope": "Global",
-      "category": "tarih",
-      "score": 7
-    },
-    {
-      "topic": "Antalya'daki COP31 öncesi, 1995'teki ilk BM iklim zirvesi COP1'e Almanya Çevre Bakanı sıfatıyla genç Angela Merkel'in başkanlık etmesi",
-      "hook": "İlk iklim zirvesini yöneten bakan sonradan Almanya'yı 16 yıl yönetti.",
-      "trend": "COP31 iklim zirvesi 9 Kasım'da Antalya'da başlıyor, dünya liderleri Türkiye'ye geliyor",
+      "topic": "1967'de Avrupa Kupası'nı kazanan Celtic kadrosundaki 11 oyuncunun hepsinin stadın 30 mil çevresinde doğmuş olması (Lizbon Aslanları)",
+      "hook": "Avrupa şampiyonu olan bu takımın bütün oyuncuları aynı mahallelerdendi.",
+      "trend": "Beşiktaş 5 Kasım'da Avrupa Ligi'nde Glasgow'da Celtic'e konuk oluyor",
       "scope": "TR",
-      "category": "tarih",
-      "score": 6
+      "category": "spor",
+      "score": 7
     }
   ]
 }
