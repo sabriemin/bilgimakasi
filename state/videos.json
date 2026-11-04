@@ -51,5 +51,16 @@
     "publish_at": "2026-11-04T16:33:59+00:00",
     "decided": "2026-11-04T17:27:09+03:00",
     "published": "2026-11-04T19:35:04+03:00"
+  },
+  {
+    "tag": "short-20261104-1839",
+    "title": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı",
+    "topic": "Liverpool'un marşı \"You'll Never Walk Alone\": 1945'te Broadway müzikali Carousel için yazılan şarkının 1963'te Gerry and the Pacemakers sayesinde Anfield'a taşınması",
+    "category": "sanat ve müzik",
+    "template": "retro",
+    "created": "2026-11-04T18:39:21",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 26,
+    "platforms": {}
   }
 ]
