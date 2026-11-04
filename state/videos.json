@@ -59,8 +59,30 @@
     "category": "sanat ve müzik",
     "template": "retro",
     "created": "2026-11-04T18:39:21",
-    "status": "onay_bekliyor",
+    "status": "yayinlandi",
     "telegram_message_id": 26,
-    "platforms": {}
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "KiwsoJf1J3E",
+        "url": "https://youtube.com/shorts/KiwsoJf1J3E"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18130437007845255",
+        "url": "https://www.instagram.com/reel/DfVILPgE9_P/"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704388744408762388",
+        "draft": true,
+        "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
+        "caption": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı #liverpool #fenerbahçe #şampiyonlarligi #bilgi #ilginçbilgiler"
+      }
+    },
+    "publish_at": "2026-11-04T18:42:17+00:00",
+    "schedule": null,
+    "decided": "2026-11-04T21:42:17+03:00",
+    "published": "2026-11-04T21:44:49+03:00"
   }
 ]
