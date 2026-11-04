@@ -236,6 +236,9 @@ def izin() -> None:
 
 
 if __name__ == "__main__":
-    from .pipeline import load_env
-    load_env(ROOT / ".env")
+    try:
+        from .pipeline import load_env
+        load_env(ROOT / ".env")
+    except ImportError:  # hafif test ortamı (yalnız requests + pydantic)
+        pass
     {"check": check, "izin": izin}[sys.argv[1]]()
