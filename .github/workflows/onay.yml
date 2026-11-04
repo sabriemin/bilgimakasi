@@ -1,8 +1,13 @@
 name: Telegram onaylarını işle
 
 on:
+  # Yalnız paylaşım saatlerinde çalışır (UTC; Türkiye = UTC+3), Actions dakikası harcamamak için.
+  # Düğmelere anında yanıt, her yeni videodan sonra açılan 30 dk'lık dinleme ile verilir.
+  # TR saatleri: 12:00 12:30 18:00 19:00 19:30 20:00 21:00 22:00
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "0,30 9 * * *"
+    - cron: "0 15-19 * * *"
+    - cron: "30 16 * * *"
   workflow_dispatch:
     inputs:
       dakika:
@@ -54,6 +59,8 @@ jobs:
           TIKTOK_PRIVACY: ${{ vars.TIKTOK_PRIVACY || 'PUBLIC_TO_EVERYONE' }}
           TIKTOK_HANDLE: ${{ vars.TIKTOK_HANDLE || 'bilgimakasi' }}
           GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
+          GITHUB_TOKEN: ${{ github.token }}
+          BEST_TIMES: ${{ vars.BEST_TIMES }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then exit 0; fi
           D="${{ github.event.inputs.dakika || '0' }}"

@@ -83,11 +83,36 @@ def _update(tag: str, **fields) -> dict | None:
     return v
 
 
+# Türkiye'deki kitle için platform başına önerilen paylaşım saatleri (TR saati).
+# BEST_TIMES ortam değişkeniyle (JSON) değiştirilebilir, ör. {"youtube": ["18:00"], ...}
+BEST_TIMES = json.loads(os.environ.get("BEST_TIMES") or json.dumps({
+    "youtube": ["18:00", "21:00"],
+    "instagram": ["12:30", "20:00"],
+    "tiktok": ["19:30", "22:00"],
+}))
+
+
+def _best_schedule(now: dt.datetime | None = None) -> dict[str, str]:
+    """Her platform için şimdiden en az 15 dk sonraki ilk önerilen saati (UTC ISO) döndürür."""
+    now = now or dt.datetime.now(TR)
+    out = {}
+    for p, times in BEST_TIMES.items():
+        cands = []
+        for d in (0, 1):
+            for hm in times:
+                h, m = map(int, hm.split(":"))
+                t = dt.datetime.combine(now.date() + dt.timedelta(days=d), dt.time(h, m), TR)
+                if t > now + dt.timedelta(minutes=15):
+                    cands.append(t)
+        out[p] = min(cands).astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+    return out
+
+
 def _slots(now: dt.datetime | None = None) -> list[tuple[str, str, dt.datetime]]:
     """Saat seçenekleri: (kod, düğme yazısı, UTC zamanı). Geçmişte kalan saatler gösterilmez."""
     now = now or dt.datetime.now(TR)
     today, tomorrow = now.date(), now.date() + dt.timedelta(days=1)
-    out = [("now", "⚡ Şimdi", now)]
+    out = [("best", "🎯 Her platform en iyi saatinde", now), ("now", "⚡ Şimdi", now)]
     for code, label, day, hour in (("b12", "Bugün 12:00", today, 12), ("b19", "Bugün 19:00", today, 19),
                                    ("y12", "Yarın 12:00", tomorrow, 12), ("y19", "Yarın 19:00", tomorrow, 19)):
         t = dt.datetime.combine(day, dt.time(hour), TR)
@@ -126,17 +151,25 @@ def _handle_callback(cq: dict, chat: str) -> None:
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb(
             [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]])})
     elif action == "at":
-        when = next((t for code, _, t in _slots() if code == arg), dt.datetime.now(TR))
-        iso = when.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
-        _update(tag, status="zamanlandi", publish_at=iso, decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
+        if arg == "best":
+            sched = _best_schedule()
+            iso = min(sched.values())
+            detail = "\n".join(f"• {PLATFORM_NAMES[p]}: {_fmt(t)}" for p, t in sorted(sched.items(), key=lambda x: x[1]))
+            note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + detail
+        else:
+            when = next((t for code, _, t in _slots() if code == arg), dt.datetime.now(TR))
+            iso = when.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+            sched = None
+            note = "✅ Onaylandı. " + ("Birkaç dakika içinde paylaşılacak." if arg == "now"
+                                       else f"Paylaşım zamanı: {_fmt(iso)}")
+        _update(tag, status="zamanlandi", publish_at=iso, schedule=sched,
+                decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb(
             [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]])})
-        note = "✅ Onaylandı. " + ("Birkaç dakika içinde paylaşılacak." if arg == "now"
-                                   else f"Paylaşım zamanı: {_fmt(iso)}")
         api("sendMessage", data={"chat_id": chat, "text": f"{note}\n{v['title']}", "reply_to_message_id": mid})
     elif action == "cancel":
         if v["status"] == "zamanlandi":
-            _update(tag, status="onay_bekliyor", publish_at=None)
+            _update(tag, status="onay_bekliyor", publish_at=None, schedule=None)
             api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb(
                 [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]])})
             note = "Paylaşım iptal edildi, video yeniden onay bekliyor."
@@ -148,14 +181,31 @@ def _handle_callback(cq: dict, chat: str) -> None:
         note = "❌ Reddedildi."
         api("sendMessage", data={"chat_id": chat, "text": f"{note}\n{v['title']}", "reply_to_message_id": mid})
     elif action == "rt":  # hatalı platformları yeniden dene
-        _update(tag, status="zamanlandi", publish_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"))
+        _update(tag, status="zamanlandi", schedule=None,
+                publish_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"))
         note = "Hatalı platformlar birkaç dakika içinde yeniden denenecek."
     api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": note[:190]})
 
 
+COMMANDS = [
+    {"command": "uret", "description": "Hemen yeni video üret (ör. /uret kara delikler)"},
+    {"command": "durum", "description": "Bekleyen ve zamanlanan videolar"},
+    {"command": "saatler", "description": "Platformların en iyi paylaşım saatleri"},
+    {"command": "yardim", "description": "Komut listesi"},
+]
+_menu_set = False
+
+
 def poll(wait: int = 0) -> int:
     """Yeni düğme basışlarını ve komutları işler. wait>0 ise o kadar saniye yeni olay bekler (long polling)."""
+    global _menu_set
     chat = str(os.environ["TELEGRAM_CHAT_ID"])
+    if not _menu_set:  # "/" yazınca açılan komut menüsü
+        try:
+            api("setMyCommands", data={"commands": json.dumps(COMMANDS, ensure_ascii=False)})
+        except Exception as e:  # noqa: BLE001
+            print("Komut menüsü ayarlanamadı:", e)
+        _menu_set = True
     off = load(OFFSET, {"offset": 0})
     updates = api("getUpdates", data={"offset": off["offset"], "timeout": wait}) or []
     for u in updates:
@@ -184,9 +234,17 @@ def poll(wait: int = 0) -> int:
                 ok = _dispatch(topic)
                 api("sendMessage", data={"chat_id": chat, "text": "Üretim başlatıldı, birkaç dakika içinde gelir." if ok
                                          else "Üretim başlatılamadı."})
-            elif text.startswith("/start"):
-                api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya gelecek.\n"
-                                         "/durum: bekleyen ve zamanlanan videolar\n/uret [konu]: hemen yeni video üret"})
+            elif text.startswith("/saatler"):
+                lines = ["Platformların en iyi paylaşım saatleri (Türkiye):"]
+                lines += [f"• {PLATFORM_NAMES[p]}: {', '.join(t)}" for p, t in BEST_TIMES.items()]
+                lines += ["", "Onaylarken '🎯 Her platform en iyi saatinde' seçersen her biri kendi saatinde paylaşılır."]
+                api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
+            elif text.startswith("/start") or text.startswith("/yardim"):
+                api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
+                                         "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n"
+                                         "/durum: bekleyen ve zamanlanan videolar\n"
+                                         "/saatler: platformların en iyi paylaşım saatleri\n"
+                                         "/yardim: bu liste"})
     save(OFFSET, off)
     return len(updates)
 
@@ -213,9 +271,14 @@ def publish_due() -> None:
            and dt.datetime.fromisoformat(v["publish_at"]) <= now]
     for v in due:
         tag = v["tag"]
-        _update(tag, status="yayinlaniyor")
         done = {k for k, r in (v.get("platforms") or {}).items() if r.get("status") == "ok"}
-        todo = [p for p in PLATFORM_NAMES if p not in done]
+        sched = v.get("schedule") or {}
+        todo = [p for p in PLATFORM_NAMES if p not in done
+                and (p not in sched or dt.datetime.fromisoformat(sched[p]) <= now)]
+        later = {p: t for p, t in sched.items() if p not in done and p not in todo}
+        if not todo:
+            continue
+        _update(tag, status="yayinlaniyor")
         try:
             with tempfile.TemporaryDirectory() as d:
                 video, meta = fetch_release(tag, Path(d))
@@ -226,10 +289,15 @@ def publish_due() -> None:
         failed = [p for p, r in platforms.items() if r.get("status") == "hata"]
         ok = [p for p, r in platforms.items() if r.get("status") == "ok"]
         status = "kismen" if failed and ok else "hata" if failed else "yayinlandi" if ok else "baglanti_yok"
-        _update(tag, status=status, platforms=platforms,
-                published=dt.datetime.now(TR).isoformat(timespec="seconds"))
+        if later:  # diğer platformların saati henüz gelmedi
+            _update(tag, status="zamanlandi", platforms=platforms, publish_at=min(later.values()))
+        else:
+            _update(tag, status=status, platforms=platforms,
+                    published=dt.datetime.now(TR).isoformat(timespec="seconds"))
         lines = []
         for p, r in platforms.items():
+            if p not in todo:
+                continue  # yalnız bu turda paylaşılanları yaz
             name = PLATFORM_NAMES[p]
             if r["status"] == "ok":
                 lines.append(f"✅ {name}: {r.get('url') or ('taslak olarak gönderildi' if r.get('draft') else 'paylaşıldı')}" + (f"\n   ⚠️ {r['note']}" if r.get("note") else "")
@@ -240,7 +308,11 @@ def publish_due() -> None:
                 lines.append(f"➖ {name}: bağlı değil")
         head = {"yayinlandi": "📢 Paylaşıldı", "kismen": "⚠️ Kısmen paylaşıldı", "hata": "❌ Paylaşılamadı",
                 "baglanti_yok": "➖ Hiçbir platform bağlı değil, paylaşım yapılmadı"}[status]
-        kb = _kb([[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]]) if failed else _kb([])
+        if later:
+            lines += [f"🕒 {PLATFORM_NAMES[p]}: {_fmt(t)}" for p, t in sorted(later.items(), key=lambda x: x[1])]
+            head = "📢 Paylaşım sürüyor" if ok else head
+        kb = (_kb([[("🚫 Kalanları iptal et", f"cancel:{tag}")]]) if later
+              else _kb([[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]]) if failed else _kb([]))
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"], "reply_markup": kb})
         api("sendMessage", data={"chat_id": chat, "text": f"{head}\n{v['title']}\n\n" + "\n".join(lines),
                                  "reply_to_message_id": v["telegram_message_id"], "disable_web_page_preview": "true"})
