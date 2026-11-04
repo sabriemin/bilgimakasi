@@ -84,7 +84,7 @@ jobs:
           git config user.email "shortgen-bot@users.noreply.github.com"
           git add history.jsonl state/
           git commit -m "Yeni video: $TAG" || exit 0
-          git pull --rebase && git push
+          for i in 1 2 3 4; do git pull --rebase && git push && break; sleep $((i*5)); done
       - name: Hata olursa senaryoyu ve bütçe kaydını sakla
         if: failure()
         run: |
@@ -94,4 +94,4 @@ jobs:
           git config user.email "shortgen-bot@users.noreply.github.com"
           git add state/ || true
           git commit -m "Yarım kalan üretim: senaryo saklandı" || exit 0
-          git pull --rebase && git push
+          for i in 1 2 3 4; do git pull --rebase && git push && break; sleep $((i*5)); done
