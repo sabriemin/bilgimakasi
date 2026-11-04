@@ -266,11 +266,18 @@ if __name__ == "__main__":
                 os.environ.setdefault(k.strip(), v.strip().strip('"'))
     if sys.argv[1] == "tiktok-login-url":
         from urllib.parse import urlencode
-        print("https://www.tiktok.com/v2/auth/authorize/?" + urlencode({
+        url = "https://www.tiktok.com/v2/auth/authorize/?" + urlencode({
             "client_key": os.environ["TIKTOK_CLIENT_KEY"].strip(), "response_type": "code",
             "scope": "user.info.basic,video.publish,video.upload",
-            "redirect_uri": TT_REDIRECT, "state": "bilgimakasi"}))
-        sys.exit(0)
+            "redirect_uri": TT_REDIRECT, "state": "bilgimakasi"})
+        # Actions günlükleri secret değerlerini maskelediği için link Telegram'dan gönderilir
+        r = requests.post(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendMessage", data={
+            "chat_id": os.environ["TELEGRAM_CHAT_ID"],
+            "text": "TikTok bağlantısı: aşağıdaki linke tıkla, @bilgimakasi ile giriş yapıp izin ver. "
+                    "Açılan sayfadaki kodu GitHub Secrets'a TIKTOK_AUTH_CODE adıyla ekle.\n\n" + url,
+            "disable_web_page_preview": "true"}, timeout=30)
+        print("Telegram:", r.status_code)
+        sys.exit(0 if r.ok else 1)
     if sys.argv[1] == "tiktok-exchange":
         key, secret, code = _env("TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET", "TIKTOK_AUTH_CODE")
         if not os.environ.get("GH_SECRETS_PAT"):
