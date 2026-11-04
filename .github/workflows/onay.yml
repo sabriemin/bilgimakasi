@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
+    inputs:
+      dakika:
+        description: "Kaç dakika boyunca düğmelere anında yanıt verilsin (0 = tek kontrol)"
+        required: false
+        default: "0"
 
 permissions:
   contents: write
@@ -16,7 +21,7 @@ concurrency:
 jobs:
   onay:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,7 +56,8 @@ jobs:
           GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then exit 0; fi
-          python -m shortgen.telegram_bot publish-due
+          D="${{ github.event.inputs.dakika || '0' }}"
+          if [ "$D" != "0" ]; then python -m shortgen.telegram_bot listen "$D"; else python -m shortgen.telegram_bot publish-due; fi
       - name: Durumu kaydet
         run: |
           git config user.name "shortgen-bot"

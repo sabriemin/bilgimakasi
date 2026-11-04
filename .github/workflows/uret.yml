@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: state
@@ -85,6 +86,10 @@ jobs:
           git add history.jsonl state/
           git commit -m "Yeni video: $TAG" || exit 0
           for i in 1 2 3 4; do git pull --rebase && git push && break; sleep $((i*5)); done
+      - name: Onay düğmelerini 30 dakika anında dinle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run onay.yml -f dakika=30 || true
       - name: Hata olursa senaryoyu ve bütçe kaydını sakla
         if: failure()
         run: |

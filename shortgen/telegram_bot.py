@@ -153,11 +153,12 @@ def _handle_callback(cq: dict, chat: str) -> None:
     api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": note[:190]})
 
 
-def poll() -> None:
-    """Yeni düğme basışlarını ve komutları işler."""
+def poll(wait: int = 0) -> int:
+    """Yeni düğme basışlarını ve komutları işler. wait>0 ise o kadar saniye yeni olay bekler (long polling)."""
     chat = str(os.environ["TELEGRAM_CHAT_ID"])
     off = load(OFFSET, {"offset": 0})
-    for u in api("getUpdates", data={"offset": off["offset"], "timeout": 0}):
+    updates = api("getUpdates", data={"offset": off["offset"], "timeout": wait}) or []
+    for u in updates:
         off["offset"] = u["update_id"] + 1
         save(OFFSET, off)  # bir olay hata verse bile tekrar tekrar işlenmesin
         if cq := u.get("callback_query"):
@@ -187,6 +188,20 @@ def poll() -> None:
                 api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya gelecek.\n"
                                          "/durum: bekleyen ve zamanlanan videolar\n/uret [konu]: hemen yeni video üret"})
     save(OFFSET, off)
+    return len(updates)
+
+
+def listen(minutes: float) -> None:
+    """Belirtilen süre boyunca düğmelere anında yanıt verir ve saati gelenleri hemen paylaşır."""
+    import time
+    end = time.time() + minutes * 60
+    while time.time() < end:
+        try:
+            poll(wait=int(max(1, min(50, end - time.time()))))
+            publish_due()
+        except Exception as e:  # noqa: BLE001
+            print("Dinleme hatası:", e)
+            time.sleep(5)
 
 
 def publish_due() -> None:
@@ -247,5 +262,7 @@ if __name__ == "__main__":
         notify(Path(sys.argv[2]), sys.argv[3])
     elif sys.argv[1] == "poll":
         poll()
+    elif sys.argv[1] == "listen":
+        listen(float(sys.argv[2]))
     elif sys.argv[1] == "publish-due":
         publish_due()
