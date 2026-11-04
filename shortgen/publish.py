@@ -50,11 +50,11 @@ def _rotate_secret(name: str, value: str) -> bool:
     return r.returncode == 0
 
 
-_DROP = ("📷", "🎙", "Görseller:", "Kaynaklar:", "Bu videoda yapay zekâ")
+_DROP = ("🎙", "Görseller:", "Kaynaklar:", "Bu videoda yapay zekâ")
 
 
 def _clean_desc(text: str) -> str:
-    """Açıklamada yalnız bilgi + etiket kalsın (eski videolardaki kaynak/atıf/yapay zekâ satırlarını at)."""
+    """Açıklamada bilgi + etiket + görsel kaynağı kalsın (eski videolardaki kaynak listesi/yapay zekâ satırlarını at)."""
     keep = [ln for ln in text.splitlines() if not ln.strip().startswith(_DROP)]
     return re.sub(r"\n{3,}", "\n\n", "\n".join(keep)).strip()
 

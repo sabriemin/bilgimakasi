@@ -128,6 +128,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
     desc = "\n\n".join(filter(None, [
         script.description,
         " ".join("#" + h.lstrip("#").replace(" ", "") for h in script.hashtags),
+        images.credits_text(credits),
     ]))
     meta = {
         "title": script.title, "description": desc, "hashtags": script.hashtags,
