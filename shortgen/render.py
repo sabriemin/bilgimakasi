@@ -25,7 +25,7 @@ WHITE = (250, 249, 245)
 GREY = (150, 148, 145)
 
 THEME_BG = {"red": RED, "yellow": YELLOW, "black": BLACK, "paper": PAPER}
-SUB_SIZE, SUB_Y, HEAD_SCALE, GRAIN_ON = 52, 1500, 1.0, True
+SUB_SIZE, SUB_Y, HEAD_SCALE, GRAIN_ON = 52, 1400, 1.0, True  # altyazı, platform arayüzünün (alt ~380 px) üstünde
 LABEL_STYLE, ROT_MAX, TEXT_ENTRY, SUB_BOX, STARS, CASE = "box", 1.8, "pop", "torn", False, "upper"
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 
@@ -44,7 +44,7 @@ def apply_template(name: str) -> dict:
     HEAD_FONT = str(FONT_DIR / t["fonts"]["headline"])
     MONO_BOLD = str(FONT_DIR / t["fonts"]["subtitle"])
     SUB_SIZE = t.get("subtitle_size", 52)
-    SUB_Y = t.get("subtitle_y", 1500)
+    SUB_Y = t.get("subtitle_y", 1400)
     HEAD_SCALE = t.get("headline_scale", 1.0)
     GRAIN_ON = t.get("grain", True)
     LABEL_STYLE = t.get("label_style", "box")      # box | plain
@@ -292,7 +292,7 @@ class SceneRenderer:
         self.labels = []
         y = {"full": 1000, "framed": 300}.get(s.image_mode, 300 if drawing else 380)
         if s.image_mode == "full":
-            y = 1330 - sum(font.getbbox(x)[3] + 40 for x in lines)
+            y = min(1330, SUB_Y - 120) - sum(font.getbbox(x)[3] + 40 for x in lines)  # altyazıya binmesin
         x0 = 54
         if s.kicker.strip():
             k = label(tr_upper(s.kicker), _font(MONO_BOLD, 34),
