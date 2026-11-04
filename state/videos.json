@@ -28,8 +28,25 @@
     "category": "spor",
     "template": "retro",
     "created": "2026-11-04T13:07:12",
-    "status": "onay_bekliyor",
+    "status": "kismen",
     "telegram_message_id": 8,
-    "platforms": {}
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "UFpdmPmentg",
+        "url": "https://youtube.com/shorts/UFpdmPmentg"
+      },
+      "instagram": {
+        "status": "hata",
+        "error": "Instagram yükleme hatası: 400 {\"debug_info\":{\"retriable\":false,\"type\":\"ProcessingFailedError\",\"message\":\"Request processing failed\"}}"
+      },
+      "tiktok": {
+        "status": "hata",
+        "error": "TikTok yükleme başlatılamadı: 403 {'error': {'code': 'unaudited_client_can_only_post_to_private_accounts', 'message': 'Please review our integration guidelines at https://developers.tiktok.com/doc/content-sharing-guidelines/', 'log_id': '202611042252332DDAF76246E08B07A49A'}}"
+      }
+    },
+    "publish_at": "2026-11-04T14:51:56+00:00",
+    "decided": "2026-11-04T17:27:09+03:00",
+    "published": "2026-11-04T17:52:33+03:00"
   }
 ]
