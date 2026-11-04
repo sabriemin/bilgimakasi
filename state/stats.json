@@ -1,25 +1,30 @@
 {
- "time": "2026-11-05T00:00+03:00",
+ "time": "2026-11-05T00:39+03:00",
  "platforms": {
   "youtube": {
    "account": {
     "followers": 893,
     "views": 173861,
-    "videos": 172
+    "videos": 169
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 40,
+     "views": 68,
      "likes": 0,
      "comments": 0
     },
     "short-20261104-1839": {
-     "views": 24,
+     "views": 40,
      "likes": 1,
      "comments": 0
     },
     "short-20261104-2033": {
      "views": 3,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261104-212900": {
+     "views": 0,
      "likes": 0,
      "comments": 0
     }
@@ -28,31 +33,38 @@
   "instagram": {
    "account": {
     "followers": 4,
-    "videos": 3,
-    "views": 213,
-    "likes": 3,
-    "comments": 0,
-    "saves": 0,
-    "shares": 0
+    "videos": 4,
+    "views": 1368,
+    "likes": 33,
+    "comments": 1,
+    "saves": 4,
+    "shares": 1
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 130,
+     "views": 141,
      "likes": 2,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 79,
+     "views": 122,
      "likes": 0,
      "comments": 0,
-     "saves": 0,
+     "saves": 1,
      "shares": 0
     },
     "short-20261104-2033": {
-     "views": 4,
-     "likes": 1,
+     "views": 1105,
+     "likes": 31,
+     "comments": 1,
+     "saves": 3,
+     "shares": 1
+    },
+    "short-20261104-212900": {
+     "views": 0,
+     "likes": 0,
      "comments": 0,
      "saves": 0,
      "shares": 0
@@ -63,30 +75,37 @@
    "account": {
     "followers": 17,
     "likes": 237,
-    "videos": 3,
-    "views": 696,
+    "videos": 4,
+    "views": 733,
     "comments": 0,
     "shares": 0
    },
    "videos": {},
    "list": [
     {
+     "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
+     "views": 6,
+     "likes": 0,
+     "comments": 0,
+     "shares": 0
+    },
+    {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 38,
+     "views": 60,
      "likes": 2,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "You'll Never Walk Alone, Liverpool tribünlerinden önce 1945'",
-     "views": 177,
+     "views": 183,
      "likes": 8,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "1904 St. Louis Olimpiyatları'ndaki maratonda bir koşucu yolu",
-     "views": 481,
+     "views": 484,
      "likes": 6,
      "comments": 0,
      "shares": 0
@@ -97,6 +116,7 @@
  "titles": {
   "short-20261104-1307": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi",
   "short-20261104-1839": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı",
-  "short-20261104-2033": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı"
+  "short-20261104-2033": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı",
+  "short-20261104-212900": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi"
  }
 }
