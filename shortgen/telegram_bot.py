@@ -74,6 +74,24 @@ def _find(videos: list, tag: str) -> dict | None:
     return next((v for v in videos if v["tag"] == tag), None)
 
 
+def _refresh_videos() -> None:
+    """Dinleme işi başladıktan sonra üretilen videoları uzak depodan alır (yerel değişikliklere dokunmaz)."""
+    import subprocess
+    try:
+        subprocess.run(["git", "fetch", "-q", "origin", "main"], cwd=ROOT, check=True, timeout=60)
+        remote = json.loads(subprocess.run(["git", "show", "origin/main:state/videos.json"], cwd=ROOT,
+                                           capture_output=True, text=True, check=True).stdout)
+    except Exception as e:  # noqa: BLE001
+        print("Uzak durum alınamadı:", e)
+        return
+    videos = load(VIDEOS, [])
+    have = {v["tag"] for v in videos}
+    new = [v for v in remote if v["tag"] not in have]
+    if new:
+        save(VIDEOS, videos + new)
+        print("Uzaktan eklenen videolar:", [v["tag"] for v in new])
+
+
 def _update(tag: str, **fields) -> dict | None:
     videos = load(VIDEOS, [])
     v = _find(videos, tag)
@@ -157,6 +175,10 @@ def _handle_callback(cq: dict, chat: str) -> None:
         return
     videos = load(VIDEOS, [])
     v = _find(videos, tag)
+    if not v:  # dinleme başladıktan sonra üretilmiş olabilir
+        _refresh_videos()
+        videos = load(VIDEOS, [])
+        v = _find(videos, tag)
     if not v:
         api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Video bulunamadı."})
         return
