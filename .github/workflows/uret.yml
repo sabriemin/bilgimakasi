@@ -19,9 +19,8 @@ permissions:
 
 # Onay dinleme oturumu (group: state) 30 dk sürebildiği için üretim ayrı grupta çalışır;
 # durum dosyaları shortgen.state_sync ile içerik düzeyinde birleştirilir.
-concurrency:
-  group: uret
-  cancel-in-progress: false
+# Üretimler paralel çalışabilir: GitHub bir grupta yalnız 1 bekleyen iş tuttuğu için grup kullanmak
+# art arda gelen üretim isteklerinden birini iptal ediyordu. Durum dosyaları state_sync ile birleştirilir.
 
 jobs:
   uret:
@@ -66,7 +65,7 @@ jobs:
           [ -n "$TEMPLATE" ] && ARGS+=(--template "$TEMPLATE")
           python -m shortgen.pipeline "${ARGS[@]}"
           echo "OUT_DIR=$(ls -td output/*/ | head -1)" >> "$GITHUB_ENV"
-          echo "TAG=short-$(date -u +%Y%m%d-%H%M)" >> "$GITHUB_ENV"
+          echo "TAG=short-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_ENV"
       - name: Videoyu sakla (GitHub Release)
         env:
           GH_TOKEN: ${{ github.token }}
