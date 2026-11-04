@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Video etiketi (ör. short-20261104-2100)"
+        description: "Video etiketi (ör. short-20261104-2100) veya hepsi"
         required: true
       islem:
         description: "bos = yalnız bildir, yeniden = saatleri yeniden hesapla"
