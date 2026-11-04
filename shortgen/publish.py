@@ -195,12 +195,19 @@ def tiktok(video: Path, meta: dict) -> dict:
     else:
         chunk = 10 * 1024 * 1024
         count = size // chunk
-    init = requests.post(f"{TT}/post/publish/video/init/", headers=h, json={
-        "post_info": {"title": title, "privacy_level": privacy, "disable_comment": False, "disable_duet": False,
-                      "disable_stitch": False, "is_aigc": bool(meta.get("ai_voice"))},
-        "source_info": {"source": "FILE_UPLOAD", "video_size": size, "chunk_size": chunk,
-                        "total_chunk_count": count}}, timeout=60)
+    def _init(priv: str):
+        return requests.post(f"{TT}/post/publish/video/init/", headers=h, json={
+            "post_info": {"title": title, "privacy_level": priv, "disable_comment": False, "disable_duet": False,
+                          "disable_stitch": False, "is_aigc": bool(meta.get("ai_voice"))},
+            "source_info": {"source": "FILE_UPLOAD", "video_size": size, "chunk_size": chunk,
+                            "total_chunk_count": count}}, timeout=60)
+    init = _init(privacy)
     d = init.json()
+    # incelemeden geçmemiş (sandbox) uygulamalar yalnızca gizli paylaşabilir
+    if "unaudited" in str(d.get("error", {}).get("code", "")) and privacy != "SELF_ONLY":
+        privacy = "SELF_ONLY"
+        init = _init(privacy)
+        d = init.json()
     if not init.ok or d.get("error", {}).get("code") not in (None, "ok"):
         raise RuntimeError(f"TikTok yükleme başlatılamadı: {init.status_code} {str(d)[:400]}")
     pid, url = d["data"]["publish_id"], d["data"]["upload_url"]
