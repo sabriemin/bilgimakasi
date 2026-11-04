@@ -233,47 +233,6 @@ def _dispatch(topic: str) -> bool:
     return r.status_code == 204
 
 
-def poll() -> list[str]:
-    """Yeni olayları işler; onaylanan etiketleri döndürür (yükleme adımı için)."""
-    chat = str(os.environ["TELEGRAM_CHAT_ID"])
-    off = load(OFFSET, {"offset": 0})
-    approved = []
-    for u in api("getUpdates", data={"offset": off["offset"], "timeout": 0}):
-        off["offset"] = u["update_id"] + 1
-        if cq := u.get("callback_query"):
-            if str(cq["from"]["id"]) != chat:
-                continue
-            action, tag = cq["data"].split(":", 1)
-            v = _set_status(tag, "onaylandi" if action == "ok" else "reddedildi")
-            note = "✅ Onaylandı, yüklemeye alındı." if action == "ok" else "❌ Reddedildi."
-            api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": note})
-            if v:
-                api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"],
-                                                    "reply_markup": json.dumps({"inline_keyboard": []})})
-                api("sendMessage", data={"chat_id": chat, "text": f"{note}\n{v['title']}",
-                                         "reply_to_message_id": v["telegram_message_id"]})
-            if action == "ok":
-                approved.append(tag)
-        elif (m := u.get("message")) and str(m["chat"]["id"]) == chat:
-            text = (m.get("text") or "").strip()
-            if text.startswith("/durum"):
-                vs = load(VIDEOS, [])
-                bekleyen = [v for v in vs if v["status"] == "onay_bekliyor"]
-                lines = [f"Toplam video: {len(vs)}", f"Onay bekleyen: {len(bekleyen)}"]
-                lines += [f"• {v['title']}" for v in bekleyen[-10:]]
-                api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
-            elif text.startswith("/uret"):
-                topic = text[5:].strip()
-                ok = _dispatch(topic)
-                api("sendMessage", data={"chat_id": chat, "text": "Üretim başlatıldı, birkaç dakika içinde gelir." if ok
-                                         else "Üretim başlatılamadı."})
-            elif text.startswith("/start"):
-                api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya gelecek.\n"
-                                         "/durum: bekleyen videolar\n/uret [konu]: hemen yeni video üret"})
-    save(OFFSET, off)
-    return approved
-
-
 if __name__ == "__main__":
     from .pipeline import load_env
     load_env(ROOT / ".env")
