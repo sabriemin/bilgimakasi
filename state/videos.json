@@ -38,15 +38,17 @@
       },
       "instagram": {
         "status": "hata",
-        "error": "Instagram yükleme hatası: 400 {\"debug_info\":{\"retriable\":false,\"type\":\"ProcessingFailedError\",\"message\":\"Request processing failed\"}}"
+        "error": "Instagram işleme zaman aşımı"
       },
       "tiktok": {
-        "status": "hata",
-        "error": "TikTok yükleme başlatılamadı: 403 {'error': {'code': 'unaudited_client_can_only_post_to_private_accounts', 'message': 'Please review our integration guidelines at https://developers.tiktok.com/doc/content-sharing-guidelines/', 'log_id': '202611042252332DDAF76246E08B07A49A'}}"
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704332834034780181",
+        "draft": true,
+        "note": "Uygulama TikTok incelemesinden geçene kadar video taslak olarak gönderilir: TikTok'taki bildirime dokunup açıklamayı yapıştır ve Paylaş de"
       }
     },
-    "publish_at": "2026-11-04T14:51:56+00:00",
+    "publish_at": "2026-11-04T14:55:24+00:00",
     "decided": "2026-11-04T17:27:09+03:00",
-    "published": "2026-11-04T17:52:33+03:00"
+    "published": "2026-11-04T18:07:37+03:00"
   }
 ]
