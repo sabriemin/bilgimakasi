@@ -1,0 +1,436 @@
+{
+ "topic": "Ahtapotların zekâsı: Inky'nin kaçışı, kollardaki nöronlar, alet kullanımı ve insan tanıma",
+ "category": "Bilim ve Doğa",
+ "template": "",
+ "title": "Kilitli Akvaryumdan Kaçan Ahtapot: Bu Zekâ Nereden Geliyor?",
+ "description": "2016'da duyulan bir haber: Yeni Zelanda'da bir ahtapot tankından çıkıp bir gider borusundan denize kaçtı. Nöronlarının çoğu kollarında, alet kullanıyor, insanları birbirinden ayırt ediyor. Sizce ahtapotlar uzun yaşasaydı neler başarırdı?",
+ "hashtags": [
+  "#ahtapot",
+  "#bilgimakasi",
+  "#bilim",
+  "#doğa",
+  "#hayvanlar",
+  "#zeka",
+  "#shorts",
+  "#bilgi"
+ ],
+ "scenes": [
+  {
+   "narration": "Bir sabah akvaryum çalışanları tankı bomboş buldu.",
+   "kicker": "YENİ ZELANDA",
+   "headline": [
+    "TANK",
+    "BOMBOŞ"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "framed",
+   "image_query": "octopus in aquarium tank",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Peki bir ahtapot kapalı bir odadan nasıl kaçar?",
+   "kicker": "",
+   "headline": [
+    "NASIL",
+    "KAÇAR?"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "question",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Adı Inky'ydi. Napier'deki Ulusal Akvaryum'da yaşıyordu.",
+   "kicker": "NAPIER, YENİ ZELANDA",
+   "headline": [
+    "INKY"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_query": "National Aquarium of New Zealand Napier",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Tankın kapağında küçük bir aralık kalmıştı.",
+   "kicker": "",
+   "headline": [
+    "KÜÇÜK",
+    "BİR ARALIK"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "door",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Inky dışarı süzüldü, zeminde süründü...",
+   "kicker": "",
+   "headline": [
+    "DIŞARI",
+    "SÜZÜLDÜ"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "octopus",
+   "motion": "fly_right"
+  },
+  {
+   "narration": "...ve bir gider borusundan denize ulaştı.",
+   "kicker": "HAWKE KÖRFEZİ",
+   "headline": [
+    "DENİZE",
+    "ULAŞTI"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "full",
+   "image_query": "Hawke Bay Napier coast sea",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Kemiksiz bedeni, gagasından büyük hemen her aralıktan geçebiliyor.",
+   "kicker": "",
+   "headline": [
+    "KEMİKSİZ",
+    "BEDEN"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "framed",
+   "image_query": "octopus beak",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Ama asıl şaşırtıcı olan bedeni değil, beyni.",
+   "kicker": "",
+   "headline": [
+    "ASIL MESELE",
+    "BEYİN"
+   ],
+   "highlight_line": 1,
+   "strike": [
+    "BEDEN"
+   ],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Bir ahtapotun yaklaşık beş yüz milyon nöronu var.",
+   "kicker": "SIRADAN AHTAPOT",
+   "headline": [
+    "500 MİLYON",
+    "NÖRON"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "framed",
+   "image_query": "Octopus vulgaris",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Bu nöronların üçte ikisi kafasında değil, kollarında.",
+   "kicker": "ÜÇTE İKİSİ",
+   "headline": [
+    "KOLLARINDA"
+   ],
+   "highlight_line": 0,
+   "strike": [
+    "KAFASINDA"
+   ],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_query": "octopus arm tentacle",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Kollar vantuzlarıyla dokunarak tat alıyor, kısmen kendi başına hareket edebiliyor.",
+   "kicker": "",
+   "headline": [
+    "DOKUNARAK",
+    "TAT ALIYOR"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "full",
+   "image_query": "octopus suckers close-up",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Üstelik üç kalbi ve mavi kanı var.",
+   "kicker": "",
+   "headline": [
+    "ÜÇ KALP",
+    "MAVİ KAN"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "heart",
+   "motion": "pulse"
+  },
+  {
+   "narration": "Endonezya'da bilim insanları bir şey daha gördü.",
+   "kicker": "ENDONEZYA",
+   "headline": [
+    "BİR ŞEY",
+    "DAHA"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Damarlı ahtapotlar hindistan cevizi kabuklarını yanlarında taşıyordu.",
+   "kicker": "DAMARLI AHTAPOT",
+   "headline": [
+    "HİNDİSTAN CEVİZİ",
+    "KABUKLARI"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "full",
+   "image_query": "Amphioctopus marginatus coconut shell",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Tehlike anında kabukların içine girip saklanıyorlardı.",
+   "kicker": "",
+   "headline": [
+    "İÇİNE GİRİP",
+    "SAKLANIYORLAR"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "coconut shell",
+   "motion": "drop_in"
+  },
+  {
+   "narration": "Araştırmacılar bunu omurgasızlarda alet kullanımı olarak tanımladı.",
+   "kicker": "CURRENT BIOLOGY, 2009",
+   "headline": [
+    "ALET",
+    "KULLANIMI"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Seattle'daki bir deneyde ahtapotlar insanları birbirinden ayırt etti.",
+   "kicker": "SEATTLE AKVARYUMU",
+   "headline": [
+    "İNSANLARI",
+    "AYIRT ETTİ"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "framed",
+   "image_query": "Giant Pacific octopus Enteroctopus dofleini",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Aynı giysili iki kişiden besleyeni ve rahatsız edeni tanıdılar.",
+   "kicker": "",
+   "headline": [
+    "AYNI GİYSİ",
+    "TANIDILAR"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Ortak atamız yarım milyar yıldan eski. Bu zekâ bizden bağımsız evrimleşti.",
+   "kicker": "",
+   "headline": [
+    "BAĞIMSIZ",
+    "EVRİMLEŞTİ"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "octopus",
+   "motion": "float"
+  },
+  {
+   "narration": "Filozof Peter Godfrey-Smith, ahtapotla karşılaşmayı akıllı bir uzaylıyla karşılaşmaya benzetir.",
+   "kicker": "PETER GODFREY-SMITH",
+   "headline": [
+    "AKILLI BİR",
+    "UZAYLI"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "letter",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "2022'de Birleşik Krallık, ahtapotları yasayla hissedebilen canlılar olarak tanıdı.",
+   "kicker": "BİRLEŞİK KRALLIK, 2022",
+   "headline": [
+    "HİSSEDEBİLEN",
+    "CANLILAR"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_query": "Palace of Westminster",
+   "icon": "record",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Oysa çoğu tür yalnızca bir iki yıl yaşıyor.",
+   "kicker": "",
+   "headline": [
+    "BİR İKİ",
+    "YIL"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "framed",
+   "image_query": "Octopus cyanea",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Bu kadar kısa bir ömre bu kadar zekâ neden sığar?",
+   "kicker": "",
+   "headline": [
+    "NEDEN",
+    "BU KADAR ZEKÂ?"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "question",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Sizce ahtapotlar uzun yaşasaydı neler başarırdı?",
+   "kicker": "SİZCE?",
+   "headline": [
+    "UZUN",
+    "YAŞASAYDI?"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "question",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Düşüncelerinizi yazın, yorumlarda buluşalım.",
+   "kicker": "BİLGİ MAKASI",
+   "headline": [
+    "YORUMLARDA",
+    "BULUŞALIM"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "arrow",
+   "anim_query": "",
+   "motion": "none"
+  }
+ ],
+ "sources": [
+  "https://www.bostonglobe.com/news/world/2016/04/13/inky-octopus-escapes-new-zealand-aquarium/Tmq6wbv3lujKGKw9e4alAL/story.html",
+  "https://theworld.org/stories/2016/04/13/inky-octopus-stages-great-escape-nz-aquarium",
+  "https://www.goodmorningamerica.com/news/story/inky-octopus-stages-daring-nighttime-escape-zealand-aquarium-38360845",
+  "https://www.newstalkzb.co.nz/news/national/dramatic-escape-for-inky-the-octopus/",
+  "https://sciencedaily.com/releases/2009/12/091214121953.htm",
+  "https://pubmed.ncbi.nlm.nih.gov/20563906/",
+  "https://sciencedaily.com/releases/2020/11/201102120027.htm",
+  "https://www.harvardmagazine.com/2023/02/feature-nicholas-bellono-animal-adaptations",
+  "https://www.smithsonianmag.com/science-nature/ten-wild-facts-about-octopuses-they-have-three-hearts-big-brains-and-blue-blood-7625828/",
+  "https://www.areanews.com.au/story/4569966/a-philosophers-guide-to-meeting-aliens-on-earth/",
+  "https://mitpressbookstore.mit.edu/book/9780374537197",
+  "https://www.legislation.gov.uk/ukpga/2022/22/notes/division/3/index.htm",
+  "https://www.eurogroupforanimals.org/news/uk-sentience-bill-passes-final-stages-recognise-decapod-and-cephalopod-sentience-law"
+ ]
+}

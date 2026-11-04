@@ -1,0 +1,50 @@
+{
+  "name": "Gazete",
+  "description": "Eski gazete sayfası: kırık beyaz, siyah tırnaklı başlıklar, bordo vurgu. Tarih, siyaset dışı belgesel hikâyeler, keşifler için.",
+  "colors": {
+    "accent": [
+      140,
+      20,
+      30
+    ],
+    "highlight": [
+      225,
+      205,
+      150
+    ],
+    "dark": [
+      26,
+      24,
+      22
+    ],
+    "light": [
+      236,
+      229,
+      212
+    ],
+    "box": [
+      248,
+      244,
+      233
+    ],
+    "muted": [
+      150,
+      140,
+      125
+    ]
+  },
+  "fonts": {
+    "headline": "PlayfairDisplay-Black.ttf",
+    "subtitle": "IBMPlexMono-SemiBold.ttf"
+  },
+  "subtitle_size": 46,
+  "subtitle_y": 1520,
+  "headline_scale": 0.85,
+  "grain": true,
+  "label_style": "plain",
+  "rotation": 0,
+  "text_entry": "wipe",
+  "subtitle_box": "plain",
+  "stars": false,
+  "case": "asis"
+}

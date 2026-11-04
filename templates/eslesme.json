@@ -1,0 +1,21 @@
+{
+  "_aciklama": "Kategori -> şablon. Listede olmayan kategoriler 'varsayilan' şablonu kullanır. 'claude_secsin' true ise Claude konuya göre şablon önerir ve bu tablo yalnızca yedek olur.",
+  "varsayilan": "kolaj",
+  "claude_secsin": false,
+  "kategoriler": {
+    "tarih": "kolaj",
+    "az bilinen insan hikâyeleri": "kolaj",
+    "sanat ve müzik": "retro",
+    "uzay": "gece",
+    "teknoloji": "minimal",
+    "icatlar": "gazete",
+    "doğa ve hayvanlar": "doga",
+    "bilim": "doga",
+    "psikoloji": "minimal",
+    "insan vücudu": "doga",
+    "coğrafya": "doga",
+    "ekonomi ve markalar": "retro",
+    "spor": "retro",
+    "dil ve kültür": "gazete"
+  }
+}

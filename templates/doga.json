@@ -1,0 +1,50 @@
+{
+  "name": "Doğa",
+  "description": "Krem kâğıt, orman yeşili ve turuncu. Doğa, hayvanlar, bilim, psikoloji için.",
+  "colors": {
+    "accent": [
+      34,
+      110,
+      70
+    ],
+    "highlight": [
+      245,
+      150,
+      40
+    ],
+    "dark": [
+      30,
+      38,
+      30
+    ],
+    "light": [
+      240,
+      233,
+      214
+    ],
+    "box": [
+      252,
+      249,
+      240
+    ],
+    "muted": [
+      150,
+      145,
+      130
+    ]
+  },
+  "fonts": {
+    "headline": "Oswald-Bold.ttf",
+    "subtitle": "CourierPrime-Bold.ttf"
+  },
+  "subtitle_size": 52,
+  "subtitle_y": 1500,
+  "headline_scale": 0.95,
+  "grain": true,
+  "label_style": "box",
+  "rotation": 1.0,
+  "text_entry": "wipe",
+  "subtitle_box": "torn",
+  "stars": false,
+  "case": "upper"
+}

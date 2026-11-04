@@ -1,0 +1,87 @@
+name: Short video üret
+
+on:
+  schedule:
+    - cron: "0 6 * * *"    # 09:00 Türkiye saati
+    - cron: "0 15 * * *"   # 18:00 Türkiye saati
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "İsteğe bağlı konu önerisi"
+        required: false
+      template:
+        description: "İsteğe bağlı şablon (kolaj, gece, doga)"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: state
+  cancel-in-progress: false
+
+jobs:
+  uret:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Anahtarlar tanımlı mı?
+        env:
+          T: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -z "$T" ]; then echo "::error::CLAUDE_CODE_OAUTH_TOKEN gizli anahtarı tanımlı değil."; exit 1; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: FFmpeg kur
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: pip install -r requirements.txt "rembg[cpu]"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Claude Code kur
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Arka plan silme modelini önbellekle
+        uses: actions/cache@v4
+        with:
+          path: ~/.u2net
+          key: u2net-v1
+      - name: Video üret
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '100' }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID || 'BPOQsosga3cXhsJivIRc' }}
+          MUSIC_FILE: ${{ vars.MUSIC_FILE }}
+          TOPIC: ${{ github.event.inputs.topic }}
+          TEMPLATE: ${{ github.event.inputs.template }}
+        run: |
+          ARGS=()
+          [ -n "$TOPIC" ] && ARGS+=(--topic "$TOPIC")
+          [ -n "$TEMPLATE" ] && ARGS+=(--template "$TEMPLATE")
+          python -m shortgen.pipeline "${ARGS[@]}"
+          echo "OUT_DIR=$(ls -td output/*/ | head -1)" >> "$GITHUB_ENV"
+          echo "TAG=short-$(date -u +%Y%m%d-%H%M)" >> "$GITHUB_ENV"
+      - name: Videoyu sakla (GitHub Release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE=$(python -c "import json;print(json.load(open('${OUT_DIR}metadata.json'))['title'])")
+          gh release create "$TAG" "${OUT_DIR}video.mp4" "${OUT_DIR}metadata.json" "${OUT_DIR}script.json" \
+            --title "$TITLE" --notes "Onay bekliyor" --prerelease
+      - name: Telegram'a gönder
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, bildirim atlandı."; exit 0; fi
+          python -m shortgen.telegram_bot notify "$OUT_DIR" "$TAG"
+      - name: Geçmişi kaydet
+        run: |
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          git add history.jsonl state/
+          git commit -m "Yeni video: $TAG" || exit 0
+          git pull --rebase && git push

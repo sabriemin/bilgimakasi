@@ -1,0 +1,50 @@
+{
+  "name": "Gece",
+  "description": "Koyu lacivert zemin, camgöbeği ve pembe vurgular. Uzay, teknoloji, gizem için.",
+  "colors": {
+    "accent": [
+      0,
+      200,
+      230
+    ],
+    "highlight": [
+      255,
+      70,
+      140
+    ],
+    "dark": [
+      12,
+      16,
+      38
+    ],
+    "light": [
+      28,
+      36,
+      74
+    ],
+    "box": [
+      240,
+      244,
+      255
+    ],
+    "muted": [
+      130,
+      140,
+      170
+    ]
+  },
+  "fonts": {
+    "headline": "BebasNeue-Regular.ttf",
+    "subtitle": "SpaceMono-Bold.ttf"
+  },
+  "subtitle_size": 46,
+  "subtitle_y": 1520,
+  "headline_scale": 1.15,
+  "grain": true,
+  "label_style": "box",
+  "rotation": 0.6,
+  "text_entry": "slide",
+  "subtitle_box": "pill",
+  "stars": true,
+  "case": "upper"
+}

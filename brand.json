@@ -1,0 +1,13 @@
+{
+  "_aciklama": "Marka öğeleri. enabled false yapılırsa videolar markasız çıkar.",
+  "enabled": true,
+  "handle": "@bilgimakasi",
+  "slogan": "Kesip biçilmiş bilgi.",
+  "follow_text": "TAKİP ET",
+  "watermark_opacity": 0.85,
+  "watermark_switch_seconds": 7,
+  "intro_cut": true,
+  "cut_transition_every": 4,
+  "subtitle_handle": true,
+  "outro_seconds": 2.4
+}

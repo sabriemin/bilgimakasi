@@ -1,0 +1,345 @@
+{
+ "topic": "Eileen Collins ve Mercury 13",
+ "category": "uzay",
+ "title": "Uzay mekiğine ters takla attıran kadın",
+ "description": "Mercury 13 kadınları uzaya gidemedi. Otuz yıl sonra Eileen Collins onları fırlatmaya davet etti. Sence bu hikâye neden az biliniyor?",
+ "hashtags": [
+  "uzay",
+  "nasa",
+  "mercury13",
+  "bilgi",
+  "shorts"
+ ],
+ "scenes": [
+  {
+   "narration": "Bu fotoğraftaki kadın, uzay mekiğini havada ters takla attırdı.",
+   "kicker": "BU FOTOĞRAFTAKİ KADIN",
+   "headline": [
+    "TERS TAKLA"
+   ],
+   "highlight_line": 0,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "local:demo/mekik_cizim.png",
+   "motion": "fly_up"
+  },
+  {
+   "narration": "Peki neden? Hikâye ondan çok önce başlıyor.",
+   "kicker": "PEKİ NEDEN?",
+   "headline": [
+    "ÇOK ÖNCE"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Yıl 1961.",
+   "kicker": "YIL",
+   "headline": [
+    "1961"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "On üç kadın, astronotlarla aynı zorlu testlerden geçiyor.",
+   "kicker": "ABD",
+   "headline": [
+    "13 KADIN"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Bazıları erkek adaylar kadar iyi sonuç alıyor.",
+   "kicker": "",
+   "headline": [
+    "ERKEKLER",
+    "KADAR İYİ"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Ama uzaya gitmelerine izin verilmiyor.",
+   "kicker": "AMA",
+   "headline": [
+    "İZİN",
+    "VERİLMİYOR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Çünkü şart, jet test pilotu olmak.",
+   "kicker": "ÇÜNKÜ ŞART",
+   "headline": [
+    "JET TEST",
+    "PİLOTU"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Ve o yıllarda kadınlar bu eğitimi alamıyor.",
+   "kicker": "",
+   "headline": [
+    "KADINLARA",
+    "KAPALI"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "door",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Bu ekip tarihe Mercury 13 olarak geçiyor.",
+   "kicker": "TARİHE GEÇEN ADI",
+   "headline": [
+    "MERCURY 13"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Otuz yıldan fazla sonra,",
+   "kicker": "OTUZ YIL SONRA",
+   "headline": [
+    "1995"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Eileen Collins, uzay mekiğinin ilk kadın pilotu oluyor.",
+   "kicker": "EILEEN COLLINS",
+   "headline": [
+    "İLK KADIN",
+    "PİLOT"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "local:demo/eileen_collins_nasa.jpg",
+   "motion": "zoom_in"
+  },
+  {
+   "narration": "Fırlatma gününe Mercury 13 kadınlarını davet ediyor.",
+   "kicker": "FIRLATMA GÜNÜ",
+   "headline": [
+    "DAVET"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "letter",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Onların gidemediği yere, artık o gidiyor.",
+   "kicker": "",
+   "headline": [
+    "GİDEMEDİKLERİ",
+    "YERE"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "1999'da bir adım daha atıyor.",
+   "kicker": "1999",
+   "headline": [
+    "BİR ADIM",
+    "DAHA"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "local:demo/mekik_cizim.png",
+   "motion": "fly_up"
+  },
+  {
+   "narration": "Bir uzay mekiğine komuta eden ilk kadın oluyor.",
+   "kicker": "",
+   "headline": [
+    "İLK KADIN",
+    "KOMUTAN"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "full",
+   "image_query": "local:demo/eileen_collins_nasa.jpg",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "2005'te ise Columbia faciasından sonraki ilk uçuşu yönetiyor.",
+   "kicker": "2005",
+   "headline": [
+    "FACİADAN",
+    "SONRA"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "İstasyona yaklaşırken mekiği ters takla attırıyor.",
+   "kicker": "İSTASYONA YAKLAŞIRKEN",
+   "headline": [
+    "TERS TAKLA"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "yellow",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "arrow",
+   "anim_query": "local:demo/mekik_cizim.png",
+   "motion": "spin"
+  },
+  {
+   "narration": "Böylece istasyondaki ekip, ısı kalkanını fotoğraflayabiliyor.",
+   "kicker": "BÖYLECE",
+   "headline": [
+    "ISI KALKANI"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Bunu yapan ilk komutan o.",
+   "kicker": "BUNU YAPAN",
+   "headline": [
+    "İLK"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Sence Mercury 13'ün hikâyesi neden bu kadar az biliniyor?",
+   "kicker": "SENCE BU HİKÂYE",
+   "headline": [
+    "NEDEN AZ",
+    "BİLİNİYOR?"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "red",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "question",
+   "anim_query": "",
+   "motion": "none"
+  },
+  {
+   "narration": "Yorumlarda buluşalım.",
+   "kicker": "",
+   "headline": [
+    "YORUMLARA",
+    "YAZ"
+   ],
+   "highlight_line": 1,
+   "strike": [],
+   "theme": "black",
+   "image_mode": "none",
+   "image_query": "",
+   "icon": "none",
+   "anim_query": "",
+   "motion": "none"
+  }
+ ],
+ "sources": [
+  "NASA: Eileen Collins biyografisi",
+  "NASA: STS-63, STS-93, STS-114 görev sayfaları"
+ ]
+}

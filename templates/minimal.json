@@ -1,0 +1,50 @@
+{
+  "name": "Minimal",
+  "description": "Beyaz zemin, siyah yazı, tek mavi vurgu, kutusuz sade başlıklar. Teknoloji, ekonomi, psikoloji için.",
+  "colors": {
+    "accent": [
+      37,
+      99,
+      235
+    ],
+    "highlight": [
+      255,
+      200,
+      0
+    ],
+    "dark": [
+      17,
+      17,
+      17
+    ],
+    "light": [
+      247,
+      247,
+      245
+    ],
+    "box": [
+      255,
+      255,
+      255
+    ],
+    "muted": [
+      160,
+      160,
+      160
+    ]
+  },
+  "fonts": {
+    "headline": "ArchivoBlack-Regular.ttf",
+    "subtitle": "DMMono-Medium.ttf"
+  },
+  "subtitle_size": 46,
+  "subtitle_y": 1520,
+  "headline_scale": 0.8,
+  "grain": false,
+  "label_style": "plain",
+  "rotation": 0,
+  "text_entry": "slide",
+  "subtitle_box": "pill",
+  "stars": false,
+  "case": "upper"
+}
