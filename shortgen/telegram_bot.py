@@ -29,7 +29,14 @@ OFFSET = STATE / "telegram_offset.json"
 
 def api(method: str, **kw):
     r = requests.post(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/{method}", timeout=120, **kw)
-    r.raise_for_status()
+    if not r.ok:
+        desc = r.json().get("description", "") if r.headers.get("content-type", "").startswith("application/json") else ""
+        # önemsiz hatalar: eski düğme sorgusu, değişmeyen klavye
+        if method in ("answerCallbackQuery", "editMessageReplyMarkup") and (
+                "query is too old" in desc or "not modified" in desc or "query ID is invalid" in desc):
+            print(f"Telegram {method} atlandı: {desc}")
+            return None
+        raise RuntimeError(f"Telegram {method} hatası {r.status_code}: {desc}")
     return r.json()["result"]
 
 
