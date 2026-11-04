@@ -113,7 +113,42 @@ def _ig_base(token: str) -> str:
     return "https://graph.facebook.com" if token.startswith("EAA") else IG_GRAPH
 
 
+HOST_REPO = os.environ.get("VIDEO_HOST_REPO", "sabriemin/sabriemin.github.io")
+
+
+def _host_temp(video: Path) -> tuple[str, str] | None:
+    """Videoyu herkese açık site deposuna geçici sürüm olarak yükler; (link, etiket) döndürür."""
+    pat = os.environ.get("GH_SECRETS_PAT")
+    if not pat:
+        return None
+    tag = f"gecici-{int(time.time())}"
+    env = {**os.environ, "GH_TOKEN": pat}
+    r = subprocess.run(["gh", "release", "create", tag, str(video), "-R", HOST_REPO, "--title", "Geçici video",
+                        "--notes", "Instagram yüklemesi için geçici; birkaç dakika içinde silinir.", "--latest=false"],
+                       env=env, capture_output=True, text=True)
+    if r.returncode:
+        print("Geçici video yüklenemedi:", r.stderr.strip()[:300])
+        return None
+    return f"https://github.com/{HOST_REPO}/releases/download/{tag}/{video.name}", tag
+
+
+def _host_cleanup(tag: str) -> None:
+    subprocess.run(["gh", "release", "delete", tag, "-R", HOST_REPO, "--yes", "--cleanup-tag"],
+                   env={**os.environ, "GH_TOKEN": os.environ.get("GH_SECRETS_PAT", "")}, capture_output=True)
+
+
 def instagram(video: Path, meta: dict) -> dict:
+    if not meta.get("public_video_url"):
+        hosted = _host_temp(video)
+        if hosted:
+            try:
+                return _instagram(video, {**meta, "public_video_url": hosted[0]})
+            finally:
+                _host_cleanup(hosted[1])
+    return _instagram(video, meta)
+
+
+def _instagram(video: Path, meta: dict) -> dict:
     (token,) = _env("IG_ACCESS_TOKEN")
     user = os.environ.get("IG_USER_ID", "").strip() or "me"  # numara verilmezse anahtarın sahibi kullanılır
     G = _ig_base(token)
@@ -338,35 +373,31 @@ if __name__ == "__main__":
             print(cid, st.text[:300])
         sys.exit(0)
     if sys.argv[1] == "ig-upload-test":
-        # paylaşım yapmadan Instagram yüklemesini dener ve ayrıntıları yazar
+        # paylaşım yapmadan: videoyu geçici linke koy, Instagram kapsayıcısı oluştur, işlenmesini bekle
         (token,) = _env("IG_ACCESS_TOKEN")
         user = os.environ.get("IG_USER_ID", "").strip() or "me"
         G = _ig_base(token)
         with tempfile.TemporaryDirectory() as d:
             v, m = fetch_release(sys.argv[2], Path(d))
-            size = v.stat().st_size
-            data = v.read_bytes()
-            for ver, mode in (("v26.0", "bytes"), ("v26.0", "bytes-ct"), ("v23.0", "bytes")):
-                c = requests.post(f"{G}/{ver}/{user}/media", data={
-                    "media_type": "REELS", "upload_type": "resumable", "caption": "test",
-                    "access_token": token}, timeout=60)
-                print(f"[{ver} {mode}] kapsayıcı:", c.status_code, c.text[:200])
-                if not c.ok:
-                    continue
-                cid = c.json()["id"]
-                hdr = {"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(size)}
-                if mode == "bytes-ct":
-                    hdr["Content-Type"] = "application/octet-stream"
-                up = requests.post(c.json().get("uri") or f"https://rupload.facebook.com/ig-api-upload/{ver}/{cid}",
-                                   data=data, headers=hdr, timeout=900)
-                print(f"[{ver} {mode}] yükleme:", up.status_code, up.text[:300])
-                time.sleep(10)
-                st = requests.get(f"{G}/{ver}/{cid}", params={"fields": "status_code,status",
-                                                               "access_token": token}, timeout=30)
-                print(f"[{ver} {mode}] durum:", st.text[:300])
-            pe = requests.get(f"{G}/v26.0/{user}", params={"fields": "username,account_type",
-                                                          "access_token": token}, timeout=30)
-            print("hesap:", pe.text[:300])
+            hosted = _host_temp(v)
+            print("geçici link:", "oluşturuldu" if hosted else "OLUŞTURULAMADI")
+            if hosted:
+                try:
+                    c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
+                        "media_type": "REELS", "video_url": hosted[0], "caption": "test", "access_token": token},
+                        timeout=60)
+                    print("kapsayıcı:", c.status_code, c.text[:300])
+                    if c.ok:
+                        for _ in range(30):
+                            st = requests.get(f"{G}/{IG_VER}/{c.json()['id']}", params={
+                                "fields": "status_code,status", "access_token": token}, timeout=30).json()
+                            if st.get("status_code") != "IN_PROGRESS":
+                                break
+                            time.sleep(10)
+                        print("durum:", st)
+                finally:
+                    _host_cleanup(hosted[1])
+                    print("geçici video silindi")
         sys.exit(0)
     if sys.argv[1] == "check":
         name = sys.argv[2]
