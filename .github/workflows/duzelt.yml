@@ -1,0 +1,51 @@
+name: Düzeltme bildir
+
+# Bir düzeltmeden sonra Telegram'daki video mesajına güncel planı yanıt olarak yazar.
+# islem=yeniden: en iyi saatleri şimdiki kurallarla yeniden hesaplayıp kaydeder.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Video etiketi (ör. short-20261104-2100)"
+        required: true
+      islem:
+        description: "bos = yalnız bildir, yeniden = saatleri yeniden hesapla"
+        required: false
+        default: ""
+      neden:
+        description: "Mesajdaki kısa açıklama"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  duzelt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: En güncel durumu al
+        run: |
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          git fetch -q origin main && git reset -q --hard origin/main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-bot.txt
+      - run: pip install -r requirements-bot.txt
+      - name: Düzeltmeyi Telegram'a yaz
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          BEST_TIMES: ${{ vars.BEST_TIMES }}
+          TAG: ${{ inputs.tag }}
+          ISLEM: ${{ inputs.islem }}
+          NEDEN: ${{ inputs.neden }}
+        run: python -m shortgen.telegram_bot duzelt "$TAG" "$ISLEM" "$NEDEN"
+      - name: Durumu kaydet
+        if: always()
+        run: python -m shortgen.state_sync "Düzeltme bildirildi"

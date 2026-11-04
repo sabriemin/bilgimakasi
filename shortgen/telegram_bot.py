@@ -141,11 +141,12 @@ def _busy(exclude: str | None = None) -> dict[str, list[dt.datetime]]:
     return busy
 
 
-def _best_schedule(now: dt.datetime | None = None, exclude: str | None = None) -> dict[str, str]:
+def _best_schedule(now: dt.datetime | None = None, exclude: str | None = None,
+                   ignore_busy: bool = False) -> dict[str, str]:
     """Her platform için en az 15 dk sonraki, başka bir videoya ayrılmamış ilk önerilen saati (UTC ISO) döndürür.
     Aynı platformda iki paylaşım arasında en az MIN_GAP olur; bugünün saatleri doluysa sonraki günlere geçer."""
     now = now or dt.datetime.now(TR)
-    busy = _busy(exclude)
+    busy = {} if ignore_busy else _busy(exclude)
     out = {}
     for p, times in BEST_TIMES.items():
         chosen = None
@@ -177,10 +178,27 @@ def _slots(now: dt.datetime | None = None, all_: bool = False) -> list[tuple[str
     return out
 
 
+AYLAR = ("Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık")
+GUNLER = ("Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar")
+
+
 def _fmt(iso: str) -> str:
+    """Tarih her zaman açık yazılır (ör. "6 Kasım Cuma 12:30"): gece yarısı "bugün/yarın" karışıklığı olmasın."""
     t = dt.datetime.fromisoformat(iso).astimezone(TR)
-    day = "bugün" if t.date() == dt.datetime.now(TR).date() else t.strftime("%d.%m")
-    return f"{day} {t:%H:%M}"
+    return f"{t.day} {AYLAR[t.month - 1]} {GUNLER[t.weekday()]} {t:%H:%M}"
+
+
+def _plan_text(tag: str, sched: dict[str, str]) -> str:
+    """En iyi saat planı + daha erken saatler başka videolara ayrıldıysa hangilerine ayrıldığı."""
+    lines = [f"• {PLATFORM_NAMES[p]}: {_fmt(t)}" for p, t in sorted(sched.items(), key=lambda x: x[1])]
+    free = _best_schedule(exclude=tag, ignore_busy=True)
+    if any(sched[p] != free[p] for p in sched):
+        others = [v["title"] for v in load(VIDEOS, []) if v.get("status") == "zamanlandi" and v.get("tag") != tag
+                  and min((v.get("schedule") or {"x": v.get("publish_at") or "9999"}).values()) < max(sched.values())]
+        if others:
+            lines.append("\nDaha erken en iyi saatler şu videolara ayrılmıştı, aynı saate iki video konmadı:\n"
+                         + "\n".join(f"  - {t[:60]}" for t in others))
+    return "\n".join(lines)
 
 
 def _kb(rows: list[list[tuple[str, str]]]) -> str:
@@ -244,8 +262,7 @@ def _handle_callback(cq: dict, chat: str) -> None:
         if arg == "best":
             sched = _best_schedule(exclude=tag)
             iso = min(sched.values())
-            detail = "\n".join(f"• {PLATFORM_NAMES[p]}: {_fmt(t)}" for p, t in sorted(sched.items(), key=lambda x: x[1]))
-            note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + detail
+            note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + _plan_text(tag, sched)
         else:
             # düğme gösterildikten sonra saat 15 dk sınırına girmiş olabilir: seçilen saati yine de kullan
             when = next((t for code, _, t in _slots(all_=True) if code == arg), dt.datetime.now(TR))
@@ -539,6 +556,26 @@ def _dispatch(topic: str, workflow: str = "uret.yml") -> bool:
     return r.status_code == 204
 
 
+def duzelt(tag: str, islem: str = "", neden: str = "") -> None:
+    """Bir düzeltmeden sonra Telegram'daki video mesajına güncel durumu yanıt olarak yazar.
+    islem="yeniden": en iyi saatleri şimdiki kurallara göre yeniden hesaplar ve kaydeder."""
+    chat = str(os.environ["TELEGRAM_CHAT_ID"])
+    v = _find(load(VIDEOS, []), tag)
+    if not v:
+        raise SystemExit(f"Video bulunamadı: {tag}")
+    if islem == "yeniden" and v.get("status") == "zamanlandi" and v.get("schedule"):
+        sched = _best_schedule(exclude=tag)
+        v = _update(tag, schedule=sched, publish_at=min(sched.values()))
+    if v.get("status") == "zamanlandi":
+        body = (_plan_text(tag, v["schedule"]) if v.get("schedule")
+                else f"• Tüm platformlar: {_fmt(v['publish_at'])}")
+    else:
+        body = "Durum: " + v.get("status", "?")
+    head = "🔁 Düzeltme" + (f" ({neden})" if neden else "") + ": güncel paylaşım planı"
+    api("sendMessage", data={"chat_id": chat, "text": f"{head}\n{v['title']}\n\n{body}",
+                             "reply_to_message_id": v["telegram_message_id"]})
+
+
 if __name__ == "__main__":
     try:
         from .pipeline import load_env
@@ -554,6 +591,8 @@ if __name__ == "__main__":
         nxt = _next_due()
         if nxt and nxt <= dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=2):
             print("Paylaşım işi başlatıldı:", _dispatch("", "onay.yml"))
+    elif sys.argv[1] == "duzelt":  # düzeltme sonrası: videonun mesajına güncel planı yanıt olarak yazar
+        duzelt(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "", " ".join(sys.argv[4:]))
     elif sys.argv[1] == "notify":
         notify(Path(sys.argv[2]), sys.argv[3])
     elif sys.argv[1] == "poll":
