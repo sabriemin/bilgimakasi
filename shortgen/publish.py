@@ -280,7 +280,17 @@ if __name__ == "__main__":
             user = os.environ.get("IG_USER_ID", "").strip()
             r = requests.get(f"{IG_GRAPH}/{IG_VER}/me", params={"fields": "user_id,username", "access_token": token}, timeout=30)
             if not r.ok:
-                sys.exit(f"HATA: Instagram {r.status_code}: {r.text[:400]}")
+                print(f"graph.instagram.com reddetti: {r.status_code}: {r.text[:300]}")
+                # Facebook girişli (Unified login) anahtar olabilir: graph.facebook.com ile dene
+                f = requests.get(f"https://graph.facebook.com/{IG_VER}/me",
+                                 params={"fields": "id,name", "access_token": token}, timeout=30)
+                print(f"graph.facebook.com /me: {f.status_code}: {f.text[:300]}")
+                if f.ok:
+                    a = requests.get(f"https://graph.facebook.com/{IG_VER}/me/accounts",
+                                     params={"fields": "name,instagram_business_account{id,username}", "access_token": token},
+                                     timeout=30)
+                    print(f"Bağlı sayfalar/Instagram: {a.status_code}: {a.text[:500]}")
+                sys.exit("HATA: Instagram anahtarı graph.instagram.com ile çalışmıyor")
             me = r.json()
             print("Instagram bağlantısı çalışıyor:", me.get("username"))
             if user and str(me.get("user_id")) != user and str(me.get("id")) != user:
