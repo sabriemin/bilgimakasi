@@ -176,14 +176,15 @@ def _instagram(video: Path, meta: dict) -> dict:
     caption = (caption[:2150 - len(" ".join(tags))] + "\n\n" + " ".join(tags)).strip()
 
     public_url = meta.get("public_video_url")
+    cover = {"thumb_offset": os.environ.get("COVER_MS", "1000")}  # kapak: ilk sahnedeki kanca başlığı
     if public_url:  # en güvenilir yol: Instagram videoyu herkese açık linkten kendisi çeker
         c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
             "media_type": "REELS", "video_url": public_url, "caption": caption, "share_to_feed": "true",
-            "access_token": token}, timeout=60)
+            "access_token": token, **cover}, timeout=60)
     else:
         c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
             "media_type": "REELS", "upload_type": "resumable", "caption": caption, "share_to_feed": "true",
-            "access_token": token}, timeout=60)
+            "access_token": token, **cover}, timeout=60)
     if not c.ok:
         raise RuntimeError(f"Instagram kapsayıcı oluşturulamadı: {c.status_code} {c.text[:400]}")
     cid = c.json()["id"]
@@ -254,7 +255,8 @@ def tiktok(video: Path, meta: dict) -> dict:
     def _init(priv: str):
         return requests.post(f"{TT}/post/publish/video/init/", headers=h, json={
             "post_info": {"title": title, "privacy_level": priv, "disable_comment": False, "disable_duet": False,
-                          "disable_stitch": False, "is_aigc": bool(meta.get("ai_voice"))},
+                          "disable_stitch": False, "is_aigc": bool(meta.get("ai_voice")),
+                          "video_cover_timestamp_ms": int(os.environ.get("COVER_MS", "1000"))},
             "source_info": {"source": "FILE_UPLOAD", "video_size": size, "chunk_size": chunk,
                             "total_chunk_count": count}}, timeout=60)
     init = _init(privacy)
