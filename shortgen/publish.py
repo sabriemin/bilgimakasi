@@ -105,22 +105,29 @@ IG_GRAPH = "https://graph.instagram.com"
 IG_VER = os.environ.get("IG_API_VERSION", "v23.0")
 
 
+def _ig_base(token: str) -> str:
+    """Instagram girişli anahtar (IG...) graph.instagram.com, Birleşik/Facebook girişli (EAA...) graph.facebook.com kullanır."""
+    return "https://graph.facebook.com" if token.startswith("EAA") else IG_GRAPH
+
+
 def instagram(video: Path, meta: dict) -> dict:
     (token,) = _env("IG_ACCESS_TOKEN")
     user = os.environ.get("IG_USER_ID", "").strip() or "me"  # numara verilmezse anahtarın sahibi kullanılır
-    # 60 günlük anahtarı her paylaşımda tazele (24 saatten eski olmalı; olmazsa sorun değil)
-    rr = requests.get(f"{IG_GRAPH}/refresh_access_token",
-                      params={"grant_type": "ig_refresh_token", "access_token": token}, timeout=30)
-    if rr.ok and rr.json().get("access_token"):
-        token = rr.json()["access_token"]
-        _rotate_secret("IG_ACCESS_TOKEN", token)
+    G = _ig_base(token)
+    if G == IG_GRAPH:
+        # 60 günlük anahtarı her paylaşımda tazele (24 saatten eski olmalı; olmazsa sorun değil)
+        rr = requests.get(f"{IG_GRAPH}/refresh_access_token",
+                          params={"grant_type": "ig_refresh_token", "access_token": token}, timeout=30)
+        if rr.ok and rr.json().get("access_token"):
+            token = rr.json()["access_token"]
+            _rotate_secret("IG_ACCESS_TOKEN", token)
 
     caption = meta["title"] + "\n\n" + meta["description"]
     tags = _hashtags(meta, 30)
     caption = re.sub(r"(#\w+\s*)+$", "", caption).strip()  # açıklamanın sonundaki etiketleri tekrar etme
     caption = (caption[:2150 - len(" ".join(tags))] + "\n\n" + " ".join(tags)).strip()
 
-    c = requests.post(f"{IG_GRAPH}/{IG_VER}/{user}/media", data={
+    c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
         "media_type": "REELS", "upload_type": "resumable", "caption": caption, "share_to_feed": "true",
         "access_token": token}, timeout=60)
     if not c.ok:
@@ -134,7 +141,7 @@ def instagram(video: Path, meta: dict) -> dict:
     if not up.ok:
         raise RuntimeError(f"Instagram yükleme hatası: {up.status_code} {up.text[:400]}")
     for _ in range(60):  # işlenmesini bekle (en fazla ~10 dk)
-        s = requests.get(f"{IG_GRAPH}/{IG_VER}/{cid}", params={"fields": "status_code,status",
+        s = requests.get(f"{G}/{IG_VER}/{cid}", params={"fields": "status_code,status",
                                                                "access_token": token}, timeout=30).json()
         if s.get("status_code") == "FINISHED":
             break
@@ -143,12 +150,12 @@ def instagram(video: Path, meta: dict) -> dict:
         time.sleep(10)
     else:
         raise RuntimeError("Instagram işleme zaman aşımı")
-    p = requests.post(f"{IG_GRAPH}/{IG_VER}/{user}/media_publish",
+    p = requests.post(f"{G}/{IG_VER}/{user}/media_publish",
                       data={"creation_id": cid, "access_token": token}, timeout=60)
     if not p.ok:
         raise RuntimeError(f"Instagram yayınlama hatası: {p.status_code} {p.text[:400]}")
     mid = p.json()["id"]
-    link = requests.get(f"{IG_GRAPH}/{IG_VER}/{mid}", params={"fields": "permalink", "access_token": token},
+    link = requests.get(f"{G}/{IG_VER}/{mid}", params={"fields": "permalink", "access_token": token},
                         timeout=30).json().get("permalink", "")
     return {"id": mid, "url": link}
 
@@ -277,24 +284,24 @@ if __name__ == "__main__":
             print("YouTube bağlantısı çalışıyor." + (f" Kanal: {title}" if title else ""))
         elif name == "instagram":
             (token,) = _env("IG_ACCESS_TOKEN")
-            user = os.environ.get("IG_USER_ID", "").strip()
-            r = requests.get(f"{IG_GRAPH}/{IG_VER}/me", params={"fields": "user_id,username", "access_token": token}, timeout=30)
+            user = os.environ.get("IG_USER_ID", "").strip() or "me"
+            G = _ig_base(token)
+            print("Kullanılan adres:", G)
+            r = requests.get(f"{G}/{IG_VER}/{user}", params={"fields": "id,username", "access_token": token}, timeout=30)
             if not r.ok:
-                print(f"graph.instagram.com reddetti: {r.status_code}: {r.text[:300]}")
-                # Facebook girişli (Unified login) anahtar olabilir: graph.facebook.com ile dene
-                f = requests.get(f"https://graph.facebook.com/{IG_VER}/me",
-                                 params={"fields": "id,name", "access_token": token}, timeout=30)
-                print(f"graph.facebook.com /me: {f.status_code}: {f.text[:300]}")
-                if f.ok:
-                    a = requests.get(f"https://graph.facebook.com/{IG_VER}/me/accounts",
-                                     params={"fields": "name,instagram_business_account{id,username}", "access_token": token},
-                                     timeout=30)
-                    print(f"Bağlı sayfalar/Instagram: {a.status_code}: {a.text[:500]}")
-                sys.exit("HATA: Instagram anahtarı graph.instagram.com ile çalışmıyor")
+                sys.exit(f"HATA: Instagram {r.status_code}: {r.text[:400]}")
             me = r.json()
-            print("Instagram bağlantısı çalışıyor:", me.get("username"))
-            if user and str(me.get("user_id")) != user and str(me.get("id")) != user:
-                print(f"UYARI: IG_USER_ID eşleşmiyor. Doğru değer: {me.get('user_id')}")
+            if not me.get("username"):
+                sys.exit(f"HATA: hesap bilgisi gelmedi: {str(me)[:300]}")
+            print("Instagram bağlantısı çalışıyor:", me.get("username"), me.get("id"))
+            if G != IG_GRAPH:
+                d = requests.get(f"{G}/{IG_VER}/debug_token", params={"input_token": token, "access_token": token},
+                                 timeout=30)
+                if d.ok:
+                    dd = d.json().get("data", {})
+                    exp = dd.get("expires_at")
+                    print("Anahtar süresi:", "süresiz" if not exp else time.strftime("%Y-%m-%d", time.gmtime(exp)),
+                          "| izinler:", ", ".join(dd.get("scopes", [])))
         elif name == "tiktok":
             h = {"Authorization": f"Bearer {_tt_token()}"}
             r = requests.post(f"{TT}/post/publish/creator_info/query/", headers=h, timeout=30)
