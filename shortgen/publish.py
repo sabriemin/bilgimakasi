@@ -127,20 +127,29 @@ def instagram(video: Path, meta: dict) -> dict:
 
     caption = meta["title"] + "\n\n" + meta["description"]
     tags = _hashtags(meta, 5)  # Instagram en fazla 5 etiket
-    caption = re.sub(r"(#\w+\s*)+$", "", caption).strip()  # açıklamanın sonundaki etiketleri tekrar etme
+    caption = re.sub(r"#\w+", "", caption)  # etiketleri ayıkla, sonda bir kez (en fazla 5) ekle
+    caption = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", caption)).strip()
     caption = (caption[:2150 - len(" ".join(tags))] + "\n\n" + " ".join(tags)).strip()
 
-    c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
-        "media_type": "REELS", "upload_type": "resumable", "caption": caption, "share_to_feed": "true",
-        "access_token": token}, timeout=60)
+    public_url = meta.get("public_video_url")
+    if public_url:  # en güvenilir yol: Instagram videoyu herkese açık linkten kendisi çeker
+        c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
+            "media_type": "REELS", "video_url": public_url, "caption": caption, "share_to_feed": "true",
+            "access_token": token}, timeout=60)
+    else:
+        c = requests.post(f"{G}/{IG_VER}/{user}/media", data={
+            "media_type": "REELS", "upload_type": "resumable", "caption": caption, "share_to_feed": "true",
+            "access_token": token}, timeout=60)
     if not c.ok:
         raise RuntimeError(f"Instagram kapsayıcı oluşturulamadı: {c.status_code} {c.text[:400]}")
     cid = c.json()["id"]
     size = video.stat().st_size
     up_url = c.json().get("uri") or f"https://rupload.facebook.com/ig-api-upload/{IG_VER}/{cid}"
-    if True:  # gövde akış (stream) yerine tek parça bayt olarak gönderilmeli; testte yalnız bu çalıştı
-        f = video.read_bytes()
-        up = requests.post(up_url, data=f,
+    if public_url:
+        up = requests.Response()
+        up.status_code = 200
+    else:  # gövde akış (stream) yerine tek parça bayt olarak gönderilir
+        up = requests.post(up_url, data=video.read_bytes(),
                            headers={"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(size)},
                            timeout=900)
     if not up.ok:
@@ -271,7 +280,16 @@ def publish(video: Path, meta: dict, only: list[str] | None = None) -> dict:
 def fetch_release(tag: str, dest: Path) -> tuple[Path, dict]:
     subprocess.run(["gh", "release", "download", tag, "--pattern", "video.mp4", "--pattern", "metadata.json",
                     "--dir", str(dest), "--clobber"], check=True)
-    return dest / "video.mp4", json.loads((dest / "metadata.json").read_text(encoding="utf-8"))
+    meta = json.loads((dest / "metadata.json").read_text(encoding="utf-8"))
+    repo = os.environ.get("GITHUB_REPOSITORY", "sabriemin/bilgimakasi")
+    try:  # depo herkese açıksa videonun doğrudan linki Instagram'a verilir
+        priv = subprocess.run(["gh", "api", f"repos/{repo}", "--jq", ".private"], capture_output=True, text=True,
+                              check=True).stdout.strip()
+        if priv == "false":
+            meta["public_video_url"] = f"https://github.com/{repo}/releases/download/{tag}/video.mp4"
+    except Exception:  # noqa: BLE001
+        pass
+    return dest / "video.mp4", meta
 
 
 if __name__ == "__main__":
