@@ -2,44 +2,44 @@
   "date": "2026-11-04",
   "items": [
     {
-      "topic": "Liverpool'un marşı 'You'll Never Walk Alone' aslında 1945'te Broadway müzikali Carousel için yazıldı; 1963'te Gerry and the Pacemakers'ın cover'ıyla Anfield tribünlerine geçti",
-      "hook": "Liverpool taraftarının marşı aslında bir Broadway müzikalinden çıktı",
-      "trend": "Fenerbahçe bu akşam Şampiyonlar Ligi'nde Liverpool'u Kadıköy'de ağırlıyor",
+      "topic": "30 Ekim 1996'da Fenerbahçe'nin Old Trafford'da Elvir Bolić'in sapan golüyle Manchester United'ı 1-0 yenip kulübün Avrupa'da evinde 40 yıllık yenilmezliğini bitirmesi",
+      "hook": "Manchester United evinde 40 yıl yenilmedi… ta ki bir Türk takımı gelene kadar.",
+      "trend": "Fenerbahçe bu akşam Kadıköy'de Liverpool'u ağırlıyor, İngiliz devlerine karşı geçmiş zaferler konuşuluyor",
       "scope": "TR",
-      "category": "sanat ve müzik",
+      "category": "spor",
       "score": 9
     },
     {
-      "topic": "GTA serisinin 'Race'n'Chase' adlı bir yarış oyunu olarak başlaması ve polislerin oyuncuya çarpmaya çalıştığı bir hatanın oyunun temeli olması",
-      "hook": "Dünyanın en çok kazanan oyun serisi bir yazılım hatasından doğdu",
-      "trend": "GTA VI'nın 19 Kasım çıkışı yaklaşıyor, oyun dünyasının bir numaralı konusu",
+      "topic": "GTA serisinin 'Race'n'Chase' adlı neredeyse iptal edilen bir oyundan doğması ve polis arabalarının oyuncuya çarpmasına yol açan yapay zekâ hatasının oyunu kurtarması",
+      "hook": "Dünyanın en çok satan oyun serilerinden biri bir yazılım hatası sayesinde doğdu.",
+      "trend": "GTA 6'nın 19 Kasım 2026'daki çıkışına iki hafta kaldı, heyecan zirvede",
       "scope": "Global",
       "category": "teknoloji",
       "score": 9
     },
     {
-      "topic": "4 Kasım 1922'de Howard Carter ekibinin Tutankamon mezarına inen ilk basamağı bulması ve bu basamağı su taşıyan bir çocuğun bulduğu hikâyesi",
-      "hook": "104 yıl önce bugün, kumun altından tek bir basamak çıktı",
-      "trend": "Bugün Tutankamon mezarının ilk basamağının bulunmasının 104. yıl dönümü",
+      "topic": "Liverpool'un efsanevi 'Kop' tribününün adını 1900'deki Boer Savaşı'nda pek çok Liverpoollu askerin öldüğü Güney Afrika'daki Spion Kop tepesinden alması",
+      "hook": "Liverpool'un en ünlü tribünü adını Afrika'daki kanlı bir tepeden alıyor.",
+      "trend": "Liverpool bu akşam Şampiyonlar Ligi'nde Fenerbahçe deplasmanında; Anfield kültürü gündemde",
       "scope": "Global",
       "category": "tarih",
       "score": 8
     },
     {
-      "topic": "Sera etkisini 1856'da ilk kez deneyle gösteren ama makalesini kadın olduğu için bir erkeğin okuduğu bilim insanı Eunice Foote",
-      "hook": "İklim değişikliğini ilk fark eden kişinin adını neden hiç duymadınız?",
-      "trend": "COP31 İklim Zirvesi 9-20 Kasım'da Antalya'da başlıyor",
-      "scope": "TR",
-      "category": "az bilinen insan hikâyeleri",
+      "topic": "4 Kasım 1922'de Tutankamon mezarına inen ilk basamağın bulunması ve bu keşfi bir su taşıyıcı çocuğun yaptığına dair popüler anlatı ile Carter'ın günlüğü arasındaki fark",
+      "hook": "Tarihin en büyük arkeolojik keşfi tek bir basamakla başladı.",
+      "trend": "Tutankamon mezarının ilk basamağının bulunmasının 104. yıl dönümü bugün",
+      "scope": "Global",
+      "category": "tarih",
       "score": 7
     },
     {
-      "topic": "Suzanne Collins'in Açlık Oyunları fikrini Theseus ve Minotor mitiyle, TV'de realite şovla savaş haberleri arasında kanal değiştirirken bulması",
-      "hook": "Açlık Oyunları fikri bir gece kanal değiştirirken doğdu",
-      "trend": "'Sunrise on the Reaping' filmi 20 Kasım'da vizyona giriyor, fragmanlar çok izleniyor",
-      "scope": "Global",
-      "category": "sanat ve müzik",
-      "score": 7
+      "topic": "Antalya'daki COP31 öncesi, 1995'teki ilk BM iklim zirvesi COP1'e Almanya Çevre Bakanı sıfatıyla genç Angela Merkel'in başkanlık etmesi",
+      "hook": "İlk iklim zirvesini yöneten bakan sonradan Almanya'yı 16 yıl yönetti.",
+      "trend": "COP31 iklim zirvesi 9 Kasım'da Antalya'da başlıyor, dünya liderleri Türkiye'ye geliyor",
+      "scope": "TR",
+      "category": "tarih",
+      "score": 6
     }
   ]
 }
