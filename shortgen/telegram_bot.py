@@ -119,19 +119,48 @@ BEST_TIMES = json.loads(os.environ.get("BEST_TIMES") or json.dumps({
 }))
 
 
-def _best_schedule(now: dt.datetime | None = None) -> dict[str, str]:
-    """Her platform için şimdiden en az 15 dk sonraki ilk önerilen saati (UTC ISO) döndürür."""
+MIN_GAP = dt.timedelta(hours=float(os.environ.get("MIN_GAP_HOURS", "2")))
+
+
+def _busy(exclude: str | None = None) -> dict[str, list[dt.datetime]]:
+    """Platform bazında dolu saatler: zamanlanmış videolar + son 24 saatte paylaşılanlar."""
+    busy: dict[str, list[dt.datetime]] = {p: [] for p in BEST_TIMES}
+    for v in load(VIDEOS, []):
+        if v.get("tag") == exclude:
+            continue
+        if v.get("status") == "zamanlandi":
+            sched = v.get("schedule") or {p: v.get("publish_at") for p in BEST_TIMES}
+            for p, t in sched.items():
+                if t and p in busy:
+                    busy[p].append(dt.datetime.fromisoformat(t))
+        if v.get("published"):
+            t = dt.datetime.fromisoformat(v["published"])
+            for p, r in (v.get("platforms") or {}).items():
+                if r.get("status") == "ok" and p in busy:
+                    busy[p].append(t)
+    return busy
+
+
+def _best_schedule(now: dt.datetime | None = None, exclude: str | None = None) -> dict[str, str]:
+    """Her platform için en az 15 dk sonraki, başka bir videoya ayrılmamış ilk önerilen saati (UTC ISO) döndürür.
+    Aynı platformda iki paylaşım arasında en az MIN_GAP olur; bugünün saatleri doluysa sonraki günlere geçer."""
     now = now or dt.datetime.now(TR)
+    busy = _busy(exclude)
     out = {}
     for p, times in BEST_TIMES.items():
-        cands = []
-        for d in (0, 1):
-            for hm in times:
+        chosen = None
+        for d in range(0, 7):
+            for hm in sorted(times):
                 h, m = map(int, hm.split(":"))
                 t = dt.datetime.combine(now.date() + dt.timedelta(days=d), dt.time(h, m), TR)
-                if t > now + dt.timedelta(minutes=15):
-                    cands.append(t)
-        out[p] = min(cands).astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+                if t <= now + dt.timedelta(minutes=15):
+                    continue
+                if all(abs(t - b) >= MIN_GAP for b in busy.get(p, [])):
+                    chosen = t
+                    break
+            if chosen:
+                break
+        out[p] = (chosen or now + dt.timedelta(minutes=20)).astimezone(dt.timezone.utc).isoformat(timespec="seconds")
     return out
 
 
@@ -206,7 +235,7 @@ def _handle_callback(cq: dict, chat: str) -> None:
             [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]])})
     elif action == "at":
         if arg == "best":
-            sched = _best_schedule()
+            sched = _best_schedule(exclude=tag)
             iso = min(sched.values())
             detail = "\n".join(f"• {PLATFORM_NAMES[p]}: {_fmt(t)}" for p, t in sorted(sched.items(), key=lambda x: x[1]))
             note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + detail
