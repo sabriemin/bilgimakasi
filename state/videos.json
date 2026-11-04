@@ -197,8 +197,11 @@
     "category": "tarih",
     "template": "kolaj",
     "created": "2026-11-04T21:29:00",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 70,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-04T21:30:56+00:00",
+    "schedule": null,
+    "decided": "2026-11-05T00:30:56+03:00"
   }
 ]
