@@ -80,8 +80,9 @@ jobs:
         if: inputs.islem != 'kaldir'
         run: |
           set -e
-          for i in 1 2 3 4 5 6; do
-            body=$(curl -s "$URL" || true); echo "kapı: $body"
+          # yeni hesaplarda workers.dev adresinin açılması birkaç dakika sürebilir
+          for i in $(seq 30); do
+            body=$(curl -sS -m 10 "$URL" 2>&1 || true); echo "kapı ($i): ${body:0:160}"
             echo "$body" | grep -q "çalışıyor" && break; sleep 10
           done
           echo "$body" | grep -q "çalışıyor" || { echo "::error::Worker adresi yanıt vermiyor: $URL"; exit 1; }
