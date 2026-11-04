@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-04",
+  "items": [
+    {
+      "topic": "Liverpool'un marşı 'You'll Never Walk Alone' aslında 1945'te Broadway müzikali Carousel için yazıldı; 1963'te Gerry and the Pacemakers'ın cover'ıyla Anfield tribünlerine geçti",
+      "hook": "Liverpool taraftarının marşı aslında bir Broadway müzikalinden çıktı",
+      "trend": "Fenerbahçe bu akşam Şampiyonlar Ligi'nde Liverpool'u Kadıköy'de ağırlıyor",
+      "scope": "TR",
+      "category": "sanat ve müzik",
+      "score": 9
+    },
+    {
+      "topic": "GTA serisinin 'Race'n'Chase' adlı bir yarış oyunu olarak başlaması ve polislerin oyuncuya çarpmaya çalıştığı bir hatanın oyunun temeli olması",
+      "hook": "Dünyanın en çok kazanan oyun serisi bir yazılım hatasından doğdu",
+      "trend": "GTA VI'nın 19 Kasım çıkışı yaklaşıyor, oyun dünyasının bir numaralı konusu",
+      "scope": "Global",
+      "category": "teknoloji",
+      "score": 9
+    },
+    {
+      "topic": "4 Kasım 1922'de Howard Carter ekibinin Tutankamon mezarına inen ilk basamağı bulması ve bu basamağı su taşıyan bir çocuğun bulduğu hikâyesi",
+      "hook": "104 yıl önce bugün, kumun altından tek bir basamak çıktı",
+      "trend": "Bugün Tutankamon mezarının ilk basamağının bulunmasının 104. yıl dönümü",
+      "scope": "Global",
+      "category": "tarih",
+      "score": 8
+    },
+    {
+      "topic": "Sera etkisini 1856'da ilk kez deneyle gösteren ama makalesini kadın olduğu için bir erkeğin okuduğu bilim insanı Eunice Foote",
+      "hook": "İklim değişikliğini ilk fark eden kişinin adını neden hiç duymadınız?",
+      "trend": "COP31 İklim Zirvesi 9-20 Kasım'da Antalya'da başlıyor",
+      "scope": "TR",
+      "category": "az bilinen insan hikâyeleri",
+      "score": 7
+    },
+    {
+      "topic": "Suzanne Collins'in Açlık Oyunları fikrini Theseus ve Minotor mitiyle, TV'de realite şovla savaş haberleri arasında kanal değiştirirken bulması",
+      "hook": "Açlık Oyunları fikri bir gece kanal değiştirirken doğdu",
+      "trend": "'Sunrise on the Reaping' filmi 20 Kasım'da vizyona giriyor, fragmanlar çok izleniyor",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 7
+    }
+  ]
+}
