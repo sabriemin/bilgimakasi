@@ -1,8 +1,24 @@
 {
- "time": "2026-11-04T22:08+03:00",
+ "time": "2026-11-04T22:31+03:00",
  "platforms": {
   "youtube": {
-   "error": "YouTube okuma izni yok: YT_API_KEY eklenmeli"
+   "account": {
+    "followers": 893,
+    "views": 173859,
+    "videos": 171
+   },
+   "videos": {
+    "short-20261104-1307": {
+     "views": 38,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261104-1839": {
+     "views": 0,
+     "likes": 0,
+     "comments": 0
+    }
+   }
   },
   "instagram": {
    "account": {
@@ -15,6 +31,10 @@
     "short-20261104-1307": {
      "likes": 1,
      "comments": 0
+    },
+    "short-20261104-1839": {
+     "likes": 0,
+     "comments": 0
     }
    },
    "note": "izlenme ve kaydetme için Instagram içgörü izni gerekli"
@@ -24,6 +44,7 @@
   }
  },
  "titles": {
-  "short-20261104-1307": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi"
+  "short-20261104-1307": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi",
+  "short-20261104-1839": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı"
  }
 }
