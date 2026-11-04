@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import time
 from dataclasses import dataclass, asdict
@@ -33,7 +34,9 @@ def _get(url: str, **kw) -> requests.Response:
     r.raise_for_status()
     return r
 API = "https://commons.wikimedia.org/w/api.php"
-ALLOWED = re.compile(r"^(public domain|pd\b|pd-|cc0|cc[- ]by(-sa)?[- ]?\d)", re.I)
+# Yalnız atıf gerektirmeyen görseller (kamu malı / CC0): açıklamada kaynak satırı istenmiyor.
+# ALLOW_CC_BY=1 verilirse CC BY / BY-SA da kullanılır (o zaman atıf gerekir).
+ALLOWED = re.compile(r"^(public domain|pd\b|pd-|cc0)" + (r"|^cc[- ]by(-sa)?[- ]?\d" if os.environ.get("ALLOW_CC_BY") == "1" else ""), re.I)
 
 
 @dataclass
@@ -86,7 +89,7 @@ def find_openverse(query: str, cache_dir: Path, exclude: set[str] | None = None)
     """Openverse (Flickr, müzeler vb.): yalnızca CC0, kamu malı, CC BY, CC BY-SA."""
     exclude = exclude or set()
     r = _get("https://api.openverse.org/v1/images/", timeout=30, params={
-        "q": query, "license": "cc0,pdm,by,by-sa", "page_size": 20, "mature": "false"})
+        "q": query, "license": "cc0,pdm,by,by-sa" if os.environ.get("ALLOW_CC_BY") == "1" else "cc0,pdm", "page_size": 20, "mature": "false"})
     for it in r.json().get("results", []):
         if (it.get("width") or 0) < 600 or it.get("filetype") not in (None, "jpg", "jpeg", "png"):
             continue

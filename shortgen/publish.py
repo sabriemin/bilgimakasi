@@ -50,6 +50,15 @@ def _rotate_secret(name: str, value: str) -> bool:
     return r.returncode == 0
 
 
+_DROP = ("📷", "🎙", "Görseller:", "Kaynaklar:", "Bu videoda yapay zekâ")
+
+
+def _clean_desc(text: str) -> str:
+    """Açıklamada yalnız bilgi + etiket kalsın (eski videolardaki kaynak/atıf/yapay zekâ satırlarını at)."""
+    keep = [ln for ln in text.splitlines() if not ln.strip().startswith(_DROP)]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(keep)).strip()
+
+
 def _hashtags(meta: dict, limit: int) -> list[str]:
     tags = ["#" + re.sub(r"\s+", "", h.lstrip("#")) for h in meta.get("hashtags", [])]
     return [t for t in tags if len(t) > 1][:limit]
@@ -71,7 +80,7 @@ def youtube(video: Path, meta: dict) -> dict:
     title = meta["title"].replace("<", "").replace(">", "")
     if "#shorts" not in title.lower() and len(title) <= 92:
         title += " #Shorts"
-    desc = meta["description"].replace("<", "").replace(">", "")[:4900]
+    desc = _clean_desc(meta["description"]).replace("<", "").replace(">", "")[:4900]
     body = {
         "snippet": {"title": title[:100], "description": desc, "categoryId": "27",  # Eğitim
                     "tags": [h.lstrip("#") for h in meta.get("hashtags", [])][:15],
@@ -160,7 +169,7 @@ def _instagram(video: Path, meta: dict) -> dict:
             token = rr.json()["access_token"]
             _rotate_secret("IG_ACCESS_TOKEN", token)
 
-    caption = meta["title"] + "\n\n" + meta["description"]
+    caption = meta["title"] + "\n\n" + _clean_desc(meta["description"])
     tags = _hashtags(meta, 5)  # Instagram en fazla 5 etiket
     caption = re.sub(r"#\w+", "", caption)  # etiketleri ayıkla, sonda bir kez (en fazla 5) ekle
     caption = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", caption)).strip()
