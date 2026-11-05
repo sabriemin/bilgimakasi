@@ -486,5 +486,63 @@
       "tiktok": "2026-11-09T15:00:00+00:00"
     },
     "decided": "2026-11-05T20:55:14+03:00"
+  },
+  {
+    "tag": "short-20261105-213125",
+    "title": "Berlin Duvarı'na Gecekondu Kuran Türk: Osman Kalın'ın Ağaç Evi",
+    "topic": "Osman Kalın: Berlin Duvarı'nın dibinde, Doğu Almanya'ya ait arsaya 1983'te bostan ve kulübe kuran Yozgatlı Türk işçi",
+    "category": "az bilinen insan hikâyeleri",
+    "template": "kolaj",
+    "created": "2026-11-05T21:31:25",
+    "status": "reddedildi",
+    "telegram_message_id": 176,
+    "aciklama_message_id": 177,
+    "platforms": {},
+    "decided": "2026-11-06T00:47:30+03:00"
+  },
+  {
+    "tag": "short-20261105-213128",
+    "title": "Tane Tane Pilav Nasıl Yapılır? Sır Görünmez Bir Tozda",
+    "topic": "Pilav tane tane nasıl pişirilir? Islatma, yıkama, kavurma, doğru su oranı ve demlendirme",
+    "category": "bilim",
+    "template": "kart",
+    "created": "2026-11-05T21:31:28",
+    "status": "reddedildi",
+    "telegram_message_id": 178,
+    "aciklama_message_id": 179,
+    "platforms": {},
+    "decided": "2026-11-06T00:47:30+03:00"
+  },
+  {
+    "tag": "short-20261105-213643",
+    "title": "Elektrikçi olsaydın günün nasıl geçerdi? Şaltere bile güvenmezdin",
+    "topic": "Elektrikçi olsaydın günün nasıl geçerdi? Sabahtan akşama bir elektrikçinin iş günü ve güvenlik kuralları",
+    "category": "az bilinen insan hikâyeleri",
+    "template": "kart",
+    "created": "2026-11-05T21:36:43",
+    "status": "reddedildi",
+    "telegram_message_id": 180,
+    "aciklama_message_id": 181,
+    "platforms": {},
+    "decided": "2026-11-06T00:47:33+03:00"
+  },
+  {
+    "tag": "short-20261105-213747",
+    "title": "Lokum nasıl üretilir? Jöle kıvamının sırrı jelatin değil",
+    "topic": "Lokum nasıl üretiliyor? Şeker şurubundan nişastayla pişirilen, dinlendirilip kesilen Türk lokumu",
+    "category": "dil ve kültür",
+    "template": "uretim",
+    "created": "2026-11-05T21:37:47",
+    "status": "zamanlandi",
+    "telegram_message_id": 182,
+    "aciklama_message_id": 183,
+    "platforms": {},
+    "publish_at": "2026-11-06T09:30:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-06T18:00:00+00:00",
+      "instagram": "2026-11-06T09:30:00+00:00",
+      "tiktok": "2026-11-06T19:00:00+00:00"
+    },
+    "decided": "2026-11-06T00:47:43+03:00"
   }
 ]

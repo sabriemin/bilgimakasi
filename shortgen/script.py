@@ -438,9 +438,15 @@ OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; vid
 - KANCA: ilk cümle izleyiciyi duruma koyar ve çarpıcı bir rakam ya da çarpıcı bir an verir (en fazla 10 kelime).
   İlk headline durumu ve rakamı ya da anı söyler.
 - GÜN AKIŞI ("günün nasıl geçerdi" konuları): 3-5 durak, her biri günün bir saati. kicker saat olur (ör. "07:30"),
-  headline o saatte olan somut iş ya da an (ör. "İLK ARIZA", "ÇATIDA ÖĞLE"); dış ses o anı gerçekçi bir ayrıntıyla
-  anlatır (kullanılan alet, tipik iş, iş güvenliği kuralı, müşteriyle bir an, yorgunluk ya da keyif). Para yalnız
-  konunun parçasıysa geçer (ör. günün sonunda eline kalan); geçiyorsa aşağıdaki rakam kuralları geçerlidir.
+  headline o saatte olan somut an (ör. "İLK ÇAĞRI", "ÇATIDA ÖĞLE"). Amaç ders vermek değil, izleyiciye "demek böyle
+  bir gün" dedirtmek: her durak izleyicinin kendini o işin içinde hissedeceği insanî ve şaşırtıcı bir an olur (bir
+  müşterinin tuhaf isteği, beklenmedik bir iş, en sevilen ya da en sevilmeyen an, yorgunluk, keyif; günde kaç iş, kaç
+  kilometre, kaç basamak gibi bir sayı). Duraklardan en az biri insanla ilgili (müşteri, usta-çırak, ev halkı), biri
+  sürpriz olur. İş güvenliği prosedürü, mevzuat ya da teknik adım sıralaması ANLATMA; meslek terimini ya hiç kullanma
+  ya da herkesin anlayacağı günlük sözle söyle (kötü: "kaçak akım rölesini test edersin"; iyi: "evin sigortasının
+  neden attığını bulman bazen bir saat sürer"). Gün bir kapanış anıyla biter (eve dönüş, günün hesabı: kaç iş, ne kadar
+  yorgunluk). Para geçebilir, izleyici de merak eder (bir iş kaça yapılır, ayda yaklaşık ne kalır); geçiyorsa aşağıdaki
+  rakam kuralları geçerlidir.
 - DURAKLAR (para konuları: gelir, gider, ikramiye, maliyet): 3-4 durak, her biri somut bir rakama dayanır. Rakamın sahnesi card "counter" olur: card_value rakamın
   kendisi birimiyle (ör. "1,2 MİLYON ₺", "%25", "18 AY"), card_label 1-3 kelimelik etiket (ör. "AYLIK KİRA"). Bu kalıpta
   bu kural KART ALANLARI'ndaki genel counter kuralının yerine geçer: birim card_value'da kalır, card_label'a yazılmaz.
@@ -450,8 +456,8 @@ OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; vid
   "ELİNE KALAN"); card_note kaynak ve tarih (ör. "Tahmini · Kasım {YIL}"). Fişin sahnesinde dış ses toplamı söyler.
 - Videonun ortasında içeriden bilinen ya da şaşırtıcı bir ayrıntı olur (ikinci merak anı; card "interstitial" olabilir).
 - KAPANIŞ: Makas'ın yorumu tek kısa cümle; son sahne "Sen olsan ne yapardın? Yorumlara yaz." ile biter (card "cta").
-- GERÇEKLİK: gün akışındaki işler, saatler ve kurallar da gerçektir (meslek odaları, MEB meslek tanımları, iş
-  güvenliği mevzuatı, meslek sahiplerinin anlatımları); uydurma ayrıntı ya da abartılı tehlike yok.
+- GERÇEKLİK: gün akışındaki işler, saatler ve anlar da gerçektir (meslek odaları, MEB meslek tanımları, meslek
+  sahiplerinin röportaj ve anlatımları, fiyat ve ilan siteleri); uydurma ayrıntı ya da abartılı tehlike yok.
 - RAKAMLAR: hepsi {YIL} Türkiye'sine aittir ve web aramasıyla bulunur; yuvarlanır (ör. "yaklaşık 48 bin lira"), tahminse
   "yaklaşık" ya da "tahmini" denir; şehre göre değişiyorsa şehir adı söylenir. Kaynaklar resmî ya da saygın olur:
   Resmî Gazete, ÇSGB ve SGK (asgari ücret, işveren maliyeti), TÜİK, Milli Piyango'nun resmî ikramiye ve olasılık
