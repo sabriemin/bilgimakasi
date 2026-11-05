@@ -10,10 +10,10 @@ on:
         description: "İsteğe bağlı konu önerisi"
         required: false
       template:
-        description: "İsteğe bağlı şablon (ör. kolaj, gece, doga, kart, nasil, uretim; nasil ve uretim kendi kalıbıyla yazılır)"
+        description: "İsteğe bağlı şablon (ör. kolaj, gece, doga, kart, nasil, uretim, kitap; nasil, uretim ve kitap kendi kalıbıyla yazılır)"
         required: false
       kalip:
-        description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil, uretim, olsaydin)"
+        description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil, uretim, olsaydin, kitap)"
         required: false
 
 permissions:

@@ -162,6 +162,33 @@
       "category": "ekonomi ve markalar",
       "score": 7,
       "seri": "olsaydin"
+    },
+    {
+      "topic": "Sabahattin Ali, Kürk Mantolu Madonna: Berlin'de bir tablonun önünde hayatı değişen Raif Efendi; 1943'te neredeyse hiç ilgi görmeyen roman yetmiş yıl sonra en çok satanlara girdi",
+      "hook": "Yıllarca okunmayan bir roman, yetmiş yıl sonra rafların en üstüne çıktı.",
+      "trend": "Okuma listelerinin ve kitap kulüplerinin en sevilen romanı",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 9,
+      "seri": "kitap"
+    },
+    {
+      "topic": "Franz Kafka, Dönüşüm: bir sabah dev bir böceğe dönüşmüş olarak uyanan pazarlamacı; Kafka yayıncısından kapağa böceğin çizilmemesini istedi",
+      "hook": "Kafka, kitabının kapağında böcek görmek istemedi.",
+      "trend": "Lise okuma listelerinin en kısa ve en tuhaf klasiği",
+      "scope": "Global",
+      "category": "dil ve kültür",
+      "score": 8,
+      "seri": "kitap"
+    },
+    {
+      "topic": "Mary Shelley, Frankenstein: genç bir bilim insanının yarattığı varlık; yazar romana 18 yaşında bir yaz gecesi başladı ve kitapta canavarın adı yok",
+      "hook": "Frankenstein canavarın değil, onu yaratanın adı.",
+      "trend": "Yeni sinema uyarlamasıyla yeniden konuşulan klasik",
+      "scope": "Global",
+      "category": "dil ve kültür",
+      "score": 7,
+      "seri": "kitap"
     }
   ]
 }
