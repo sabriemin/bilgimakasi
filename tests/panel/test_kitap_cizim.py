@@ -790,7 +790,7 @@ class Birlesim(unittest.TestCase):
             P.build(script, Path(tmp) / "b", use_voice=False, music=None, template="kitap")
             cap["metadata"] = json.loads((Path(tmp) / "b" / "metadata.json").read_text(encoding="utf-8"))
         specs, meta = cap["specs"], cap["meta"]
-        self.assertEqual([s.card["bolum"] for s in specs], ["giris", "giris", "konu", "fikir", "bilgi", "soru"])
+        self.assertEqual([s.card["bolum"] for s in specs], ["giris", "giris", "konu", "konu", "fikir", "fikir", "bilgi", "bilgi", "soru"])
         self.assertEqual(specs[2].card["vurgu"], "Ailesi ona nasıl bakacak?")
         self.assertIn(specs[2].card["vurgu"], specs[2].card["sayfa"])
         self.assertEqual(specs[0].card["mascot"], "surprised")

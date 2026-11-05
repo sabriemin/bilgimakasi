@@ -28,7 +28,10 @@
     {
       "narration": "Bir adam bir sabah uyanıyor ve artık insan değil. Kafka'nın Dönüşüm'ü böyle başlar:",
       "kicker": "KİTAP #01",
-      "headline": ["İLK CÜMLEDE", "HAŞERE OLUYOR"],
+      "headline": [
+        "İLK CÜMLEDE",
+        "HAŞERE OLUYOR"
+      ],
       "highlight_line": 1,
       "strike": [],
       "theme": "black",
@@ -43,7 +46,9 @@
     {
       "narration": "Gregor Samsa bir sabah tedirgin rüyalardan uyandığında, yatağında korkunç bir haşereye dönüşmüş olduğunu gördü.",
       "kicker": "",
-      "headline": ["İLK CÜMLE"],
+      "headline": [
+        "İLK CÜMLE"
+      ],
       "highlight_line": -1,
       "strike": [],
       "theme": "paper",
@@ -55,9 +60,11 @@
       "vurgu": ""
     },
     {
-      "narration": "Gregor, ailesini geçindiren bir pazarlamacı. Şimdi odasına kapanmış bir yük. Ailesi ona nasıl bakacak?",
+      "narration": "Gregor, ailesini tek başına geçindiren bir pazarlamacı. Şimdi odasına kapanmış bir yük. Ailesi ona nasıl bakacak?",
       "kicker": "",
-      "headline": ["NE ANLATIYOR?"],
+      "headline": [
+        "NE ANLATIYOR?"
+      ],
       "highlight_line": -1,
       "strike": [],
       "theme": "paper",
@@ -70,9 +77,28 @@
       "mascot": "thinking"
     },
     {
-      "narration": "Kafka sert bir soru soruyor: İnsan işe yaramadığında da sevilir mi?",
+      "narration": "Kapının ardında annesi, babası, kız kardeşi Grete ve sabırsız şefi bekliyor. Gregor ise kapıyı bile açamıyor.",
       "kicker": "",
-      "headline": ["ANA FİKİR"],
+      "headline": [
+        "NE ANLATIYOR?"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "kitap_bolum": "konu",
+      "sayfa_metni": "",
+      "vurgu": "",
+      "mascot": "auto"
+    },
+    {
+      "narration": "Kafka sert bir soru soruyor: İnsan artık işe yaramadığında da sevilir mi?",
+      "kicker": "",
+      "headline": [
+        "ANA FİKİR"
+      ],
       "highlight_line": -1,
       "strike": [],
       "theme": "paper",
@@ -84,9 +110,28 @@
       "vurgu": "işe yaramadığında da sevilir mi?"
     },
     {
-      "narration": "Kafka 1915'te yayıncısına yazdı: Böceğin kendisi çizilemez, uzaktan bile gösterilemez.",
+      "narration": "Para getirdiği sürece değerli olan bir adam, artık yalnızca bir yük. Aile önce acıyor, sonra yoruluyor.",
       "kicker": "",
-      "headline": ["BİLİYOR MUYDUN?"],
+      "headline": [
+        "ANA FİKİR"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "kitap_bolum": "fikir",
+      "sayfa_metni": "",
+      "vurgu": "",
+      "mascot": "auto"
+    },
+    {
+      "narration": "Kafka 25 Ekim 1915'te yayıncısına yazdı: Böceğin kendisi çizilemez, uzaktan bile gösterilemez.",
+      "kicker": "",
+      "headline": [
+        "BİLİYOR MUYDUN?"
+      ],
       "highlight_line": -1,
       "strike": [],
       "theme": "paper",
@@ -99,9 +144,28 @@
       "mascot": "surprised"
     },
     {
+      "narration": "Bu yüzden ilk baskının kapağında böcek yok; elleriyle yüzünü kapatmış bir adam ve aralık bir kapı var. Çizim, ressam Ottomar Starke'nin.",
+      "kicker": "",
+      "headline": [
+        "BİLİYOR MUYDUN?"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "kitap_bolum": "bilgi",
+      "sayfa_metni": "",
+      "vurgu": "",
+      "mascot": "auto"
+    },
+    {
       "narration": "Sence ailesi haksız mıydı? Okudun mu? Yorumlara yaz.",
       "kicker": "",
-      "headline": ["OKUDUN MU?"],
+      "headline": [
+        "OKUDUN MU?"
+      ],
       "highlight_line": -1,
       "strike": [],
       "theme": "yellow",

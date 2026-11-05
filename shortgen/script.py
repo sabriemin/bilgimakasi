@@ -109,14 +109,14 @@ KAMU_MALI_FARK = 71
 KITAP_AMBLEMLER = ["kapi", "anahtar", "goz", "kalp", "gemi", "saat", "mektup", "tac", "kus", "agac", "dalga", "yildiz",
                    "kilic", "maske", "ev", "ay"]
 KITAP_RENKLERI = ["kirmizi", "sari", "lacivert", "yesil", "siyah"]
-# Kitabın sayfa bölümleri, videodaki sırasıyla (her bölüm 1-2 sahne). Sekme adları: İLK CÜMLE (alıntı yoksa KÜNYE) /
+# Kitabın sayfa bölümleri, videodaki sırasıyla (her bölüm 1-3 sahne). Sekme adları: İLK CÜMLE (alıntı yoksa KÜNYE) /
 # KONU / FİKİR / BİLGİ / SORU.
 KITAP_BOLUMLERI = ("giris", "konu", "fikir", "bilgi", "soru")
 KITAP_SAYFA_KELIME = 22          # sayfa_metni en çok bu kadar kelime
 KITAP_KAPANIS = "Okudun mu? Yorumlara yaz."
 # Kitap kalıbında toplam dış ses (yavaş seslendirmede ~2,15 kelime/sn: 30-38 sn): hedef aralık ve üst sınır
-KITAP_KELIME = (65, 80)
-KITAP_KELIME_UST = 82
+KITAP_KELIME = (125, 140)  # Sabri 6 Kas: kitap videoları 1 dakika
+KITAP_KELIME_UST = 145
 
 
 def kamu_mali(yazar_olum: int | None, yil: int | None = None) -> bool:
@@ -230,7 +230,7 @@ class Scene(BaseModel):
     # Yalnız 'kitap' kalıbı (Bir Kitap Bir Dakika / "kitap" şablonu) kullanır; eski senaryolar için isteğe bağlı.
     kitap_bolum: Literal["", "giris", "konu", "fikir", "bilgi", "soru"] = Field(default="", description=(
         "Yalnız kitap kalıbı: sahnenin ait olduğu kitap sayfası; sahneler giris → konu → fikir → bilgi → soru "
-        "sırasıyla gelir, her bölüm 1-2 sahne. Diğer kalıplarda boş."))
+        "sırasıyla gelir, her bölüm 1-3 sahne. Diğer kalıplarda boş."))
     sayfa_metni: str = Field(default="", description=(
         "Yalnız kitap kalıbı: bölümün sağ sayfasına yazılan kısa metin, en fazla 22 kelime (dış sesle aynı olmak "
         "zorunda değil). Bölümün ilk sahnesine yazılır, ikinci sahnede boş kalır. giris bölümünde ilk cümle değil, "
@@ -495,18 +495,18 @@ _RENK_LISTESI = ", ".join(KITAP_RENKLERI)
 # değişmez.
 KITAP_RULES = f"""BİR KİTAP BİR DAKİKA DÜZENİ (yalnız 'kitap' kalıbı; video kodla çizilen bir kitapla kurulur: önce kapak, sonra
 sekmeli sayfalar; her sahne bu kitabın bir sayfa anıdır):
-- SÜRE: dış ses 30-38 saniye, toplam {KITAP_KELIME[0]}-{KITAP_KELIME[1]} kelime, {KITAP_KELIME_UST}'yi GEÇMESİN (genel kuraldaki
-  78 sınırı yerine bu kalıpta {KITAP_KELIME_UST}; seslendirme yavaş olduğu için daha fazlası 38 saniyeyi aşar).
-  Sahne sayısı 5-8 (genel kuraldaki 9-12 değil). Her sahnenin narration'ı tam cümle(ler)le başlayıp biter.
-- BÖLÜMLER: her sahnenin kitap_bolum alanı dolu; sıra giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne, sıra
+- SÜRE: dış ses yaklaşık 1 dakika (55-62 saniye), toplam {KITAP_KELIME[0]}-{KITAP_KELIME[1]} kelime, {KITAP_KELIME_UST}'yi GEÇMESİN (genel kuraldaki
+  78 sınırı yerine bu kalıpta {KITAP_KELIME_UST}; seslendirme yavaş olduğu için daha fazlası 1 dakikayı aşar).
+  Sahne sayısı 8-12 (her bölüm 1-3 sahne). Her sahnenin narration'ı tam cümle(ler)le başlayıp biter.
+- BÖLÜMLER: her sahnenin kitap_bolum alanı dolu; sıra giris → konu → fikir → bilgi → soru, her bölüm 1-3 sahne, sıra
   bozulmaz ve geri dönülmez. Ekrandaki sekmeler İLK CÜMLE (alıntı yoksa KÜNYE) / KONU / FİKİR / BİLGİ / SORU'dur.
   1) giris (kanca, ~10-14 kelime): ilk cümle kitabın en çarpıcı öncülü ya da, yalnız kamu malı kitapta, ilk cümlesinin
      kendi çevirimiz (o zaman ilk cümle 16 kelimeye kadar olabilir; değilse genel kuraldaki gibi en fazla 10 kelime).
      Kitabın adı ve yazarı ilk iki cümlede geçer.
-  2) konu (~16-22 kelime): kahraman kim, nerede, hangi durumla karşı karşıya; yalnız öncül ve ilk perde.
-  3) fikir (~12-16 kelime): kitabın asıl derdi, ana fikri tek cümlede; Makas'ın yorumunun yerine geçer, ayrıca yorum
+  2) konu (~35-45 kelime, 2-3 sahne): kahraman kim, nerede, hangi durumla karşı karşıya; yalnız öncül ve ilk perde.
+  3) fikir (~25-30 kelime, 2 sahne): kitabın asıl derdi, ana fikri tek cümlede; Makas'ın yorumunun yerine geçer, ayrıca yorum
      cümlesi ekleme.
-  4) bilgi (~12-18 kelime): kitap ya da yazarı hakkında şaşırtıcı, doğrulanmış tek bir gerçek (yazılış hikâyesi, yasak,
+  4) bilgi (~25-35 kelime, 2 sahne): kitap ya da yazarı hakkında şaşırtıcı, doğrulanmış tek bir gerçek (yazılış hikâyesi, yasak,
      ilk baskı, uyarlama, yazarın hayatı); videonun ikinci merak anı budur.
   5) soru (son sahne): kitabın fikrine bağlı en fazla 8 kelimelik kısa bir soru olabilir; son cümle tam olarak
      "{KITAP_KAPANIS}"
@@ -787,7 +787,7 @@ def _bolum_plani(n: int) -> list[str]:
 
 def kitap_bolumleri(raw: list[str]) -> list[str]:
     """Sahnelerin kitap_bolum değerlerini düzene sokar: giris → konu → fikir → bilgi → soru, sıra geri dönmez, ilk sahne
-    giris, son sahne soru, her bölüm 1-2 sahne (5'ten az sahnede ara bölümler düşebilir, 10'dan çok sahnede bölüm başına
+    giris, son sahne soru, her bölüm 1-3 sahne (5'ten az sahnede ara bölümler düşebilir, 10'dan çok sahnede bölüm başına
     daha çok sahne olur). Yazılan bölümlerden en azını değiştiren dağılım seçilir; boş ya da tanınmayan değerli sahne
     önceki sahnenin bölümünün devamıdır (sığmazsa sonraki bölüme geçer). Hiç bölüm yazılmamışsa ya da eşitlikte varsayılan
     plan (_bolum_plani: artan sahneler önce konu, sonra bilgi) kazanır."""
@@ -872,7 +872,7 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
       (çizici sol sayfaya künye basar) ve giris dahil bütün sayfa metinlerindeki alıntılar (tırnak içinde 4+ kelime ya
       da kitabın ilk cümlesi) çıkar; kamu malıysa ilk cümle sol sayfaya basılır, sağ sayfada (giris sayfa_metni)
       tekrar edilmez. Dış ses, başlık ve açıklamada kalan alıntıyı kitap_alintilari bildirir (üretim durur);
-    - kitap_bolum sırası giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne (kitap_bolumleri); bölümün sayfa
+    - kitap_bolum sırası giris → konu → fikir → bilgi → soru, her bölüm 1-3 sahne (kitap_bolumleri); bölümün sayfa
       metni ilk sahnesindedir;
     - sayfa metni en çok KITAP_SAYFA_KELIME kelime; vurgu sayfa metninin harfi harfine bir parçası ya da boş;
     - ekranda 'KANCA' kelimesi görünmez; son cümle 'Okudun mu? Yorumlara yaz.'; kapak, baskı ve afiş araması yapılmaz."""
@@ -1024,8 +1024,8 @@ def kitap_sorunlari(script, year: int | None = None) -> list[str]:
     out += ["kamu malı olmayan kitapta alıntı (çıkar, dolaylı anlat): " + a
             for a in kitap_alintilari(script, yil, hepsi=True)]
     n = len(script.scenes)
-    if not 5 <= n <= 8:
-        out.append(f"{n} sahne var (5-8 olmalı)")
+    if not 8 <= n <= 12:
+        out.append(f"{n} sahne var (8-12 olmalı)")
     kelime = sum(len(sc.narration.split()) for sc in script.scenes)
     if not KITAP_KELIME[0] <= kelime <= KITAP_KELIME_UST:
         out.append(f"toplam dış ses {kelime} kelime ({KITAP_KELIME[0]}-{KITAP_KELIME[1]} olmalı, en çok "
@@ -1033,7 +1033,7 @@ def kitap_sorunlari(script, year: int | None = None) -> list[str]:
     raw = [sc.kitap_bolum for sc in script.scenes]
     if raw != kitap_bolumleri(raw):
         out.append(f"kitap_bolum sırası bozuk ({', '.join(b or '-' for b in raw)}); giris → konu → fikir → bilgi → "
-                   "soru, her bölüm 1-2 sahne olmalı")
+                   "soru, her bölüm 1-3 sahne olmalı")
     for i, sc in enumerate(script.scenes, 1):
         if len(sc.sayfa_metni.split()) > KITAP_SAYFA_KELIME:
             out.append(f"{i}. sahnenin sayfa_metni {len(sc.sayfa_metni.split())} kelime "
@@ -1403,7 +1403,7 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
                   "içindir) her kitapta dolu olsun. Eser adları tırnakla yazılabilir; tırnak içinde cümle kalmasın. "
                   f"Bu kalıpta toplam dış ses {KITAP_KELIME[0]}-{KITAP_KELIME[1]} kelime olur, {KITAP_KELIME_UST}'yi "
                   "geçmez (78 kelime sınırı yerine); ilk cümle kamu malı kitabın kendi ilk cümlesiyse 16 kelimeye kadar olabilir. "
-                  "kitap_bolum düzenini (giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne), sayfa_metni ve vurgu "
+                  "kitap_bolum düzenini (giris → konu → fikir → bilgi → soru, her bölüm 1-3 sahne), sayfa_metni ve vurgu "
                   "alanlarını koru; dış sesi değiştirdiğin bölümün sayfa_metni'ni de uydur, vurgu sayfa_metni'nden harfi "
                   f"harfine alınsın. Son cümle '{KITAP_KAPANIS}' olsun. Şu alanlara giren açıyı çıkar: "
                   + KITAP_YASAK + ". ")

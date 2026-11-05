@@ -55,18 +55,23 @@ DONUSUM = {
         sahne("giris", "Bir sabah uyanıyorsun ve dev bir böceğe dönüşmüşsün. Franz Kafka'nın Dönüşüm adlı kitabı tam "
                        "olarak böyle başlar.", GIRIS,
               "en ünlü açılışlarından"),
-        sahne("konu", "Gregor bir pazarlamacıdır ve ailesinin bütün yükünü o taşır. Böcek olmuştur ama tek derdi işe "
-                      "geç kalmaktır.",
+        sahne("konu", "Gregor Samsa bir pazarlamacıdır ve ailesinin bütün yükünü o taşır. Böcek olmuştur ama ilk "
+                      "derdi trene yetişememek, işe geç kalmaktır.",
               "Ailesini geçindiren Gregor, böceğe dönüştüğü sabah bile işe geç kalmayı dert eder.", "işe geç kalmayı"),
-        sahne("konu", "Kapının ardında ise ailesi ve sabırsız patronu, ondan bir açıklama bekliyordur."),
-        sahne("fikir", "Kitabın asıl sorusu şudur: İşe yaramadığımız gün, sevdiklerimiz bizi hâlâ sever mi?",
+        sahne("konu", "Kapının ardında ise annesi, babası, kız kardeşi Grete ve sabırsız şefi ondan bir açıklama "
+                      "bekliyordur; kapı ise içeriden kilitlidir."),
+        sahne("fikir", "Kitabın asıl sorusu şudur: İşe yaramadığımız gün, sevdiklerimiz bizi hâlâ sever mi? Kafka bu "
+                       "soruyu bir ailenin sofrasında sorar.",
               "İşe yaramadığımız gün, sevdiklerimiz bizi hâlâ sever mi?", "hâlâ sever mi"),
         sahne("bilgi", "Üstelik Kafka, 1915'teki ilk baskı hazırlanırken yayıncısına mektup yazıp kapağa böceğin asla "
                        "çizilmemesini istemişti.",
               "Kafka, 1915'te yayıncısından kapağa böceğin asla çizilmemesini istedi.", "böceğin asla çizilmemesini",
               mascot="surprised"),
-        sahne("soru", "Sence ailesi haksız mıydı? Okudun mu? Yorumlara yaz.", "Okudun mu? Yorumlara yaz.",
-              "Okudun mu?"),
+        sahne("bilgi", "Bu yüzden ilk baskının kapağında böcek yoktur; yalnızca elleriyle yüzünü kapatmış bir adam ve "
+                       "aralık bir kapı görünür. Çizimi ressam Ottomar Starke yapmıştır."),
+        sahne("soru", "Gregor'un yerinde olsan ilk kimi çağırırdın?", "Sen olsan ilk kimi çağırırdın?",
+              "ilk kimi çağırırdın?"),
+        sahne("soru", "Sence ailesi haksız mıydı? Okudun mu? Yorumlara yaz."),
     ],
 }
 
@@ -346,7 +351,8 @@ class KitapIcerik(unittest.TestCase):
         s.scenes[1].sayfa_metni, s.scenes[2].sayfa_metni = "", "Gregor işe geç kalmayı dert eder."
         s.scenes[1].vurgu, s.scenes[2].vurgu = "", "işe geç kalmayı"
         s = self.sc.normalize_kitap(s, year=2026)
-        self.assertEqual([x.kitap_bolum for x in s.scenes], ["giris", "konu", "konu", "fikir", "bilgi", "soru"])
+        self.assertEqual([x.kitap_bolum for x in s.scenes],
+                         ["giris", "konu", "konu", "fikir", "bilgi", "bilgi", "soru", "soru"])
         self.assertEqual((s.scenes[1].sayfa_metni, s.scenes[1].vurgu),
                          ("Gregor işe geç kalmayı dert eder.", "işe geç kalmayı"), "bölümün sayfası ilk sahnesinde")
         self.assertEqual((s.scenes[2].sayfa_metni, s.scenes[2].vurgu), ("", ""))
@@ -399,8 +405,8 @@ class KitapIcerik(unittest.TestCase):
             s.scenes[-1].narration = son
             self.assertEqual(sc.normalize_kitap(s, year=2026).scenes[-1].narration, beklenen, son)
         s = self.senaryo()
-        s.scenes[-1].sayfa_metni, s.scenes[-1].vurgu = "", ""
-        self.assertEqual(sc.normalize_kitap(s, year=2026).scenes[-1].sayfa_metni, sc.KITAP_KAPANIS)
+        s.scenes[-2].sayfa_metni, s.scenes[-2].vurgu = "", ""  # soru bölümünün sayfası ilk sahnesinde
+        self.assertEqual(sc.normalize_kitap(s, year=2026).scenes[-2].sayfa_metni, sc.KITAP_KAPANIS)
 
     def test_sayfa_en_cok_22_kelime(self):
         sc = self.sc
@@ -442,11 +448,13 @@ class KitapIcerik(unittest.TestCase):
         kisa = self.senaryo()
         kisa.scenes[2].narration = "Kapı kapalıdır."
         kisa.scenes[4].narration = "Kafka kapakta böcek istemedi."
-        self.assertEqual(sc.kitap_sorunlari(kisa, 2026), ["toplam dış ses 60 kelime (65-80 olmalı, en çok 82)"])
+        self.assertEqual(sc.kitap_sorunlari(kisa, 2026), ["toplam dış ses 99 kelime (125-140 olmalı, en çok 145)"])
         uzun = self.senaryo()
-        uzun.scenes[2].narration += " Ama kapı kilitli, anahtar içeride ve Gregor'un küçük bacakları kilidi çevirmeye yetmiyor."
-        self.assertEqual(sc.kitap_sorunlari(uzun, 2026), ["toplam dış ses 91 kelime (65-80 olmalı, en çok 82)"],
-                         "30-38 saniyeyi aşan senaryo")
+        uzun.scenes[2].narration += (" Ama kapı kilitli, anahtar içeride ve Gregor'un küçük bacakları kilidi çevirmeye "
+                                     "yetmiyor. Dışarıdan sesler yükseliyor, şef sabırsızlanıyor ve annesi ağlamaya "
+                                     "başlıyor.")
+        self.assertEqual(sc.kitap_sorunlari(uzun, 2026), ["toplam dış ses 147 kelime (125-140 olmalı, en çok 145)"],
+                         "1 dakikayı aşan senaryo")
         self.assertIn("kitap.kaynak_ilk_cumle boş", sc.kitap_sorunlari(self.senaryo(kaynak_ilk_cumle=""), 2026)[0])
         s = self.senaryo(yazar_olum=0)
         s.kitap = None
@@ -470,8 +478,8 @@ class KitapIcerik(unittest.TestCase):
         self.assertEqual(sc.kalip_kurallari("kitap", False), "\n" + sc.KITAP_RULES)
         self.assertEqual(sc.kalip_kurallari("kitap", True), "\n" + sc.KITAP_RULES)
         k = sc.KITAP_RULES
-        for parca in ("giris → konu → fikir → bilgi → soru", "her bölüm 1-2 sahne", "Sahne sayısı 5-8",
-                      "en fazla 22 kelime", "HARFİ HARFİNE", "65-80 kelime, 82'yi GEÇMESİN", "30-38 saniye", "SÜRPRİZ YOK",
+        for parca in ("giris → konu → fikir → bilgi → soru", "her bölüm 1-3 sahne", "Sahne sayısı 8-12",
+                      "en fazla 22 kelime", "HARFİ HARFİNE", "125-140 kelime, 145'yi GEÇMESİN", "55-62 saniye", "SÜRPRİZ YOK",
                       "kaynak_ilk_cumle (HER kitapta", "ozgun_baslik",
                       "yayınevi kapakları, yayınevi görselleri ve yayımlanmış çeviriler KULLANILMAZ",
                       f"yazarı {sc.YIL - 71} ya da daha önce ölmüşse", "KENDİ kısa", "İLK CÜMLE (alıntı yoksa KÜNYE)",
@@ -530,7 +538,7 @@ class KitapIcerik(unittest.TestCase):
         self.assertIn("- kitap: " + sc.STRUCTURES["kitap"][1], cagri[0][2])
         self.assertIn("ANLATIM KALIBI (SABİT)", cagri[0][2])
         self.assertIn("yazarın ölüm yılı (kamu malı kararı buna bağlı)", cagri[0][2])
-        for parca in ("yazar_olum; yaşıyorsa 0", f"yazar {sc.YIL - 71} ya da daha önce ölmemişse", "65-80 kelime",
+        for parca in ("yazar_olum; yaşıyorsa 0", f"yazar {sc.YIL - 71} ya da daha önce ölmemişse", "125-140 kelime",
                       "ilk perdeden sonraki dönüşleri", sc.KITAP_YASAK, '"kitap_bolum": "giris"', '"sayfa_metni"'):
             self.assertIn(parca, cagri[1][2])
         self.assertNotIn("Kitap kurallarında bulunan sorunlar", cagri[1][2], "kurallara uyan senaryo")
@@ -538,7 +546,8 @@ class KitapIcerik(unittest.TestCase):
         self.assertIn('"amblem": "kapi"', cagri[2][2], "editör kitap alanını görür")
         self.assertEqual(out.structure, "kitap")
         self.assertEqual(out.kitap.ilk_cumle, ILK)
-        self.assertEqual([x.kitap_bolum for x in out.scenes], ["giris", "konu", "konu", "fikir", "bilgi", "soru"])
+        self.assertEqual([x.kitap_bolum for x in out.scenes],
+                         ["giris", "konu", "konu", "fikir", "bilgi", "bilgi", "soru", "soru"])
         self.assertNotIn("UYARI kitap", gunluk)
         # kural dışı senaryo: sorunlar doğrulayıcıya gider, düzelmezse günlükte görünür
         kisa = self.senaryo()
@@ -546,9 +555,9 @@ class KitapIcerik(unittest.TestCase):
         kisa.scenes[4].narration = "Kafka kapakta böcek istemedi."
         kisa.scenes[2].kitap_bolum = "soru"
         _, cagri, gunluk = self.uret(kisa, structure="kitap")
-        self.assertIn("Kitap kurallarında bulunan sorunlar (düzelt): toplam dış ses 60 kelime (65-80 olmalı, en çok 82); "
-                      "kitap_bolum sırası bozuk (giris, konu, soru, fikir, bilgi, soru)", cagri[1][2])
-        self.assertIn("UYARI kitap: toplam dış ses 60 kelime (65-80 olmalı, en çok 82)", gunluk)
+        self.assertIn("Kitap kurallarında bulunan sorunlar (düzelt): toplam dış ses 99 kelime (125-140 olmalı, en çok 145); "
+                      "kitap_bolum sırası bozuk (giris, konu, soru, fikir, bilgi, bilgi, soru, soru)", cagri[1][2])
+        self.assertIn("UYARI kitap: toplam dış ses 99 kelime (125-140 olmalı, en çok 145)", gunluk)
         self.assertNotIn("UYARI kitap: kitap_bolum", gunluk, "bölüm sırası kodda düzelir")
 
     def test_dogrulayici_ve_editor_kitap_alanlarini_korur(self):
