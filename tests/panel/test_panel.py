@@ -1728,7 +1728,7 @@ class KonuSirasiUretim(Ortak):
         cagri = {}
 
         def generate_script(history, topic=None, templates=None, series_prev=None, allow_series=False, kart=False,
-                            structure=None):
+                            structure=None, adim_kartlari=False):
             cagri.update(topic=topic, kart=kart, structure=structure, allow_series=allow_series)
             if uret:
                 uret()
@@ -2284,6 +2284,557 @@ class KapiIleTutarlilik(unittest.TestCase):
         self.assertEqual(int(re.search(r"const ONCE_MS = (\d+) \* 60e3;", w).group(1)) * 60, self.tb.DUE_WINDOW.total_seconds())
         self.assertEqual(tuple(json.loads(re.search(r"const BASLAMAMIS = (\[.*?\]);", w).group(1))), self.tb.NOT_STARTED)
         self.assertIn("Math.ceil((an - simdi) / 60e3)) + 2)", w)  # dakika = kalan + 2 (telegram_bot._due_inputs)
+
+
+class NasilSablonu(unittest.TestCase):
+    """Nasıl yapılır? şablonu: sahne alanları, şablon seçimi, nasil yönergesi, adım düzeni, sahne planı ve ornek.yml."""
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(REPO))
+        for ad in [m for m in sys.modules if m == "shortgen" or m.startswith("shortgen.")]:
+            del sys.modules[ad]
+        import shortgen.pipeline as pl
+        import shortgen.script as sc
+        cls.pl, cls.sc = pl, sc
+        cls.cay = sc.load_script(REPO / "demo" / "nasil" / "ornek_cay.json")
+
+    @classmethod
+    def tearDownClass(cls):
+        sys.path.remove(str(REPO))
+        for ad in [m for m in sys.modules if m == "shortgen" or m.startswith("shortgen.")]:
+            del sys.modules[ad]
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="nasil_test_"))
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
+    def yama(self, nesne, ad, deger):
+        eski = getattr(nesne, ad)
+        setattr(nesne, ad, deger)
+        self.addCleanup(setattr, nesne, ad, eski)
+
+    def kart_modulu(self):
+        try:
+            from shortgen import kart, nasil
+        except ImportError as e:  # numpy/Pillow/cairosvg yoksa
+            self.skipTest(str(e))
+        return kart, nasil
+
+    # ------------------------------------------------------------ şema
+    def test_sahne_alanlari_varsayilan_ve_eski_senaryolar(self):
+        sc = self.sc
+        for yol in (REPO / "demo" / "demo_script.json", REPO / "demo" / "kart" / "ornek_cin_seddi.json"):
+            s = sc.load_script(yol)
+            self.assertTrue(s.scenes)
+            self.assertEqual({(x.step, tuple(x.callouts)) for x in s.scenes}, {(0, ())}, yol.name)
+        ham = json.loads((REPO / "demo" / "demo_script.json").read_text(encoding="utf-8"))
+        ham["scenes"][0]["step"] = -1
+        with self.assertRaises(Exception):
+            sc.ShortScript.model_validate(ham)
+        ozellik = sc.ShortScript.model_json_schema()["$defs"]["Scene"]["properties"]
+        self.assertIn("step", ozellik)
+        self.assertIn("callouts", ozellik)
+
+    def test_ornek_cay_senaryosu(self):
+        s = self.cay
+        self.assertEqual((s.structure, s.template), ("nasil", "nasil"))
+        self.assertEqual([x.step for x in s.scenes], [0, 1, 2, 3, 4, 0])
+        self.assertEqual(len(s.hashtags), 5)
+        kelime = sum(len(x.narration.split()) for x in s.scenes)
+        self.assertTrue(65 <= kelime <= 78, kelime)
+        self.assertTrue(s.scenes[-1].narration.rstrip().endswith("Yorumlara yaz."))
+        for x in s.scenes[1:5]:
+            self.assertRegex(x.headline[0], r"^ADIM \d$")
+            self.assertLessEqual(len(x.callouts), 2)
+            self.assertTrue(8 <= len(x.narration.split()) <= 14, x.narration)
+            baslik = " ".join(x.headline[1:])
+            for c in x.callouts:  # not başlığı tekrarlamaz, en çok 3 kelime / 18 karakter
+                self.assertTrue(len(c.split()) <= 3 and len(c) <= 18, c)
+                self.assertNotIn(c, baslik)
+        # su önce kaynar, demlik o sıcak suyla ısıtılır; özetteki neden ilk adımın püf noktasına bağlanır
+        self.assertIn("suyu kaynat", s.scenes[1].narration)
+        self.assertIn("demliği bu sıcak suyla", s.scenes[2].narration)
+        self.assertTrue(s.scenes[-1].narration.startswith("Uzun kaynayan su"))
+        for x in s.scenes[:5]:
+            self.assertTrue(x.illustration.startswith("local:demo/nasil/"), x.illustration)
+            self.assertTrue((REPO / x.illustration[6:]).is_file(), x.illustration)
+        kopya = s.model_copy(deep=True)
+        self.assertEqual(self.sc.normalize_nasil(kopya).model_dump(), s.model_dump(), "örnek zaten düzenli")
+
+    # ------------------------------------------------------------ şablon seçimi
+    def test_sablon_secimi(self):
+        pl = self.pl
+        cat = pl.template_catalog()
+        self.assertIn("nasil", cat)
+        t = json.loads((REPO / "templates" / "nasil.json").read_text(encoding="utf-8"))
+        self.assertEqual(t["renderer"], "nasil")
+        self.assertEqual(json.loads((REPO / "templates" / "kart.json").read_text(encoding="utf-8"))["renderer"], "kart")
+        m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
+        self.assertEqual(m["yapi_sablon"]["nasil"], "kart", "onaydan önce nasil kalıbı kart şablonunda kalır")
+        s = self.cay
+        self.assertEqual(pl.pick_template(s, "nasil"), "nasil")
+        self.assertEqual(pl.pick_template(s), "kart")
+        # Claude'un önerisi nasil olsa da (claude_secsin) nasil yalnız yapi_sablon ya da --template ile seçilir
+        kok = self.tmp / "kok"
+        shutil.copytree(REPO / "templates", kok / "templates")
+        m2 = dict(m, claude_secsin=True, yapi_sablon={"nasil": "nasil"}, kart=dict(m.get("kart") or {}, acik=False))
+        (kok / "templates" / "eslesme.json").write_text(json.dumps(m2, ensure_ascii=False), encoding="utf-8")
+        self.yama(pl, "ROOT", kok)
+        self.assertEqual(pl.pick_template(s), "nasil", "eşleşme nasil'e çevrilince nasil kalıbı nasil şablonuna gider")
+        baska = s.model_copy(update={"structure": "hikaye", "template": "nasil", "category": "uzay"})
+        self.assertNotEqual(pl.pick_template(baska), "nasil")
+        self.assertEqual(pl.pick_template(s.model_copy(update={"template": "kolaj", "structure": "hikaye"})), "kolaj")
+        self.assertIn("nasil", pl.KENDI_SECIMLI, "Claude'un şablon listesine girmez")
+
+    def test_template_nasil_kalibi_sabitler(self):
+        pl = self.pl
+        kok = self.tmp / "kok"
+        shutil.copytree(REPO / "templates", kok / "templates")
+        (kok / "state").mkdir()
+        self.yama(pl, "ROOT", kok)
+        cagri = {}
+
+        def generate_script(history, topic=None, templates=None, series_prev=None, allow_series=False, kart=False,
+                            structure=None, adim_kartlari=False):
+            cagri.update(topic=topic, structure=structure, kart=kart, templates=templates, adim_kartlari=adim_kartlari)
+            return self.cay.model_copy(deep=True)
+        self.yama(pl, "generate_script", generate_script)
+        self.yama(pl, "build", lambda script, out, **k: cagri.update(sablon=k["template"]) or out / "video.mp4")
+        eski_etiket = os.environ.get("SERIES_LABEL")
+        os.environ["SERIES_LABEL"] = "0"
+        self.addCleanup(lambda: os.environ.__setitem__("SERIES_LABEL", eski_etiket) if eski_etiket is not None
+                        else os.environ.pop("SERIES_LABEL", None))
+        def calistir(*argv):
+            eski = sys.argv
+            sys.argv = ["pipeline", *argv, "--out", str(self.tmp / "out")]
+            try:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    pl.main()
+            finally:
+                sys.argv = eski
+        for argv, kalip, sablon in ((["--topic", "çay", "--template", "nasil"], "nasil", "nasil"),
+                                    (["--topic", "çay", "--template", "nasil", "--structure", "nasil"], "nasil", "nasil"),
+                                    (["--topic", "çay", "--structure", "nasil"], "nasil", "kart")):
+            cagri.clear()
+            calistir(*argv)
+            self.assertEqual((cagri["structure"], cagri["sablon"]), (kalip, sablon), argv)
+            self.assertNotIn("nasil", cagri["templates"] or {}, "nasil Claude'a önerilmez")
+            acik = bool((json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
+                         .get("kart") or {}).get("acik"))
+            self.assertEqual(cagri["kart"], acik or sablon == "kart", "nasil şablonu kart yönergesi istemez")
+            # Adım kartları düzeni yalnız video nasil şablonuyla çizilecekse istenir (kart'a giden nasil genel kurallarla)
+            self.assertEqual(cagri["adim_kartlari"], sablon == "nasil", argv)
+        # eşleşme nasil şablonuna çevrilince kalıpla gelen nasil da Adım kartları düzeniyle yazılır
+        m = json.loads((kok / "templates" / "eslesme.json").read_text(encoding="utf-8"))
+        m["yapi_sablon"]["nasil"] = "nasil"
+        (kok / "templates" / "eslesme.json").write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
+        cagri.clear()
+        calistir("--topic", "çay", "--structure", "nasil")
+        self.assertEqual((cagri["sablon"], cagri["adim_kartlari"]), ("nasil", True))
+        # nasil şablonu başka kalıpla kullanılmaz: Claude'a gitmeden (ya da kurguya geçmeden) durur
+        cagri.clear()
+        with self.assertRaises(SystemExit) as hata:
+            calistir("--topic", "çay", "--template", "nasil", "--structure", "efsane")
+        self.assertIn("nasil kalıbıyla", str(hata.exception))
+        self.assertEqual(cagri, {}, "senaryo yazdırılmadı")
+        efsane = self.tmp / "efsane.json"
+        efsane.write_text(self.cay.model_copy(update={"structure": "efsane"}).model_dump_json(), encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            calistir("--script", str(efsane), "--template", "nasil", "--no-voice")
+        self.assertNotIn("sablon", cagri, "kurgu başlamadı")
+
+    # ------------------------------------------------------------ senaryo yönergesi
+    def test_nasil_yonergesi_yalniz_nasil_kalibinda(self):
+        sc = self.sc
+        h = self.tmp / "history.jsonl"
+        h.write_text("", encoding="utf-8")
+        sistem = []
+
+        def ask(prompt, schema, system, web=False):
+            sistem.append((schema.__name__, system, prompt))
+            s = self.cay.model_copy(deep=True)
+            if schema is sc.ShortScript:
+                return s
+            if schema is sc.Review:
+                return sc.Review(ok=True, problems=[], fixed=s)
+            return sc.Polished(notes=[], fixed=s)
+        self.yama(sc, "ask_claude", ask)
+        with contextlib.redirect_stdout(io.StringIO()):
+            sc.generate_script(h, "çay", structure="nasil", adim_kartlari=True)
+            nasil = sistem[:]
+            sistem.clear()
+            sc.generate_script(h, "çay", structure="nasil")   # yapi_sablon nasil -> kart: genel sahne kuralları
+            kart = sistem[:]
+            sistem.clear()
+            sc.generate_script(h, "çay", structure="efsane", adim_kartlari=True)
+            efsane = sistem[:]
+            sistem.clear()
+            sc.generate_script(h, None, series_prev={"structure": "nasil", "title": "t", "topic": "çay", "brief": "b",
+                                                     "narration": "n", "category": "bilim"}, adim_kartlari=True)
+            seri = sistem[:]
+        adlar = [a for a, _, _ in nasil]
+        self.assertEqual(adlar, ["ShortScript", "Review", "Polished"])
+        self.assertIn(sc.NASIL_RULES, nasil[0][1], "üretici")
+        self.assertIn(sc.NASIL_RULES, nasil[1][1], "doğrulayıcı")
+        self.assertIn("numaralı adım sahneleri", nasil[1][2])
+        self.assertIn("step/callouts", nasil[2][1], "editör adım alanlarına dokunmaz")
+        self.assertIn(sc.EDITOR_NASIL, nasil[2][1], "editör Adım kartlarının başlıklarına dokunmaz")
+        self.assertIn(sc.NASIL_RULES, seri[0][1])
+        self.assertEqual([a for a, _, _ in kart], ["ShortScript", "Review", "Polished"])
+        for ad, system, prompt in kart + efsane:
+            self.assertNotIn(sc.NASIL_RULES, system, ad)
+            self.assertNotIn(sc.EDITOR_NASIL, system, ad)
+            self.assertNotIn("numaralı adım sahneleri", prompt, ad)
+        self.assertIn("Güvenli olmayan", kart[1][2], "güvenlik süzgeci şablondan bağımsız")
+        # Adım kartlarında cümle sahneler arasında bölünmez, özetteki neden Makas'ın yorumunun yerine geçer
+        for parca in ("cümleyi sahneler arasında BÖLME", "ayrıca yorum cümlesi ekleme", "başlıkta yazanı tekrarlamasın",
+                      '"4 ADIM" ekranda kendiliğinden çıkar'):
+            self.assertIn(parca, sc.NASIL_RULES)
+        # ocakta olağan pişirme yasak değil (çay demleme adımı), açık ateş püf noktaları yasak
+        self.assertIn("açık ateş", sc.NASIL_YASAK)
+        self.assertIn("ocakta olağan pişirme ve su kaynatma hariç", sc.NASIL_YASAK)
+        self.assertIn("NASIL YAPILIR:", sc.STRUCTURES["nasil"][1])
+        self.assertIn(sc.NASIL_YASAK, sc.STRUCTURES["nasil"][1])
+        self.assertIn(sc.NASIL_YASAK, sc.NASIL_RULES)
+
+    def test_dil_duzeltmesi_adim_alanlarini_korur(self):
+        sc = self.sc
+        bozuk = self.cay.model_copy(deep=True)
+        for x in bozuk.scenes:
+            x.step, x.callouts = 0, []
+        bozuk.scenes[0].headline, bozuk.scenes[0].highlight_line = ["ÇAYI ACI YAPAN", "DEMLEME SÜRESİ"], 0
+        bozuk.scenes[2].headline = ["ADIM 2", "DEMLİĞİ SICAK SUYLA ISIT"]
+        sistem = []
+
+        def ask(prompt, schema, system, web=False):
+            sistem.append(system)
+            return sc.Polished(notes=[], fixed=bozuk.model_copy(deep=True))
+        self.yama(sc, "ask_claude", ask)
+        out = sc.polish_script(self.cay.model_copy(deep=True))
+        self.assertEqual([x.step for x in out.scenes], [0, 1, 2, 3, 4, 0])
+        self.assertEqual(out.scenes[3].callouts, ["KİŞİ BAŞI", "1 TATLI KAŞIĞI"])
+        self.assertEqual(out.scenes[0].headline, ["ÇAYI ACI YAPAN", "DEMLEME SÜRESİ"], "kart şablonunda editör yazar")
+        self.assertNotIn(sc.EDITOR_NASIL, sistem[-1])
+        # Adım kartları: soru kancası, adım ve özet başlıkları editörden önceki hâliyle kalır
+        out = sc.polish_script(self.cay.model_copy(deep=True), adim_kartlari=True)
+        self.assertIn(sc.EDITOR_NASIL, sistem[-1])
+        self.assertEqual([x.headline for x in out.scenes], [x.headline for x in self.cay.scenes])
+        self.assertEqual([x.highlight_line for x in out.scenes], [x.highlight_line for x in self.cay.scenes])
+        efsane = self.cay.model_copy(update={"structure": "efsane"}, deep=True)
+        out = sc.polish_script(efsane, adim_kartlari=True)
+        self.assertEqual(out.scenes[0].headline, ["ÇAYI ACI YAPAN", "DEMLEME SÜRESİ"], "başka kalıpta etkisiz")
+
+    def test_adim_duzeni_normallestirilir(self):
+        sc = self.sc
+        s = self.cay.model_copy(deep=True)
+        # doğrulayıcı step alanlarını silmiş, adımları atlamalı numaralamış, bir adımı iki sahneye bölmüş olsun
+        for x in s.scenes:
+            x.step = 0
+        s.scenes[1].headline, s.scenes[1].highlight_line = ["adım 2: demliği ısıt"], 0   # tek satırda önek
+        s.scenes[2].headline = ["3. ADIM", "SUYU KAYNAT"]
+        s.scenes[3].headline = ["KAYNAMAYI BEKLE"]                     # iki adım arası adımsız: önceki adımın devamı
+        s.scenes[4].headline, s.scenes[4].highlight_line, s.scenes[4].step = ["ÇAYI KOY"], 0, 6  # yalnız step alanı
+        out = sc.normalize_nasil(s)
+        self.assertEqual([x.step for x in out.scenes], [0, 1, 2, 2, 3, 0])
+        self.assertEqual(out.scenes[1].headline, ["ADIM 1", "DEMLİĞİ ISIT"])
+        self.assertEqual(out.scenes[1].highlight_line, 1, "vurgu aynı satırda kalır")
+        self.assertEqual(out.scenes[2].headline, ["ADIM 2", "SUYU KAYNAT"])
+        self.assertEqual(out.scenes[3].headline, ["KAYNAMAYI BEKLE"], "devam sahnesine numara eklenmez")
+        self.assertEqual((out.scenes[4].headline, out.scenes[4].highlight_line), (["ADIM 3", "ÇAYI KOY"], 1))
+        self.assertEqual(out.scenes[5].headline, ["ÇAY DEMLEME"])
+        efsane = self.cay.model_copy(update={"structure": "efsane"}, deep=True)
+        efsane.scenes[1].headline = ["ADIM 7"]
+        self.assertEqual(sc.normalize_nasil(efsane).scenes[1].headline, ["ADIM 7"], "başka kalıpta dokunulmaz")
+
+    def test_adim_sayisi_basligi_adim_sanilmaz(self):
+        sc = self.sc
+        for silinmis in (False, True):     # step alanları duruyor / doğrulayıcı silmiş
+            s = self.cay.model_copy(deep=True)
+            if silinmis:
+                for x in s.scenes:
+                    x.step = 0
+            s.scenes[0].headline = ["4 ADIM", "ÇAY NASIL DEMLENİR?"]
+            s.scenes[-1].headline = ["4 ADIM", "ÇAY DEMLEME"]
+            out = sc.normalize_nasil(s)
+            self.assertEqual([x.step for x in out.scenes], [0, 1, 2, 3, 4, 0], silinmis)
+            self.assertEqual(out.scenes[0].headline, ["4 ADIM", "ÇAY NASIL DEMLENİR?"], "kanca başlığı kalır")
+            self.assertEqual(out.scenes[-1].headline, ["4 ADIM", "ÇAY DEMLEME"], "özet adıma katılmaz")
+        # ilk ve son sahnede 'ADIM n' de okunmaz; ters biçimde sıra noktası şart
+        s = self.cay.model_copy(deep=True)
+        for x in s.scenes:
+            x.step = 0
+        s.scenes[-1].headline = ["ADIM 4", "TAM KIVAM ÇAY"]
+        self.assertEqual([x.step for x in sc.normalize_nasil(s).scenes], [0, 1, 2, 3, 4, 0])
+        for satir, beklenen in (("ADIM 1", 1), ("1. ADIM", 1), ("1.ADIM: ÇAYI KOY", 1), ("ADIM 2: SUYU KAYNAT", 2),
+                                ("adım 3", 3), ("4 ADIM", 0), ("3 ADIM:", 0), ("4 ADIMDA ÇAY", 0), ("ADIM ADIM", 0)):
+            self.assertEqual(sc.adim_isaretleri([0, 0, 0], ["", satir, ""])[1], beklenen, satir)
+
+    def test_son_adimin_devami_ozete_kaymaz(self):
+        sc = self.sc
+        s = self.cay.model_copy(deep=True)
+        # son adım iki sahneye bölünmüş, yalnız ilki işaretli: devam sahnesi son adımda kalır, özet yalnız son sahne
+        devam = s.scenes[4].model_copy(update={"step": 0, "headline": ["DEMLİK ÜSTTE"], "narration": "Kapağı açma."})
+        s.scenes.insert(5, devam)
+        out = sc.normalize_nasil(s)
+        self.assertEqual([x.step for x in out.scenes], [0, 1, 2, 3, 4, 4, 0])
+        self.assertEqual(out.scenes[5].headline, ["DEMLİK ÜSTTE"], "devam sahnesine numara eklenmez")
+        self.assertEqual(sc.adim_gruplari([0, 1, 0, 2, 0, 3, 0, 0]), ([0], [(1, [1, 2]), (2, [3, 4]), (3, [5, 6])], [7]))
+        self.assertEqual(sc.adim_gruplari([0, 1, 2, 3]), ([0], [(1, [1]), (2, [2]), (3, [3])], []))
+
+    # ------------------------------------------------------------ kurgu planı
+    def test_sahne_plani(self):
+        _, nasil = self.kart_modulu()
+        S = lambda hl, step=0, callouts=(), sprite=None, image=None, hlx=-1: types.SimpleNamespace(  # noqa: E731
+            headline=list(hl), highlight_line=hlx, sprite=sprite, image=image,
+            card={"step": step, "callouts": list(callouts), "mascot": "auto"})
+        specs = [S(["ÇAY NASIL", "DEMLENİR?"], hlx=1, sprite=Path("k.png")),
+                 S(["ADIM 1", "demliği ısıt"], 1, ["sıcak su", "", "a", "b"]),
+                 S(["DEVAMI"], 1, sprite=Path("a1.png")),
+                 S(["ARA"], 0),
+                 S(["ADIM 2: suyu kaynat"], 5, image=Path("f.jpg")),
+                 S(["ÇAY DEMLEME"]), S(["SON"])]
+        segs = nasil.plan(specs)
+        self.assertEqual([(g.kind, g.scenes, g.number) for g in segs],
+                         [("hook", [0], 0), ("step", [1, 2, 3], 1), ("step", [4, 5], 2), ("recap", [6], 0)],
+                         "son adımdan sonraki adımsız sahne son adımın devamı, özet yalnız son sahne")
+        self.assertEqual(segs[0].hl, 1)
+        self.assertEqual(segs[1].title, ["DEMLİĞİ ISIT"])
+        self.assertEqual(segs[1].callouts, ["SICAK SU", "A"], "boş not atlanır, en çok 2 not, Türkçe büyük harf")
+        self.assertEqual(segs[1].sprite, Path("a1.png"), "bölümün ilk çizimi")
+        self.assertEqual((segs[2].title, segs[2].image), (["SUYU KAYNAT"], Path("f.jpg")))
+        # yalnız başlıktaki adım işaretleri
+        b = nasil.plan([S(["KANCA"]), S(["ADIM 1", "X"]), S(["2. ADIM", "Y"]), S(["adım 3", "Z"]), S(["ÖZET"])])
+        self.assertEqual([(g.kind, g.number, g.title) for g in b],
+                         [("hook", 0, ["KANCA"]), ("step", 1, ["X"]), ("step", 2, ["Y"]), ("step", 3, ["Z"]),
+                          ("recap", 0, ["ÖZET"])])
+        # adım işareti yok (başka kalıpta yazılmış senaryo): ilk sahne kanca, son sahne özet
+        c = nasil.plan([S([str(i)]) for i in range(5)])
+        self.assertEqual([(g.kind, g.scenes, g.number) for g in c],
+                         [("hook", [0], 0), ("step", [1], 1), ("step", [2], 2), ("step", [3], 3), ("recap", [4], 0)])
+        self.assertEqual([g.title for g in c][1], ["1"], "işaretsiz adımın başlığı sahne başlığıdır")
+        self.assertEqual([g.kind for g in nasil.plan([S(["A"]), S(["B"])])], ["hook", "step"])
+        self.assertEqual(nasil.plan([]), [])
+        # kancada ya da özette adım sayısı ('4 ADIM') adım işareti değildir
+        d = nasil.plan([S(["4 ADIM", "MUZ NASIL", "TAZE KALIR?"]), S(["ADIM 1", "SAR"], 1), S(["ADIM 2", "AS"], 2),
+                        S(["4 ADIM", "MUZ SAKLAMA"])])
+        self.assertEqual([(g.kind, g.scenes, g.title) for g in d],
+                         [("hook", [0], ["4 ADIM", "MUZ NASIL", "TAZE KALIR?"]), ("step", [1], ["SAR"]),
+                          ("step", [2], ["AS"]), ("recap", [3], ["4 ADIM", "MUZ SAKLAMA"])])
+
+    def test_balon_sayfalari(self):
+        kart, nasil = self.kart_modulu()
+        from shortgen.voice import Word
+        metin = ("Çünkü uzun kaynayan su çayı yavanlaştırır, fazla demlenen çay da tanen salıp acılaşır. "
+                 "Sen çayını kaç dakika demliyorsun? Yorumlara yaz.")
+        words = [Word(w, i * 0.4, i * 0.4 + 0.35) for i, w in enumerate(metin.split())]
+        soru = metin.split().index("Sen")
+        sp = nasil.Speech(words, 0, len(words), (112, 1100, 880, 1230), breaks={soru})
+        sayfa = [i for p0, p1 in sp.pages for i in range(p0, p1)]
+        self.assertEqual(sayfa, list(range(len(words))), "her kelime bir kez, sırayla")
+        self.assertIn(soru, sp.page_starts, "soru cümlesi yeni sayfada başlar")
+        self.assertTrue(sp.page_kind(soru, {soru}))
+        self.assertFalse(sp.page_kind(0, {soru}))
+        for pi, lines in sp.lines.items():
+            self.assertLessEqual(len(lines), sp.max_lines)
+            for L in lines:
+                self.assertLessEqual(kart.tw(" ".join(words[i].text for i in L), sp.FONT, sp.size), sp.width + 0.5)
+            if len(lines) > 1:
+                self.assertGreater(len(lines[-1]), 1, "son satırda tek kelime kalmaz")
+        # uzun tek cümle önce yan cümleden bölünür
+        uzun = [Word(w, 0, 0) for w in ("Son olarak demliği çaydanlığın üstüne koy, kısık ateşte on iki ila on beş "
+                                        "dakika boyunca hiç kapağını açmadan sabırla demle.").split()]
+        sp2 = nasil.Speech(uzun, 0, len(uzun), (112, 1380, 880, 1500), sizes=(40,), max_lines=2)
+        self.assertGreater(len(sp2.pages), 1)
+        self.assertEqual(uzun[sp2.pages[0][1] - 1].text, "koy,", "sayfa yan cümle sonunda biter")
+
+    # ------------------------------------------------------------ kurgu ayrıntıları
+    def nasil_video(self, adim=4, ozet="Uzun kaynayan su çayı yavanlaştırır, fazla demlenen çay acılaşır. "
+                    "Sen çayını kaç dakika demliyorsun? Yorumlara yaz.", sprite=None):
+        kart, nasil = self.kart_modulu()
+        from shortgen.voice import Word
+        metinler = (["Çayı acı yapan çoğu zaman demleme süresi."]
+                    + [f"Adım {k} için kısa bir cümle söyle." for k in range(1, adim + 1)] + [ozet])
+        words, scenes, t = [], [], 0.0
+        for i, m in enumerate(metinler):
+            ws = [Word(w, t + j * 0.4, t + j * 0.4 + 0.35) for j, w in enumerate(m.split())]
+            start, t = t, t + len(ws) * 0.4 + 0.3
+            words += ws
+            step = i if 0 < i <= adim else 0
+            hl = (["ÇAY NASIL", "DEMLENİR?"] if i == 0 else
+                  [f"ADIM {i}", "KISIK ATEŞTE", "DEMLE"] if step else ["ÇAY DEMLEME"])
+            scenes.append(types.SimpleNamespace(words=ws, start=start, end=t, kicker="", headline=hl, highlight_line=-1,
+                                                sprite=sprite if step else None, image=None,
+                                                card={"step": step, "callouts": [], "mascot": "auto"}))
+        return nasil.NasilVideo(scenes, words, {}, {}), nasil, kart
+
+    def test_baslik_satirlari_turkce_cengellerle_cakismaz(self):
+        kart, nasil = self.kart_modulu()
+        from PIL import Image, ImageDraw
+        import numpy as np
+        for lines, size, acilir in ((["KISIK ATEŞTE", "12-15 DK DEMLE"], 100, True),
+                                    (["ÇAYI KOY,", "KAYNAR SUYU DÖK"], 88, True),
+                                    (["SUYU KAYNAT", "AMA TAŞIRMA"], 100, False)):
+            p = nasil.title_pitch(lines, size)
+            taban = nasil.cap_h("anton", size) * 1.12 + size * 0.1
+            self.assertEqual(p > taban + 1, acilir, lines)
+            # iki satırı ayrı ayrı çiz: üst satırın mürekkebi (2 px payla) alttakine değmez
+            f = kart.fnt("anton", size)
+            maske = []
+            for k, L in enumerate(lines):
+                im = Image.new("L", (int(f.getlength(L)) + 40, int(size * 3)), 0)
+                ImageDraw.Draw(im).text((10, size * 1.1 + k * p), L, font=f, fill=255, anchor="ls")
+                maske.append(np.asarray(im) > 96)
+            w = min(m.shape[1] for m in maske)
+            ust = np.zeros_like(maske[0][:, :w])
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    ust |= np.roll(np.roll(maske[0][:, :w], dy, 0), dx, 1)
+            self.assertFalse((ust & maske[1][:, :w]).any(), lines)
+        # boyut seçimi çizimdeki satır aralığıyla ölçer: blok başlık alanına (196 px) sığar
+        for baslik in (["KISIK ATEŞTE", "12-15 DK DEMLE"], ["ÇAYI KOY,", "KAYNAR SUYU DÖK"], ["ŞİŞEYİ ÇALKALA,", "ÇÖZ"]):
+            size, lines = nasil.fit_lines(baslik, "anton", 618, 112, 54, 3, 196, pitch=nasil.title_pitch)
+            blok = nasil.cap_h("anton", size) + (len(lines) - 1) * nasil.title_pitch(lines, size)
+            self.assertLessEqual(blok, 196, baslik)
+
+    def test_ilerleme_makasi_son_dugumu_kapatmaz(self):
+        for adim in (3, 4, 5):
+            v, nasil, _ = self.nasil_video(adim)
+            son, nx = v.steps[-1], v.node_x
+            for lt in (nasil.T_REACH + 0.35, 1.0, son.end - son.start - 0.05):
+                x, dy, kesiyor, bar = v.scissors_at(son.start + lt)
+                sag, sol = x + nasil.SC_W * (1 - nasil.SC_PIN), x - nasil.SC_W * nasil.SC_PIN
+                self.assertLessEqual(sag, nx[-1] - 52 + 0.5, (adim, lt))         # kırmızı düğümün solunda
+                self.assertGreaterEqual(sol, nx[-2] + 40 - 0.5, (adim, lt))      # önceki düğüme de binmez
+                if adim <= 4:
+                    self.assertLessEqual(sag, nx[-1] - 52 * 1.25, "düğüm patlarken bile")
+                self.assertEqual((bar, kesiyor), (nx[-1], False), "son çizgi kesilmiş")
+            # ara adımlarda makas düğümün sağında bir sonrakine doğru keser (değişmedi)
+            x, _, kesiyor, bar = v.scissors_at(v.steps[0].end - 0.05)
+            self.assertTrue(kesiyor and nx[0] + 52 < x - nasil.SC_W * nasil.SC_PIN + 30 and bar == x)
+
+    def test_ozet_eski_kart_kesildikten_sonra_gelir(self):
+        from PIL import Image
+        v, nasil, _ = self.nasil_video(4)
+        self.assertGreaterEqual(nasil.RECAP0, nasil.CUT)
+        seg = v.segs[-1]
+        bos = Image.new("RGBA", (nasil.W, nasil.H), (0, 0, 0, 0))
+        for lt in (0.0, 0.2, nasil.CUT - 0.01):
+            img = bos.copy()
+            v.draw_recap(img, seg, lt, seg.start + lt)
+            self.assertIsNone(img.getbbox(), f"özet {lt:.2f} sn'de çizilmemeli")
+        img = bos.copy()
+        v.draw_recap(img, seg, nasil.RECAP0 + 0.2, seg.start + nasil.RECAP0 + 0.2)
+        self.assertIsNotNone(img.getbbox())
+
+    def test_yorum_cagrisi_ekranda_bir_kez(self):
+        from PIL import Image
+        kart, _ = self.kart_modulu()
+        konan = []
+        eski = kart.put
+        self.yama(kart, "put", lambda img, layer, *a, **k: (konan.append(layer), eski(img, layer, *a, **k)))
+        for ozet, cagri in (("Uzun kaynayan su çayı yavanlaştırır. Sen çayını kaç dakika demliyorsun? Yorumlara yaz.",
+                             True),
+                            ("Uzun kaynayan su çayı yavanlaştırır. Sen çayını kaç dakika demliyorsun?", False)):
+            v, nasil, kart = self.nasil_video(4, ozet)
+            seg = v.segs[-1]
+            sp, R, cta = v.speech(seg), v.recap_parts(seg), v.recap_cta(seg)
+            soru = min(v.recap_breaks(seg))
+            self.assertEqual(v.words[soru].text, "Sen")
+            if cagri:
+                self.assertEqual((v.words[cta].text, sp.b), ("Yorumlara", cta), "çağrı kutuya yazılmaz")
+                an = v.words[cta].start
+            else:
+                self.assertIsNone(cta)
+                self.assertEqual(sp.b, seg.b)
+                an = v.words[soru].start
+            self.assertTrue(all(i < sp.b for p0, p1 in sp.pages for i in range(p0, p1)))
+            for t, beklenen in ((an - 0.3, False), (an + 0.1, True), (seg.end - 0.05, True)):
+                konan.clear()
+                v.draw_recap(Image.new("RGBA", (nasil.W, nasil.H)), seg, t - seg.start, t)
+                self.assertEqual(any(x is R["sticker"] for x in konan), beklenen, (ozet, t))
+                self.assertEqual(any(x is R["save"] for x in konan), not beklenen, "kaydet etiketi çıkartmadan önce")
+
+    def test_yeni_kart_sag_kenarda_yumusak_belirir(self):
+        from PIL import Image
+        import numpy as np
+        _, nasil = self.kart_modulu()
+        kat = Image.new("RGBA", (300, 4), (0, 0, 0, 255))
+        a = np.asarray(nasil.feather_right(kat, 700).getchannel("A"))[0]
+        self.assertEqual(a[875 - 700], 255)
+        self.assertLess(a[934 - 700], 10)
+        self.assertTrue(100 < a[905 - 700] < 160)
+        self.assertIs(nasil.feather_right(kat, 700, strength=0), kat, "yerinde duran kart yumuşatılmaz")
+        self.assertIs(nasil.feather_right(kat, 500), kat, "kenara uzanmayan katman")
+        # kayan kartın kağıdı x=930'da arka plandan ayrışmaz; oturmuş kartın sağ kenarı tam görünür
+        v, nasil, _ = self.nasil_video(4)
+        seg = v.steps[1]
+        zemin = np.asarray(nasil.yellow_bg().convert("RGB")).astype(int)
+        for lt in (nasil.SLIDE0 + 0.03, nasil.SLIDE0 + 0.06, nasil.SLIDE0 + 0.1):
+            img = nasil.yellow_bg().copy()
+            v.draw_step(img, seg, lt, True)
+            fark = np.abs(np.asarray(img.convert("RGB")).astype(int) - zemin).sum(axis=2)
+            self.assertLess(fark[nasil.CARD[1] + 20:nasil.CARD[3] - 20, 930].max(), 60, lt)
+        img = nasil.yellow_bg().copy()
+        v.draw_step(img, seg, 2.0, True)
+        fark = np.abs(np.asarray(img.convert("RGB")).astype(int) - zemin).sum(axis=2)
+        self.assertGreater(fark[700, 916:921].max(), 400, "kartın mürekkep çerçevesi")
+
+    def test_makas_adim_cizimini_kapatmaz(self):
+        import numpy as np
+        for ad in ("adim1_kaynat", "adim2_demlik", "adim3_koy", "adim4_demle"):
+            v, nasil, _ = self.nasil_video(4, sprite=REPO / "demo" / "nasil" / f"{ad}.png")
+            seg = v.steps[0]
+            kutu = (nasil.CARD[0] + 30, 790, nasil.CARD[2] - 150, nasil.CARD[3] - 28)
+            d, dx, dy = v.fit_drawing(seg, kutu)
+            zone, zx, zy = v.mascot_zone(seg)
+            a = np.asarray(d.getchannel("A").resize((int(d.width / 2), int(d.height / 2)))) > 140
+            ekran = np.zeros((nasil.H, nasil.W), bool)
+            ekran[int(dy):int(dy) + a.shape[0], int(dx):int(dx) + a.shape[1]] = a
+            self.assertLessEqual(int((ekran[zy:zy + zone.shape[0], zx:zx + zone.shape[1]] & zone).sum()), 40, ad)
+            self.assertGreaterEqual(max(d.width / 2 / (kutu[2] - kutu[0]), d.height / 2 / (kutu[3] - kutu[1])), 0.65, ad)
+
+    def test_kurgu_nasil_modulune_gider(self):
+        _, nasil = self.kart_modulu()
+        pl = self.pl
+        cap = {}
+        self.yama(nasil, "render_nasil", lambda specs, words, out, mp3, music, meta: cap.update(
+            specs=specs, words=words, meta=meta))
+        from shortgen import render
+        self.addCleanup(render.apply_template, "kolaj")
+        with contextlib.redirect_stdout(io.StringIO()):
+            pl.build(self.cay.model_copy(deep=True), self.tmp / "out", use_voice=False, music=None, template="nasil")
+        self.assertEqual([s.card["step"] for s in cap["specs"]], [0, 1, 2, 3, 4, 0])
+        self.assertEqual(cap["specs"][2].card["callouts"], ["ÇALKALA, BOŞALT", "SICAK SU"])
+        self.assertEqual([s.sprite.name if s.sprite else None for s in cap["specs"]],
+                         ["kanca_cay.png", "adim1_kaynat.png", "adim2_demlik.png", "adim3_koy.png", "adim4_demle.png",
+                          None])
+        self.assertEqual(len(cap["words"]), 74)
+        self.assertEqual(cap["meta"]["structure"], "nasil")
+        self.assertEqual([g.kind for g in nasil.plan(cap["specs"])], ["hook", "step", "step", "step", "step", "recap"])
+
+    # ------------------------------------------------------------ iş akışı
+    def test_ornek_yml_kalip_ortamdan_gecer(self):
+        y = (REPO / ".github" / "workflows" / "ornek.yml").read_text(encoding="utf-8")
+        self.assertRegex(y, r"\n      kalip:\n        description: .+\n        required: false\n")
+        self.assertEqual(y.count("${{ github.event.inputs.kalip }}"), 2, "kalıp yalnız env ile geçer")
+        self.assertEqual(y.count("KALIP: ${{ github.event.inputs.kalip }}"), 2)
+        self.assertIn('[ -z "$SENARYO" ] && [ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")', y)
+        self.assertIn("nasil", re.search(r"\n      sablon:\n        description: (.+)\n", y).group(1))
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("PyYAML yok")
+        adimlar = yaml.safe_load(y)["jobs"]["ornek"]["steps"]
+        girdi = next(a for a in adimlar if a.get("name") == "Girdiler")
+        sonuc = {}
+        for kalip in ("", "nasil", "efsane", "Nasil", "nasil; id", "$(id)", "a" * 21):
+            env = dict(os.environ, SENARYO="", KONU="çay", KALIP=kalip)
+            r = __import__("subprocess").run(["bash", "-c", girdi["run"]], env=env, capture_output=True, text=True)
+            sonuc[kalip] = r.returncode
+        self.assertEqual(sonuc, {"": 0, "nasil": 0, "efsane": 0, "Nasil": 1, "nasil; id": 1, "$(id)": 1, "a" * 21: 1})
+        uret = next(a for a in adimlar if a.get("name") == "Örnek videoyu üret")
+        self.assertNotIn("inputs.", uret["run"], "girdiler betiğe doğrudan yazılmaz")
 
 
 if __name__ == "__main__":

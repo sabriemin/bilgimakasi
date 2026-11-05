@@ -1568,6 +1568,26 @@ class InterstitialCard(Card):
         return "surprised"
 
 
+def cta_sticker(text: str, max_w: float, size: int = 92) -> Image.Image:
+    """'YORUMLARA YAZ ↓' çıkartması: kırmızı, mürekkep çerçeveli ve gölgeli, 2° eğik (1x RGBA; nasil.py de kullanır)."""
+    ssz = size
+    while tw(text, "anton", ssz) + 150 > max_w:
+        ssz -= 4
+    bw, bh = tw(text, "anton", ssz) + 150, ssz * 1.18
+    sp = Pen(0, 0, bw + 30, bh + 30)
+    sp.rr((10, 10, bw + 10, bh + 10), 14, fill=INK)
+    sp.rr((0, 0, bw, bh), 14, fill=RED, outline=INK, width=4)
+    cap = -tbox("H", "anton", ssz)[1]
+    sp.text(36, bh / 2 + cap / 2, text, "anton", ssz, OFF)
+    sp.svg(arrow_svg(OFF, 15, "down"), ICON_VB, bw - 100, bh / 2 - 38, 76)
+    return sp.done().rotate(2.0, resample=Image.BICUBIC, expand=True)
+
+
+def cta_pulse(lt: float) -> float:
+    """Yorum çıkartmasının nabzı (ölçek): 0,4 sn durur, sonra 1,1 sn'lik dönemle %3,5 büyüyüp küçülür."""
+    return 1.0 if lt < 0.4 else 1 + 0.035 * (0.5 - 0.5 * math.cos((lt - 0.4) * 2 * math.pi / 1.1))
+
+
 class CtaCard(Card):
     """Son sahnenin soru kartı: soru, 'YORUMLARA YAZ' etiketi, kupon çizgisi ve kanal adı. Makas mutlu."""
     still = False
@@ -1606,18 +1626,7 @@ class CtaCard(Card):
             pen.text(cx, yb, " ".join(L), font, size, INK, anchor="ms")
             yb += lh
         # yorum etiketi (ayrı katman: hafifçe nabız atar)
-        st = tr_upper(self.BUTTON)
-        ssz = 92
-        while tw(st, "anton", ssz) + 150 > ix1 - ix0 - 120:
-            ssz -= 4
-        bw, bh = tw(st, "anton", ssz) + 150, ssz * 1.18
-        sp = Pen(0, 0, bw + 30, bh + 30)
-        sp.rr((10, 10, bw + 10, bh + 10), 14, fill=INK)
-        sp.rr((0, 0, bw, bh), 14, fill=RED, outline=INK, width=4)
-        cap = -tbox("H", "anton", ssz)[1]
-        sp.text(36, bh / 2 + cap / 2, st, "anton", ssz, OFF)
-        sp.svg(arrow_svg(OFF, 15, "down"), ICON_VB, bw - 100, bh / 2 - 38, 76)
-        self.sticker = sp.done().rotate(2.0, resample=Image.BICUBIC, expand=True)
+        self.sticker = cta_sticker(tr_upper(self.BUTTON), ix1 - ix0 - 120)
         self.sticker_c = (cx, iy0 + 330)
         # kupon çizgisi + kanal adı
         ly = iy0 + 448
@@ -1633,7 +1642,7 @@ class CtaCard(Card):
 
     def layer(self, lt, dur):
         img = self.base.copy()
-        k = 1.0 if lt < 0.4 else 1 + 0.035 * (0.5 - 0.5 * math.cos((lt - 0.4) * 2 * math.pi / 1.1))
+        k = cta_pulse(lt)
         st = self.sticker
         if k != 1.0:
             st = st.resize((int(st.width * k), int(st.height * k)), Image.BILINEAR)
@@ -2025,6 +2034,22 @@ def mascot_svg(mood: str = "normal", mouth: str = "rest", blink: bool = False) -
     return out + "</g>"
 
 
+def talk_state(words: list[Word], starts: list[float], t: float) -> str:
+    """Makas'ın ağzı: o an okunan kelimenin hecesine göre 'open'/'closed', sessizlikte 'rest' (nasil.py de kullanır)."""
+    if not words:
+        return "rest"
+    i = bisect.bisect_right(starts, t) - 1
+    if i < 0:
+        return "rest"
+    w = words[i]
+    if t >= w.end:
+        return "rest"
+    letters = sum(ch.isalnum() for ch in w.text)
+    n = max(1, round(letters / 2.6))
+    ph = (t - w.start) / max(0.05, w.end - w.start) * n
+    return "open" if (ph % 1.0) < 0.55 else "closed"
+
+
 class Mascot:
     """İfade/ağız/göz kırpma başına bir kez çizilen Makas görüntüleri."""
 
@@ -2085,6 +2110,60 @@ def cover_layer(kicker: str, stamp: str, note: bool = False, box=CARD0) -> Image
         # vuruşunun ve açılış zıplamasının (ilk 0,5 sn, en çok 7 px yukarı) altında
         _comp(lay, im, cx - im.width / 2 - rx0, cy - im.height / 2 - ry0)
     return lay
+
+
+def card_cut(img: Image.Image, old: Image.Image, local: float, seed: int, origin=None, card=CARD,
+             x_end: float = SAFE_X - 66, clip_top=None, clips_bot=None) -> None:
+    """Makas kesme geçişi: eski kart makasla ikiye kesilir (CUT_SLICE), parçalar tam opak ayrılır (CUT_SPLIT: üst
+    parça sola-yukarı ~70 px kayıp 3° döner, alt parça menteşeli gibi düşer: sol ucu ~35 px, maskotun üstündeki sağ ucu
+    ≤ 6 px, böylece bıçak uçlarına inmez), sonra en çok 2 karede söner; altta yeni kart durur. Ayrılmadan sönen
+    parçalar çift pozlama gibi okunuyordu. Varsayılanlar kart şablonunun yerleşimidir; nasil.py kendi kart kutusunu,
+    katman kökenini (origin) ve kırpma kutularını verir."""
+    rx0, ry0 = origin if origin is not None else CARD_REGION[:2]
+    lw, lh = old.size
+    ang = math.radians(6 if seed % 2 else -6)
+    cy = (card[1] + card[3]) / 2 - ry0
+    yl, yr = cy - math.tan(ang) * lw / 2, cy + math.tan(ang) * lw / 2
+    p_cut = clamp(local / CUT_SLICE)
+    sx = lerp(card[0] - rx0 - 40, x_end - rx0, ease_in_out(p_cut))
+    e = ease_out_cubic((local - CUT_SLICE) / CUT_SPLIT) + 0.25 * clamp((local - CUT_SLICE - CUT_SPLIT) / CUT_FADE)
+    a = 1 - clamp((local - CUT_SLICE - CUT_SPLIT) / CUT_FADE)
+    if a <= 0:
+        return
+    mask = Image.new("L", old.size, 0)
+    ImageDraw.Draw(mask).polygon([(0, 0), (lw, 0), (lw, yr), (0, yl)], fill=255)
+    top = Image.new("RGBA", old.size, (0, 0, 0, 0))
+    top.paste(old, (0, 0), mask)
+    bot = Image.new("RGBA", old.size, (0, 0, 0, 0))
+    bot.paste(old, (0, 0), ImageChops.invert(mask))
+    clip = clip_top if clip_top is not None else (0, SAFE[1], SAFE[2], CLIP_FLOOR)
+    bx, by = rx0, ry0 + 20 * e
+    tx, ty = rx0 - 60 * e, ry0 - 36 * e
+    if e > 0.01:
+        r = bot.rotate(2.3 * e, resample=Image.BICUBIC, expand=True)    # sağ uç yukarıda kalır
+        bx, by = bx - (r.width - lw) / 2, by - (r.height - lh) / 2
+        bot = r
+        r = top.rotate(-3.0 * e, resample=Image.BICUBIC, expand=True)   # sol uç kalkar
+        tx, ty = tx - (r.width - lw) / 2, ty - (r.height - lh) / 2
+        top = r
+    # kartta: düşen sol uç terminalin üstüne kadar inebilir; maskot bandında (x ≥ 600) bıçak uçlarının (y ≥ 1154)
+    # üstünde kalır
+    for cb in (clips_bot if clips_bot is not None else
+               ((0, SAFE[1], 600, TERM[1] - 16), (600, SAFE[1], SAFE[2], CLIP_FLOOR + 14))):
+        put(img, bot, bx, by, alpha=a, clip=cb)
+    put(img, top, tx, ty, alpha=a, clip=clip)
+    if p_cut < 1:
+        dd = ImageDraw.Draw(img)
+        x = card[0] - 30
+        while x < sx + rx0:
+            xe = min(x + 22, sx + rx0)
+            ya = ry0 + yl + (yr - yl) * ((x - rx0) / lw)
+            yb = ry0 + yl + (yr - yl) * ((xe - rx0) / lw)
+            dd.line([(x, ya), (xe, yb)], fill=INK, width=4)
+            x += 34
+        sc = scissors_icon(110, 34 if int(local * 30) % 2 else 14, rot=-math.degrees(ang))
+        yy = ry0 + yl + (yr - yl) * (sx / lw)
+        put(img, sc, rx0 + sx - sc.width * 0.45, yy - sc.height / 2)
 
 
 class KartScene:
@@ -2252,18 +2331,7 @@ class KartVideo:
             put(img, cur_im, cur_c[0] - cur_im.width / 2, cur_c[1] - cur_im.height / 2, k=k)
 
     def _talk(self, t: float) -> str:
-        if not self.words:
-            return "rest"
-        i = bisect.bisect_right(self.starts, t) - 1
-        if i < 0:
-            return "rest"
-        w = self.words[i]
-        if t >= w.end:
-            return "rest"
-        letters = sum(ch.isalnum() for ch in w.text)
-        n = max(1, round(letters / 2.6))
-        ph = (t - w.start) / max(0.05, w.end - w.start) * n
-        return "open" if (ph % 1.0) < 0.55 else "closed"
+        return talk_state(self.words, self.starts, t)
 
     def _mascot(self, img: Image.Image, t: float, sc: KartScene, lt: float) -> None:
         mood = sc.mood(lt)
@@ -2302,53 +2370,7 @@ class KartVideo:
         return mask
 
     def _cut(self, img: Image.Image, old: Image.Image, local: float, seed: int) -> None:
-        """Eski kart makasla ikiye kesilir (CUT_SLICE), parçalar tam opak ayrılır (CUT_SPLIT: üst parça sola-yukarı
-        ~70 px kayıp 3° döner, alt parça menteşeli gibi düşer: sol ucu ~35 px, maskotun üstündeki sağ ucu ≤ 6 px, böylece
-        bıçak uçlarına inmez), sonra en çok 2 karede söner; altta yeni kart durur. Ayrılmadan sönen parçalar çift pozlama
-        gibi okunuyordu."""
-        rx0, ry0 = CARD_REGION[:2]
-        lw, lh = old.size
-        ang = math.radians(6 if seed % 2 else -6)
-        cy = (CARD[1] + CARD[3]) / 2 - ry0
-        yl, yr = cy - math.tan(ang) * lw / 2, cy + math.tan(ang) * lw / 2
-        p_cut = clamp(local / CUT_SLICE)
-        sx = lerp(CARD[0] - rx0 - 40, SAFE_X - 66 - rx0, ease_in_out(p_cut))
-        e = ease_out_cubic((local - CUT_SLICE) / CUT_SPLIT) + 0.25 * clamp((local - CUT_SLICE - CUT_SPLIT) / CUT_FADE)
-        a = 1 - clamp((local - CUT_SLICE - CUT_SPLIT) / CUT_FADE)
-        if a <= 0:
-            return
-        mask = Image.new("L", old.size, 0)
-        ImageDraw.Draw(mask).polygon([(0, 0), (lw, 0), (lw, yr), (0, yl)], fill=255)
-        top = Image.new("RGBA", old.size, (0, 0, 0, 0))
-        top.paste(old, (0, 0), mask)
-        bot = Image.new("RGBA", old.size, (0, 0, 0, 0))
-        bot.paste(old, (0, 0), ImageChops.invert(mask))
-        clip = (0, SAFE[1], SAFE[2], CLIP_FLOOR)
-        bx, by = rx0, ry0 + 20 * e
-        tx, ty = rx0 - 60 * e, ry0 - 36 * e
-        if e > 0.01:
-            r = bot.rotate(2.3 * e, resample=Image.BICUBIC, expand=True)    # sağ uç yukarıda kalır
-            bx, by = bx - (r.width - lw) / 2, by - (r.height - lh) / 2
-            bot = r
-            r = top.rotate(-3.0 * e, resample=Image.BICUBIC, expand=True)   # sol uç kalkar
-            tx, ty = tx - (r.width - lw) / 2, ty - (r.height - lh) / 2
-            top = r
-        # düşen sol uç terminalin üstüne kadar inebilir; maskot bandında (x ≥ 600) bıçak uçlarının (y ≥ 1154) üstünde kalır
-        put(img, bot, bx, by, alpha=a, clip=(0, SAFE[1], 600, TERM[1] - 16))
-        put(img, bot, bx, by, alpha=a, clip=(600, SAFE[1], SAFE[2], CLIP_FLOOR + 14))
-        put(img, top, tx, ty, alpha=a, clip=clip)
-        if p_cut < 1:
-            dd = ImageDraw.Draw(img)
-            x = CARD[0] - 30
-            while x < sx + rx0:
-                xe = min(x + 22, sx + rx0)
-                ya = ry0 + yl + (yr - yl) * ((x - rx0) / lw)
-                yb = ry0 + yl + (yr - yl) * ((xe - rx0) / lw)
-                dd.line([(x, ya), (xe, yb)], fill=INK, width=4)
-                x += 34
-            sc = scissors_icon(110, 34 if int(local * 30) % 2 else 14, rot=-math.degrees(ang))
-            yy = ry0 + yl + (yr - yl) * (sx / lw)
-            put(img, sc, rx0 + sx - sc.width * 0.45, yy - sc.height / 2)
+        card_cut(img, old, local, seed)
 
     def _intro(self, img: Image.Image, t: float, dark: bool, dur: float = 0.8) -> None:
         """Açılış: makas başlığın altındaki kesik çizgiyi soldan sağa keser (t=0'da sol başta durur)."""
@@ -2415,6 +2437,15 @@ def render_kart(scenes: list[render.SceneSpec], words: list[Word], out_mp4: Path
                 music: Path | None, meta: dict) -> Path:
     """Kart şablonuyla videoyu kurar: kareleri render.render gibi ffmpeg'e yazar, render.mux ile sesi ekler,
     brand.json'daki end_tail_seconds / outro_seconds ayarlarına uyar."""
+    return render_frames(scenes, words, out_mp4, voice_mp3, music,
+                         lambda bcfg: KartVideo(scenes, words, meta, bcfg), "Kart")
+
+
+def render_frames(scenes: list[render.SceneSpec], words: list[Word], out_mp4: Path, voice_mp3: Path | None,
+                  music: Path | None, make_video, name: str) -> Path:
+    """Kart ve nasil şablonlarının ortak kare döngüsü: make_video(bcfg) .frame(t) veren nesneyi kurar; içerik son
+    sözden sonra brand.json'daki end_tail_seconds kadar (kapanış kartı açıksa 0,7 sn) sürer, ardından marka kapanış
+    kartı (outro_seconds) gelir. Kareler ffmpeg'e yazılır, ses render.mux ile eklenir."""
     from .brand import Brand, load_config
     t_begin = time.perf_counter()
     bcfg = load_config()
@@ -2424,7 +2455,7 @@ def render_kart(scenes: list[render.SceneSpec], words: list[Word], out_mp4: Path
     content_end = (words[-1].end if words else scenes[-1].end) + (0.7 if outro else tail)
     total = content_end + outro
     scenes[-1].end = content_end
-    video = KartVideo(scenes, words, meta, bcfg)
+    video = make_video(bcfg)
     silent = out_mp4.with_suffix(".silent.mp4")
     ff = subprocess.Popen([
         "ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
@@ -2444,5 +2475,5 @@ def render_kart(scenes: list[render.SceneSpec], words: list[Word], out_mp4: Path
     render.mux(silent, voice_mp3, music, out_mp4, total)
     silent.unlink(missing_ok=True)
     el = time.perf_counter() - t_begin
-    print(f"Kart: {n} kare, {el:.1f} sn ({el / max(1, n) * 1000:.0f} ms/kare)")
+    print(f"{name}: {n} kare, {el:.1f} sn ({el / max(1, n) * 1000:.0f} ms/kare)")
     return out_mp4

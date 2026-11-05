@@ -33,6 +33,26 @@ Hata olan platform için "Hatalıları tekrar dene" düğmesi çıkar. Platform 
 `templates/` klasöründe her şablon bir JSON dosyasıdır: renkler, fontlar, altyazı boyutu ve konumu, başlık ölçeği.
 Hazır şablonlar: `kolaj` (örnek videodaki tarz), `gece` (lacivert, camgöbeği, pembe, yıldızlar), `doga` (yeşil, turuncu, krem), `minimal` (beyaz, siyah, mavi, kutusuz), `retro` (70'ler renkleri, tırnaklı harfler), `gazete` (eski gazete sayfası).
 Şablon ayarları: `label_style` (box/plain), `rotation`, `text_entry` (pop/slide/wipe/drop), `subtitle_box` (torn/pill/plain), `stars`, `case`.
+`"renderer"` alanı olan şablonlar kendi kurgu modülüyle çizilir: `kart` → `shortgen/kart.py`, `nasil` → `shortgen/nasil.py`.
+
+### Nasıl yapılır? şablonu (`nasil`, "Adım kartları")
+Sarı noktalı zemin, üstte "NASIL YAPILIR?" etiketi ve ADIM n/N, 1-2-3-4 ilerleme çubuğu (makas bir sonraki düğüme
+keser), numaralı adım kartı (kırmızı yırtık numara, başlık, çizim, en çok 2 küçük not) ve kartı gösteren Makas.
+Kinetik altyazı yoktur: dış sesin her kelimesi Makas'ın konuşma balonunda (özette NEDEN?/SENCE? kutusunda) okunduğu
+anda sarı yazılır, sessiz izleyen de takip eder; sondaki "Yorumlara yaz." kutuya değil, söylendiği anda çıkan YORUMLARA
+YAZ çıkartmasına yazılır. Senaryo eşlemesi: ilk sahne kanca (soru başlığı + çizim), `step` alanı 1, 2, 3... olan
+sahneler adım kartları (başlığın ilk satırı `ADIM n`, `callouts` küçük notlar; adımsız ara sahneler adımın devamı), en
+son sahne özet (adım listesi + "neden" + soru). Bu düzen (`NASIL_RULES`, editörde başlıkların korunması) yalnız video
+`nasil` şablonuyla çizilecekse Claude'dan istenir; `yapi_sablon` kart'ı gösterirken nasil senaryoları genel sahne
+kurallarıyla yazılır. Adım numaraları her iki yolda `normalize_nasil` ile sağlamlaştırılır. `nasil` şablonu başka
+kalıptaki senaryoyla kullanılmaz (pipeline durur). Marka kapanışı kart şablonuyla ortaktır.
+
+    python -m shortgen.pipeline --script demo/nasil/ornek_cay.json --template nasil --no-voice   # anahtarsız deneme
+    python -m shortgen.pipeline --topic "çay nasıl demlenir" --template nasil                   # nasil kalıbıyla yazılır
+
+`--template nasil` kalıp verilmemişse senaryoyu `nasil` kalıbıyla yazdırır. Nasıl yapılır? serisinin otomatik olarak
+bu şablona gitmesi için `templates/eslesme.json` → `yapi_sablon` içinde `"nasil": "kart"` değerini `"nasil"` yapın
+(onaydan önce `kart` kalır). Claude'un şablon önerisi `kart` ve `nasil`'i seçemez.
 
 ## Animasyonlar
 Claude, anlatılan şey doğal olarak hareket ediyorsa sahneye bir nesne animasyonu ekler (`shortgen/anim.py`):
@@ -56,6 +76,9 @@ sonra eski mesajdan basılan düğme başka bir konuyu üretmez.
 - `uret.yml`: her gün 09:00 ve 18:00'de (Türkiye saati) video üretir, GitHub Releases'a koyar ve Telegram'a Onayla / Reddet düğmeleriyle gönderir.
 - `onay.yml`: 10 dakikada bir Telegram'daki düğme basışlarını ve komutları işler. Durumlar `state/videos.json` dosyasında tutulur.
 - Bot komutları: `/durum` (bekleyen videolar), `/uret konu` (hemen yeni video).
+- `ornek.yml` (elle): yeni bir şablonu denemek için yayınlanmayan, kaydedilmeyen örnek video üretip Telegram'a gönderir.
+  Girdiler: `senaryo` (ör. `demo/nasil/ornek_cay.json`) ya da `konu`, `sablon` (ör. `nasil`), isteğe bağlı `kalip`
+  (yalnız konuyla üretimde anlatım kalıbını sabitler, ör. `nasil`; küçük harf dışı değer reddedilir) ve `not`.
 
 Depo ayarlarında **Settings → Secrets and variables → Actions** altına şu gizli anahtarları ekleyin:
 `CLAUDE_CODE_OAUTH_TOKEN`, `ELEVENLABS_API_KEY`, ``TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.

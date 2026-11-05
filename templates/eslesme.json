@@ -19,7 +19,7 @@
     "dil ve kültür": "gazete"
   },
   "yapi_sablon": {
-    "_aciklama": "Anlatım kalıbı -> şablon. Kategori eşleşmesinden ve kart kuralından önce gelir; elle seçilen şablon (--template) yine kazanır. 'nasil' (Nasıl yapılır?) kendi şablonu hazır olana kadar geçici olarak kart şablonunu kullanır.",
+    "_aciklama": "Anlatım kalıbı -> şablon. Kategori eşleşmesinden ve kart kuralından önce gelir; elle seçilen şablon (--template) yine kazanır. 'nasil' (Nasıl yapılır?) sahibi örnek videoyu onaylayana kadar geçici olarak kart şablonunu kullanır; kendi şablonuna geçmek için değeri \"nasil\" yapın (templates/nasil.json).",
     "nasil": "kart"
   },
   "_kart_notu": "Kart şablonu (Makas maskotlu kartlar). acik true olunca yapı ya da kategori eşleşen senaryolar kart şablonunu kullanır; tarih kategorilerinin hikâye anlatımları her zaman kolajda kalır. Sahibi örnek videoyu onaylayana kadar kapalı.",

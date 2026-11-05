@@ -1,0 +1,142 @@
+{
+  "topic": "Çay nasıl tam kıvamında demlenir",
+  "category": "dil ve kültür",
+  "template": "nasil",
+  "title": "Çay nasıl demlenir? Tam kıvamında çay demleme, 4 adım",
+  "description": "Çay demleme rehberi: çayı acı yapan çoğu zaman çay değil, demleme süresi. Sen çayını kaç dakika demliyorsun?",
+  "hashtags": [
+    "çaydemleme",
+    "çaynasıldemlenir",
+    "türkçayı",
+    "mutfak",
+    "bilgimakasi"
+  ],
+  "scenes": [
+    {
+      "narration": "Çayı acı yapan çoğu zaman çay değil, demleme süresi.",
+      "kicker": "",
+      "headline": [
+        "ÇAY NASIL",
+        "TAM KIVAMINDA",
+        "DEMLENİR?"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/nasil/kanca_cay.png",
+      "motion": "none"
+    },
+    {
+      "narration": "Önce suyu kaynat ama uzun süre kaynatma; fokurdayınca ocağı kıs.",
+      "kicker": "",
+      "headline": [
+        "ADIM 1",
+        "SUYU KAYNAT,",
+        "UZUN KAYNATMA"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/nasil/adim1_kaynat.png",
+      "motion": "none",
+      "step": 1,
+      "callouts": [
+        "FOKURDAYINCA KIS"
+      ]
+    },
+    {
+      "narration": "Ardından demliği bu sıcak suyla çalkalayıp ısıt; soğuk demlik suyu soğutur.",
+      "kicker": "",
+      "headline": [
+        "ADIM 2",
+        "DEMLİĞİ ISIT"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/nasil/adim2_demlik.png",
+      "motion": "none",
+      "step": 2,
+      "callouts": [
+        "ÇALKALA, BOŞALT",
+        "SICAK SU"
+      ]
+    },
+    {
+      "narration": "Sonra kişi başı bir tatlı kaşığı çay koy, üstüne kaynar suyu dök.",
+      "kicker": "",
+      "headline": [
+        "ADIM 3",
+        "ÇAYI KOY,",
+        "KAYNAR SUYU DÖK"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/nasil/adim3_koy.png",
+      "motion": "none",
+      "step": 3,
+      "callouts": [
+        "KİŞİ BAŞI",
+        "1 TATLI KAŞIĞI"
+      ]
+    },
+    {
+      "narration": "Son olarak demliği çaydanlığın üstüne koy, kısık ateşte 12 ila 15 dakika demle.",
+      "kicker": "",
+      "headline": [
+        "ADIM 4",
+        "KISIK ATEŞTE",
+        "DEMLE"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/nasil/adim4_demle.png",
+      "motion": "none",
+      "step": 4,
+      "callouts": [
+        "12-15 DAKİKA",
+        "ÇAYDANLIK ÜSTÜNDE"
+      ]
+    },
+    {
+      "narration": "Uzun kaynayan su çayı yavanlaştırır, fazla demlenen çay ise tanen salıp acılaşır. Sen çayını kaç dakika demliyorsun? Yorumlara yaz.",
+      "kicker": "",
+      "headline": [
+        "ÇAY DEMLEME"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    }
+  ],
+  "sources": [
+    "Çaykur: Türk çayı demleme önerileri (suyu uzun kaynatmama, demliği ısıtma, kişi başı bir tatlı kaşığı, kısık ateşte demleme)",
+    "Çay kimyası: demleme süresi uzadıkça artan tanen (kateşin) ve buruk, acı tat"
+  ],
+  "search_phrase": "çay demleme",
+  "structure": "nasil",
+  "series_part": 0,
+  "next_part_brief": ""
+}

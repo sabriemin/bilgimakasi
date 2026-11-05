@@ -31,8 +31,8 @@ CATEGORIES = [
 NASIL_YASAK = ("tıbbi ya da sağlık tedavisi, ilaç, tehlikeli ya da yasa dışı işler, finansal/yatırım ya da hukuki tavsiye, "
                "uzmanlık gerektiren işler, temizlik ürünlerini ya da kimyasalları karıştırma, gıda güvenliği iddiaları "
                "(bozulmuş yiyeceği kurtarma, pişmiş yemeği saklama ya da yeniden ısıtma, son kullanma tarihi), elektrik, gaz, "
-               "pil, ateş ya da kızgın yağla ilgili püf noktaları, çocuk ya da evcil hayvan bakımı, başkasının konumunu, "
-               "mesajlarını ya da hesabını izleme ve güvenlik önlemlerini aşma")
+               "pil, açık ateş ya da kızgın yağla ilgili püf noktaları (ocakta olağan pişirme ve su kaynatma hariç), çocuk "
+               "ya da evcil hayvan bakımı, başkasının konumunu, mesajlarını ya da hesabını izleme ve güvenlik önlemlerini aşma")
 
 # Anlatım kalıpları: aynı şablonun tekrarı "seri üretim" gibi görünmesin diye dönüşümlü kullanılır.
 # label: ilk sahnenin üstündeki seri etiketi (ör. "EFSANE Mİ, GERÇEK Mİ? #4"), izleyiciye tanıdık bir format verir.
@@ -46,11 +46,12 @@ STRUCTURES = {
     "sayac": ("3 ŞAŞIRTICI BİLGİ", "3 ŞAŞIRTICI BİLGİ: tek konu hakkında giderek şaşırtıcılaşan 3 bilgi; en şaşırtıcısı en "
               "sonda. Kuru sayım ('Birincisi, ikincisi') YAPMA; bilgiler akıcı bir anlatıyla bağlansın ('Üstelik...', "
               "'Ama asıl tuhaf olan...') ve izleyici üç ayrı bilgiyi rahatça seçebilsin. Kanca en tuhaf bilgiye merak uyandırsın."),
-    "nasil": ("NASIL YAPILIR?", "NASIL YAPILIR: ilk cümlede ulaşılacak sonucu ya da çözülen sorunu söyle ('Muzları bir hafta "
-              "taze tutmanın sırrı sapında.') → 3-5 numaralı, somut adım; her adım kısa bir sahne olsun, headline'ın ilk satırı "
-              "'ADIM 1', 'ADIM 2' diye adım numarası, sonraki satır(lar) adımın kendisi (ör. 'ADIM 1' / 'SAPI SAR') → sonda "
-              "sonucu ya da yöntemin neden işe yaradığını (şaşırtıcı ya da bilimsel nedenini) tek cümlede söyle. Adımlar "
-              "evde, güvenle ve özel beceri gerektirmeden yapılabilsin; şu alanlara giren adım YOK: " + NASIL_YASAK + "."),
+    "nasil": ("NASIL YAPILIR?", "NASIL YAPILIR: ilk sahne kanca: ilk cümlede ulaşılacak sonucu ya da çözülen sorunu söyle "
+              "('Muzları bir hafta taze tutmanın sırrı sapında.') → 3-5 numaralı, somut adım; her adım TEK sahne olsun "
+              "(step alanı 1, 2, 3...; headline'ın ilk satırı 'ADIM 1', 'ADIM 2' diye adım numarası, sonraki satır(lar) "
+              "adımın kendisi, ör. 'ADIM 1' / 'SAPI SAR') → son sahne özet: yöntemin neden işe yaradığını (şaşırtıcı ya da "
+              "bilimsel nedenini) tek cümlede söyle. Adımlar evde, güvenle ve özel beceri gerektirmeden yapılabilsin; şu "
+              "alanlara giren adım YOK: " + NASIL_YASAK + "."),
 }
 # Yalnız açıkça istendiğinde (öneriden üretim: --structure) kullanılan kalıplar: otomatik dönüşüme girmez.
 FORCED_ONLY = {"nasil"}
@@ -88,6 +89,12 @@ class Scene(BaseModel):
     card_note: str = Field(default="", description="Kartın küçük notu ya da kaynağı (ör. 'NASA arşivi · 1999'), en fazla 32 karakter.")
     mascot: Literal["auto", "normal", "surprised", "thinking", "happy"] = Field(
         default="auto", description="Kart şablonunda maskot Makas'ın ifadesi; çoğu sahnede auto.")
+    # Yalnız 'nasil' kalıbı (Nasıl yapılır? / "nasil" şablonu) kullanır; eski senaryolar için isteğe bağlı.
+    step: int = Field(default=0, ge=0, description=(
+        "Yalnız nasil kalıbı: bu sahnenin adım numarası (1, 2, 3...); kanca ve özet sahnelerinde 0. Diğer kalıplarda 0."))
+    callouts: List[str] = Field(default_factory=list, description=(
+        "Yalnız nasil kalıbının adım sahneleri: çizimin üstüne konacak en fazla 2 küçük not etiketi, her biri en fazla "
+        "3 kelime/18 karakter, BÜYÜK HARF (ör. 'TAŞMA SINIRI', '12-15 DK'). Çoğu sahnede boş."))
 
 
 class ShortScript(BaseModel):
@@ -191,6 +198,113 @@ KART_RULES = """KART ALANLARI (yalnız "kart" şablonu kullanır, diğer şablon
 - nasil kalıbında adım sahnelerinin card'ı auto (fotoğraf/çizim) kalsın; adım numarasını counter kartına koyma.
 Kart alanları görsel alanların yerine geçmez; her sahnede fotoğraf/çizim kuralı aynen geçerli.
 Kartlardaki sayı, inanış ve alıntılar da doğrulanmış bilgi olmalı."""
+
+
+# Yalnız 'nasil' kalıbında sisteme eklenir (Nasıl yapılır? serisi); diğer kalıpların yönergesi değişmez.
+NASIL_RULES = """NASIL YAPILIR? DÜZENİ (yalnız 'nasil' kalıbı; video "Adım kartları" ekranlarıyla kurulur, her sahne bir ekrandır):
+- Sahne sayısı = adım sayısı + 2 (5-7 sahne); genel kuraldaki 9-12 sahne bu kalıpta geçerli değil. Her sahnenin
+  narration'ı tam cümle(ler)le başlayıp biter; genel kuraldaki gibi bir cümleyi sahneler arasında BÖLME (her ekran
+  kendi cümlesini yazar). Sıra:
+  1) KANCA (ilk sahne, step 0): narration'ın ilk cümlesi sonucu ya da sorunu ve çözüme işaret eden ipucunu söyler (en
+     fazla 10 kelime, ör. "Muzları bir hafta taze tutmanın sırrı sapında."). headline ekranda büyük yazılan SORUDUR
+     (2-3 satır, satır başı 1-3 kelime, ör. "MUZ NASIL" / "BİR HAFTA" / "TAZE KALIR?"; bu başlığın kelimeleri dış seste
+     geçmeyebilir; adım sayısını yazma, "4 ADIM" ekranda kendiliğinden çıkar), highlight_line en vurucu satır.
+     illustration sonucu ya da sorunu gösteren tek, net çizim.
+  2) ADIMLAR (3-5 sahne, her adım TEK sahne, doğru sırada): step 1, 2, 3...; headline'ın ilk satırı 'ADIM n', sonraki
+     1-2 satır adımın kendisi, emir kipinde 2-5 kelime (ör. "ADIM 2" / "SAPI STREÇLE"). narration 1-2 kısa cümle
+     (8-14 kelime): adımı ve kısa püf noktasını ya da nedenini söyler; "Önce", "Ardından", "Son olarak" gibi
+     bağlaçlarla akar. Bu metin Makas'ın konuşma balonunda kelime kelime yazılır: kısa ve sade olsun.
+     illustration: adımın nesnesini ya da hareketini gösteren yalın, düz bir çizim (ör. "a bunch of bananas whose stems
+     are wrapped in plastic film"); çizimde yazı olmaz. callouts: çizimin üstündeki en fazla 2 küçük not (ölçü, süre,
+     sınır; ör. "TAŞMA SINIRI", "12-15 DK"), gerekmiyorsa boş; başlıkta yazanı tekrarlamasın, her biri en fazla 3
+     kelime. image_mode none, image_queries boş: bu şablon fotoğraf değil çizim kullanır. card auto.
+  3) ÖZET (son sahne, step 0): narration önce yöntemin neden işe yaradığını tek cümlede söyler (şaşırtıcı ya da
+     bilimsel neden; adımlardaki bir püf noktasına bağlansın), sonra kısa bir soru sorar ve "Yorumlara yaz." ile biter.
+     Bu "neden" cümlesi Makas'ın yorumunun yerine geçer; ayrıca yorum cümlesi ekleme. headline işin 1-3 kelimelik
+     kısa adı (ör. "MUZ SAKLAMA"; "ADIM" ya da adım sayısı yazma). Adımların listesi ekranda kendiliğinden çıkar;
+     illustration boş kalabilir.
+- Toplam dış ses genel kuraldaki gibi 65-75 kelime (78'i geçmesin): kanca ~10, her adım 8-14, özet 14-20 kelime.
+- Sayı, süre ve miktarlar doğrulanmış olsun; adımlar evde güvenle uygulanabilsin. Şu alanlara giren adım YOK: """ + NASIL_YASAK + "."
+
+# Başlıktaki adım işareti: 'ADIM 2', 'ADIM 2:', '2. ADIM'. Ters biçimde sıra noktası şart: '4 ADIM' adım sayısıdır
+# (kanca ya da özet başlığı), adım işareti değil.
+ADIM_RE = re.compile(r"^\s*(?:ADIM\s*(\d+)|(\d+)\s*\.\s*ADIM)\b[\s:.,\-–—]*")
+
+
+def _tr_upper(s: str) -> str:
+    return s.replace("i", "İ").replace("ı", "I").upper()
+
+
+def adim_isaretleri(steps: list[int], first_lines: list[str]) -> list[int]:
+    """Sahnelerin ham adım işaretleri (0: adımsız). step alanı her sahnede geçerlidir; yoksa başlığın ilk satırındaki
+    'ADIM n' okunur, ama 3+ sahnelik senaryoda ilk (kanca) ve son (özet) sahnede okunmaz: kancanın ya da özetin başlığı
+    adımı sanılıp düzen kaymasın."""
+    n = len(steps)
+    out = []
+    for i, (st, line) in enumerate(zip(steps, first_lines)):
+        if st and st > 0:
+            out.append(int(st))
+            continue
+        m = ADIM_RE.match(_tr_upper((line or "").strip())) if (n < 3 or 0 < i < n - 1) else None
+        out.append(int(m.group(1) or m.group(2)) if m else 0)
+    return out
+
+
+def adim_gruplari(raw: list[int]) -> tuple[list[int], list[tuple[int, list[int]]], list[int]]:
+    """Ham adım işaretlerinden (kanca sahneleri, [(adım sırası, sahneler)], özet sahneleri). İlk adımdan önceki sahneler
+    kanca; aynı adımın art arda sahneleri ve iki adım arasındaki adımsız sahne o adımın devamı; son adımdan sonraki
+    adımsız sahneler de son adımın devamıdır, yalnız en son sahne özettir. Adım işareti yoksa adım listesi boştur."""
+    marked = [i for i, r in enumerate(raw) if r]
+    if not marked:
+        return list(range(len(raw))), [], []
+    first, last = marked[0], marked[-1]
+    end = max(last, len(raw) - 2)          # özet yalnız en son sahne (adım son sahnede bitmiyorsa)
+    groups: list[tuple[int, list[int]]] = []
+    prev = None
+    for i in range(first, end + 1):
+        if raw[i] and raw[i] != prev:
+            groups.append((len(groups) + 1, [i]))
+            prev = raw[i]
+        else:
+            groups[-1][1].append(i)
+    return list(range(first)), groups, list(range(end + 1, len(raw)))
+
+
+def normalize_nasil(script: ShortScript) -> ShortScript:
+    """Nasıl yapılır? senaryosunun adım düzenini sağlamlaştırır (yerinde, kalıp nasil değilse dokunmaz): adım numarası
+    step alanından, yoksa başlığın ilk satırındaki 'ADIM n'den okunur (adim_isaretleri) ve 1'den sırayla yeniden
+    verilir; sahneler adim_gruplari ile kanca / adım / özet olarak ayrılır (adımsız ara sahneler adımın devamıdır).
+    Her adımın ilk sahnesinin başlığı 'ADIM n' satırıyla başlar (kart şablonu sağ üstte adım numarasını bu satırdan
+    okur)."""
+    if script.structure != "nasil":
+        return script
+    raw = adim_isaretleri([sc.step for sc in script.scenes], [(sc.headline or [""])[0] for sc in script.scenes])
+    hook, groups, recap = adim_gruplari(raw)
+    if not groups:
+        return script
+    for n, idx in groups:
+        for i in idx:
+            _adim_basligi(script.scenes[i], n, new=(i == idx[0]))
+    for i in hook + recap:
+        script.scenes[i].step = 0
+    return script
+
+
+def _adim_basligi(sc: Scene, n: int, new: bool) -> None:
+    """Sahnenin adım numarasını ve başlığındaki 'ADIM n' satırını n'e çeker; adımın ilk sahnesi bu satırla başlar."""
+    sc.step = n
+    head = list(sc.headline or [])
+    m = ADIM_RE.match(_tr_upper(head[0].strip())) if head else None
+    if m:
+        rest = head[0].strip()[m.end():].strip()
+        head[0:1] = [f"ADIM {n}"] + ([_tr_upper(rest)] if rest else [])
+        if rest and sc.highlight_line >= 0:
+            sc.highlight_line += 1
+    elif new:
+        head.insert(0, f"ADIM {n}")
+        if sc.highlight_line >= 0:
+            sc.highlight_line += 1
+    sc.headline = head
 
 
 def _history(path: Path) -> list[str]:
@@ -307,8 +421,11 @@ def structure_ask(keys: list[str]) -> str:
 
 def generate_script(history_file: Path, topic_hint: str | None = None,
                     templates: dict[str, str] | None = None, series_prev: dict | None = None,
-                    allow_series: bool = False, kart: bool = False, structure: str | None = None) -> ShortScript:
-    """structure verilirse (öneriden üretim) kalıp sabittir: yalnız o sunulur, doğrulama ve dil düzeltmesi değiştiremez."""
+                    allow_series: bool = False, kart: bool = False, structure: str | None = None,
+                    adim_kartlari: bool = False) -> ShortScript:
+    """structure verilirse (öneriden üretim) kalıp sabittir: yalnız o sunulur, doğrulama ve dil düzeltmesi değiştiremez.
+    adim_kartlari: video "Adım kartları" (nasil şablonu) ile çizilecek; nasil kalıbında ekran düzeni (NASIL_RULES) yalnız
+    o zaman istenir. Kart şablonuna giden nasil senaryoları genel sahne kurallarıyla yazılır."""
     if structure and structure not in STRUCTURES:
         raise ValueError(f"bilinmeyen anlatım kalıbı: {structure}")
     used = _history(history_file)[-200:]
@@ -329,7 +446,8 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
             f"- {k}: {v}" for k, v in templates.items())
     if used and not series_prev:
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
-    script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else ""))
+    nasil = adim_kartlari and (series_prev or {}).get("structure", structure) == "nasil"
+    script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + ("\n" + NASIL_RULES if nasil else ""))
     forced = None if series_prev else structure
     serbest = not series_prev and not structure  # kalıp dönüşümden seçilir: FORCED_ONLY (nasil) seçilemez
     if forced:
@@ -338,18 +456,18 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
         script.structure = allowed_structures(history_file)[0]
     part, brief = (2, "") if series_prev else (script.series_part if allow_series else 0, script.next_part_brief)
     phrase = script.search_phrase
-    checked = verify_script(script, keep_structure=bool(forced))
+    checked = verify_script(script, keep_structure=bool(forced), adim_kartlari=nasil)
     # doğrulayıcı kalıbı gerekçeyle değiştirebilir: etiket son metne uysun diye doğrulanmış hâlin kalıbı kullanılır
     # (sabit kalıpta değiştiremez: seri etiketi ve şablon kalıba bağlı)
     structure = series_prev.get("structure", checked.structure) if series_prev else (forced or checked.structure)
     if serbest and structure in FORCED_ONLY:  # doğrulayıcı da serbest kalıpta nasil'e geçemez
         structure = script.structure  # (seri etiketi, kart şablonu ve #NasılYapılır bu kalıba bağlı)
     checked.structure = structure
-    out = polish_script(checked)
+    out = polish_script(checked, adim_kartlari=nasil)
     out.series_part, out.next_part_brief = part, (brief if part == 1 else "")
     out.structure, out.search_phrase = structure, out.search_phrase or phrase
     out.hashtags = [t for t in (re.sub(r"\W", "", h) for h in out.hashtags) if t]
-    return out
+    return normalize_nasil(out)
 
 
 class Review(BaseModel):
@@ -358,15 +476,18 @@ class Review(BaseModel):
     fixed: ShortScript
 
 
-def verify_script(script: ShortScript, keep_structure: bool = False) -> ShortScript:
+def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartlari: bool = False) -> ShortScript:
     """İkinci geçiş: bilgileri web aramasıyla doğrular, hataları düzeltir veya çıkarır. keep_structure: kalıp seriden
-    geldiği için sabit (doğrulayıcı değiştiremez)."""
+    geldiği için sabit (doğrulayıcı değiştiremez). adim_kartlari: nasil kalıbının Adım kartları düzeni korunur."""
+    duzen = adim_kartlari and script.structure == "nasil"
     kalip = ("Anlatım kalıbı (structure) bu video için SABİT; değiştirme, metni bu kalıba uydur. " if keep_structure else
              "Seçilen anlatım kalıbını (structure) koru; yalnız konu o kalıba gerçekten uymuyorsa değiştir ve structure "
              "alanını da buna göre güncelle ('nasil' kalıbına geçme: o yalnız Nasıl yapılır? serisinden gelir). ")
     if script.structure == "nasil":  # doğrulanabilir ama güvensiz bir yöntem de elensin
-        kalip += ("Güvenli olmayan ya da şu alanlara giren adımı çıkar veya güvenli bir adımla değiştir: "
-                  + NASIL_YASAK + ". ")
+        kalip += "Güvenli olmayan ya da şu alanlara giren adımı çıkar veya güvenli bir adımla değiştir: " + NASIL_YASAK + ". "
+    if duzen:
+        kalip += ("Kanca, numaralı adım sahneleri (step 1, 2, 3...; başlığın ilk satırı 'ADIM n') ve son özet sahnesi "
+                  "düzenini koru; adım çıkarırsan kalanları yeniden numarala. ")
     review = ask_claude(
         "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
         "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
@@ -374,12 +495,13 @@ def verify_script(script: ShortScript, keep_structure: bool = False) -> ShortScr
         "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). " + kalip +
         "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
         "alanında döndür.\n\n" + script.model_dump_json(indent=1),
-        Review, SYSTEM + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
+        Review, SYSTEM + ("\n" + NASIL_RULES if duzen else "")
+        + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
     if review.problems:
         print("Doğrulama notları:", *review.problems, sep="\n - ")
     if keep_structure:
         review.fixed.structure = script.structure
-    return review.fixed
+    return normalize_nasil(review.fixed)
 
 
 EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün. Görevin, sana verilen kısa video senaryosunun dış sesini
@@ -395,7 +517,7 @@ EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün.
 - Senaryonun structure alanına göre: neden ise ilk cümle ve ilk headline soru olarak kalabilir, cevabı öne taşıma;
   sayac ise en tuhaf bilgiyi öne taşıma (sonda kalsın); efsane ise ilk cümle inanışı ve yanlış (ya da şaşırtıcı biçimde
   doğru) olduğunu birlikte söylesin, doğrulanmış sonucu tersine çevirme; nasil ise adımların sayısını ve sırasını koru,
-  headline'ların ilk satırındaki 'ADIM 1', 'ADIM 2' numaralarını değiştirme.
+  headline'ların ilk satırındaki 'ADIM 1', 'ADIM 2' numaralarını ve step/callouts alanlarını değiştirme.
 - series_part 2 ise ilk cümle 1. bölümün kaldığı yeri hatırlatan cümle olarak kalsın; kalıba özel ilk cümle kuralını
   uygulama, 1. bölümü yeniden anlatma.
 - headline satırları, değişen narration'da geçen kelimelerden oluşsun (BÜYÜK HARF, satır başı 1-3 kelime).
@@ -403,14 +525,26 @@ EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün.
 Düzeltilmiş tam senaryoyu döndür."""
 
 
+# Yalnız Adım kartları (nasil şablonu) ile çizilecek nasil senaryolarında editöre eklenir.
+EDITOR_NASIL = """
+ADIM KARTLARI: Bu senaryo "Adım kartları" ekranlarıyla kurulur. headline ve highlight_line alanlarına DOKUNMA: ilk
+sahnenin başlığı ekranda büyük yazılan sorudur ve kelimeleri dış seste geçmeyebilir, adım başlıkları kart başlığı, son
+sahnenin başlığı işin kısa adıdır (bu senaryoda "headline satırları narration kelimelerinden oluşsun" ve "ilk headline
+özneyi ve dönüşü söylesin" kuralları geçerli değil). Her sahnenin narration'ı tam cümleyle başlayıp bitsin; adım
+sahnelerinin dış sesi Makas'ın konuşma balonunda yazıldığı için kısa kalsın (8-14 kelime)."""
+
+
 class Polished(BaseModel):
     notes: List[str] = Field(description="Yapılan önemli dil düzeltmeleri, kısa")
     fixed: ShortScript
 
 
-def polish_script(script: ShortScript) -> ShortScript:
-    """Üçüncü geçiş: belgesel dili ve akış için Türkçe editör (web araması yok)."""
-    res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + script.model_dump_json(indent=1), Polished, EDITOR)
+def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScript:
+    """Üçüncü geçiş: belgesel dili ve akış için Türkçe editör (web araması yok). adim_kartlari: nasil kalıbının Adım
+    kartları düzeninde başlıklar (soru kancası, adım ve özet başlıkları) editörden önceki hâliyle kalır."""
+    duzen = adim_kartlari and script.structure == "nasil"
+    res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + script.model_dump_json(indent=1), Polished,
+                     EDITOR + (EDITOR_NASIL if duzen else ""))
     if res.notes:
         print("Dil düzeltmeleri:", *res.notes[:12], sep="\n - ")
     fixed = res.fixed
@@ -418,8 +552,10 @@ def polish_script(script: ShortScript) -> ShortScript:
         return script
     for a, b in zip(script.scenes, fixed.scenes):  # görsel alanları kesin olarak koru
         for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon", "anim_query",
-                  "card", "card_value", "card_label", "card_myth", "card_fact", "card_note", "mascot"):
+                  "card", "card_value", "card_label", "card_myth", "card_fact", "card_note", "mascot", "step", "callouts"):
             setattr(b, f, getattr(a, f))
+        if duzen:  # Adım kartlarında başlık ekran metnidir (dış sesin altyazısı değil): editör değiştiremez
+            b.headline, b.highlight_line = list(a.headline), a.highlight_line
     fixed.sources, fixed.category = script.sources, script.category
     fixed.search_phrase, fixed.structure = script.search_phrase, script.structure
     return fixed

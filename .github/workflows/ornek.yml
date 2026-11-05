@@ -12,9 +12,12 @@ on:
         description: "Senaryo yoksa Claude'un yazacağı konu"
         required: false
       sablon:
-        description: "Şablon"
+        description: "Şablon (ör. kart, nasil). nasil şablonunda konuyla üretim nasil kalıbıyla yazılır."
         required: false
         default: "kart"
+      kalip:
+        description: "İsteğe bağlı sabit anlatım kalıbı, yalnız konuyla üretimde (ör. nasil, efsane; nasil şablonu yalnız nasil kalıbıyla)"
+        required: false
       not:
         description: "Telegram mesajına eklenecek kısa not"
         required: false
@@ -31,9 +34,14 @@ jobs:
         env:
           SENARYO: ${{ github.event.inputs.senaryo }}
           KONU: ${{ github.event.inputs.konu }}
+          KALIP: ${{ github.event.inputs.kalip }}
         run: |
           if [ -z "$SENARYO" ] && [ -z "$KONU" ]; then
             echo "::error::Senaryo dosyası ya da konu verilmeli (konusuz üretim gündem/sıra/bekleyen senaryoya dokunurdu)."; exit 1
+          fi
+          # kalıp yalnız ortam değişkeniyle geçer; tam listeyi pipeline (--structure seçenekleri) denetler
+          if ! [[ "$KALIP" =~ ^[a-z]{0,20}$ ]]; then
+            echo "::error::Kalıp yalnız küçük harflerden oluşur (ör. nasil, efsane)."; exit 1
           fi
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -65,12 +73,15 @@ jobs:
           SENARYO: ${{ github.event.inputs.senaryo }}
           KONU: ${{ github.event.inputs.konu }}
           SABLON: ${{ github.event.inputs.sablon }}
+          KALIP: ${{ github.event.inputs.kalip }}
           SERIES: "0"  # örnek bir seri başlatmasın
           AUTO_TREND: "0"
         run: |
           ARGS=(--out "$RUNNER_TEMP/ornek")
           [ -n "$SABLON" ] && ARGS+=(--template "$SABLON")
           if [ -n "$SENARYO" ]; then ARGS+=(--script "$SENARYO"); else ARGS+=("--topic=$KONU"); fi
+          # hazır senaryoda kalıp senaryonun kendisinden gelir; konuyla üretimde sabitlenir
+          [ -z "$SENARYO" ] && [ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")
           python -m shortgen.pipeline "${ARGS[@]}"
           echo "OUT_DIR=$(ls -td "$RUNNER_TEMP"/ornek/*/ | head -1)" >> "$GITHUB_ENV"
       - name: Videoyu iş çıktısı olarak sakla
