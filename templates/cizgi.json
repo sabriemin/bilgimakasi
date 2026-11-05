@@ -1,0 +1,28 @@
+{
+  "name": "Çizgi Roman",
+  "description": "Karar Senin hikâye serisi: her sahne bir çizgi roman sayfası. Kalın kenarlı 1-3 panel, kodla çizilen mekânlar ve her panelde aynı görünen karakterler (Kuzey, Hasan Reis, Nermin, Selim Bey, Orhan Bey), tırnak içindeki söz konuşma balonunda, dış ses sarı anlatıcı kutusunda kelime kelime; GERÇEK BİLGİ kartı, izleyici ipucu ve sonda makasla kesilen kırmızı A / camgöbeği B oylaması. Üst bantta KARAR SENİN · N. BÖLÜM, her karede KURGU etiketi. Yalnız --template cizgi ile seçilir; sahnelerin cizgi tarifi olmalıdır.",
+  "renderer": "cizgi",
+  "istem": "ÇİZGİ ROMAN ŞABLONU (Karar Senin): her sahnenin 'cizgi' alanını doldur (diğer şablonlarda null kalan alan).\n- duzen: tek, ust_alt, yan_yana ya da uc; paneller: her panelde mekan (listeden), karakterler (id, poz, ifade, konum sol/orta/sag, cerceve bust/boy), isteğe bağlı ses ('GOL!') ve yazi (tabela, skor, defter, saat, bilet).\n- Karakterlerin görünüşü sabittir; yalnız poz ve ifade seç. Kulüp adı yalnız yazı ve renk olarak geçer; arma, logo, gerçek antrenör, başkan ya da oyuncu yok.\n- Dış seste tırnak içinde söz varsa o sahnede balon {konusan, metin (tırnaktaki söz, harfi harfine), tur, panel} doldur.\n- İlk sahnede seri 'KARAR SENİN' ve bolum numarası; bölümün tek gerçek bilgisi kart {tur: gercek, metin, kaynak}; izleyicinin bilip karakterin bilmediği şey kart {tur: ipucu, baslik}; son sahne kart {tur: ab, baslik (soru), a, b} ve iki panel (A, B).",
+  "colors": {
+    "accent": [221, 32, 39],
+    "highlight": [252, 213, 33],
+    "dark": [20, 19, 19],
+    "light": [233, 231, 226],
+    "box": [250, 249, 245],
+    "muted": [150, 148, 145]
+  },
+  "fonts": {
+    "headline": "Anton-Regular.ttf",
+    "subtitle": "CourierPrime-Bold.ttf"
+  },
+  "subtitle_size": 40,
+  "subtitle_y": 1400,
+  "headline_scale": 1.0,
+  "grain": true,
+  "label_style": "box",
+  "rotation": 1.8,
+  "text_entry": "pop",
+  "subtitle_box": "torn",
+  "stars": false,
+  "case": "upper"
+}

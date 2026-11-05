@@ -18,6 +18,8 @@ from typing import List, Literal
 
 from pydantic import BaseModel, Field
 
+from . import cizgi_sabit as CZ
+
 MODEL = os.environ.get("CLAUDE_MODEL", "opus")
 ROOT = Path(__file__).resolve().parent.parent
 USAGE = ROOT / "state" / "claude_usage.json"
@@ -184,6 +186,80 @@ WEB_KALIPLARI = {"uretim", "olsaydin", "kitap"}
 ADIM_KELIMESI = {"nasil": "ADIM", "uretim": "AŞAMA"}
 
 
+# ---------------------------------------------------------------- Çizgi Roman şablonu ("Karar Senin") sahne tarifi
+# Yalnız cizgi şablonu (shortgen/cizgi.py) okur; diğer şablonlar yok sayar. Bütün anahtarların listesi ve Türkçe
+# tanımları shortgen/cizgi_sabit.py'dedir.
+class CizgiKarakter(BaseModel):
+    """Panelde görünen bir karakter: görünüşü kimliğinden gelir (sabit), sahneye göre yalnız poz, ifade ve yer değişir."""
+    id: Literal[tuple(CZ.KARAKTERLER)] = Field(description=(  # type: ignore[valid-type]
+        "Karakterin kimliği: kuzey, hasan, nermin, selim, orhan ya da golge (yüzü gölgede not alan adam)."))
+    poz: Literal[tuple(CZ.POZLAR)] = Field(default="dur", description=(  # type: ignore[valid-type]
+        "Kollar ve eldeki nesne: dur, kartvizit, ag, top, sut (sol ayakla şut; boydan), sevinc, not, telefon, "
+        "isaret, cene, kollar."))
+    ifade: Literal[tuple(CZ.IFADELER)] = Field(default="normal", description=(  # type: ignore[valid-type]
+        "Yüz ifadesi: normal, gulumse, mutlu, saskin, endiseli, dusunceli, kararli."))
+    konum: Literal[CZ.KONUMLAR] = Field(default="orta", description=(  # type: ignore[valid-type]
+        "Paneldeki yeri: sol, orta, sag. Soldaki karakter sağa, sağdaki sola bakar."))
+    cerceve: Literal[CZ.CERCEVELER] = Field(default="bust", description=(  # type: ignore[valid-type]
+        "bust: belden yukarı yakın plan; boy: boydan (şut, koşu)."))
+
+
+class CizgiPanel(BaseModel):
+    """Çizgi roman sayfasındaki bir panel: mekân (arka plan), içindeki karakterler ve isteğe bağlı ses efekti."""
+    mekan: Literal[tuple(CZ.MEKANLAR)] = Field(default="bos", description=(  # type: ignore[valid-type]
+        "Panelin arka planı (kodla çizilen mekân): bos, iskele_gece, liman, tekne_sabah, saha_aksam, harita_fener, "
+        "saha_gol, tribun, brosur, soyunma, yol_tabelasi, mutfak, telefon_defter, saat_bilet, istanbul, samsun."))
+    karakterler: List[CizgiKarakter] = Field(default_factory=list, description=(
+        "Paneldeki karakterler, en çok 3; boş olabilir (yalnız mekân)."))
+    ses: str = Field(default="", description=(
+        "Panelde kalın harflerle yazılan ses efekti, en çok 10 karakter (ör. 'GOL!', 'TİK TAK'). Çoğu panelde boş."))
+    yazi: List[str] = Field(default_factory=list, description=(
+        "Mekândaki yazılar, en çok 3 kısa satır, BÜYÜK HARF: skor tabelası ('6 MAÇ · 9 GOL'), yol tabelası (sol ve sağ "
+        "yön: ['İSTANBUL', 'SAMSUN']), defterdeki isimler, saat ('23:40') ve bilet ('SİNOP → İSTANBUL'), broşür "
+        "bölümleri. Mekânın yazısı yoksa boş."))
+
+
+class CizgiBalon(BaseModel):
+    """Konuşma balonu: dış sesteki tırnak içindeki söz balona yazılır (anlatıcı kutusuna değil)."""
+    konusan: Literal[tuple(CZ.KARAKTERLER)] = Field(description=(  # type: ignore[valid-type]
+        "Konuşan karakterin kimliği; balonun kuyruğu ona uzanır (aynı panelde olmalı)."))
+    metin: str = Field(description=(
+        "Balondaki söz, dış sesteki tırnak içindeki cümleyle harfi harfine aynı (tırnaksız), en çok 12 kelime."))
+    tur: Literal[CZ.BALON_TURLERI] = Field(default="konus", description=(  # type: ignore[valid-type]
+        "konus: konuşma balonu; dusun: düşünce bulutu; bagir: dikenli bağırma balonu."))
+    panel: int = Field(default=0, ge=0, description="Balonun bulunduğu panelin sırası (0'dan).")
+
+
+class CizgiKart(BaseModel):
+    """Sahnenin özel kartı: GERÇEK BİLGİ, izleyici ipucu ya da son sahnenin A/B oylaması."""
+    tur: Literal[tuple(CZ.KARTLAR)] = Field(description=(  # type: ignore[valid-type]
+        "gercek: bölümün tek gerçek bilgisi; ipucu: izleyicinin bildiği, karakterin bilmediği şey; ab: son sahnenin "
+        "A/B oylaması."))
+    baslik: str = Field(default="", description=(
+        "Kartın başlığı, BÜYÜK HARF. gercek: boşsa 'GERÇEK BİLGİ'; ipucu: ör. 'SEN BİLİYORSUN, KUZEY BİLMİYOR'; ab: "
+        "soru, ör. 'KUZEY NE YAPSIN?'."))
+    metin: str = Field(default="", description="gercek: bilginin kendisi, en çok 14 kelime. Diğerlerinde boş olabilir.")
+    kaynak: str = Field(default="", description="gercek: kısa kaynak notu, en çok 36 karakter.")
+    a: str = Field(default="", description="ab: A seçeneği, en çok 4 kelime / 28 karakter, BÜYÜK HARF.")
+    b: str = Field(default="", description="ab: B seçeneği, en çok 4 kelime / 28 karakter, BÜYÜK HARF.")
+
+
+class CizgiSahne(BaseModel):
+    """Bir sahnenin çizgi roman sayfası: 1-3 panel, isteğe bağlı konuşma balonu ve özel kart. Dış ses sayfanın altındaki
+    sarı anlatıcı kutusuna kelime kelime yazılır (tırnak içindeki söz balona)."""
+    duzen: Literal[tuple(CZ.DUZENLER)] = Field(default="tek", description=(  # type: ignore[valid-type]
+        "Panel düzeni: tek (1 panel), ust_alt (2), yan_yana (2), uc (3: üstte geniş, altta iki). ab kartında yok "
+        "sayılır (iki panel: A ve B)."))
+    paneller: List[CizgiPanel] = Field(default_factory=list, description=(
+        "Panellerin içeriği, düzendeki sırayla (soldan sağa, yukarıdan aşağı). ab kartında ilk panel A, ikincisi B."))
+    balon: CizgiBalon | None = Field(default=None, description="Konuşma balonu; tırnak içinde söz yoksa null.")
+    kart: CizgiKart | None = Field(default=None, description="Özel kart (gercek, ipucu, ab); çoğu sahnede null.")
+    seri: str = Field(default="", description=(
+        "Yalnız ilk sahne: üst bandın seri adı (boşsa 'KARAR SENİN'). Sonraki sahneler ilk sahneninkini kullanır."))
+    bolum: int = Field(default=0, ge=0, description=(
+        "Yalnız ilk sahne: bölüm numarası (üst bantta '1. BÖLÜM'). Sonraki sahneler ilk sahneninkini kullanır."))
+
+
 class Scene(BaseModel):
     narration: str = Field(description=(
         "Bu sahnede okunacak metin parçası: bir cümle ya da uzun bir cümlenin bir bölümü. Tüm sahnelerin narration'ları "
@@ -244,6 +320,11 @@ class Scene(BaseModel):
     delil: int = Field(default=0, ge=0, description=(
         "Yalnız Dava Dosyası şablonu (efsane kalıbı): bu sahnenin delil numarası (1, 2, 3...); aynı delilin devam "
         "sahnesi aynı numarayı alır. Kanca, iddia, ara ve hüküm sahnelerinde 0. Diğer şablonlarda 0."))
+
+    # --- cizgi şablonu ---
+    cizgi: CizgiSahne | None = Field(default=None, description=(
+        "Yalnız Çizgi Roman şablonu (Karar Senin hikâye serisi): bu sahnenin çizgi roman sayfası (paneller, mekân, "
+        "karakterler, konuşma balonu, özel kart). Diğer şablonlarda null."))
 
 
 class KitapBilgi(BaseModel):
@@ -1440,6 +1521,8 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         delil_geri_yukle(script, review.fixed)
     if review.fixed.structure == "kitap":
         _kitap_alanlarini_tamamla(script, review.fixed)
+    if any(sc.cizgi is not None for sc in script.scenes):  # Çizgi Roman: paneller ve balonlar yazarın tarifinde kalır
+        cizgi_geri_yukle(script, review.fixed)
     return normalize_kitap(normalize_nasil(review.fixed))
 
 
@@ -1448,11 +1531,14 @@ _KITAP_SAHNE_ALANLARI = {"kitap_bolum", "sayfa_metni", "vurgu"}
 
 
 def _senaryo_json(script: ShortScript) -> str:
-    """Doğrulayıcıya ve editöre giden senaryo metni. Kitap alanları yalnız kitap kalıbında yazılır: diğer kalıpların
-    istemleri bu alanlar eklenmeden önceki hâliyle aynı kalır."""
+    """Doğrulayıcıya ve editöre giden senaryo metni. Kitap alanları yalnız kitap kalıbında, Çizgi Roman tarifi (cizgi)
+    yalnız dolu olduğunda yazılır: diğer kalıpların istemleri bu alanlar eklenmeden önceki hâliyle aynı kalır."""
+    # Çizgi Roman sahne tarifi (cizgi) yalnız dolu olan senaryoda yazılır: diğer senaryoların istemi aynı kalır
+    cizgisiz = set() if any(sc.cizgi is not None for sc in script.scenes) else {"cizgi"}
     if script.structure == "kitap":
-        return script.model_dump_json(indent=1)
-    return script.model_dump_json(indent=1, exclude={"kitap": True, "scenes": {"__all__": _KITAP_SAHNE_ALANLARI}})
+        return script.model_dump_json(indent=1, exclude={"scenes": {"__all__": cizgisiz}} if cizgisiz else None)
+    return script.model_dump_json(indent=1, exclude={"kitap": True,
+                                                     "scenes": {"__all__": _KITAP_SAHNE_ALANLARI | cizgisiz}})
 
 
 def _kitap_alanlarini_tamamla(once: ShortScript, sonra: ShortScript) -> None:
@@ -1468,6 +1554,27 @@ def _kitap_alanlarini_tamamla(once: ShortScript, sonra: ShortScript) -> None:
             and not any(sc.kitap_bolum or sc.sayfa_metni for sc in sonra.scenes)):
         for a, b in zip(once.scenes, sonra.scenes):
             b.kitap_bolum, b.sayfa_metni, b.vurgu = a.kitap_bolum, a.sayfa_metni, a.vurgu
+
+
+def cizgi_geri_yukle(eski: ShortScript, yeni: ShortScript) -> None:
+    """Çizgi Roman sahne tarifleri (Scene.cizgi) doğrulamadan sonra yazarınkine döner: doğrulayıcı dış sesi düzeltir,
+    paneli çizilecek tarifi değiştirmez. Sahne sayısı aynıysa sırayla; değiştiyse her yeni sahne dış sesi en çok benzeyen
+    (oran en az 0,5) eski sahnenin tarifini alır, eşi olmayan sahne tarifsiz kalır (renderer boş paneli çizer)."""
+    if len(yeni.scenes) == len(eski.scenes):
+        for a, b in zip(eski.scenes, yeni.scenes):
+            b.cizgi = a.cizgi.model_copy(deep=True) if a.cizgi is not None else None
+        return
+    import difflib
+    kullanilan: set[int] = set()
+    for b in yeni.scenes:
+        aday = [(difflib.SequenceMatcher(None, a.narration.lower(), b.narration.lower()).ratio(), i)
+                for i, a in enumerate(eski.scenes) if i not in kullanilan]
+        oran, i = max(aday) if aday else (0.0, -1)
+        if oran >= 0.5:
+            kullanilan.add(i)
+            b.cizgi = eski.scenes[i].cizgi.model_copy(deep=True) if eski.scenes[i].cizgi is not None else None
+        else:
+            b.cizgi = None
 
 
 def delil_geri_yukle(eski: ShortScript, yeni: ShortScript) -> None:
@@ -1575,7 +1682,8 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
         return script
     korunan = [f for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon",
                            "anim_query", "card", "card_value", "card_label", "card_myth", "card_fact", "card_note",
-                           "card_lines", "mascot", "step", "callouts", "kitap_bolum", "sayfa_metni", "vurgu", "delil")
+                           "card_lines", "mascot", "step", "callouts", "kitap_bolum", "sayfa_metni", "vurgu", "delil",
+                           "cizgi")
                if f in Scene.model_fields]
     for i, (a, b) in enumerate(zip(script.scenes, fixed.scenes)):  # görsel alanları kesin olarak koru
         for f in korunan:
