@@ -125,6 +125,11 @@ def turkce_tarih(gun: dt.date) -> tuple[str, str, str, str]:
             f"HAFTA {gun.isocalendar()[1]} · GÜN {gun.timetuple().tm_yday}")
 
 
+def tarihsiz_baslik(para: bool) -> tuple[str, str, str, str]:
+    """meta'da yayın tarihi yoksa basılı tarih satırı: somut gün yok. ('BİR', 'İŞ GÜNÜ', 'SAAT SAAT', '')"""
+    return ("BİR", "AYIN", "HESABI", "") if para else ("BİR", "İŞ GÜNÜ", "SAAT SAAT", "")
+
+
 def saat_of(kicker: str) -> tuple[str, int] | None:
     """kicker'daki saat: ('07:30', 450 dakika) ya da None."""
     m = SAAT_RE.search(kicker or "")
@@ -602,7 +607,31 @@ def plan(specs) -> list[Sahne]:
 # ---------------------------------------------------------------- dış ses (fosforlu kalemle okunan kelime)
 class Anlati(N.Speech):
     """nasil.Speech'in sayfa bölme kuralları; kâğıt üstünde: söylenmiş mürekkep, okunan fosforlu kalem üstünde
-    mürekkep, sıradaki soluk."""
+    mürekkep, sıradaki soluk. Son sayfada tek başına 1-3 kelime kalmasın ('lira.', '78 bin lira.' gibi): yetim
+    kalırsa daha küçük puntolar (30'a dek) denenir; kutu iki satırlıktır, altında defter yazıları başlar."""
+    YETIM = 3            # son sayfada en çok bu kadar kelime kalırsa yetim sayılır ("78 bin lira.")
+    YEDEK = (30,)        # yetim kalırsa ek olarak denenen punto
+
+    def __init__(self, words, a, b, rect, sizes=(36, 34, 32), max_lines=2, lh=1.34, breaks=()):
+        super().__init__(words, a, b, rect, sizes=sizes, max_lines=max_lines, lh=lh, breaks=breaks)
+        if not self._yetim():
+            return
+        for size in [z for z in tuple(sizes) + self.YEDEK if z <= self.size]:
+            pages, _ = self._pages(size, set(breaks))
+            if len(pages) == 1 or len(pages[-1]) > self.YETIM:
+                self._kur(size, pages)
+                return
+        # hiçbiri olmazsa ilk bölme kalır (kutu üçüncü satıra yer vermez); testler demo metinlerini bu yüzden denetler
+
+    def _yetim(self) -> bool:
+        return len(self.pages) >= 2 and self.pages[-1][1] - self.pages[-1][0] <= self.YETIM
+
+    def _kur(self, size, pages) -> None:
+        self.size = size
+        self.pages = [(p[0], p[-1] + 1) for p in pages]
+        self.page_starts = [p0 for p0, _ in self.pages]
+        self.lines = {pi: self._balanced(list(range(p0, p1)), size) for pi, (p0, p1) in enumerate(self.pages)}
+        self._img = {}
 
     def image(self, pi: int, cur: int) -> Image.Image:
         key = (pi, cur)
@@ -1042,11 +1071,13 @@ class AjandaVideo:
         ns = SimpleNamespace(scenes=[SimpleNamespace(**sc) for sc in (senaryo.get("scenes") or [])]
                              or [SimpleNamespace(**{**(sp.card or {}), "narration": sp.narration}) for sp in scenes])
         self.para = bool(para_var(ns)) or any(s.tur in ("sayac", "fis") for s in self.p)
+        self.saatli = not self.para or self.gun     # para sayfası (gider defteri) saatsiz: giderin saati olmaz
         self.gorunum = [self._gorunum(s) for s in self.p]
         tarih = self.meta.get("tarih")
         if isinstance(tarih, str):
             tarih = dt.date.fromisoformat(tarih)
-        self.tarih = turkce_tarih(tarih or dt.date.today())
+        # Video yayından günler önce (ve sunucunun UTC saatiyle) çizilir; yayın günü bilinmeden somut tarih basılmaz
+        self.tarih = turkce_tarih(tarih) if tarih else tarihsiz_baslik(self.para and not self.gun)
         k0 = up(scenes[0].kicker) if scenes else ""
         self.seri = k0 if k0.startswith(SERI_ADI) else SERI_ADI
         self.alt = CALC_TOP - 8 if self.para else ICERIK_Y1
@@ -1134,7 +1165,7 @@ class AjandaVideo:
         pen = K.Pen(0, 0, W, H)
         for y, lab in self.cizgi:
             pen.rr((70, y - 1, 1052, y + 1), 1, fill=MAVI_CIZGI)
-            if lab and y <= SAFE[3] - 10:              # alttaki açıklama bandına basılı saat düşmez
+            if lab and self.saatli and y <= SAFE[3] - 10:   # alttaki açıklama bandına basılı saat düşmez
                 pen.text(38, y - 12, lab, "courier", 26, MAVI_SOLUK, anchor="ms")
         top = self.cizgi[0][0] - 40 if self.cizgi else CIZGI_UST
         pen.rr((66, top, 68, H), 1, fill=MAVI_CIZGI)
@@ -1250,9 +1281,9 @@ class AjandaVideo:
         onceki = self.p[si - 1]
         yeni = bitti or (s.tur in ("durak", "sayac", "fis") and onceki.durak != s.durak)
         if last >= 1:
-            tikler[last - 1].put(img, (lt - 0.2) / 0.25 if yeni else 1.0)
+            tikler[last - 1].put(img, (lt - YENI0 - 0.02) / 0.25 if yeni else 1.0)
         if not bitti:
-            halka[k - 1].put(img, (lt - 0.35) / 0.4 if yeni else 1.0)
+            halka[k - 1].put(img, (lt - YENI0 - 0.15) / 0.4 if yeni else 1.0)
 
     # ------------------------------------------------------------ öğeleri kur
     def _kur(self) -> None:
@@ -1850,7 +1881,11 @@ class AjandaVideo:
             K.put(img, sc, x - 64 * 58 / 124, TARIH_CIZGI + 3 - sc.height / 2)
         else:
             K.put(img, rule, 0, oy)
-        self.ilerleme(img, si, t)
+        gecis = si > 0 and lt < YENI0                  # makas eski başlığı kesip atana dek eski sahnenin durumu
+        if gecis:
+            self.ilerleme(img, si - 1, s.start - 1e-3)
+        else:
+            self.ilerleme(img, si, t)
         self.kalem_ucu = None
         for o in self.ogeler:
             if o.gorunur(si):
@@ -1862,7 +1897,10 @@ class AjandaVideo:
             bot = int(self.alt + 12)
             K.card_cut(img, old, lt, si, origin=origin, card=box, x_end=SAFE[2] - 66,
                        clip_top=(0, 236, SAFE[2], bot), clips_bot=((0, 236, SAFE[2], bot),))
-        self.anlati(img, si, t)
+        if gecis:
+            self.anlati(img, si - 1, s.start - 1e-3)
+        else:
+            self.anlati(img, si, t)
         if self.hm is not None:
             ust, deger, birim, tus, rozet = self.lcd_at(t)
             lay = self.hm.layer(ust, deger, birim, tus, rozet)

@@ -177,14 +177,19 @@ class Plan(unittest.TestCase):
         self.assertEqual(A.turkce_tarih(dt.date(2026, 2, 1))[1:3], ("ŞUBAT 2026", "PAZAR"))
         self.assertEqual(A.turkce_tarih(dt.date(2026, 8, 31))[1:3], ("AĞUSTOS 2026", "PAZARTESİ"))
 
-    def test_tarih_bugun(self):
-        """meta'da tarih yoksa sayfanın basılı tarihi bugündür."""
-        data = demo("elektrikci")
-        v, specs, words = video(data)
-        meta = dict(v.meta)
-        meta.pop("tarih")
-        v2 = A.AjandaVideo(specs, words, meta, BCFG)
-        self.assertEqual(v2.tarih, A.turkce_tarih(dt.date.today()))
+    def test_tarihsiz_baslik(self):
+        """meta'da yayın tarihi yoksa sayfaya somut gün basılmaz (çizim günü yayın günü değildir): gün akışında
+        'BİR İŞ GÜNÜ · SAAT SAAT', para gününde 'BİR AYIN HESABI'."""
+        for ad, beklenen in (("elektrikci", ("BİR", "İŞ GÜNÜ", "SAAT SAAT", "")),
+                             ("kuyumcu", ("BİR", "AYIN", "HESABI", ""))):
+            v, specs, words = video(demo(ad))
+            meta = dict(v.meta)
+            meta.pop("tarih")
+            v2 = A.AjandaVideo(specs, words, meta, BCFG)
+            self.assertEqual(v2.tarih, beklenen)
+            metin = " ".join(v2.tarih)
+            for gun in A.GUNLER:
+                self.assertNotIn(gun, metin)
 
     def test_saat(self):
         self.assertEqual(A.saat_of("07:30"), ("07:30", 450))
@@ -387,6 +392,55 @@ class Zamanlama(unittest.TestCase):
 
 
 # ---------------------------------------------------------------- şablon seçimi ve uçtan uca
+class Inceleme(unittest.TestCase):
+    def test_son_sayfada_yetim_kelime_kalmaz(self):
+        """Dış ses satırının son sayfası tek başına 1-3 kelime olmaz ('lira.', 'eder.'); sayfa en çok iki satır."""
+        metinler = [sc["narration"] for ad in DEMO for sc in demo(ad)["scenes"]] + [
+            "Çarşıda küçük bir dükkânın kirası ayda yaklaşık 80 bin lira.",
+            "Güvenlik, sigorta, elektrik ve muhasebe de eklenince ayda 200 bin lira eder.",
+            "İki çalışanın işverene maliyeti, asgari ücretle bile ayda 78 bin lira."]
+        for m in metinler:
+            m = m.split(" Sen olsan")[0]         # son sahnede soru dış ses satırına yazılmaz (başlık sorudur)
+            ws = [Word(w, i, i + 0.5) for i, w in enumerate(m.split())]
+            sp = A.Anlati(ws, 0, len(ws), A.ANLATI)
+            if len(sp.pages) > 1:
+                self.assertGreater(sp.pages[-1][1] - sp.pages[-1][0], A.Anlati.YETIM, m)
+            for lines in sp.lines.values():
+                self.assertLessEqual(len(lines), 2, m)
+                for L in lines:
+                    self.assertLessEqual(K.tw(" ".join(ws[i].text for i in L), "courier", sp.size),
+                                         A.ANLATI[2] - A.ANLATI[0] + 0.5, m)
+
+    def test_kesmede_eski_sahnenin_durumu(self):
+        """Makas eski başlığı kesip atana dek (YENI0) dış ses ve DURAK sırası eski sahnenindir."""
+        v, specs, words = video(demo("elektrikci"))
+        cagri = []
+        with mock.patch.object(A.AjandaVideo, "anlati", lambda self, img, si, t: cagri.append(("a", si))), \
+                mock.patch.object(A.AjandaVideo, "ilerleme", lambda self, img, si, t: cagri.append(("i", si))):
+            for si in range(2, len(v.p)):
+                s0 = v.p[si].start
+                cagri.clear()
+                v.frame(s0 + A.YENI0 * 0.5, grain=False)
+                self.assertEqual(sorted(cagri), [("a", si - 1), ("i", si - 1)])
+                cagri.clear()
+                v.frame(s0 + A.YENI0 + 0.02, grain=False)
+                self.assertEqual(sorted(cagri), [("a", si), ("i", si)])
+
+    def test_para_sayfasi_saatsiz(self):
+        """Para gününde (gider defteri) basılı saat sütunu yok; gün akışında var."""
+        v, _, _ = video(demo("kuyumcu"))
+        self.assertFalse(v.saatli)
+        v2, _, _ = video(demo("elektrikci"))
+        self.assertTrue(v2.saatli)
+
+    def test_sablon_istemi(self):
+        t = json.loads((REPO / "templates" / "ajanda.json").read_text(encoding="utf-8"))
+        for k in ("07:30", "interstitial", "quote", "illustration"):
+            self.assertIn(k, t["istem"])
+        from shortgen import script as S
+        self.assertIn("kart ya da ajanda şablonuyla", S.OLSAYDIN_RULES)
+
+
 class Secim(unittest.TestCase):
     def test_yalniz_elle_secilir(self):
         t = json.loads((REPO / "templates/ajanda.json").read_text(encoding="utf-8"))

@@ -1,8 +1,10 @@
 {
   "name": "Ajanda",
-  "description": "Ya Sen Olsaydın? için açık ajanda sayfası: üstte bugünün basılı tarihi, solda saat sütunu, duraklar tükenmez mavisiyle saatlerinin çizgisine elle yazılır (önceki duraklar sayfada kalır, tiklenir), çizimler bantlı polaroid, içeriden bilgi sarı yapışkan not; para konularında altta sarı masa hesap makinesi yürüyen toplamı gösterir. Yalnız Ya Sen Olsaydın? serisi (olsaydin kalıbı) için, --template ajanda ile seçilir.",
+  "description": "Ya Sen Olsaydın? için açık ajanda sayfası: üstte basılı tarih satırı (yayın günü bilinmediği için somut gün yerine BİR İŞ GÜNÜ / BİR AYIN HESABI), solda saat sütunu, duraklar tükenmez mavisiyle saatlerinin çizgisine elle yazılır (önceki duraklar sayfada kalır, tiklenir), çizimler bantlı polaroid, içeriden bilgi sarı yapışkan not; para konularında altta sarı masa hesap makinesi yürüyen toplamı gösterir. Yalnız Ya Sen Olsaydın? serisi (olsaydin kalıbı) için, --template ajanda ile seçilir.",
   "renderer": "ajanda",
   "yapi": "olsaydin",
+  "kart_alanlari": true,
+  "istem": "AJANDA ŞABLONU (olsaydin kalıbı): video bir ajanda sayfasında kurulur, ayrıca:\n- Gün akışında her durağın kicker'ı yalnız saattir (ör. 07:30); saatler sabahtan akşama sıralı gider.\n- İçeriden bilgi sahnesi card 'interstitial' ya da (birinin sözüyse) 'quote' olur; sarı yapışkan not olarak çizilir.\n- Her durak sahnesine bir illustration yaz (bantlı polaroid olarak çizilir).\n- Para konularında giderler ve gelirler counter ya da receipt kartıyla verilir; hesap makinesi yürüyen toplamı gösterir.",
   "colors": {
     "accent": [221, 32, 39],
     "highlight": [252, 213, 33],

@@ -12,11 +12,11 @@ on:
         description: "Senaryo yoksa Claude'un yazacağı konu"
         required: false
       sablon:
-        description: "Şablon (ör. kart, nasil, uretim). nasil ve uretim şablonlarında konuyla üretim şablonun kalıbıyla (nasil / uretim) yazılır."
+        description: "Şablon (ör. kart, nasil, uretim, ajanda, dosya). nasil, uretim, ajanda (Ya Sen Olsaydın?) ve dosya (Efsane mi, Gerçek mi?) şablonlarında konuyla üretim şablonun kalıbıyla (nasil / uretim / olsaydin / efsane) yazılır."
         required: false
         default: "kart"
       kalip:
-        description: "İsteğe bağlı sabit anlatım kalıbı, yalnız konuyla üretimde (ör. efsane, nasil, uretim, olsaydin; nasil ve uretim şablonları yalnız kendi kalıbıyla)"
+        description: "İsteğe bağlı sabit anlatım kalıbı, yalnız konuyla üretimde (ör. efsane, nasil, uretim, olsaydin). nasil, uretim, ajanda (olsaydin) ve dosya (efsane) şablonları yalnız kendi kalıbıyla; başka kalıp verilirse üretim durur."
         required: false
       not:
         description: "Telegram mesajına eklenecek kısa not"

@@ -474,6 +474,24 @@ class Senaryo(unittest.TestCase):
         self.assertEqual(out.hukum, "KISMEN DOĞRU", "doğrulayıcı hükmü düzeltebilir")
         self.assertEqual(out.scenes[7].delil, 0, "numaraları kendisi verdiyse onunki")
 
+    def test_dogrulayici_sahne_cikarirsa_deliller_eslenir(self):
+        """Doğrulayıcı bir sahneyi çıkarıp numaraları düşürürse yazarın delilleri kart türü ve dış ses benzerliğiyle
+        eşlenir, boşluksuz yeniden sıralanır; istemde delil alanını koruma ve yeniden numaralama kuralı vardır."""
+        s = S.load_script(DEMO)
+        kisa = s.model_copy(deep=True)
+        del kisa.scenes[3]                       # 2. delil sahnesi çıkarıldı
+        for sc in kisa.scenes:
+            sc.delil = 0
+        istem = []
+
+        def sahte(prompt, schema, system, web=False):
+            istem.append(prompt)
+            return S.Review(ok=False, problems=["sahne"], fixed=kisa.model_copy(deep=True))
+        with mock.patch.object(S, "ask_claude", sahte), mock.patch("builtins.print"):
+            out = S.verify_script(s, keep_structure=True)
+        self.assertEqual([sc.delil for sc in out.scenes], [0, 0, 1, 0, 2, 2, 3, 0, 0])
+        self.assertIn("'delil' alanını koru", istem[0])
+
     def test_dil_duzeltmesi_alanlari_korur(self):
         s = S.load_script(DEMO)
         duz = s.model_copy(deep=True)
@@ -501,6 +519,15 @@ class Sablon(unittest.TestCase):
         self.assertEqual(PL.sablon_yapisi("dosya"), "efsane")
         self.assertIn("dosya", PL.kendi_secimli(), "Claude'un şablon listesine girmez")
         self.assertTrue(callable(D.render))
+
+    def test_kart_alanlari_bayragi(self):
+        """Kart alanlarını okuyan şablon (dosya, ajanda) seçildiğinde kart yönergesi eslesme.json'daki kart
+        anahtarından bağımsız olarak istenir."""
+        for ad in ("dosya", "ajanda"):
+            self.assertTrue(PL._sablon(ad).get("kart_alanlari"), ad)
+        self.assertFalse(PL._sablon("nasil").get("kart_alanlari"))
+        self.assertIn('_sablon((a.template or "").strip()).get("kart_alanlari")',
+                      (REPO / "shortgen" / "pipeline.py").read_text(encoding="utf-8"))
 
     def test_yalniz_elle_secilir(self):
         m = (REPO / "templates" / "eslesme.json").read_text(encoding="utf-8")

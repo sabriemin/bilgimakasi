@@ -361,7 +361,7 @@ ekrandır, adımların yerinde ürünün üretim AŞAMALARI vardır):
 
 # Yalnız 'olsaydin' kalıbında sisteme eklenir (Ya sen olsaydın? serisi, kart şablonu: sayaç kartları ve hesap fişi).
 # Hesap fişi yönergesi yalnız burada: diğer kart videolarının yönergesi (KART_RULES) değişmez.
-OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; video kart şablonuyla kurulur):
+OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; video kart ya da ajanda şablonuyla kurulur):
 - Konu her zaman para hesabı değildir. Üç türden biridir: (a) bir meslek ya da iş ('Kuyumcu olsaydın': işe nasıl
   girilir, bir iş günü, aylık gelir ve giderler, içeriden bir ayrıntı; ya da 'Elektrikçi olsaydın günün nasıl geçerdi':
   sabahtan akşama bir iş günü, işin zor ve güzel yanları, kimsenin bilmediği ayrıntılar); (b) bir para ya da hayat olayı ('Piyango sana çıksaydı': vergiden sonra eline geçen
@@ -830,6 +830,10 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         sorun = fis_sorunlari(script)
         if sorun:
             kalip += "Hesap fişinde bulunan sorunlar (düzelt): " + "; ".join(sorun) + ". "
+    if yapi == "efsane" and any(sc.delil for sc in script.scenes):  # Dava Dosyası: delil sırası korunur
+        kalip += ("Sahnelerin 'delil' alanını koru; delil sahnesi çıkarır ya da birleştirirsen kalan delilleri 1'den "
+                  "başlayarak sırayla yeniden numarala (aynı delili sürdüren sahneler aynı numara; kanca, compare, ara, "
+                  "sonuç ve soru sahnelerinde 0). ")
     if duzen:
         kalip += (("Kanca, numaralı adım sahneleri (step 1, 2, 3...; başlığın ilk satırı 'ADIM n') ve son özet sahnesi "
                    "düzenini koru; adım çıkarırsan kalanları yeniden numarala. ") if yapi == "nasil" else
@@ -852,10 +856,34 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
     # değiştirebilir
     if not review.fixed.hukum:
         review.fixed.hukum = script.hukum
-    if len(review.fixed.scenes) == len(script.scenes) and not any(sc.delil for sc in review.fixed.scenes):
-        for a, b in zip(script.scenes, review.fixed.scenes):
-            b.delil = a.delil
+    if not any(sc.delil for sc in review.fixed.scenes) and any(sc.delil for sc in script.scenes):
+        delil_geri_yukle(script, review.fixed)
     return normalize_nasil(review.fixed)
+
+
+def delil_geri_yukle(eski: ShortScript, yeni: ShortScript) -> None:
+    """Doğrulayıcı delil numaralarını düşürdüyse yazarınkileri geri koyar. Sahne sayısı aynıysa sırayla; değiştiyse
+    (sahne çıkarıldı ya da birleştirildi) her yeni sahne, kart türü aynı olan ve dış sesi en çok benzeyen eski sahneyle
+    eşlenir; numaralar sonra 1'den başlayarak boşluksuz yeniden sıralanır."""
+    if len(yeni.scenes) == len(eski.scenes):
+        for a, b in zip(eski.scenes, yeni.scenes):
+            b.delil = a.delil
+        return
+    import difflib
+    kullanilan: set[int] = set()
+    for b in yeni.scenes:
+        aday = [(difflib.SequenceMatcher(None, a.narration.lower(), b.narration.lower()).ratio(), i)
+                for i, a in enumerate(eski.scenes) if a.card == b.card and i not in kullanilan]
+        if not aday:
+            continue
+        oran, i = max(aday)
+        if oran >= 0.5:
+            kullanilan.add(i)
+            b.delil = eski.scenes[i].delil
+    sira: dict[int, int] = {}
+    for b in yeni.scenes:
+        if b.delil:
+            b.delil = sira.setdefault(b.delil, len(sira) + 1)
 
 
 EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün. Görevin, sana verilen kısa video senaryosunun dış sesini

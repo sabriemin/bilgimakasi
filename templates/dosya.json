@@ -3,6 +3,7 @@
   "description": "Koyu masada manila bir dava dosyası: kapakta DOSYA NO. sekmesi ve İDDİA fişine ataşlanmış inanış; deliller dosyanın içine sahne sahne eklenir (tanık ifadesi, delil torbasında fotoğraf, şerit metreli ölçüm, iğneli çizim) ve DELİL 2/4 sırası numaralı işaretlerle ilerler; sonda kırmızı lastik damga HÜKÜM: EFSANE / GERÇEK / KISMEN DOĞRU diye iner. Dış ses dosyanın altındaki daktilo TUTANAK şeridine kelime kelime yazılır. Yalnız Efsane mi, Gerçek mi? serisi (efsane kalıbı) için; yalnız --template dosya ile seçilir.",
   "renderer": "dosya",
   "yapi": "efsane",
+  "kart_alanlari": true,
   "istem": "DAVA DOSYASI ŞABLONU (efsane kalıbı): kart alanlarını (card, card_myth, card_fact, card_label, card_value, card_note) kart şablonundaki gibi doldur, ayrıca:\n- hukum alanını doldur: inanış yanlışsa EFSANE, doğruysa GERÇEK, bir kısmı doğruysa KISMEN DOĞRU.\n- İkinci sahne card 'compare': card_myth inanışın öznesiyle tam hâli, en çok 6 kelime (ör. 'Çin Seddi uzaydan görünür'); card_fact doğrusu.\n- Ardından 2-4 delil sahnesi; her birinin delil alanı 1, 2, 3... (aynı delili sürdüren sahne aynı numarayı alır; kanca, compare, ara, sonuç ve soru sahnelerinde 0). Delil türleri: quote (card_label alıntının kendisi, card_note 'Kim · nerede · yıl'), counter (card_value sayı, card_label birim), fotoğraflı sahne ya da çizim (illustration).\n- Sondan bir önceki sahne sonucu tek cümleyle söyler; son sahne soru sorar ve 'Yorumlara yaz.' ile biter.",
   "colors": {
     "accent": [221, 32, 39],

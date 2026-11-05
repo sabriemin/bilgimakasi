@@ -300,7 +300,10 @@ def main() -> None:
     # 2. bölüm, 1. bölümden en az 12 saat sonra gelen ilk konusuz üretimde çekilir
     part2_due = bool(open_part) and dt.datetime.now() >= dt.datetime.fromisoformat(open_part["created"]) + dt.timedelta(hours=12)
     # kart alanlarının yönergesi yalnız kart seçilebilecekse istenir (kapalıyken üretim yönergesi aynen kalır)
-    kart_on = (a.template or "").strip() == "kart" or bool((m.get("kart") or {}).get("acik"))
+    # kart alanlarının yönergesi (KART_RULES): kart şablonu, kart alanlarını okuyan şablonlar ("kart_alanlari": ajanda,
+    # dosya) elle seçildiğinde ya da eslesme.json'da kart açıkken
+    kart_on = ((a.template or "").strip() == "kart" or bool(_sablon((a.template or "").strip()).get("kart_alanlari"))
+               or bool((m.get("kart") or {}).get("acik")))
     if a.script:
         script = load_script(a.script)
     elif pending.exists() and not a.topic:

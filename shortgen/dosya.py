@@ -41,6 +41,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import SimpleNamespace
+from zoneinfo import ZoneInfo
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
@@ -88,7 +89,7 @@ TYPE = 0.14                                # daktilo: kelimenin harfleri bu sür
 SCROLL = 0.16                              # tutanakta satır kayması
 TUT_SIZE = 44                              # tutanak yazısı (Courier Prime Bold)
 SERIT_UST = 38                             # hüküm şeridinde yazının üst boşluğu (etiket yazıya değmesin)
-POSE = {"kapak": (836, 1262, 0.44, 228.0), "ic": (846, 1262, 0.44, 205.0), "ara": (846, 1262, 0.44, None)}
+POSE = {"kapak": (868, 1270, 0.44, 228.0), "ic": (846, 1262, 0.44, 205.0), "ara": (846, 1262, 0.44, None)}
 MOOD = {"kapak": "surprised", "ozet": "thinking", "delil": "normal", "ara": "surprised"}
 Q_RE = re.compile(r"\byorumlara\s+yaz", re.I)
 SORU_EKI = re.compile(r"\s+(?:mi|mı|mu|mü)(?:dir|dır|dur|dür|ydi|ydı|ydu|ydü)?\s*[?!.…]*\s*$", re.I)
@@ -679,7 +680,8 @@ class DosyaVideo:
         self.seri, self.dosya_no = seri_bilgisi(scenes[0].kicker if scenes else "")
         self.iddia = iddia_metni(scenes, self.meta)
         self.hukum = hukum_of(scenes, self.meta)
-        self.tarih = self.meta.get("tarih") or dt.date.today().strftime("%d.%m.%Y")
+        # dosyanın açıldığı gün: sunucu UTC çalışır, İstanbul saatiyle (21:00 UTC sonrası ertesi gün)
+        self.tarih = self.meta.get("tarih") or dt.datetime.now(ZoneInfo("Europe/Istanbul")).strftime("%d.%m.%Y")
         self.mascot = Mascot()
         self._c: dict = {}
         self._dyn: dict = {}
@@ -1592,7 +1594,7 @@ class DosyaVideo:
         stamp_ust = "HÜKÜM" if self.hukum else "DOSYA"
         # alt sıra: tutanağın sol üst köşesinde SENCE? sekmesi, yanında YORUMLARA YAZ çıkartması (Makas'a değmez)
         lab_sence = K.torn_label("SENCE?", 64, OFF, RED, 57)
-        sence_top = TUTANAK[1] + 24 - lab_sence.h
+        sence_top = TUTANAK[1] + 10 - lab_sence.h   # ilk tutanak satırının büyük harf tepesine en az 10 px
         sx = X0 + 6 + lab_sence.w + 20
         sticker = K.cta_sticker(up(K.CtaCard.BUTTON), MASKOT_X0 - sx - 20, size=60)   # 20: 2° eğiklik payı
         top = 282
