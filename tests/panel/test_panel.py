@@ -2584,7 +2584,7 @@ class NasilSablonu(unittest.TestCase):
         uretim_sablonu(kok)
         (kok / "templates" / "deneme.json").write_text(json.dumps({"description": "d", "renderer": "nasil"}),
                                                        encoding="utf-8")
-        self.assertEqual(pl.kendi_secimli(), {"kart", "nasil", "uretim", "deneme"})
+        self.assertEqual(pl.kendi_secimli(), {"kart", "nasil", "uretim", "deneme", "kitap"})
         self.assertEqual((pl.sablon_yapisi("deneme"), pl.sablon_yapisi("nasil"), pl.sablon_yapisi("uretim"),
                           pl.sablon_yapisi("kart"), pl.sablon_yapisi("kolaj"), pl.sablon_yapisi("yok")),
                          ("nasil", "nasil", "uretim", "", "", ""), "yapi yoksa nasil")
