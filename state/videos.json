@@ -260,5 +260,16 @@
     "schedule": null,
     "decided": "2026-11-05T07:29:56+03:00",
     "published": "2026-11-05T07:31:54+03:00"
+  },
+  {
+    "tag": "short-20261105-043425",
+    "title": "Kış lastiği ne işe yarar? Cevap kar değil, 7 derece",
+    "topic": "Kış lastiği kar için değil sıcaklık için var: yaz lastiği yaklaşık 7°C altında sertleşir, kış lastiğinin silika oranı yüksek yumuşak karışımı soğukta esnek kalır; Türkiye'de ticari araçlara zorunluluk 15 Kasım'da başlar",
+    "category": "bilim",
+    "template": "doga",
+    "created": "2026-11-05T04:34:25",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 101,
+    "platforms": {}
   }
 ]
