@@ -615,5 +615,25 @@
     "telegram_message_id": 202,
     "aciklama_message_id": 203,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261105-232827",
+    "title": "Dönüşüm Kafka konusu ve kapakta asla gösterilmeyen böcek",
+    "topic": "Franz Kafka'nın Dönüşüm'ü: Bir sabah haşereye dönüşen Gregor Samsa ve Kafka'nın böceğin kapakta gösterilmesini yasaklaması",
+    "category": "dil ve kültür",
+    "template": "kitap",
+    "structure": "kitap",
+    "created": "2026-11-05T23:28:27",
+    "status": "zamanlandi",
+    "telegram_message_id": 205,
+    "aciklama_message_id": 206,
+    "platforms": {},
+    "publish_at": "2026-11-08T19:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-08T19:00:00+00:00",
+      "instagram": "2026-11-08T19:00:00+00:00",
+      "tiktok": "2026-11-08T19:00:00+00:00"
+    },
+    "decided": "2026-11-06T02:29:43+03:00"
   }
 ]
