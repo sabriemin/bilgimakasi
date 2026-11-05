@@ -330,6 +330,39 @@ class PanelIslemleri(Ortak):
         self.panel(action="edit", tag=Y, title="x", description="y")
         self.assertNotIn("duzenleme", self.vid(Y))
 
+    def test_duzenleme_paylasima_10_dk_kala_reddedilir(self):
+        # paylaşım işi publish_at'te başlar, durumu yüklemeden sonra kaydeder: o pencerede metin değişmez
+        yakin = (SIMDI + _dt.timedelta(minutes=9)).isoformat()
+        self.video_degistir(T, status="zamanlandi", publish_at=yakin, schedule=None)
+        c = self.panel(action="edit", tag=T, title="Yeni", description="Yeni bilgi.")
+        self.assertNotIn("duzenleme", self.vid(T))
+        self.assertIn("ℹ️ Düzenleme yapılmadı", self.mesajlar(c)[-1])
+        # 10 dakikadan uzaksa düzenlenir; paylaşılmış platform varsa eski metnin orada kaldığı söylenir
+        uzak = (SIMDI + _dt.timedelta(minutes=30)).isoformat()
+        self.video_degistir(T, publish_at=uzak, platforms={"instagram": {"status": "ok", "url": "u"}})
+        c = self.panel(action="edit", tag=T, title="Yeni", description="Yeni bilgi.")
+        self.assertEqual(self.vid(T)["duzenleme"]["title"], "Yeni")
+        self.assertIn("Zaten paylaşılan Instagram paylaşımında eski metin kalır", self.mesajlar(c)[-1])
+
+    def test_metnin_altindaki_etiket_satiri_kendi_etiketleri_sayilir(self):
+        m = self.tb._apply_edit(self.META, {"title": "T", "description": "Metin.\n#kendi1 #kendi2"})
+        self.assertEqual(m["hashtags"], ["kendi1", "kendi2"])
+        self.assertEqual(m["description"], "Metin.\n\n#kendi1 #kendi2\n\n📷 John Doe (CC BY-SA 4.0)")
+        # metnin içinde geçen # etiket sayılmaz
+        m = self.tb._apply_edit(self.META, {"title": "T", "description": "#1 numaralı kural\nMetin."})
+        self.assertEqual(m["hashtags"], self.META["hashtags"])
+
+    def test_uzun_duzenlemede_gorsel_atfi_kesilmez(self):
+        import shortgen.publish as P
+        cred = "📷 Jane Doe (CC BY-SA 3.0), Ahmet Yılmaz (CC BY 2.0), ESA/Hubble (CC BY 4.0)"
+        head = "B" * 100 + "\n\n" + "Uzun bilgi. " * 170 + "\n\n" + cred
+        for limit, ölç in ((2200, None), (2152, len)):
+            cap = P._fit_caption(head, "#a #b", limit, ölç)
+            self.assertTrue(cap.endswith(cred + "\n\n#a #b"), cap[-120:])
+            self.assertLessEqual((ölç or P._u16)(cap), limit)
+        # sığan metin aynen kalır (üretimdeki kısa açıklamalar değişmez)
+        self.assertEqual(P._fit_caption("Kısa.\n\n" + cred, "#a", 2200), "Kısa.\n\n" + cred + "\n\n#a")
+
     def _paylas(self, meta):
         """publish_due'yu sahte indirme/yükleme ile çalıştırır; platformlara giden meta'yı döndürür."""
         import shortgen.publish as P
@@ -813,6 +846,16 @@ class Birlestirme(unittest.TestCase):
         # uzakta yalnız durum dışı bir alan değişmediyse (ör. yalnız panel düzenlemesi) yerel kayıt kazanır
         out = json.loads(self.ss._merge("state/videos.json", d(b), d(b), d(l)))[0]
         self.assertEqual(out, l)
+
+    def test_yalniz_metin_duzenleyen_calisma_uzaktaki_karari_ezmez(self):
+        b = {"tag": "t", "title": "Eski", "status": "zamanlandi", "publish_at": "P", "platforms": {}}
+        d = lambda v: json.dumps([v])  # noqa: E731
+        l = {**b, "title": "Yeni", "duzenleme": {"title": "Yeni", "description": "d"}}  # panel düzenlemesi
+        for r in ({**b, "status": "onay_bekliyor", "publish_at": None},  # iptal
+                  {**b, "status": "reddedildi", "publish_at": None},  # ret
+                  {**b, "status": "kismen", "platforms": {"youtube": {"status": "ok"}, "instagram": {"status": "hata"}}}):
+            out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
+            self.assertEqual(out, {**r, "title": "Yeni", "duzenleme": l["duzenleme"]})
 
     def test_birlestirme_panel_kayit_numarasini_korur(self):
         d = lambda x, rid=None: json.dumps({"konular": x, **({"rid": rid} if rid else {})})  # noqa: E731

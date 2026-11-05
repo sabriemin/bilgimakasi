@@ -914,7 +914,8 @@ function uygulama(AYAR) {
     if (["hata", "kismen", "baglanti_yok"].includes(v.status)) {
       d.push(dugme("retry:" + t, "Hatalıları tekrar dene", "btn-ana", () => islem("retry:" + t, { action: "retry", tag: t }, v.title), kilit));
     }
-    if (v.status === "onay_bekliyor" || v.status === "zamanlandi") {
+    const yakin = v.status === "zamanlandi" && v.publish_at && Date.parse(v.publish_at) <= Date.now() + 10 * 60e3;
+    if ((v.status === "onay_bekliyor" || v.status === "zamanlandi") && !yakin) { // paylaşıma 10 dk kala düzenlenmez
       d.push(dugme("edit:" + t, "Düzenle", "btn-cizgi", () => duzenleSayfasi(v), kilit));
     }
     if (d.length) k.append(h("div", { class: "dugmeler" }, d));

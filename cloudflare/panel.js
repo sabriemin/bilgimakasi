@@ -294,6 +294,55 @@ const OKUNAMADI = {
   stats_gecmis: (k) => `İstatistik geçmişi okunamadı (${k}); grafikler eksik olabilir.`,
 };
 
+// Panel yalnız işi süren videoları ve son VIDEO_GUN gün içindeki bitmiş videoları gösterir: videos.json büyüdükçe
+// yanıt ve işlemci süresi (ücretsiz plan istek başına 10 ms) sabit kalsın.
+const VIDEO_GUN = 120, VIDEO_BITMIS_EN_COK = 150;
+const BITMIS = new Set(["yayinlandi", "reddedildi", "iptal"]);
+
+function gorunenVideolar(vs) {
+  const sinir = Date.now() - VIDEO_GUN * 86400e3;
+  const tarih = (v) => Date.parse((v && (v.published || v.created)) || "") || 0;
+  let bitmis = 0;
+  const out = [];
+  for (let i = vs.length - 1; i >= 0; i--) { // en yeniler sonda
+    const v = vs[i];
+    if (!v || typeof v !== "object") continue;
+    if (BITMIS.has(v.status)) {
+      if (bitmis >= VIDEO_BITMIS_EN_COK || tarih(v) < sinir) continue;
+      bitmis++;
+    }
+    out.push(v);
+  }
+  return out.reverse();
+}
+
+// Yalnız hata/not alanlarını yerinde maskeler (kopya yok): platforms.*.error/note, stats platforms.*.error/note
+function gizliYerinde(x, env, derin = 0) {
+  if (!x || typeof x !== "object" || derin > 4) return x;
+  if (Array.isArray(x)) {
+    for (const y of x) gizliYerinde(y, env, derin + 1);
+    return x;
+  }
+  for (const [k, v] of Object.entries(x)) {
+    if (GIZLI_ALANLAR.has(k)) x[k] = gizliTemizle(v, env, true);
+    else if (v && typeof v === "object") gizliYerinde(v, env, derin + 1);
+  }
+  return x;
+}
+
+// Metnin son n dolu satırı (tüm dosyayı bölmeden)
+function sonSatirlar(metin, n) {
+  const out = [];
+  let son = metin.length;
+  while (son > 0 && out.length < n) {
+    const i = metin.lastIndexOf("\n", son - 1);
+    const satir = metin.slice(i + 1, son);
+    if (satir.trim()) out.push(satir);
+    son = i < 0 ? 0 : i;
+  }
+  return out.reverse();
+}
+
 // stats_gecmis satırı {"time":…,"hesap":{…},"video":{…}}: video bölümü hiç ayrıştırılmaz (yanıt ve CPU küçük kalır)
 function gecmisSatiri(s) {
   const i = s.indexOf(',"video":');
@@ -312,12 +361,14 @@ async function durumOku(env) {
   }
   const uyarilar = adlar.filter((a) => f[a].hata).map((a) => OKUNAMADI[a](f[a].hata));
   const kuyruk = jsonCoz(f.konu_sirasi.metin, null);
-  const gecmis = (f.stats_gecmis.metin || "").split("\n").filter((s) => s.trim())
-    .slice(-400).map(gecmisSatiri).filter(Boolean); // grafikler yalnız hesap toplamlarını kullanır
+  const gecmis = sonSatirlar(f.stats_gecmis.metin || "", 400).map(gecmisSatiri).filter(Boolean); // yalnız hesap toplamları
+  const tum = jsonCoz(f.videos.metin, []);
+  const videos = gizliYerinde(gorunenVideolar(Array.isArray(tum) ? tum : []), env);
   return {
     zaman: new Date().toISOString(),
-    videos: gizliTemizle(jsonCoz(f.videos.metin, []) || [], env),
-    stats: gizliTemizle(jsonCoz(f.stats.metin, null), env),
+    videos,
+    videos_toplam: Array.isArray(tum) ? tum.length : 0,
+    stats: gizliYerinde(jsonCoz(f.stats.metin, null), env),
     oneriler: jsonCoz(f.oneriler.metin, null),
     konu_sirasi: Array.isArray(kuyruk) ? kuyruk : (kuyruk && Array.isArray(kuyruk.konular) ? kuyruk.konular : []),
     konu_sirasi_rid: (kuyruk && typeof kuyruk.rid === "string" && kuyruk.rid) || null, // son panel kaydı (izleme için)
@@ -445,6 +496,10 @@ async function islemHazirla(env, b) {
       p.code = b.code;
     }
     if (action === "edit") {
+      // paylaşım işi publish_at'te başlar ve durumu yüklemeden sonra kaydeder (telegram_bot.EDIT_GUARD_MIN ile aynı)
+      if (video.status === "zamanlandi" && video.publish_at && Date.parse(video.publish_at) <= Date.now() + 10 * 60e3) {
+        throw new Hata(409, "Bir paylaşım şu an sürüyor ya da 10 dakika içinde başlayacak; şimdi düzenlenemez. Paylaşılmayan platform kalırsa sonra yeniden dene.");
+      }
       p.title = metinAl(b.title, "Başlık", 1, SINIR.baslik);
       p.description = aciklamaDenetle(metinAl(b.description, "Açıklama", 1, SINIR.aciklama, true));
     }

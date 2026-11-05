@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 import tempfile
 import os
 import sys
@@ -544,7 +545,7 @@ def process_update(u: dict, chat: str) -> None:
                                      "/saatler: platformların en iyi paylaşım saatleri\n"
                                      "/panel: yönetim paneline giriş bağlantısı\n"
                                      "/yardim: bu liste"})
-        elif text.startswith("/panel"):  # giriş bağlantısını Cloudflare kapısı verir (PANEL_SECRET orada)
+        elif re.match(r"/panel(@\w+)?(\s|$)", text):  # giriş bağlantısını Cloudflare kapısı verir (PANEL_SECRET orada)
             api("sendMessage", data={"chat_id": chat, "text": "Panel bağlantısını 7/24 kapı verir; kapı kapalı ya da "
                                      "henüz panelli sürüme güncellenmemiş. GitHub'da 'Telegram kapısını kur' işini "
                                      "çalıştırıp /panel yaz."})
@@ -567,6 +568,23 @@ def _is_tail(par: str) -> bool:
     return bool(lines) and all(ln.startswith(_TAIL) for ln in lines)
 
 
+# Paylaşım işi publish_at'te başlar ve durumu ancak yüklemeden sonra kaydeder: bu kadar dakika kala metin değiştirilmez.
+EDIT_GUARD_MIN = 10
+
+
+def _split_tag_lines(desc: str) -> str:
+    """Metnin hemen altına boş satır bırakmadan yazılmış #etiket satırlarını ayrı paragraf yapar."""
+    import re
+    pars = re.split(r"\n\s*\n", desc.strip())
+    lines = pars[-1].splitlines()
+    k = len(lines)
+    while k > 0 and lines[k - 1].split() and all(w.startswith("#") for w in lines[k - 1].split()):
+        k -= 1
+    if 0 < k < len(lines):
+        pars[-1:] = ["\n".join(lines[:k]).rstrip(), "\n".join(ln.strip() for ln in lines[k:])]
+    return "\n\n".join(pars)
+
+
 def _apply_edit(meta: dict, ed: dict | None) -> dict:
     """Panelde düzenlenen başlık/açıklamayı paylaşım paketine uygular. Orijinal açıklamanın görsel atfı (📷, lisans)
     HER ZAMAN sona eklenir; kullanıcının metni yalnız etiket (#) satırının yerine geçebilir: kendi # satırını yazdıysa
@@ -577,7 +595,7 @@ def _apply_edit(meta: dict, ed: dict | None) -> dict:
     meta = dict(meta)
     if ed.get("title"):
         meta["title"] = ed["title"]
-    desc = (ed.get("description") or "").strip()
+    desc = _split_tag_lines(ed.get("description") or "") if (ed.get("description") or "").strip() else ""
     if desc:
         pars = [x.strip() for x in re.split(r"\n\s*\n", desc) if x.strip()]
         own_tags = any(_is_tail(x) and any(ln.strip().startswith("#") for ln in x.splitlines()) for x in pars)
@@ -672,12 +690,21 @@ def process_panel(p: dict, chat: str) -> None:
                 api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb([])})
                 say(f"🔁 {note}\n{v['title']}")
             elif action == "edit":
+                pa = v.get("publish_at")
+                if v.get("status") == "zamanlandi" and pa and dt.datetime.fromisoformat(pa) <= \
+                        dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=EDIT_GUARD_MIN):
+                    _restore_kb(tag, chat)
+                    say("ℹ️ Düzenleme yapılmadı: bir paylaşım şu an sürüyor ya da 10 dakika içinde başlayacak. Paylaşılmayan "
+                        f"platform kalırsa paylaşım bittikten sonra yeniden düzenleyebilirsin.\n{v['title']}")
+                    return
                 title, desc = _check_edit(p)
                 first = (v.get("duzenleme") or {}).get("ilk_baslik") or v["title"]  # seri bağı (seri.json) için
                 v = _update(tag, title=title, duzenleme={"title": title, "description": desc, "ilk_baslik": first,
                                                          "at": dt.datetime.now(TR).isoformat(timespec="seconds")})
                 _edit_caption(v, chat)
-                say(f"✏️ Başlık ve açıklama düzenlendi; paylaşımda bu metin kullanılacak.\n\n{title}\n\n{desc}")
+                done = [PLATFORM_NAMES[x] for x in PLATFORM_NAMES if x in _done(v)]
+                old_note = f"\n(Zaten paylaşılan {', '.join(done)} paylaşımında eski metin kalır.)" if done else ""
+                say(f"✏️ Başlık ve açıklama düzenlendi; paylaşımda bu metin kullanılacak.{old_note}\n\n{title}\n\n{desc}")
         elif action == "produce_suggestion":
             from .trends import load_saved
             items, i = load_saved(), p.get("index")

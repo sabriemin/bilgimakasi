@@ -85,7 +85,11 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
                 # kullanıcı kararıdır (iptal, ret, yeniden onay, tekrar dene, düzeltme). Bu çalışma paylaşım yaptıysa
                 # kullanıcının kararı geçerli olur, bu çalışmada yapılmış paylaşımlar (ok) yine korunur.
                 # Panel düzenlemesi (duzenleme/başlık) hangi taraf kazanırsa kazansın kaybolmaz (_keep_edit).
-                if _decision(rv) != _decision(bv) and rv.get("platforms") == bv.get("platforms") \
+                if rv != bv and _decision(v) == _decision(bv):
+                    # bu çalışma yalnız metni düzenledi (panel): uzaktaki kararlar ve paylaşımlar aynen kalır,
+                    # yalnız düzenlenen başlık/açıklama taşınır
+                    out[v["tag"]] = {**rv, **{k: v[k] for k in ("duzenleme", "title") if k in v}}
+                elif _decision(rv) != _decision(bv) and rv.get("platforms") == bv.get("platforms") \
                         and v.get("platforms") != bv.get("platforms"):
                     out[v["tag"]] = _keep_published(_keep_edit(rv, v, bv), v)
                 else:

@@ -98,13 +98,21 @@ def _u16(s: str) -> int:
     return len(s.encode("utf-16-le")) // 2
 
 
-def _fit_caption(head: str, tags: str, limit: int) -> str:
-    """Etiketler her zaman sonda kalsın diye metni kısaltır. TikTok sınırı UTF-16 birimiyle sayar (emoji 2 birim)."""
-    room = limit - (_u16(tags) + 2 if tags else 0)
-    while head and _u16(head) > room:
-        head = head[:-max(1, (_u16(head) - room) // 2)]
+def _fit_caption(head: str, tags: str, limit: int, measure=None) -> str:
+    """Etiketler ve sondaki görsel atfı (📷 ...) paragrafları her zaman kalsın diye yalnız bilgi metnini kısaltır.
+    TikTok sınırı UTF-16 birimiyle sayar (emoji 2 birim); Instagram karakterle (measure=len)."""
+    measure = measure or _u16
+    pars = head.split("\n\n")
+    k = len(pars)
+    while k > 1 and pars[k - 1].lstrip().startswith("📷"):
+        k -= 1
+    head, keep = "\n\n".join(pars[:k]), pars[k:]
+    tail = "\n\n".join(keep + ([tags] if tags else []))
+    room = limit - (measure(tail) + 2 if tail else 0)
+    while head and measure(head) > room:
+        head = head[:-max(1, (measure(head) - room) // 2)]
     head = head.rstrip()
-    return "\n\n".join(x for x in (head, tags) if x)
+    return "\n\n".join(x for x in (head, tail) if x)
 
 
 def _hashtags(meta: dict, limit: int) -> list[str]:
@@ -224,7 +232,10 @@ def _instagram(video: Path, meta: dict) -> dict:
     tags = _hashtags(meta, 5)  # Instagram en fazla 5 etiket
     caption = re.sub(r"#[^\s#]+", "", caption)  # etiketleri ayıkla, sonda bir kez (en fazla 5) ekle
     caption = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", caption)).strip()
-    caption = (caption[:2150 - len(" ".join(tags))] + "\n\n" + " ".join(tags)).strip()
+    if len(caption) + len(" ".join(tags)) + 2 > 2152:  # sığmıyorsa yalnız bilgi metni kısalır, atıf ve etiketler kalır
+        caption = _fit_caption(caption, " ".join(tags), 2152, len)
+    else:
+        caption = (caption + "\n\n" + " ".join(tags)).strip()
 
     public_url = meta.get("public_video_url")
     cover = {"thumb_offset": os.environ.get("COVER_MS", "1000")}  # kapak: ilk sahnedeki kanca başlığı

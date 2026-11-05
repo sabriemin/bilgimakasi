@@ -329,6 +329,24 @@ describe("okuma API", () => {
     saatIlerlet(30000);
   });
 
+  test("durum: eski bitmiş videolar gönderilmez, işi süren her video gönderilir", async () => {
+    saatIlerlet(30000);
+    const kok = mkdtempSync(join(tmpdir(), "panel-eski-"));
+    cpSync(FIKSTUR, kok, { recursive: true });
+    const vs = JSON.parse(readFileSync(join(FIKSTUR, "videos.json"), "utf8"));
+    const eski = new Date(Date.now() - 200 * 86400e3).toISOString();
+    vs.unshift({ ...vs[0], tag: "short-20260401-0900", status: "yayinlandi", created: eski, published: eski },
+      { ...vs[0], tag: "short-20260402-0900", status: "kismen", created: eski });
+    writeFileSync(join(kok, "videos.json"), JSON.stringify(vs));
+    const { r } = await istek("/panel/api/durum", { cerez: await oturum(18 * 86400), fetchAyar: { kok } });
+    const d = await r.json();
+    assert.equal(d.videos_toplam, vs.length);
+    assert.ok(!d.videos.some((v) => v.tag === "short-20260401-0900"), "200 günlük paylaşılmış video gitmez");
+    assert.ok(d.videos.some((v) => v.tag === "short-20260402-0900"), "sorunlu video eski de olsa gider");
+    assert.equal(d.videos.length, vs.length - 1);
+    saatIlerlet(30000);
+  });
+
   test("durum ~20 sn önbellekte; oturuma özel", async () => {
     saatIlerlet(21000); // önceki testin izolat içi önbelleği geçsin
     const c1 = await oturum(), c2 = await oturum(29 * 86400);
@@ -537,6 +555,22 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
       }
     });
   }
+
+  test("paylaşıma 10 dakikadan az kalan videoda düzenleme reddedilir", async () => {
+    const kok = mkdtempSync(join(tmpdir(), "panel-yakin-"));
+    cpSync(FIKSTUR, kok, { recursive: true });
+    const vs = JSON.parse(readFileSync(join(FIKSTUR, "videos.json"), "utf8"));
+    const z = vs.find((v) => v.tag === Z);
+    saatIlerlet(91000);
+    z.publish_at = new Date(Date.now() + 5 * 60e3).toISOString();
+    writeFileSync(join(kok, "videos.json"), JSON.stringify(vs));
+    const c = await oturum();
+    const x = await istek("/panel/api/islem", { ...POST({ action: "edit", tag: Z, title: "a", description: "b" }, c),
+      fetchAyar: { kok } });
+    assert.equal(x.r.status, 409);
+    assert.match((await x.r.json()).hata, /10 dakika/);
+    assert.equal(dispatchlar(x.cagrilar).length, 0);
+  });
 
   test("retry yalnız sorunlu videoda (fikstüre hata kaydı eklenerek)", async () => {
     // sorunlu video yok: 409 döner
