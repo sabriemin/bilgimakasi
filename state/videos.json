@@ -563,5 +563,17 @@
       "tiktok": "2026-11-07T16:30:00+00:00"
     },
     "decided": "2026-11-06T00:58:52+03:00"
+  },
+  {
+    "tag": "short-20261105-221556",
+    "title": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında",
+    "topic": "Pilav tane tane nasıl pişirilir? Islatma ve yıkama, tereyağında kavurma, 1'e 1,5 su oranı ve kâğıt havluyla demlendirme",
+    "category": "bilim",
+    "template": "nasil",
+    "created": "2026-11-05T22:15:56",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 191,
+    "aciklama_message_id": 192,
+    "platforms": {}
   }
 ]
