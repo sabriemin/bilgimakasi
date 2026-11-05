@@ -1,6 +1,6 @@
 // Panel ekran görüntüleri (Playwright + Chromium): 390x844 ve 1280x900, açık ve koyu tema, her sekme.
 //   OUT=<klasör> [PORT=8790] [FONTS=<Google Fonts önbelleği>] [VIDEO=<örnek video>] [BOLUM=seriler] node tests/panel/ekran.mjs
-// BOLUM=seriler: yalnız Konular sekmesindeki altı serili öneriler (panel_konular_*.png, 390x844 ve 1280x800).
+// BOLUM=seriler: yalnız Konular sekmesindeki yedi serili öneriler (panel_konular_*.png, 390x844 ve 1280x800).
 // PORT, PORT+1 ve PORT+2 kullanılır. Takvim bölümü dokunmatik uzun basışla sürükleme ve Saat seç sayfasını da dener.
 // Sunucu (sunucu.mjs) ayrı süreçte sabit saatle çalışır; yazı tipleri yerelden verilir, dış ağa çıkılmaz.
 import { spawn } from "node:child_process";
@@ -8,7 +8,7 @@ import { mkdirSync, readFileSync, existsSync, mkdtempSync, cpSync, writeFileSync
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
-import { BURASI, FIKSTUR, ALTI_SERI } from "./sahte.mjs";
+import { BURASI, FIKSTUR, YEDI_SERI } from "./sahte.mjs";
 import { SERI_NOTU } from "../../cloudflare/panel_ui.js";
 
 const require = createRequire(import.meta.url);
@@ -18,11 +18,11 @@ const FONTS = process.env.FONTS;
 const SAAT = process.env.SAAT || "2026-11-05T00:45:00+03:00";
 mkdirSync(OUT, { recursive: true });
 
-// örnek duruma ek: bir sorunlu (kısmen paylaşılmış) video, Sorunlu bölümü de görünsün; seriler: altı serili öneriler
+// örnek duruma ek: bir sorunlu (kısmen paylaşılmış) video, Sorunlu bölümü de görünsün; seriler: yedi serili öneriler
 function durumHazirla(sorunlu, seriler = false) {
   const kok = mkdtempSync(join(tmpdir(), "panel_ekran_"));
   cpSync(FIKSTUR, kok, { recursive: true });
-  if (seriler) writeFileSync(join(kok, "oneriler.json"), JSON.stringify(ALTI_SERI, null, 1));
+  if (seriler) writeFileSync(join(kok, "oneriler.json"), JSON.stringify(YEDI_SERI, null, 1));
   if (sorunlu) {
     const vs = JSON.parse(readFileSync(join(kok, "videos.json"), "utf8"));
     vs.push({ tag: "short-20261103-150200", title: "Kahve Avrupa'ya Gelince Neden Yasaklandı?", topic: "Kahvenin 1500'lerde Mekke ve İstanbul'da yasaklanması",
@@ -212,11 +212,12 @@ async function bitir(browser, kayit, hatalar) {
 }
 
 // ---------------------------------------------------------------- Konular: öneri serileri
-// Altı serili öneriler (sahte.mjs ALTI_SERI): kalıbı sabit seriler (efsane, nasil, uretim, olsaydin) sıraya eklenmez
-// ve nedenini söyler; yedi süzgeç çipi telefonda kendi satırında kayar, sayfa yana kaymaz.
-// Görüntüler: Tümü ve iki yeni serinin süzgeci (açık tema), Tümü (koyu tema), olsaydin önerisinin Üret onayı (telefon).
+// Yedi serili öneriler (sahte.mjs YEDI_SERI): kalıbı sabit seriler (efsane, nasil, uretim, olsaydin, kitap) sıraya
+// eklenmez ve nedenini söyler; sekiz süzgeç çipi telefonda kendi satırında kayar, sayfa yana kaymaz.
+// Görüntüler: Tümü ve üç yeni serinin süzgeci (açık tema), Tümü (koyu tema), olsaydin ve kitap önerilerinin Üret onayı
+// (telefon).
 const SERI_GORUNUMLER = [["mobil", { width: 390, height: 844 }, 2], ["masaustu", { width: 1280, height: 800 }, 1]];
-const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin"];
+const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin", "kitap"];
 
 async function seriEkranlari(browser, port, kayit, hatalar) {
   const sunucu = await sunucuBaslat(durumHazirla(false, true), port);
@@ -263,26 +264,30 @@ async function seriEkranlari(browser, port, kayit, hatalar) {
           const dosya = join(OUT, `panel_konular_${filtre}_${ad}_${t}.png`);
           await page.screenshot({ animations: "disabled", path: dosya, fullPage: true }); kayit.push(dosya);
         };
-        await denetle("tumu", 18);
+        await denetle("tumu", 21);
         await ekranAl("tumu");
         if (tema === "light") {
-          for (const filtre of ["uretim", "olsaydin"]) {
+          for (const filtre of ["uretim", "olsaydin", "kitap"]) {
             await page.click(`.cip[data-seri="${filtre}"]`);
             await page.waitForTimeout(150);
             await denetle(filtre, 3);
             await ekranAl(filtre);
           }
-          if (ad === "mobil") { // olsaydin önerisinin Üret onayı: serinin notu söylenir
-            await page.click(".oneri >> nth=0 >> text=Üret");
-            await page.waitForSelector("dialog[open]");
-            const metin = await page.textContent("dialog[open]");
-            if (!metin.includes(SERI_NOTU.olsaydin + "Video yaklaşık 15 dakikada")) {
-              hatalar.push(`${yer}: olsaydin onay metni: ${metin}`);
+          if (ad === "mobil") { // olsaydin ve kitap önerilerinin Üret onayı: serinin notu söylenir
+            for (const seri of ["kitap", "olsaydin"]) {
+              await page.click(`.cip[data-seri="${seri}"]`);
+              await page.waitForTimeout(150);
+              await page.click(".oneri >> nth=0 >> text=Üret");
+              await page.waitForSelector("dialog[open]");
+              const metin = await page.textContent("dialog[open]");
+              if (!metin.includes(SERI_NOTU[seri] + "Video yaklaşık 15 dakikada")) {
+                hatalar.push(`${yer}: ${seri} onay metni: ${metin}`);
+              }
+              await page.waitForTimeout(250);
+              const dosya = join(OUT, `panel_konular_${seri}_onay_${ad}_${t}.png`);
+              await page.screenshot({ animations: "disabled", path: dosya }); kayit.push(dosya);
+              await page.click("dialog[open] >> text=Vazgeç");
             }
-            await page.waitForTimeout(250);
-            const dosya = join(OUT, `panel_konular_olsaydin_onay_${ad}_${t}.png`);
-            await page.screenshot({ animations: "disabled", path: dosya }); kayit.push(dosya);
-            await page.click("dialog[open] >> text=Vazgeç");
           }
         }
         await ctx.close();

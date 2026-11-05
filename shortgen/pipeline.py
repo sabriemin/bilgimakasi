@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from . import illustrate, images, render, voice
-from .script import STRUCTURES, ShortScript, generate_script, load_script, para_var
+from .script import STRUCTURES, KitapTelifHatasi, ShortScript, generate_script, kitap_telif, load_script, para_var
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -38,7 +38,8 @@ def template_catalog() -> dict[str, str]:
 
 # Kendi kurgu modülü olan şablonlar Claude'a önerilmez, yalnız kendi kuralıyla seçilir (kart: kart_uygun; renderer'ı
 # olan diğerleri: yapi_sablon ya da --template). Yeni bir şablon (ör. uretim) "renderer" yazınca kendiliğinden bu gruba
-# girer. kart ve nasil dışındaki kurgu modülleri shortgen/<renderer>.py içinde render(...) sunar (bkz. build).
+# girer. kart ve nasil dışındaki kurgu modülleri (ör. kitap) shortgen/<renderer>.py içinde render(...) sunar
+# (bkz. build).
 KENDI_RENDERER = ("kart", "nasil")
 
 
@@ -60,6 +61,33 @@ def sablon_yapisi(name: str | None) -> str:
     if not t.get("renderer"):
         return ""
     return t.get("yapi") or ("nasil" if t.get("renderer") == "nasil" else "")
+
+
+def yapi_sablonu(structure: str | None) -> str:
+    """Kalıbın kendi şablonu: renderer'ı kitap olan ve "yapi"sı bu kalıp olan ilk şablon (kitap -> kitap.json); yoksa
+    ''. eslesme.json'daki yapi_sablon önce gelir; bu, orada yazılmamış kitap kalıbının da kendi şablonuna gitmesi
+    içindir (Bir Kitap Bir Dakika başka şablonla çizilemez: kapak, sayfa ve sekme alanları yalnız orada)."""
+    if not structure:
+        return ""
+    for k in template_catalog():
+        if sablon_renderer(k) == "kitap" and sablon_yapisi(k) == structure:
+            return k
+    return ""
+
+
+def kalip_sablonu(structure: str | None, template: str | None) -> str | None:
+    """Kendi şablonu olan kalıbın (kitap -> kitap.json) senaryosu yalnız o kurgu modülüyle çizilir: elle verilen
+    başka şablon (ör. ornek.yml'nin varsayılanı kart ya da yeniden çizmede --template) bu kalıpta kitabın kendi
+    şablonuyla değiştirilir (yoksa video kapaksız, sayfasız ve künyesiz çıkardı). Diğer durumlarda şablon aynen
+    döner."""
+    kendi = yapi_sablonu(structure)
+    if kendi and template and sablon_renderer(template) != sablon_renderer(kendi):
+        print(f"{structure} kalıbı yalnız kendi şablonuyla çizilir: {template} yerine {kendi} kullanılıyor.")
+        return kendi
+    return template
+
+
+TELIF_DURDU = ROOT / "output" / "telif_durdu.txt"  # uret.yml bu dosya varsa durumu Telegram'a yazar
 
 
 def kendi_secimli() -> set[str]:
@@ -86,6 +114,9 @@ def pick_template(script: ShortScript, override: str | None = None) -> str:
     by_structure = (m.get("yapi_sablon") or {}).get(script.structure)
     if by_structure in cat:  # yapıya bağlı şablon (ör. uretim -> uretim, olsaydin -> kart) kategori eşleşmesinden önce
         return by_structure
+    kendi_yapi = yapi_sablonu(script.structure)
+    if kendi_yapi:  # kalıbın kendi şablonu (kitap -> kitap)
+        return kendi_yapi
     kart = m.get("kart") or {}
     if "kart" in cat and kart_uygun(script, kart):
         return "kart"
@@ -120,20 +151,27 @@ def series_label(script: ShortScript, history: Path) -> str:
 
 def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | None,
           template: str = "kolaj", use_drawings: bool = True) -> Path:
+    if script.structure == "kitap":
+        # Bir Kitap Bir Dakika: telif kuralı her senaryoda kodla uygulanır (hazır ya da bekleyen senaryo da Claude'dan
+        # geçmeden gelebilir): kamu malı olmayan kitapta ilk cümle silinir, sayfalardaki alıntılar çıkar; dış seste,
+        # başlıkta ya da açıklamada alıntı kalmışsa video hiç üretilmez.
+        alinti = kitap_telif(script)
+        if alinti:
+            raise KitapTelifHatasi(alinti, script.topic, "video üretilmedi")
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "script.json").write_text(script.model_dump_json(indent=2), encoding="utf-8")
     cache = ROOT / "cache" / "images"
     cache.mkdir(parents=True, exist_ok=True)
 
     tcfg = render.apply_template(template)  # çizim paleti şablon renklerinden gelsin
-    renderer = tcfg.get("renderer", "")      # kart / nasil kendi kurgu modülünü kullanır, diğerleri render.render
+    renderer = tcfg.get("renderer", "")      # kart / nasil / kitap kendi kurgu modülünü kullanır, diğerleri render.render
     # 1) fotoğraflar (birden çok sorgu, Wikimedia + Openverse, alaka kontrolü)
     credits, used = [], set()
     photos: dict[int, Path] = {}
     photo_credit: dict[int, images.ImageCredit] = {}
     for i, sc in enumerate(script.scenes):
         queries = sc.image_queries or ([sc.image_query] if sc.image_query else [])
-        if sc.image_mode == "none" or not queries:
+        if sc.image_mode == "none" or not queries or renderer == "kitap":  # kitap şablonu fotoğraf kullanmaz
             continue
         if queries[0].startswith("local:"):
             photos[i] = ROOT / queries[0][6:]
@@ -280,10 +318,13 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=ROOT / "output")
     a = ap.parse_args()
     load_env(ROOT / ".env")
+    if a.structure and a.template:
+        a.template = kalip_sablonu(a.structure, a.template.strip())
     yapi = sablon_yapisi((a.template or "").strip())
     if yapi:
-        # Adım kartları şablonu (nasil, uretim) adım düzenli senaryo ister: yeni senaryo şablonun kalıbıyla ("yapi")
-        # yazılır; başka kalıp verilirse Claude'a gitmeden durur (her sahne bir adım olur, 8-10 adımlık çubuk sığmaz)
+        # Adım kartları şablonu (nasil, uretim) adım düzenli, kitap şablonu bölüm düzenli (kapak, ilk cümle, sayfalar)
+        # senaryo ister: yeni senaryo şablonun kalıbıyla ("yapi") yazılır; başka kalıp verilirse Claude'a gitmeden durur
+        # (her sahne bir adım olur, 8-10 adımlık çubuk sığmaz; kitap alanları olmayan senaryoda kapak çizilemez)
         if a.structure and a.structure != yapi:
             raise SystemExit(f"{a.template.strip()} şablonu yalnız {yapi} kalıbıyla kullanılır "
                              f"(verilen kalıp: {a.structure}).")
@@ -339,7 +380,7 @@ def main() -> None:
         catalog = {k: v for k, v in template_catalog().items() if k not in kendi}  # Claude'a önerilmez
         # yapıya bağlı şablon senaryodan önce bilinir: elle seçilen ya da yapi_sablon (ör. nasil -> kart / nasil,
         # uretim -> uretim, olsaydin -> kart)
-        hedef = a.template or (m.get("yapi_sablon") or {}).get(a.structure or "")
+        hedef = a.template or (m.get("yapi_sablon") or {}).get(a.structure or "") or yapi_sablonu(a.structure)
         script = generate_script(history, topic, catalog if m.get("claude_secsin") else None, allow_series=allow,
                                  # yapıya bağlı kart yönergesi yalnız şablon elle seçilmediyse (--template nasil kartsız)
                                  kart=kart_on or (not a.template and hedef == "kart"),
@@ -356,7 +397,7 @@ def main() -> None:
         print("Format etiketi:", script.scenes[0].kicker)
     if script.series_part == 2 and open_part and open_part.get("template") and not a.template:
         a.template = open_part["template"]
-    template = pick_template(script, a.template)
+    template = kalip_sablonu(script.structure, pick_template(script, a.template))
     print(f"Şablon: {template}")
     yapi = sablon_yapisi(template)
     if yapi and script.structure != yapi:  # ör. hazır senaryo başka kalıpta
@@ -385,5 +426,21 @@ def main() -> None:
     print(f"Hazır: {video}")
 
 
+def _telif_durdu_yaz(e: KitapTelifHatasi) -> None:
+    """Telif nedeniyle duran üretimin kısa notu (uret.yml Telegram'a gönderir; senaryo saklanmaz, yeniden denenmez)."""
+    try:
+        TELIF_DURDU.parent.mkdir(parents=True, exist_ok=True)
+        TELIF_DURDU.write_text(("Bir Kitap Bir Dakika üretimi telif kuralı yüzünden durdu"
+                                + (f" ({e.konu})" if e.konu else "") + ": kamu malı olmayan kitabın senaryosunda "
+                                "alıntı kaldı.\n- " + "\n- ".join(e.alintilar[:5])
+                                + "\nVideo üretilmedi; konuyu yeniden Üret ile deneyebilirsin."), encoding="utf-8")
+    except OSError as hata:
+        print("Telif notu yazılamadı:", hata)
+
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KitapTelifHatasi as e:
+        _telif_durdu_yaz(e)
+        raise

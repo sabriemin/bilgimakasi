@@ -117,6 +117,16 @@ export const ALTI_SERI = { date: "2026-11-05", items: [
     "Berlin'de ilk ay kiradan önce depozito ödersin.", "Yurt dışına taşınmayı düşünen gençlerin ilk sorusu", "Global", "coğrafya", 7),
 ] };
 
+// Yedi serili öneri listesi: ALTI_SERI + Bir Kitap Bir Dakika (kitap 18-20). Ekran görüntüleri ve seri testleri kullanır.
+export const YEDI_SERI = { date: ALTI_SERI.date, items: [...ALTI_SERI.items,
+  oneri("kitap", "Sabahattin Ali, Kürk Mantolu Madonna: Berlin'de bir tablonun önünde hayatı değişen Raif Efendi; 1943'te neredeyse hiç ilgi görmeyen roman yetmiş yıl sonra en çok satanlara girdi",
+    "Yıllarca okunmayan bir roman, yetmiş yıl sonra rafların en üstüne çıktı.", "Okuma listelerinin ve kitap kulüplerinin en sevilen romanı", "TR", "dil ve kültür", 9),
+  oneri("kitap", "Franz Kafka, Dönüşüm: bir sabah dev bir böceğe dönüşmüş olarak uyanan pazarlamacı; Kafka yayıncısından kapağa böceğin çizilmemesini istedi",
+    "Kafka, kitabının kapağında böcek görmek istemedi.", "Lise okuma listelerinin en kısa ve en tuhaf klasiği", "Global", "dil ve kültür", 8),
+  oneri("kitap", "Mary Shelley, Frankenstein: genç bir bilim insanının yarattığı varlık; yazar romana 18 yaşında bir yaz gecesi başladı ve kitapta canavarın adı yok",
+    "Frankenstein canavarın değil, onu yaratanın adı.", "Yeni sinema uyarlamasıyla yeniden konuşulan klasik", "Global", "dil ve kültür", 7),
+] };
+
 // Telegram mesajları (editMessageText "not modified" davranışı için): message_id -> içerik
 export const TG_MESAJLAR = new Map();
 let sonMesaj = 1000;

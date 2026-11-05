@@ -31,6 +31,8 @@ const VIDEO_ISLEM = {
 };
 const KILITLI = ["approve", "reject", "cancel", "retry", "schedule"]; // Telegram'daki düğme de "⏳ İşleniyor" olur
 const DIGER_ISLEM = ["produce_suggestion", "produce_topic", "refresh_suggestions", "report", "queue_set"];
+// öneri sırasının kaba üst sınırı: yedi seri × 3 = 21 öneri (0-20); asıl denetim kayıtlı listedeki sıra ve konu
+const ONERI_SIRA_SINIRI = 40;
 // shortgen/telegram_bot.py BEST_TIMES / EXTRA_TIMES varsayılanlarıyla aynı (test karşılaştırır)
 export const BEST_TIMES = { youtube: ["18:00", "21:00"], instagram: ["12:30", "20:00"], tiktok: ["19:30", "22:00"] };
 export const EXTRA_TIMES = { youtube: [], instagram: [], tiktok: [] };
@@ -585,7 +587,7 @@ async function islemHazirla(env, b) {
       p.description = aciklamaDenetle(metinAl(b.description, "Açıklama", 1, SINIR.aciklama, true));
     }
   } else if (action === "produce_suggestion") {
-    if (!Number.isInteger(b.index) || b.index < 0 || b.index > 19) throw new Hata(400, "Geçersiz öneri.");
+    if (!Number.isInteger(b.index) || b.index < 0 || b.index >= ONERI_SIRA_SINIRI) throw new Hata(400, "Geçersiz öneri.");
     const f = await dosya(env, DOSYALAR.oneriler);
     const items = (jsonCoz(f.metin, null) || {}).items || [];
     const it = items[b.index];

@@ -7,7 +7,7 @@ import worker, { hedefAdi } from "../../cloudflare/worker.js";
 import { SAYFA_HTML, UYGULAMA_JS, ONERI_SERILERI, SERI_NOTU } from "../../cloudflare/panel_ui.js";
 import { calistir, SENARYOLAR, SABIT_SAAT } from "./webhook_senaryolar.mjs";
 import { ORTAM, BURASI, META, FIKSTUR, fetchKur, ctxYap, saatKur, saatIlerlet, saatBirak, cacheKur, imza, oturumImza,
-  girisImza, girisMesajiKur, TG_MESAJLAR, ALTI_SERI } from "./sahte.mjs";
+  girisImza, girisMesajiKur, TG_MESAJLAR, ALTI_SERI, YEDI_SERI } from "./sahte.mjs";
 import { mkdtempSync, cpSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
@@ -49,10 +49,10 @@ describe("Telegram webhook davranışı değişmedi", () => {
     for (let i = 0; i < golden.length; i++) {
       const g = golden[i], y = yeni[i];
       if (g.ad === "mesaj /start" || g.ad === "mesaj /yardim") {
-        // bilinçli farklar: yardım metnine /panel satırı eklendi, /oneri altı seriden 18 öneri veriyor
+        // bilinçli farklar: yardım metnine /panel satırı eklendi, /oneri yedi seriden 21 öneri veriyor
         const eski = g.cagrilar[0].govde.text, yeniMetin = y.cagrilar[0].govde.text;
         assert.equal(yeniMetin, eski.replace("/yardim: bu liste", "/panel: yönetim paneline giriş bağlantısı\n/yardim: bu liste")
-          .replace("/oneri: gündemden 5 konu önerisi", "/oneri: 6 seriden 18 konu önerisi"));
+          .replace("/oneri: gündemden 5 konu önerisi", "/oneri: 7 seriden 21 konu önerisi"));
         assert.deepEqual({ ...y, cagrilar: [] }, { ...g, cagrilar: [] });
         continue;
       }
@@ -624,9 +624,39 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
       assert.deepEqual([p.action, p.index, p.topic], ["produce_suggestion", i, items[i].topic]);
     }
     // listede olmayan sıra (18 öneri: 0-17) ve sınır dışı/yanlış türde sıra reddedilir, hiçbir şey gönderilmez
-    for (const [govde, durum, hata] of [[{ index: 18 }, 409, /değişmiş/], [{ index: 20 }, 400, /öneri/],
+    for (const [govde, durum, hata] of [[{ index: 18 }, 409, /değişmiş/], [{ index: 20 }, 409, /değişmiş/],
+      [{ index: 40 }, 400, /öneri/],
       [{ index: -1 }, 400, /öneri/], [{ index: 12.5 }, 400, /öneri/], [{ index: "olsaydin" }, 400, /öneri/],
       [{ index: 15, topic: items[16].topic }, 409, /değişmiş/]]) {
+      const { r: r3, j, cagrilar } = await gonder({ action: "produce_suggestion", ...govde }, { fetchAyar: { kok } });
+      assert.equal(r3.status, durum, JSON.stringify(govde));
+      assert.match(j.hata, hata);
+      assert.equal(dispatchlar(cagrilar).length, 0);
+    }
+  });
+
+  test("yedi seri: kitap önerileri de yalnız sıra ve konuyla üretilir; kalıp/seri gönderilemez", async () => {
+    const kok = mkdtempSync(join(tmpdir(), "panel-yedi-"));
+    cpSync(FIKSTUR, kok, { recursive: true });
+    writeFileSync(join(kok, "oneriler.json"), JSON.stringify(YEDI_SERI));
+    saatIlerlet(30000);
+    const { r } = await istek("/panel/api/durum", { cerez: await oturum(20 * 86400), fetchAyar: { kok } });
+    const d = await r.json();
+    assert.deepEqual(d.oneriler, YEDI_SERI, "öneriler (seri alanıyla) olduğu gibi gelir");
+    const items = YEDI_SERI.items;
+    assert.deepEqual([18, 19, 20].map((i) => items[i].seri), ["kitap", "kitap", "kitap"]);
+    for (const i of [18, 20]) {
+      const { r: r2, j, cagrilar } = await gonder({ action: "produce_suggestion", index: i, topic: items[i].topic,
+        kalip: "kitap", seri: "kitap", structure: "kitap", template: "kitap" }, { fetchAyar: { kok } });
+      assert.equal(r2.status, 202, JSON.stringify(j));
+      const p = panelOlayi(cagrilar);
+      assert.deepEqual(Object.keys(p).sort(), ["action", "at", "index", "rid", "topic"], String(i));
+      assert.deepEqual([p.action, p.index, p.topic], ["produce_suggestion", i, items[i].topic]);
+    }
+    // 21 öneri: 0-20 (20, eski 19 sınırına takılmaz); 21 listede yok, 40 sınır dışı,
+    // başka önerinin konusuyla gelen sıra reddedilir
+    for (const [govde, durum, hata] of [[{ index: 21 }, 409, /değişmiş/], [{ index: 39 }, 409, /değişmiş/],
+      [{ index: 40 }, 400, /öneri/], [{ index: 18, topic: items[19].topic }, 409, /değişmiş/]]) {
       const { r: r3, j, cagrilar } = await gonder({ action: "produce_suggestion", ...govde }, { fetchAyar: { kok } });
       assert.equal(r3.status, durum, JSON.stringify(govde));
       assert.match(j.hata, hata);
@@ -966,13 +996,15 @@ let chromium = null;
 try {
   ({ chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT || "/opt/node22/lib/node_modules/playwright"));
 } catch { /* yok */ }
-const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin"]; // kalıbı sabit seriler: sıraya eklenmez
+const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin", "kitap"]; // kalıbı sabit seriler: sıraya eklenmez
 
 describe("Konular: öneri serileri", () => {
   const DEPO = join(BURASI, "..", "..");
 
-  test("altı seri trends.SERILER sırasıyla; kalıbı sabit dört serinin notu var", () => {
-    assert.deepEqual(ONERI_SERILERI.map(([k]) => k), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin"]);
+  test("yedi seri trends.SERILER sırasıyla; kalıbı sabit beş serinin notu var", () => {
+    assert.deepEqual(ONERI_SERILERI.map(([k]) => k), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap"]);
+    assert.deepEqual(ONERI_SERILERI[6], ["kitap", "Kitap", "Bir Kitap Bir Dakika", "📖"]);
+    assert.equal(new Set(ONERI_SERILERI.map(([, , , ik]) => ik)).size, ONERI_SERILERI.length, "simgeler ayrı (Konular 📚)");
     // olsaydin'in adı geçici (sahibi seçiyor): yalnız simgesi sabit; adı Python'la karşılaştırılır (sonraki test)
     assert.deepEqual(ONERI_SERILERI[4], ["uretim", "Üretim", "Nasıl üretiliyor?", "🏭"]);
     assert.equal(ONERI_SERILERI[5][3], "💭");
@@ -986,12 +1018,14 @@ describe("Konular: öneri serileri", () => {
     }
     assert.match(SERI_NOTU.uretim, /aşama kartları şablonu/);
     assert.match(SERI_NOTU.olsaydin, /kart şablonunda sayaç ve hesap fişi kartlarıyla/);
+    assert.match(SERI_NOTU.kitap, /kitap kapağı ve sayfalarıyla/);
+    assert.match(SERI_NOTU.kitap, /kamu malı olmayan kitapta alıntı yerine künye sayfası/);
     // uygulama listeyi ve notları kapıdan (AYAR) alır: tarayıcıdaki kopya aynı
     assert.ok(UYGULAMA_JS.includes(JSON.stringify(ONERI_SERILERI)) && UYGULAMA_JS.includes(JSON.stringify(SERI_NOTU)));
   });
 
   test("Python'daki seriler panelde aynı sıra, ad ve simgeyle var; kalıbı sabit her serinin notu var", () => {
-    // trends.py birleşince altı seri olur; panel önden giderse fazlası zararsızdır (o seriden öneri gelmez)
+    // trends.py birleşince yedi seri olur; panel önden giderse fazlası zararsızdır (o seriden öneri gelmez)
     const tr = readFileSync(join(DEPO, "shortgen", "trends.py"), "utf8");
     const sozluk = (ad) => {
       const m = new RegExp(`^${ad} = \\{([^}]*)\\}`, "m").exec(tr);
@@ -1023,7 +1057,7 @@ describe("Konular: öneri serileri", () => {
     async () => {
       const kok = mkdtempSync(join(tmpdir(), "panel-alti-ui-"));
       cpSync(FIKSTUR, kok, { recursive: true });
-      writeFileSync(join(kok, "oneriler.json"), JSON.stringify(ALTI_SERI));
+      writeFileSync(join(kok, "oneriler.json"), JSON.stringify(YEDI_SERI));
       saatIlerlet(30000);
       const cerez = await oturum(19 * 86400); // başka testin önbelleğe aldığı durum gelmesin
       const gidenler = [];
@@ -1057,8 +1091,8 @@ describe("Konular: öneri serileri", () => {
         }));
         let o = await ozet();
         assert.deepEqual(o.basliklar, ONERI_SERILERI.map(([, , ad, ik]) => `${ik} ${ad}`));
-        assert.deepEqual(o.cipler, [["tumu", "Tümü", "18", "true"], ...ONERI_SERILERI.map(([k, kisa]) => [k, kisa, "3", "false"])]);
-        assert.deepEqual(o.kartlar.map(([s, no]) => [s, no]), ALTI_SERI.items.map((it, i) => [it.seri, `${i + 1}.`]));
+        assert.deepEqual(o.cipler, [["tumu", "Tümü", "21", "true"], ...ONERI_SERILERI.map(([k, kisa]) => [k, kisa, "3", "false"])]);
+        assert.deepEqual(o.kartlar.map(([s, no]) => [s, no]), YEDI_SERI.items.map((it, i) => [it.seri, `${i + 1}.`]));
         for (const [seri, , dugmeler, not] of o.kartlar) {
           assert.equal(dugmeler.includes("Sıraya ekle"), !KALIPLI.includes(seri), seri);
           assert.equal(Boolean(not), KALIPLI.includes(seri), seri);
@@ -1079,14 +1113,25 @@ describe("Konular: öneri serileri", () => {
         assert.ok(m.boy >= 44, "dokunma alanı: " + m.boy);
         assert.deepEqual(m.kenar, ["sag-var"], "sağda sığmayan çip var: sağ kenar solar");
         // en sondaki seriyi seç: yalnız o seri görünür, seçili çip yeniden çizimde görünür kalır
+        await page.click('.cip[data-seri="kitap"]');
+        o = await ozet();
+        assert.deepEqual(o.basliklar, ["📖 Bir Kitap Bir Dakika"]);
+        assert.deepEqual(o.kartlar.map(([s, no]) => [s, no]), [["kitap", "19."], ["kitap", "20."], ["kitap", "21."]]);
+        assert.equal(o.cipler.find(([k]) => k === "kitap")[3], "true");
+        m = await olcu();
+        assert.ok(m.secili[0] >= 0 && m.secili[1] <= 390, "seçili çip görünür: " + m.secili);
+        assert.deepEqual(m.kenar, ["sol-var"], "son çip seçili: satır sona kaydı, yalnız sol kenar solar");
+        // kitap önerisinin Üret onayı serinin notunu söyler; Vazgeç ile hiçbir şey gönderilmez
+        await page.click(".oneri >> nth=0 >> text=Üret");
+        const kitapMetni = await page.textContent("dialog[open]");
+        assert.ok(kitapMetni.includes(SERI_NOTU.kitap + "Video yaklaşık 15 dakikada hazır olur ve onaya gelir."), kitapMetni);
+        await page.click("dialog[open] >> text=Vazgeç");
         await page.click('.cip[data-seri="olsaydin"]');
         o = await ozet();
         assert.deepEqual(o.basliklar, [ONERI_SERILERI[5][3] + " " + ONERI_SERILERI[5][2]]);
         assert.deepEqual(o.kartlar.map(([s, no]) => [s, no]), [["olsaydin", "16."], ["olsaydin", "17."], ["olsaydin", "18."]]);
-        assert.equal(o.cipler.find(([k]) => k === "olsaydin")[3], "true");
         m = await olcu();
         assert.ok(m.secili[0] >= 0 && m.secili[1] <= 390, "seçili çip görünür: " + m.secili);
-        assert.deepEqual(m.kenar, ["sol-var"], "son çip seçili: satır sona kaydı, yalnız sol kenar solar");
         await page.click('.cip[data-seri="uretim"]');
         o = await ozet();
         assert.deepEqual(o.basliklar, ["🏭 Nasıl üretiliyor?"]);
@@ -1096,13 +1141,13 @@ describe("Konular: öneri serileri", () => {
         await page.click(".oneri >> nth=0 >> text=Üret");
         const metin = await page.textContent("dialog[open]");
         assert.ok(metin.includes(SERI_NOTU.olsaydin + "Video yaklaşık 15 dakikada hazır olur ve onaya gelir."), metin);
-        assert.ok(metin.includes(ALTI_SERI.items[15].topic));
+        assert.ok(metin.includes(YEDI_SERI.items[15].topic));
         await page.click("dialog[open] .btn-ana");
         await page.waitForSelector(".bildirim");
         const d = gidenler.filter((x) => x.url.endsWith("/actions/workflows/isle.yml/dispatches"));
         assert.equal(d.length, 1);
         const p = JSON.parse(d[0].govde.inputs.update).panel;
-        assert.deepEqual([p.action, p.index, p.topic], ["produce_suggestion", 15, ALTI_SERI.items[15].topic]);
+        assert.deepEqual([p.action, p.index, p.topic], ["produce_suggestion", 15, YEDI_SERI.items[15].topic]);
         assert.deepEqual(Object.keys(p).sort(), ["action", "at", "index", "rid", "topic"]);
         assert.deepEqual(hatalar, []);
       } finally {

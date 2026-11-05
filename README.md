@@ -52,8 +52,24 @@ kalıptaki senaryoyla kullanılmaz (pipeline durur). Marka kapanışı kart şab
 
 `--template nasil` kalıp verilmemişse senaryoyu `nasil` kalıbıyla yazdırır. Nasıl yapılır? serisinin otomatik olarak
 bu şablona gitmesi için `templates/eslesme.json` → `yapi_sablon` içinde `"nasil": "kart"` değerini `"nasil"` yapın
-(onaydan önce `kart` kalır). Claude'un şablon önerisi `kart`, `nasil` ve `uretim`'i seçemez (çizicisi `kart` ya da
-`nasil` olan şablonlar yalnız kendi kalıbıyla ya da `yapi_sablon` ile seçilir).
+(onaydan önce `kart` kalır). Claude'un şablon önerisi `kart`, `nasil`, `uretim` ve `kitap`'ı seçemez (çizicisi `kart`,
+`nasil` ya da `kitap` olan şablonlar yalnız kendi kalıbıyla ya da `yapi_sablon` ile seçilir).
+
+## Bir Kitap Bir Dakika (kitap şablonu)
+`templates/kitap.json` (çizici `shortgen/kitap.py`, kalıp `kitap`): kütüphane rafının önünde kodla çizilmiş bez ciltli
+bir kitap. Kapakta başlık, yazar, amblem (`KITAP_AMBLEMLER`, 16 vektör çizim) ve kapak rengi; kapak açılır, her bölüm
+bir sayfa çiftidir (sekmeler İLK CÜMLE ya da KÜNYE / KONU / FİKİR / BİLGİ / SORU), sağ sayfa dış sesle yazılır ve
+`vurgu` fosforlu kalemle çizilir; sonda kitap kapanır, arka kapakta soru ve OKUDUN MU? durur. Senaryo eşlemesi:
+`kitap` alanı (künye, `yazar_olum`, `ilk_cumle`, `amblem`, `kapak_rengi`), sahnelerde `kitap_bolum`
+(giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne), `sayfa_metni` (sağ sayfa, en çok 22 kelime) ve `vurgu`.
+Telif kodda uygulanır (`normalize_kitap`, `kitap_telif`; senaryo yazımında ve `pipeline.build`'de, hazır senaryoda da):
+yayınevi kapağı, görseli ya da yayımlanmış çeviri kullanılmaz, fotoğraf aranmaz; ilk cümle yalnız kamu malı kitapta
+(Türkiye'de Y yılında yazarı Y-71 ya da önce ölmüş: 2026'da 1955 ve öncesi) kendi çevirimizle sol sayfaya basılır.
+Diğer kitaplarda sol sayfa künyedir, sayfalardaki alıntılar silinir; dış seste, başlıkta ya da açıklamada alıntı
+kalırsa video üretilmez. Seri sahibi örnek videoyu onaylayana kadar yalnız elle seçilir (`FORCED_ONLY`): öneriden,
+`--structure kitap`, `--template kitap` ya da Telegram/panelde konunun başına `kitap:` yazarak.
+
+    python -m shortgen.pipeline --script demo/kitap/ornek_donusum.json --template kitap --no-voice   # anahtarsız deneme
 
 ## Animasyonlar
 Claude, anlatılan şey doğal olarak hareket ediyorsa sahneye bir nesne animasyonu ekler (`shortgen/anim.py`):
@@ -61,22 +77,25 @@ Claude, anlatılan şey doğal olarak hareket ediyorsa sahneye bir nesne animasy
 Nesne Wikimedia'da önce şeffaf PNG olarak aranır; bulunamazsa fotoğrafın arka planı `rembg` ile silinir. Uçan nesnelerin arkasında duman izi oluşur.
 `templates/eslesme.json` hangi kategorinin hangi şablonu kullanacağını belirler. `claude_secsin: true` yapılırsa Claude her konu için şablonu kendisi önerir.
 `yapi_sablon` anlatım kalıbına göre şablon seçer ve kategori eşleşmesinden önce gelir (şimdilik `nasil` → `kart`,
-`uretim` → `uretim`, `olsaydin` → `kart`).
+`uretim` → `uretim`, `olsaydin` → `kart`, `kitap` → `kitap`; kitap kalıbı orada yazılmasa da kendi şablonuna gider).
 Elle seçmek için: `python -m shortgen.pipeline --template gece`
 
 ## Konu önerileri
-`/oneri` (ya da paneldeki "Yeni öneriler iste") tek bir web aramalı Claude çağrısıyla altı seriden üçer, toplam 18
-öneri getirir (Telegram'da üçer serilik iki mesaj): 🔥 Popüler (bugünün gündemine bağlı şaşırtıcı açı), 📚 Konular
-(gündemden bağımsız şaşırtıcı konu), 🧐 Efsane mi, gerçek mi? (Türkiye'de yaygın yanlış inanış), 🛠 Nasıl yapılır?
-(3-5 adımlık güvenli, pratik yöntem), 🏭 Nasıl üretiliyor? (gündelik bir ürünün hammaddeden bitmiş ürüne 3-5 aşamada
-üretimi) ve 💭 `olsaydin` serisi (izleyiciyi bir mesleğe, para olayına ya da hayat durumuna koyan, güncel Türkiye
-rakamlarıyla "olsaydın ne olurdu" hesabı; serinin adı geçicidir: ekran etiketi `script.STRUCTURES`, liste adı
-`trends.SERILER`, panel adı `cloudflare/panel_ui.js` `ONERI_SERILERI`, seri etiketi `publish.SERIES_TAGS` içindedir).
+`/oneri` (ya da paneldeki "Yeni öneriler iste") tek bir web aramalı Claude çağrısıyla yedi seriden üçer, toplam 21
+öneri getirir (Telegram'da üçer serilik mesajlar, Bir Kitap Bir Dakika üçüncü mesajda): 🔥 Popüler (bugünün
+gündemine bağlı şaşırtıcı açı), 📚 Konular (gündemden bağımsız şaşırtıcı konu), 🧐 Efsane mi, gerçek mi? (Türkiye'de
+yaygın yanlış inanış), 🛠 Nasıl yapılır? (3-5 adımlık güvenli, pratik yöntem), 🏭 Nasıl üretiliyor? (gündelik bir
+ürünün hammaddeden bitmiş ürüne 3-5 aşamada üretimi), 💭 `olsaydin` serisi (izleyiciyi bir mesleğe, para olayına ya da
+hayat durumuna koyan, güncel Türkiye rakamlarıyla "olsaydın ne olurdu" hesabı; serinin adı geçicidir: ekran etiketi
+`script.STRUCTURES`, liste adı `trends.SERILER`, panel adı `cloudflare/panel_ui.js` `ONERI_SERILERI`, seri etiketi
+`publish.SERIES_TAGS` içindedir) ve 📖 Bir Kitap Bir Dakika (tek kitabın konusu ve ana fikri, sürprizsiz; gündeme
+bağlanabilir: yıl dönümü, uyarlama, ödül).
 Öneriden üretimde serinin kalıbı sabitlenir: efsane → `efsane`, nasıl yapılır → `nasil`, nasıl üretiliyor → `uretim`,
-`olsaydin` → `olsaydin` (`--structure`).
+`olsaydin` → `olsaydin`, Bir Kitap Bir Dakika → `kitap` (`--structure`).
 Otomatik üretim yalnız ilk üç seriden seçer (son video efsane kalıbındaysa Efsane önerisini atlar), kendi önerilerini
-kaydetmez; `nasil`, `uretim` ve `olsaydin` kalıpları otomatik dönüşüme girmez. Konu sırası yalnız metni tuttuğu için
-Efsane, Nasıl yapılır?, Nasıl üretiliyor? ve `olsaydin` önerileri sıraya eklenmez, yalnız "Üret" ile üretilir.
+kaydetmez; `nasil`, `uretim`, `olsaydin` ve `kitap` kalıpları otomatik dönüşüme girmez. Konu sırası yalnız metni
+tuttuğu için Efsane, Nasıl yapılır?, Nasıl üretiliyor?, `olsaydin` ve Bir Kitap Bir Dakika önerileri sıraya eklenmez,
+yalnız "Üret" ile üretilir.
 Telegram düğmeleri listenin damgasını taşır: liste yenilendikten sonra eski mesajdan basılan düğme başka bir konuyu
 üretmez.
 

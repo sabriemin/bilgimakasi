@@ -341,7 +341,7 @@ def _suggestion_topic(it: dict) -> str:
 
 def _produce_suggestion(it: dict) -> bool:
     """Öneriden üretim: serinin kalıbı (trends.SERI_KALIP: Efsane mi, gerçek mi? -> efsane, Nasıl yapılır? -> nasil,
-    Nasıl üretiliyor? -> uretim, Ya sen olsaydın? -> olsaydin) üretimde sabitlenir."""
+    Nasıl üretiliyor? -> uretim, Ya sen olsaydın? -> olsaydin, Bir Kitap Bir Dakika -> kitap) üretimde sabitlenir."""
     from .trends import kalip_of
     return _dispatch(_suggestion_topic(it), kalip=kalip_of(it))
 
@@ -490,7 +490,7 @@ def _handle_callback(cq: dict, chat: str) -> None:
 
 
 COMMANDS = [
-    {"command": "oneri", "description": "Altı seriden 18 konu önerisi (butonla üret)"},
+    {"command": "oneri", "description": "Yedi seriden 21 konu önerisi (butonla üret)"},
     {"command": "uret", "description": "Hemen yeni video üret (ör. /uret kara delikler)"},
     {"command": "durum", "description": "Bekleyen ve zamanlanan videolar"},
     {"command": "rapor", "description": "İzlenme, takipçi, beğeni, kaydetme raporu"},
@@ -628,7 +628,7 @@ def process_update(u: dict, chat: str) -> None:
             api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
         elif text.startswith("/start") or text.startswith("/yardim"):
             api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
-                                     "/oneri: 6 seriden 18 konu önerisi (butonla üret)\n"
+                                     "/oneri: 7 seriden 21 konu önerisi (butonla üret)\n"
                                      "/uret [konu]: hemen yeni video üret (konu isteğe bağlı; 'Kuyumcu olsaydın', "
                                      "'Çay nasıl demlenir?' gibi konularda seri kendiliğinden seçilir, başına "
                                      "'genel:' yazarsan serbest kalır)\n"
@@ -1336,6 +1336,9 @@ if __name__ == "__main__":
         duzelt(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "", " ".join(sys.argv[4:]))
     elif sys.argv[1] == "notify":
         notify(Path(sys.argv[2]), sys.argv[3])
+    elif sys.argv[1] == "durdu":  # uret.yml: üretim telif kuralı yüzünden durdu (pipeline'ın yazdığı kısa not)
+        _durdu = Path(sys.argv[2]).read_text(encoding="utf-8").strip()
+        api("sendMessage", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": _cut16("⛔ " + _durdu, 4096)})
     elif sys.argv[1] == "preview":  # ornek.yml: yalnız göz atmak için, onaysız ve kayıtsız
         preview(Path(sys.argv[2]), " ".join(sys.argv[3:]))
     elif sys.argv[1] == "poll":

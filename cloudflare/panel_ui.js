@@ -566,7 +566,8 @@ export const SINIR = { baslik: 100, aciklama: 2000, aciklamaBayt: 4000 };
 export const ONERI_SERILERI = [["populer", "Popüler", "Popüler", "🔥"], ["konu", "Konular", "Konular", "📚"],
   ["efsane", "Efsane", "Efsane mi, gerçek mi?", "🧐"], ["nasil", "Nasıl yapılır", "Nasıl yapılır?", "🛠"],
   ["uretim", "Üretim", "Nasıl üretiliyor?", "🏭"],
-  ["olsaydin", "Olsaydın", "Ya sen olsaydın?", "💭"]];
+  ["olsaydin", "Olsaydın", "Ya sen olsaydın?", "💭"],
+  ["kitap", "Kitap", "Bir Kitap Bir Dakika", "📖"]];
 const SERI_ADI = Object.fromEntries(ONERI_SERILERI.map(([k, , ad]) => [k, ad]));
 // Kalıbı sabit seriler (anahtarlar = trends.SERI_KALIP): üretimde serinin kalıbı sabitlenir (telegram_bot._produce_suggestion),
 // onay penceresinde söylenir; konu sırası yalnız konu metnini tutar, bu seriler sıradan kalıpsız üretilirdi: sıraya eklenmez
@@ -575,6 +576,7 @@ export const SERI_NOTU = {
   nasil: `“${SERI_ADI.nasil}” kalıbıyla üretilir; kendi şablonu hazır olana kadar kart şablonu kullanılır. `,
   uretim: `“${SERI_ADI.uretim}” kalıbıyla, aşama kartları şablonuyla üretilir. `,
   olsaydin: `“${SERI_ADI.olsaydin}” kalıbıyla, kart şablonunda sayaç ve hesap fişi kartlarıyla üretilir. `,
+  kitap: `“${SERI_ADI.kitap}” kalıbıyla, kodla çizilen kitap kapağı ve sayfalarıyla üretilir; kamu malı olmayan kitapta alıntı yerine künye sayfası olur. `,
 };
 
 // ------------------------------------------------------------------ tarayıcı uygulaması
