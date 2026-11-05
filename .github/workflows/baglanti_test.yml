@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       platform:
-        description: "youtube, instagram veya tiktok"
+        description: "youtube, instagram, tiktok veya claude (API anahtarı testi)"
         required: true
         default: youtube
 
@@ -19,6 +19,7 @@ jobs:
           python-version: "3.12"
       - run: pip install requests pydantic
       - name: Test (yükleme yapılmaz)
+        if: github.event.inputs.platform != 'claude'
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
@@ -39,3 +40,45 @@ jobs:
             instagram-durum:*) python -m shortgen.publish ig-status "${P#instagram-durum:}" ;;
             *) python -m shortgen.publish check "$P" ;;
           esac
+      - name: Claude Code kur
+        if: github.event.inputs.platform == 'claude'
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Claude anahtarı testi (en küçük istek, anahtar yazdırılmaz)
+        if: github.event.inputs.platform == 'claude'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          BUTCE: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD }}
+        run: |
+          [ -n "$ANTHROPIC_API_KEY" ] && echo "ANTHROPIC_API_KEY tanımlı." || echo "::warning::ANTHROPIC_API_KEY tanımlı değil."
+          # biçim denetimi: anahtarın kendisi ya da bir parçası yazdırılmaz, yalnız evet/hayır ve uzunluk
+          python3 - <<'PY'
+          import os, re
+          k = os.environ.get("ANTHROPIC_API_KEY", "")
+          print("Uzunluk:", len(k), "| baş/son boşluk:", "var" if k != k.strip() else "yok",
+                "| sk-ant-api ile başlıyor:", "evet" if k.strip().startswith("sk-ant-api") else "hayır",
+                "| kısaltma (...) içeriyor:", "evet" if ("..." in k or "\u2026" in k) else "hayır",
+                "| geçersiz karakter:", "var" if re.search(r"[^A-Za-z0-9_\-]", k.strip()) else "yok")
+          PY
+          export ANTHROPIC_API_KEY="$(printf '%s' "$ANTHROPIC_API_KEY" | tr -d '[:space:]')"
+          echo "Depo bütçe değişkeni: ${BUTCE:-tanımsız (varsayılan 90 $)}"
+          claude -p "Yalnız 'tamam' yaz." --model haiku --output-format stream-json --verbose --tools "" \
+            --max-budget-usd 0.05 > cikti.jsonl 2> hata.txt || true
+          python3 - <<'PY'
+          import json
+          ok = False
+          for line in open("cikti.jsonl", encoding="utf-8"):
+              try:
+                  d = json.loads(line)
+              except ValueError:
+                  continue
+              if d.get("type") == "system" and d.get("subtype") == "init":
+                  print("Kimlik kaynağı:", d.get("apiKeySource"))
+              if d.get("type") == "result":
+                  ok = not d.get("is_error")
+                  print("Sonuç:", "başarılı" if ok else "hata", "| maliyet $", d.get("total_cost_usd"),
+                        "| yanıt:", str(d.get("result"))[:200])
+          if not ok:
+              print(open("hata.txt", encoding="utf-8").read()[-1500:])
+              raise SystemExit(1)
+          PY

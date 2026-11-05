@@ -32,9 +32,12 @@ jobs:
     steps:
       - name: Anahtarlar tanımlı mı?
         env:
+          K: ${{ secrets.ANTHROPIC_API_KEY }}
           T: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
-          if [ -z "$T" ]; then echo "::error::CLAUDE_CODE_OAUTH_TOKEN gizli anahtarı tanımlı değil."; exit 1; fi
+          # Üretim aylık API kredisinden (ANTHROPIC_API_KEY) yürür; anahtar yoksa abonelik jetonuna düşer.
+          if [ -z "$K" ] && [ -z "$T" ]; then echo "::error::ANTHROPIC_API_KEY (ya da CLAUDE_CODE_OAUTH_TOKEN) gizli anahtarı tanımlı değil."; exit 1; fi
+          [ -n "$K" ] || echo "::warning::ANTHROPIC_API_KEY yok, abonelik jetonu kullanılacak."
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -55,8 +58,10 @@ jobs:
           key: u2net-v1
       - name: Video üret
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '100' }}
+          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '90' }}
+          CLAUDE_BUDGET_RESET_DAY: ${{ vars.CLAUDE_BUDGET_RESET_DAY || '24' }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID || 'BPOQsosga3cXhsJivIRc' }}
           MUSIC_FILE: ${{ vars.MUSIC_FILE }}
@@ -93,8 +98,10 @@ jobs:
       - name: Yeni yorumlara cevap taslağı
         continue-on-error: true
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '100' }}
+          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '90' }}
+          CLAUDE_BUDGET_RESET_DAY: ${{ vars.CLAUDE_BUDGET_RESET_DAY || '24' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           YT_API_KEY: ${{ secrets.YT_API_KEY }}

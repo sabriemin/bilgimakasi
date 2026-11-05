@@ -48,8 +48,10 @@ jobs:
       - name: Yeni yorumlara cevap taslağı
         continue-on-error: true
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '100' }}
+          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '90' }}
+          CLAUDE_BUDGET_RESET_DAY: ${{ vars.CLAUDE_BUDGET_RESET_DAY || '24' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           YT_API_KEY: ${{ secrets.YT_API_KEY }}

@@ -1,8 +1,9 @@
 """Konu seçimi ve senaryo üretimi.
 
-Claude'a Claude Code CLI üzerinden, kullanıcının claude.ai aboneliğiyle (CLAUDE_CODE_OAUTH_TOKEN) erişilir.
-Yapılandırılmış çıktı için --json-schema kullanılır. Doğrulama adımı web araması yapabilir.
-Aylık harcama tavanı: state/claude_usage.json içinde tutulan eşdeğer maliyet CLAUDE_MONTHLY_BUDGET_USD'yi aşarsa üretim durur.
+Claude'a Claude Code CLI üzerinden erişilir: önce ANTHROPIC_API_KEY (aboneliğin aylık API kredisi), yoksa
+CLAUDE_CODE_OAUTH_TOKEN (abonelik). Yapılandırılmış çıktı için --json-schema kullanılır. Doğrulama adımı web araması yapabilir.
+Harcama tavanı: state/claude_usage.json içinde dönem başına tutulan maliyet CLAUDE_MONTHLY_BUDGET_USD'yi (varsayılan 90 $)
+aşarsa üretim durur. Dönem, API kredisinin yenilendiği gün (CLAUDE_BUDGET_RESET_DAY, varsayılan 24) başlar.
 """
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import List, Literal
 
@@ -484,17 +486,30 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
+def _period(today: dt.date | None = None) -> str:
+    """Kredi dönemi anahtarı: dönemin başladığı gün (ör. 24 Kasım-23 Aralık için '2026-11-24').
+    Gün 1 ise eski takvim ayı biçimi ('2026-11') kullanılır."""
+    today = today or dt.date.today()
+    day = min(max(int(os.environ.get("CLAUDE_BUDGET_RESET_DAY", "24") or 1), 1), 28)
+    if day == 1:
+        return today.strftime("%Y-%m")
+    start = today.replace(day=day)
+    if today.day < day:
+        start = (today.replace(day=1) - dt.timedelta(days=1)).replace(day=day)
+    return start.isoformat()
+
+
 def _month_usage() -> tuple[dict, str]:
     u = json.loads(USAGE.read_text(encoding="utf-8")) if USAGE.exists() else {}
-    return u, dt.date.today().strftime("%Y-%m")
+    return u, _period()
 
 
 def _check_budget() -> float:
-    limit = float(os.environ.get("CLAUDE_MONTHLY_BUDGET_USD", "100"))
+    limit = float(os.environ.get("CLAUDE_MONTHLY_BUDGET_USD", "90"))
     u, m = _month_usage()
     left = limit - u.get(m, 0.0)
     if left <= 0:
-        raise BudgetExceeded(f"Bu ayın Claude bütçesi ({limit:.0f} $) doldu, üretim durduruldu.")
+        raise BudgetExceeded(f"Bu dönemin Claude bütçesi ({limit:.0f} $, {m} başlangıçlı) doldu, üretim durduruldu.")
     return left
 
 
@@ -503,6 +518,19 @@ def _record(cost: float) -> None:
     u[m] = round(u.get(m, 0.0) + cost, 4)
     USAGE.parent.mkdir(parents=True, exist_ok=True)
     USAGE.write_text(json.dumps(u, indent=2), encoding="utf-8")
+
+
+_AUTH_ERR = re.compile(r"invalid api key|invalid x-api-key|authentication_error|credit balance", re.I)
+_api_key_ok = True  # anahtar bir kez reddedilirse bu çalışmanın geri kalanı abonelik jetonuyla sürer
+
+
+def _claude_env() -> dict:
+    """Claude Code'un ortamı: API anahtarı (boşlukları temizlenmiş) varsa ve reddedilmediyse önce o kullanılır."""
+    env = dict(os.environ)
+    key = env.pop("ANTHROPIC_API_KEY", "").strip()
+    if key and _api_key_ok:
+        env["ANTHROPIC_API_KEY"] = key
+    return env
 
 
 def ask_claude(prompt: str, schema: type[BaseModel], system: str, web: bool = False) -> BaseModel:
@@ -516,19 +544,28 @@ def ask_claude(prompt: str, schema: type[BaseModel], system: str, web: bool = Fa
         cmd += ["--tools", "WebSearch,WebFetch", "--allowedTools", "WebSearch", "WebFetch"]
     else:
         cmd += ["--tools", ""]
+    global _api_key_ok
     last_err = ""
-    for _ in range(2):
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=1200, cwd=ROOT)
+    tries = 0
+    while tries < 2:
+        tries += 1
+        env = _claude_env()
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=1200, cwd=ROOT, env=env)
         try:
             data = json.loads(out.stdout)
         except json.JSONDecodeError:
-            last_err = (out.stderr or out.stdout)[-2000:]
-            continue
-        _record(float(data.get("total_cost_usd") or 0))
-        if data.get("is_error") or data.get("structured_output") is None:
+            data, last_err = None, (out.stderr or out.stdout)[-2000:]
+        if data is not None:
+            _record(float(data.get("total_cost_usd") or 0))
+            if not data.get("is_error") and data.get("structured_output") is not None:
+                return schema.model_validate(data["structured_output"])
             last_err = str(data.get("result"))[-2000:]
-            continue
-        return schema.model_validate(data["structured_output"])
+        if _AUTH_ERR.search(last_err) and "ANTHROPIC_API_KEY" in env and os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
+            # anahtar geçersiz ya da kredisi bitti: üretim durmasın, bu çalışma abonelik jetonuyla sürer
+            _api_key_ok = False
+            tries -= 1
+            print("::warning::ANTHROPIC_API_KEY kullanılamadı (" + last_err[:80].replace("\n", " ")
+                  + "); abonelik jetonuna geçildi.", file=sys.stderr)
     raise RuntimeError(f"Claude yanıtı alınamadı: {last_err}")
 
 
