@@ -2569,7 +2569,10 @@ class NasilSablonu(unittest.TestCase):
         uretim_sablonu(kok)
         (kok / "templates" / "deneme.json").write_text(json.dumps({"description": "d", "renderer": "nasil"}),
                                                        encoding="utf-8")
-        self.assertEqual(pl.kendi_secimli(), {"kart", "nasil", "uretim", "ajanda", "deneme"})
+        # depodaki diğer kurgu modüllü şablonlar (ör. ajanda, dosya) da bu gruptadır; renderer'sız şablonlar hiç girmez
+        kendi = pl.kendi_secimli()
+        self.assertTrue({"kart", "nasil", "uretim", "ajanda", "dosya", "deneme"} <= kendi)
+        self.assertFalse(kendi & {"kolaj", "gazete", "retro", "minimal", "doga", "gece"})
         self.assertEqual((pl.sablon_yapisi("deneme"), pl.sablon_yapisi("nasil"), pl.sablon_yapisi("uretim"),
                           pl.sablon_yapisi("kart"), pl.sablon_yapisi("kolaj"), pl.sablon_yapisi("yok")),
                          ("nasil", "nasil", "uretim", "", "", ""), "yapi yoksa nasil")
