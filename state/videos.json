@@ -522,5 +522,17 @@
     "telegram_message_id": 180,
     "aciklama_message_id": 181,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261105-213747",
+    "title": "Lokum nasıl üretilir? Jöle kıvamının sırrı jelatin değil",
+    "topic": "Lokum nasıl üretiliyor? Şeker şurubundan nişastayla pişirilen, dinlendirilip kesilen Türk lokumu",
+    "category": "dil ve kültür",
+    "template": "uretim",
+    "created": "2026-11-05T21:37:47",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 182,
+    "aciklama_message_id": 183,
+    "platforms": {}
   }
 ]
