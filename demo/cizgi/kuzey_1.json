@@ -1,0 +1,654 @@
+{
+  "topic": "Karar Senin 1. Bölüm: İki Kartvizit",
+  "category": "spor",
+  "template": "cizgi",
+  "title": "Karar Senin · 1. Bölüm: İki Kartvizit",
+  "description": "Sinoplu genç golcü Kuzey'in cebinde iki kulübün kartviziti var: İstanbul mu, Samsun mu? Sen olsan hangisini seçerdin? Kurgusal bir hikâyedir.",
+  "hashtags": [
+    "kararsenin",
+    "futbol",
+    "sinop",
+    "altyapı",
+    "bilgimakasi"
+  ],
+  "scenes": [
+    {
+      "narration": "On beş yaşındaki Kuzey'in cebinde iki kulübün kartviziti var.",
+      "kicker": "",
+      "headline": [
+        "İKİ KARTVİZİT"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "iskele_gece",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "kartvizit",
+                "ifade": "dusunceli",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "seri": "KARAR SENİN",
+        "bolum": 1
+      }
+    },
+    {
+      "narration": "Kuzey, Sinop'ta balıkçı Hasan Reis'in oğlu.",
+      "kicker": "",
+      "headline": [
+        "SİNOP"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "liman",
+            "karakterler": [
+              {
+                "id": "hasan",
+                "poz": "ag",
+                "ifade": "gulumse",
+                "konum": "sol",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Sabahları babasıyla ağ topluyor, akşamları Sinopspor'un gençlerinde top koşturuyor.",
+      "kicker": "",
+      "headline": [
+        "SABAH AĞ",
+        "AKŞAM TOP"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "yan_yana",
+        "paneller": [
+          {
+            "mekan": "tekne_sabah",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "ag",
+                "ifade": "gulumse",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          },
+          {
+            "mekan": "saha_aksam",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "top",
+                "ifade": "kararli",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Türkiye'nin en kuzey ucu İnceburun da Sinop'ta; Kuzey adını oradan alıyor.",
+      "kicker": "",
+      "headline": [
+        "İNCEBURUN"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "harita_fener",
+            "karakterler": [],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "kart": {
+          "tur": "gercek",
+          "baslik": "GERÇEK BİLGİ",
+          "metin": "Türkiye'nin en kuzey noktası İnceburun, Sinop'tadır.",
+          "kaynak": "İnceburun Feneri · 42° Kuzey"
+        }
+      }
+    },
+    {
+      "narration": "Bu yaz bölge turnuvasında altı maçta dokuz gol atıyor.",
+      "kicker": "",
+      "headline": [
+        "6 MAÇ 9 GOL"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "saha_gol",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "sut",
+                "ifade": "kararli",
+                "konum": "sol",
+                "cerceve": "boy"
+              }
+            ],
+            "ses": "GOL!",
+            "yazi": [
+              "6 MAÇ · 9 GOL"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Final maçında tribünde iki adam not alıyor.",
+      "kicker": "",
+      "headline": [
+        "TRİBÜNDE"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "tribun",
+            "karakterler": [
+              {
+                "id": "golge",
+                "poz": "not",
+                "ifade": "normal",
+                "konum": "sol",
+                "cerceve": "bust"
+              },
+              {
+                "id": "golge",
+                "poz": "not",
+                "ifade": "normal",
+                "konum": "sag",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Biri Galatasaray'ın gözcüsü Selim Bey.",
+      "kicker": "",
+      "headline": [
+        "SELİM BEY"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "tribun",
+            "karakterler": [
+              {
+                "id": "selim",
+                "poz": "not",
+                "ifade": "gulumse",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Teklifi parlak: İstanbul'da altyapı, yatılı yer ve okul.",
+      "kicker": "",
+      "headline": [
+        "TEKLİF"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "brosur",
+            "karakterler": [],
+            "ses": "",
+            "yazi": [
+              "YATAKHANE",
+              "OKUL",
+              "SAHA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Ama orada her yaş grubunda onun gibi onlarca yetenek var.",
+      "kicker": "",
+      "headline": [
+        "ONLARCA YETENEK"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "soyunma",
+            "karakterler": [],
+            "ses": "",
+            "yazi": []
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Öbürü Samsunspor'un gözcüsü Orhan Bey.",
+      "kicker": "",
+      "headline": [
+        "ORHAN BEY"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "saha_aksam",
+            "karakterler": [
+              {
+                "id": "orhan",
+                "poz": "kollar",
+                "ifade": "gulumse",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Sözü net: \"Bizde bir yıl içinde A takımla antrenmana çıkarsın.\"",
+      "kicker": "",
+      "headline": [
+        "SÖZ"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "bos",
+            "karakterler": [
+              {
+                "id": "orhan",
+                "poz": "isaret",
+                "ifade": "gulumse",
+                "konum": "sol",
+                "cerceve": "bust"
+              },
+              {
+                "id": "kuzey",
+                "poz": "dur",
+                "ifade": "saskin",
+                "konum": "sag",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "balon": {
+          "konusan": "orhan",
+          "metin": "Bizde bir yıl içinde A takımla antrenmana çıkarsın.",
+          "tur": "konus",
+          "panel": 0
+        }
+      }
+    },
+    {
+      "narration": "Samsun eve yakın; ama İstanbul'un kapısı ikinci kez çalmayabilir.",
+      "kicker": "",
+      "headline": [
+        "İKİ YOL"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "yol_tabelasi",
+            "karakterler": [],
+            "ses": "",
+            "yazi": [
+              "İSTANBUL",
+              "SAMSUN"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım oğlum.\"",
+      "kicker": "",
+      "headline": [
+        "BABA"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "liman",
+            "karakterler": [
+              {
+                "id": "hasan",
+                "poz": "ag",
+                "ifade": "gulumse",
+                "konum": "sol",
+                "cerceve": "bust"
+              },
+              {
+                "id": "kuzey",
+                "poz": "dur",
+                "ifade": "gulumse",
+                "konum": "sag",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "balon": {
+          "konusan": "hasan",
+          "metin": "Kararın neyse arkandayım oğlum.",
+          "tur": "konus",
+          "panel": 0
+        }
+      }
+    },
+    {
+      "narration": "Annesi Nermin'in tek şartı var: okul yarım kalmayacak.",
+      "kicker": "",
+      "headline": [
+        "ANNE"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "mutfak",
+            "karakterler": [
+              {
+                "id": "nermin",
+                "poz": "kollar",
+                "ifade": "kararli",
+                "konum": "sol",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Kuzey'in bilmediği bir şey var: Selim Bey aynı turnuvadan bir golcüye daha teklif yaptı.",
+      "kicker": "",
+      "headline": [
+        "SIR"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "telefon_defter",
+            "karakterler": [
+              {
+                "id": "selim",
+                "poz": "telefon",
+                "ifade": "normal",
+                "konum": "sol",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": [
+              "KUZEY · SİNOP",
+              "BARAN · ORDU"
+            ]
+          }
+        ],
+        "kart": {
+          "tur": "ipucu",
+          "baslik": "SEN BİLİYORSUN, KUZEY BİLMİYOR"
+        }
+      }
+    },
+    {
+      "narration": "Selim Bey yarın sabah İstanbul'a dönüyor; cevap bu gece verilecek.",
+      "kicker": "",
+      "headline": [
+        "BU GECE"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "saat_bilet",
+            "karakterler": [],
+            "ses": "TİK TAK",
+            "yazi": [
+              "23:40",
+              "SİNOP – İSTANBUL"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Kuzey ne yapsın? A: İstanbul'a, Galatasaray'a gitsin. B: Samsunspor'da şansını denesin. Yorumlara A ya da B yaz.",
+      "kicker": "",
+      "headline": [
+        "A MI B Mİ?"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "yan_yana",
+        "paneller": [
+          {
+            "mekan": "istanbul",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "kartvizit",
+                "ifade": "kararli",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          },
+          {
+            "mekan": "samsun",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "top",
+                "ifade": "gulumse",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "kart": {
+          "tur": "ab",
+          "baslik": "KUZEY NE YAPSIN?",
+          "a": "İSTANBUL'A, GALATASARAY'A",
+          "b": "SAMSUNSPOR'DA ŞANSINI DENESİN"
+        }
+      }
+    }
+  ],
+  "sources": [
+    "İnceburun, Türkiye'nin en kuzey noktası: https://tr.wikipedia.org/wiki/İnceburun"
+  ],
+  "search_phrase": "Karar Senin",
+  "structure": "hikaye"
+}
