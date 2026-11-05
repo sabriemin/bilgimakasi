@@ -428,9 +428,16 @@
     "category": "tarih",
     "template": "kart",
     "created": "2026-11-05T17:29:56",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 155,
     "aciklama_message_id": 156,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-07T09:30:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-07T15:00:00+00:00",
+      "instagram": "2026-11-07T09:30:00+00:00",
+      "tiktok": "2026-11-07T16:30:00+00:00"
+    },
+    "decided": "2026-11-05T20:35:07+03:00"
   }
 ]
