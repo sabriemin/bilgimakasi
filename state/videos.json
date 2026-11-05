@@ -346,8 +346,15 @@
     "category": "dil ve kültür",
     "template": "kart",
     "created": "2026-11-05T13:47:46",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 123,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-06T12:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-06T12:00:00+00:00",
+      "instagram": "2026-11-06T14:00:00+00:00",
+      "tiktok": "2026-11-06T14:00:00+00:00"
+    },
+    "decided": "2026-11-05T16:50:32+03:00"
   }
 ]
