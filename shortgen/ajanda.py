@@ -509,6 +509,12 @@ def lcd_degeri(deger: str) -> tuple[str, str]:
         b = tutar(m.group(2) + (" " + m.group(3) if m.group(3) else ""))
         bv = _fmt(b[0], 0) if b and b[0] == int(b[0]) else m.group(2)
         return f"{m.group(1)}/{bv}", ""
+    m = re.search(r"(\d[\d.,]*)\s*[-–]\s*(\d[\d.,]*)\s*(MİLYAR|MİLYON|BİN)?", s)
+    if m:                                               # aralık: '55-65 BİN' -> 55.000-65.000 (çarpan ikisine de)
+        ek = " " + m.group(3) if m.group(3) else ""
+        a, b = tutar(m.group(1) + ek), tutar(m.group(2) + ek)
+        if a and b:
+            return f"{_fmt(a[0], 0)}-{_fmt(b[0], 0)}", birim
     t = tutar(s)
     if t is None:
         return "", ""

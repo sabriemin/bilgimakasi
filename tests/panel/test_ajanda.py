@@ -172,6 +172,13 @@ def kesisir(a, b, pay=1.0) -> bool:
 
 # ---------------------------------------------------------------- yardımcılar ve plan
 class Plan(unittest.TestCase):
+    def test_lcd_aralik_carpani(self):
+        # '55-65 BİN' LCD'de 55 olarak çıkıyordu (Sabri, elektrikçi örneği)
+        self.assertEqual(A.lcd_degeri("55-65 BİN ₺"), ("55.000-65.000", K.TL))
+        self.assertEqual(A.lcd_degeri("55–65 bin TL"), ("55.000-65.000", K.TL))
+        self.assertEqual(A.lcd_degeri("55 BİN ₺"), ("55.000", K.TL))
+        self.assertEqual(A.lcd_degeri("-1.200 ₺"), ("-1.200", K.TL))
+
     def test_turkce_tarih(self):
         self.assertEqual(A.turkce_tarih(dt.date(2026, 11, 5)), ("05", "KASIM 2026", "PERŞEMBE", "HAFTA 45 · GÜN 309"))
         self.assertEqual(A.turkce_tarih(dt.date(2026, 2, 1))[1:3], ("ŞUBAT 2026", "PAZAR"))
