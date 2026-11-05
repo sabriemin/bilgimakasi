@@ -1,0 +1,28 @@
+{
+  "name": "Ajanda",
+  "description": "Ya Sen Olsaydın? için açık ajanda sayfası: üstte bugünün basılı tarihi, solda saat sütunu, duraklar tükenmez mavisiyle saatlerinin çizgisine elle yazılır (önceki duraklar sayfada kalır, tiklenir), çizimler bantlı polaroid, içeriden bilgi sarı yapışkan not; para konularında altta sarı masa hesap makinesi yürüyen toplamı gösterir. Yalnız Ya Sen Olsaydın? serisi (olsaydin kalıbı) için, --template ajanda ile seçilir.",
+  "renderer": "ajanda",
+  "yapi": "olsaydin",
+  "colors": {
+    "accent": [221, 32, 39],
+    "highlight": [252, 213, 33],
+    "dark": [20, 19, 19],
+    "light": [248, 245, 236],
+    "box": [250, 249, 245],
+    "muted": [150, 146, 138]
+  },
+  "fonts": {
+    "headline": "Anton-Regular.ttf",
+    "subtitle": "CourierPrime-Bold.ttf"
+  },
+  "subtitle_size": 40,
+  "subtitle_y": 1400,
+  "headline_scale": 1.0,
+  "grain": true,
+  "label_style": "box",
+  "rotation": 1.8,
+  "text_entry": "pop",
+  "subtitle_box": "torn",
+  "stars": false,
+  "case": "upper"
+}
