@@ -795,8 +795,9 @@ class KonuSirasiUretim(Ortak):
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
         cagri = {}
 
-        def generate_script(history, topic=None, templates=None, series_prev=None, allow_series=False):
+        def generate_script(history, topic=None, templates=None, series_prev=None, allow_series=False, kart=False):
             cagri["topic"] = topic
+            cagri["kart"] = kart
             if uret:
                 uret()
             return demo
@@ -821,6 +822,7 @@ class KonuSirasiUretim(Ortak):
         ilk = self.kuyruk()
         cagri, out = self._main([])
         self.assertEqual(cagri["topic"], ilk[0])
+        self.assertFalse(cagri["kart"], "kart kapalıyken (eslesme.json) kart yönergesi istenmez")
         self.assertEqual(self.kuyruk(), ilk[1:])
         self.assertIn("Konu sırasından alınan konu: " + ilk[0], out)
         self.assertIn("Konu sırasından çıkarıldı: " + ilk[0], out)

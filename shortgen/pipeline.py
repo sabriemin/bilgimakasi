@@ -95,6 +95,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
     # 1) fotoğraflar (birden çok sorgu, Wikimedia + Openverse, alaka kontrolü)
     credits, used = [], set()
     photos: dict[int, Path] = {}
+    photo_credit: dict[int, images.ImageCredit] = {}
     for i, sc in enumerate(script.scenes):
         queries = sc.image_queries or ([sc.image_query] if sc.image_query else [])
         if sc.image_mode == "none" or not queries:
@@ -105,6 +106,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         found = images.find_any(queries, cache, used)
         if found:
             photos[i], cr = found
+            photo_credit[i] = cr
             used.update({"File:" + cr.title, cr.page})
             credits.append(cr)
         else:
@@ -170,6 +172,9 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         for i, (spec, sc) in enumerate(zip(specs, script.scenes)):
             spec.card = {"type": sc.card, "value": sc.card_value, "label": sc.card_label, "myth": sc.card_myth,
                          "fact": sc.card_fact, "note": sc.card_note, "mascot": sc.mascot}
+            if spec.image is not None and i in photo_credit:  # not yoksa fotoğraf kartının çipi künyeden yazılır
+                cd = images.credit_dict(photo_credit[i])
+                spec.card["credit"] = {k: cd.get(k, "") for k in ("author", "license", "source")}
             spec.card["type"] = kart.card_type(spec, i, len(specs))
         kart.render_kart(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
                                                            "title": script.title, "category": script.category})

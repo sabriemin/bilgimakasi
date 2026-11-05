@@ -8,6 +8,8 @@
   "watermark_switch_seconds": 7,
   "intro_cut": true,
   "cut_transition_every": 4,
+  "kart_kesme_her": 3,
+  "_kart_kesme_notu": "Kart şablonu makas kesme geçişini cut_transition_every yerine kart_kesme_her sahnede bir yapar (kart sahneleri kısa olduğu için 3). cut_transition_every 0 ise kartta da kesme yoktur; kart_kesme_her 0 yalnız kartta kapatır. Diğer şablonlar bu ayarı okumaz.",
   "subtitle_handle": true,
   "outro_seconds": 0,
   "_outro_notu": "Kapanış kartı izlenme oranını düşürdüğü için kapalı (0). Açmak için 2.4 yaz.",

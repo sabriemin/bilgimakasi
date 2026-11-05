@@ -54,6 +54,10 @@ HEADER_REGION = (0, 166, W, 224)
 RULE_Y = 230
 KIN = (72, 244, 920, 446)
 CARD = (100, 480, 908, 1120)
+# kapak sahnesi (sahne 0): kart biraz aşağıda başlar, kinetik bant o kadar uzar. Kapak cümlesi (6 kelimeye kadar, iki
+# satır) böylece ~76 px'in üstünde okunur; kartın, seri etiketinin ve açılış zıplamasının üstünde kalır.
+CARD0 = (100, 540, 908, 1120)
+KIN0 = (72, 238, 920, 500)
 CARD_SH = 12
 CARD_REGION = (68, 440, 926, 1140)         # kart katmanının kapladığı alan (gölge, bant, çip taşmaları dahil)
 CARD_FLOOR = 1138                          # kart bunun altına inmez: maskotun bıçak uçları ~1150'den başlar
@@ -61,7 +65,8 @@ CLIP_FLOOR = CARD_FLOOR                    # kart katmanlarının kırpıldığ�
 TERM = (60, 1296, 600, 1516)
 MASCOT_XY, MASCOT_SCALE = (774, 1370), 0.86
 WIPE = 0.42                                # ara kanca kırmızı silme süresi (sn)
-CUT_EVERY = 3                              # makas kesme geçişi her kaç sahnede bir
+WIPE_Y0, WIPE_Y1 = 232, SAFE[3]            # silmenin düz kırmızı kenarı başlık çizgisinden güvenli bandın altına iner
+CUT_EVERY = 3                              # makas kesme geçişi her kaç sahnede bir (brand.json kart_kesme_her)
 CUT_SLICE, CUT_SPLIT, CUT_FADE = 0.2, 0.15, 2 / FPS   # kesme: makas geçer, parçalar ayrılır, ≤ 2 karede söner
 CUT_LEN = CUT_SLICE + CUT_SPLIT + CUT_FADE
 
@@ -110,6 +115,19 @@ def fit(s: str, font: str, size: float, max_w: float) -> str:
     return s.rstrip(" ·-—,") + "…"
 
 
+def fit_words(s: str, font: str, size: float, max_w: float) -> str:
+    """fit gibi, ama kelime sınırında keser ('21.196 kilometre…'); kısa çizgi ve eğik çizgi de sınırdır
+    ('makas kes japon…'). İlk kelime bile sığmazsa harf harf kısaltır."""
+    if tw(s, font, size) <= max_w:
+        return s
+    cuts = [m.start() for m in re.finditer(r"(?<=\S)[\s/-]", s)]
+    for c in reversed(cuts):
+        cand = s[:c].rstrip(" ·-—,:;/") + "…"
+        if tw(cand, font, size) <= max_w:
+            return cand
+    return fit(s, font, size, max_w)
+
+
 def tr_upper(s: str) -> str:
     return s.replace("i", "İ").replace("ı", "I").upper()
 
@@ -144,6 +162,20 @@ def ease_in_out(x: float) -> float:
 def ease_out_back(x: float, k: float = 1.6) -> float:
     x = clamp(x)
     return 1 + (k + 1) * (x - 1) ** 3 + k * (x - 1) ** 2
+
+
+def wipe_edge(lt: float) -> float:
+    """Ara kanca silmesinin düz kırmızı kenarı (y): başlık çizgisinden güvenli bandın altına (1540) iner."""
+    return lerp(WIPE_Y0, WIPE_Y1, ease_in_out(lt / WIPE))
+
+
+def wipe_time(y: float) -> float:
+    """Silme kenarının y'ye ulaştığı an (sn)."""
+    lo, hi = 0.0, WIPE
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if wipe_edge(mid) < y else (lo, mid)
+    return hi
 
 
 def blend(c1, c2, k):
@@ -641,23 +673,39 @@ def kart_phrases(words: list[Word], whole_first: int = 0) -> list[list[int]]:
 
 
 class Kinetic:
-    """Dış ses, sahne sınırını aşmayan 1-4 kelimelik (kapakta en çok 6) parçalar hâlinde; her kelime yırtık kâğıtta."""
+    """Dış ses, sahne sınırını aşmayan 1-4 kelimelik (kapakta en çok 6) parçalar hâlinde; her kelime yırtık kâğıtta.
+    Kapak sahnesinin parçaları daha uzun bantta (KIN0) durur; kapak cümlesinin etiketleri biraz daha sıkı (iç boşluk
+    0,09, eğim en çok 2°) ve ilk kelime t=0'da zıplamaz, böylece altı kelimelik kapak cümlesi büyük (~76 px) okunur.
+    Kapak sahnesinde okunan kelime %12 yerine %6 (kapak cümlesinde %4) zıplar."""
     X0, Y0, X1, Y1 = KIN
     MAXW = 800
     TILT = math.sin(math.radians(3.0))
-    REGION = (40, 196, 935, 474)
+    REGION = (40, 196, 935, 500)
+    PAD, COVER_PAD = 0.16, 0.09
+    CUR_ROT, COVER_ROT = 3.0, 2.0
 
     def __init__(self, words: list[Word], ranges: list[tuple[int, int]]):
         self.words = words
         self.text = [_clean_word(w.text) for w in words]
         self.chunks: list[list[int]] = []
+        self.first: set[int] = set()     # kapak sahnesinin parçaları (uzun bant)
         for si, (a, b) in enumerate(ranges):
             for ch in kart_phrases(words[a:b], whole_first=6 if si == 0 else 0):
+                if si == 0:
+                    self.first.add(len(self.chunks))
                 self.chunks.append([a + i for i in ch])
         self.chunk_of = {i: ci for ci, ch in enumerate(self.chunks) for i in ch}
         self._lay: dict = {}
         self._lab: dict = {}
         self._layer: dict = {}
+
+    def cover(self, ci: int) -> bool:
+        """Kapak cümlesi: videonun ilk parçası."""
+        return ci == 0 and ci in self.first
+
+    def pop(self, ci: int) -> float:
+        """Okunan kelimenin başlangıçtaki büyüme oranı (kapak sahnesinde daha az: uzun bantta etiketler büyük)."""
+        return (0.04 if self.cover(ci) else 0.06) if ci in self.first else 0.12
 
     def layout(self, ci: int):
         """Parçanın en büyük boyutta en fazla 2 satıra yerleşimi: [(kelime, cx, cy, eğim)], boyut."""
@@ -667,9 +715,15 @@ class Kinetic:
         words = [self.text[i] for i in idx]
         gap = 14
         chosen = None
+        is_cover = self.cover(ci)
+        # kapak sahnesi alta doğru uzun bantta; üstte yalnız sıkı kapak cümlesi (az zıplar) başlık çizgisine yaklaşır
+        y_top, y_bot = KIN0[1] if is_cover else self.Y0, KIN0[3] if ci in self.first else self.Y1
+        pad = self.COVER_PAD if is_cover else self.PAD
+        pop = self.pop(ci) if ci in self.first else 0.0
+        tilt = math.sin(math.radians(self.COVER_ROT if is_cover else self.CUR_ROT))
         for size in range(150, 34, -2):
             fS = fnt("anton", size * SS)
-            padx, pady = size * 0.2, size * 0.16
+            padx, pady = size * 0.2, size * pad
             cap = -fS.getbbox("H", anchor="ls")[1] / SS
             ws, tops, bots = [], [], []
             for w in words:
@@ -679,22 +733,28 @@ class Kinetic:
                 bots.append(max(0, b / SS) + pady)
             def lw(ln):
                 return sum(ws[i] for i in ln) + gap * (len(ln) - 1)
-            lines = [list(range(len(words)))]
-            if lw(lines[0]) > self.MAXW:   # iki satır: en geniş satırı en dar yapan bölme (dengeli satırlar)
+            options = [[list(range(len(words)))]]
+            if lw(options[0][0]) > self.MAXW:   # iki satır: en geniş satırı en dar yapan bölme (dengeli satırlar)
                 if len(words) < 2:
                     continue
-                lines = min(([list(range(j)), list(range(j, len(words)))] for j in range(1, len(words))),
-                            key=lambda L: (max(lw(x) for x in L), lw(L[1]) - lw(L[0])))
-            if any(lw(ln) > self.MAXW for ln in lines):
-                continue
-            heights = [max(tops[i] for i in ln) + max(bots[i] for i in ln) for ln in lines]
-            overlap = size * 0.08
-            total_h = sum(heights) - overlap * (len(lines) - 1)
-            # eğik etiketin dikey taşması (en fazla 3°) + gölge: alan dışına, başlık çizgisine çıkmasın
-            ex_top = max(ws[i] for i in lines[0]) * self.TILT / 2 + 4
-            ex_bot = max(ws[i] for i in lines[-1]) * self.TILT / 2 + 12
-            if total_h + ex_top + ex_bot <= self.Y1 - self.Y0:
-                chosen = (size, lines, ws, tops, heights, overlap, total_h, ex_top, ex_bot)
+                options = sorted(([list(range(j)), list(range(j, len(words)))] for j in range(1, len(words))),
+                                 key=lambda L: (max(lw(x) for x in L), lw(L[1]) - lw(L[0])))
+                if not is_cover:   # kapak cümlesinde sığan her bölme denenir (en dengelisi önce)
+                    options = options[:1]
+            overlap = size * (0.05 if is_cover else 0.08)
+            for lines in options:
+                if any(lw(ln) > self.MAXW for ln in lines):
+                    continue
+                heights = [max(tops[i] for i in ln) + max(bots[i] for i in ln) for ln in lines]
+                total_h = sum(heights) - overlap * (len(lines) - 1)
+                # eğik etiketin dikey taşması (en fazla 3°, kapakta 2°) + gölge: alan dışına, başlık çizgisine çıkmasın;
+                # kapak sahnesinde okunan kelimenin zıplaması da hesaba katılır
+                ex_top = max(ws[i] for i in lines[0]) * tilt / 2 + 4 + pop * heights[0] / 2
+                ex_bot = max(ws[i] for i in lines[-1]) * tilt / 2 + 12 + pop * heights[-1] / 2
+                if total_h + ex_top + ex_bot <= y_bot - y_top:
+                    chosen = (size, lines, ws, tops, heights, overlap, total_h, ex_top, ex_bot)
+                    break
+            if chosen:
                 break
         if chosen is None:  # son çare: en küçük boyut, tek satır
             size = 36
@@ -703,7 +763,8 @@ class Kinetic:
         size, lines, ws, tops, heights, overlap, total_h, ex_top, ex_bot = chosen
         rng = random.Random(7000 + idx[0])
         cx0 = (self.X0 + self.X1) / 2
-        y = self.Y0 + ex_top + (self.Y1 - self.Y0 - total_h - ex_top - ex_bot) / 2
+        y = y_top + ex_top + (y_bot - y_top - total_h - ex_top - ex_bot) / 2
+        lo, hi = (0.6, 1.4) if is_cover else (0.8, 2.0)
         out = []
         for li, ln in enumerate(lines):
             base = y + max(tops[i] for i in ln)
@@ -712,15 +773,16 @@ class Kinetic:
             for i in ln:
                 gi = idx[i]
                 sgn = -1 if gi % 2 else 1
-                rot = sgn * rng.uniform(0.8, 2.0)
+                rot = sgn * rng.uniform(lo, hi)
                 out.append((gi, x + ws[i] / 2, base, rot, sgn))
                 x += ws[i] + gap
             y += heights[li] - overlap
-        self._lay[ci] = (out, size)
+        self._lay[ci] = (out, size, (pad, self.COVER_ROT if is_cover else self.CUR_ROT))
         return self._lay[ci]
 
-    def label(self, gi: int, state: str, dark: bool, size: int, rot: float, sgn: int):
-        key = (gi, state, dark, size)
+    def label(self, gi: int, state: str, dark: bool, size: int, rot: float, sgn: int, style=(PAD, CUR_ROT)):
+        """style: (iç boşluk oranı, okunan kelimenin eğimi)."""
+        key = (gi, state, dark, size, style)
         if key not in self._lab:
             if state == "said":
                 fg, bg, rim = OFF, INK, OFF
@@ -728,8 +790,8 @@ class Kinetic:
                 fg, bg, rim = (INK, YELLOW, OFF) if dark else (OFF, RED, OFF)
             else:
                 fg, bg, rim = UPC_FG, UPC_BG, OFF
-            lab = torn_label(self.text[gi], size, fg, bg, 900 + gi * 7, rim=rim)
-            r = sgn * 3.0 if state == "cur" else rot
+            lab = torn_label(self.text[gi], size, fg, bg, 900 + gi * 7, pad=style[0], rim=rim)
+            r = sgn * style[1] if state == "cur" else rot
             im = lab.render(r, shadow=(4, 7, 4, 0.32 if state == "cur" else 0.24))
             self._lab[key] = (im, lab.base_y, lab.h)
         return self._lab[key]
@@ -739,13 +801,13 @@ class Kinetic:
         key = (ci, cur, dark)
         if key in self._layer:
             return self._layer[key]
-        lay, size = self.layout(ci)
+        lay, size, style = self.layout(ci)
         rx0, ry0, rx1, ry1 = self.REGION
         rest = Image.new("RGBA", (rx1 - rx0, ry1 - ry0), (0, 0, 0, 0))
         cur_im = cur_c = None
         for gi, cx, base, rot, sgn in lay:
             state = "said" if gi < cur else ("cur" if gi == cur else "up")
-            im, base_y, h = self.label(gi, state, dark, size, rot, sgn)
+            im, base_y, h = self.label(gi, state, dark, size, rot, sgn, style)
             cy = base - base_y + h / 2
             if state == "cur":
                 cur_im, cur_c = im, (cx, cy)
@@ -838,6 +900,7 @@ class Card:
         self.c = ctx["spec"].card or {}
         self.idx = ctx["idx"]
         self.hook = ctx["idx"] == 0     # kanca karesi: kart ilk karede tamamlanmış görünür
+        self.area = ctx.get("box") or CARD   # kartın kutusu: kapak sahnesinde CARD0 (biraz aşağıda başlar)
         self._static = None
 
     def pen(self) -> Pen:
@@ -853,6 +916,11 @@ class Card:
 
     def mood(self, lt: float, dur: float) -> str:
         return "normal"
+
+    @property
+    def has_chip(self) -> bool:
+        """Kartın altında not çipi var mı (kapak damgası çipin üstüne yerleşir)."""
+        return bool((self.c.get("note") or "").strip())
 
     @property
     def topic_slug(self) -> str:
@@ -877,6 +945,41 @@ def cover(im: Image.Image, w: int, h: int, focus=(0.5, 0.38)) -> Image.Image:
     return im.crop((left, top, left + w, top + h))
 
 
+_UNKNOWN_AUTHORS = {"bilinmiyor", "unknown", "unknown author", "anonymous", "anonim", "untitled", "n/a", "-"}
+_OPENVERSE_SOURCES = {"flickr": "Flickr", "wikimedia": "Wikimedia"}
+
+
+def credit_chip(cr: dict, max_len: int = 32) -> str:
+    """Fotoğraf künyesinden (images.credit_dict: author, license, source) en çok max_len karakterlik çip yazısı:
+    "NASA · kamu malı", "Wikimedia · CC BY-SA 4.0". Yalnız künyedeki bilgiyi kısaltır, kaynak uydurmaz; yazar
+    bilinmiyorsa ya da sığmıyorsa kaynağın kısa adı yazılır."""
+    if not cr:
+        return ""
+    lic = re.sub(r"\s+", " ", str(cr.get("license") or "")).strip()
+    low = lic.lower()
+    if re.match(r"(public domain|pd\b|pd-|pdm\b|cc pdm|kamu)", low):
+        lic = "kamu malı"
+    elif low.startswith("cc0"):
+        lic = "CC0"
+    src = str(cr.get("source") or "").strip()
+    if src.lower().startswith("openverse"):
+        src = _OPENVERSE_SOURCES.get(src.split("/", 1)[-1].strip().lower(), "Openverse")
+    elif "wikimedia" in src.lower():
+        src = "Wikimedia"
+    author = re.sub(r"\s+", " ", str(cr.get("author") or "")).strip()
+    names = []
+    if author and author.lower() not in _UNKNOWN_AUTHORS:
+        names += [author, re.split(r"\s*[,;/|(]\s*|\s+-\s+", author)[0].strip()]
+    names.append(src)
+    for who in names:
+        if not who:
+            continue
+        text = f"{who} · {lic}" if lic else who
+        if len(text) <= max_len:
+            return text
+    return lic if len(lic) <= max_len else ""
+
+
 class PhotoCard(Card):
     """Arşiv duotone fotoğraf, bant, not çipi ve dosya adlı başlık çubuğu; fotoğraf sahne boyunca hafif yakınlaşır."""
     still = False
@@ -885,7 +988,8 @@ class PhotoCard(Card):
         super().__init__(ctx)
         rx0, ry0 = CARD_REGION[:2]
         pen = self.pen()
-        ix0, iy0, ix1, iy1 = shell(pen, CARD, f"{self.topic_slug} / arsiv_{self.idx + 1:02d}.jpg", tr_upper("arşiv"))
+        ix0, iy0, ix1, iy1 = shell(pen, self.area, f"{self.topic_slug} / arsiv_{self.idx + 1:02d}.jpg",
+                                   tr_upper("arşiv"))
         self.pb = (int(ix0 + 20), int(iy0 + 20), int(ix1 - 20), int(iy1 - 20))
         self.base = pen.done()
         px0, py0, px1, py1 = self.pb
@@ -902,11 +1006,16 @@ class PhotoCard(Card):
         tl = Sprite(170, 44, 10)
         tape(tl, 85, 22, 170, 44, -3, 40 + self.idx, alpha=215)
         ov.paste(tl.im, (px0 + px1) / 2 - 95, py0 - 22 - 10)
-        note = (self.c.get("note") or "").strip()
+        # not yoksa fotoğrafın kendi künyesinden kısa çip ("NASA · kamu malı"); künye yoksa çip de yok
+        self.chip = note = (self.c.get("note") or "").strip() or credit_chip(self.c.get("credit") or {})
         if note:
             chip_label(ov, px0 + 22, py1 - 96, note, max_w=pw - 60)
         self.over = ov.done()
         self.zoom_end = 1.1
+
+    @property
+    def has_chip(self) -> bool:
+        return bool(self.chip)
 
     def layer(self, lt, dur):
         p = clamp(lt / max(0.5, dur))
@@ -926,7 +1035,8 @@ class DrawingCard(Card):
 
     def static(self):
         pen = self.pen()
-        ix0, iy0, ix1, iy1 = shell(pen, CARD, f"{self.topic_slug} / cizim_{self.idx + 1:02d}.png", tr_upper("çizim"))
+        ix0, iy0, ix1, iy1 = shell(pen, self.area, f"{self.topic_slug} / cizim_{self.idx + 1:02d}.png",
+                                   tr_upper("çizim"))
         for y in range(int(iy0) + 26, int(iy1) - 16, 26):
             for x in range(int(ix0) + 26, int(ix1) - 16, 26):
                 pen.ell(x, y, 2.0, fill=(234, 232, 227))
@@ -995,12 +1105,17 @@ class CounterCard(Card):
         self.label = tr_upper((self.c.get("label") or "").strip())
         self.note = (self.c.get("note") or "").strip()
         pen = self.pen()
-        ix0, iy0, ix1, iy1 = self.inner = shell(pen, CARD, f"sayaç / {slug(self.label or 'deger', 24) or 'deger'}.log",
+        ix0, iy0, ix1, iy1 = self.inner = shell(pen, self.area,
+                                                f"sayaç / {slug(self.label or 'deger', 24) or 'deger'}.log",
                                                 tr_upper("sayaç"))
         cx = (ix0 + ix1) / 2
         final = self.text_at(1.0)
         self.size = 250
-        while self._num_w(final, self.size) > ix1 - ix0 - 90 and self.size > 120:
+        # sayı hem genişliğe hem yüksekliğe sığar: etiket ve not, zaman çizelgesinin (iy1 - 96) en az 44 px üstünde
+        # kalır (kapak sahnesinin kısa kartında sayı biraz küçülür)
+        room = iy1 - 96 - iy0 - 42 - 100 - (56 if self.note else 0) - 44
+        while (self._num_w(final, self.size) > ix1 - ix0 - 90 or -tbox("8", "anton", self.size)[1] > room) \
+                and self.size > 120:
             self.size -= 6
         cap = -tbox("8", "anton", self.size)[1]
         self.base_y = iy0 + 42 + cap
@@ -1110,19 +1225,20 @@ def _rich(text: str) -> list[tuple[str, bool]]:
 
 
 class CompareCard(Card):
-    """EFSANE (çizilir) ve GERÇEK sütunları. İnanış çizilmeden önce okunur; çizik canlanır, sonra gerçek açılır."""
+    """EFSANE (çizilir) ve GERÇEK sütunları. İnanış çizilmeden önce okunur; çizik canlanır, sonra gerçek açılır.
+    Zamanlama: tamamen açılmış hâl sahnenin sonunda en az HOLD sn ekranda kalır; inanış çizilmeden önce
+    READ sn okunur. Sahne ikisine yetmiyorsa önce çizik öne alınır, sonra çizik/açılış animasyonu sıkıştırılır (en çok
+    0,45 kat), en son okuma süresi kısalır; çok kısa sahnede (< ~1,9 sn) kart baştan açılmış durur."""
     still = False
+    HOLD, READ = 1.25, 1.4
+    STRIKE, STAGGER, GAP, REVEAL = 0.3, 0.1, 0.5, 0.35   # çizik satırı, satırlar arası, çizikten açılışa, açılış (sn)
 
     def __init__(self, ctx):
         super().__init__(ctx)
         self.myth = (self.c.get("myth") or "").strip()
         self.fact = (self.c.get("fact") or "").strip()
         self.note = (self.c.get("note") or "").strip()
-        dur = max(0.6, ctx["dur"])
-        # çizik, inanışı anlatan cümle bitmek üzereyken gelir (inanış söylenirken okunur kalır); gerçek 0,5 sn sonra
-        self.t_strike = max(0.4, min(max(1.4, self._myth_end() - 0.2), dur - 1.0))
-        self.t_reveal = self.t_strike + 0.5
-        ix0, iy0, ix1, iy1 = self.inner = inner_of(CARD)
+        ix0, iy0, ix1, iy1 = self.inner = inner_of(self.area)
         pad, gap = 22, 34
         foot = 56 if self.note else 0
         cw = (ix1 - ix0 - 2 * pad - gap) / 2
@@ -1147,6 +1263,23 @@ class CompareCard(Card):
         self.post = self._render(revealed=True)
         self.strike = self._strike_layer()
         self._fin = None
+        self.timing(max(0.6, ctx["dur"]))
+
+    def timing(self, dur: float) -> None:
+        """Çizik inanışı anlatan cümle bitmek üzereyken gelir, ama tam açılmış hâl en az HOLD sn kalacak kadar erken."""
+        n = max(1, len(self.strike_rows))
+
+        def span(k):  # çizik başından her şeyin oturmasına kadar geçen süre (k: animasyon ölçeği)
+            return k * max(self.STRIKE + self.STAGGER * (n - 1), self.GAP + self.REVEAL)
+
+        latest = dur - self.HOLD
+        k = clamp((latest - self.READ) / span(1.0), 0.45, 1.0)
+        t = min(max(self.READ, self._myth_end() - 0.2), latest - span(k))
+        self.instant = t < 0.3          # sahne çok kısa: animasyonsuz, baştan açılmış
+        self.t_strike = t
+        self.t_reveal = t + self.GAP * k
+        self.strike_len, self.stagger, self.reveal_len = self.STRIKE * k, self.STAGGER * k, self.REVEAL * k
+        self.t_full = t + span(k)
 
     LH = 1.12
 
@@ -1208,7 +1341,7 @@ class CompareCard(Card):
 
     def _render(self, revealed: bool) -> Image.Image:
         pen = self.pen()
-        shell(pen, CARD, "efsane / gerçek", tr_upper("karşılaştır"))
+        shell(pen, self.area, "efsane / gerçek", tr_upper("karşılaştır"))
         (a0, a1, a2, a3), (b0, b1, b2, b3) = self.cols
         pen.rr(self.cols[0], 16, fill=PAPER, outline=INK, width=3)
         pen.rr(self.cols[1], 16, fill=YEL_LIGHT if revealed else WHITE, outline=INK, width=3)
@@ -1262,7 +1395,7 @@ class CompareCard(Card):
         return pen.done()
 
     def layer(self, lt, dur):
-        if self.hook or lt >= self.t_reveal + 0.35:
+        if self.hook or self.instant or lt >= self.t_full:
             if self._fin is None:
                 self._fin = self.post.copy()
                 self._fin.alpha_composite(self.strike)
@@ -1270,14 +1403,14 @@ class CompareCard(Card):
         rx0, ry0 = CARD_REGION[:2]
         img = self.pre.copy() if lt < self.t_reveal else self.post.copy()
         if lt >= self.t_reveal:  # gerçek sütunu soldan sağa açılır
-            k = ease_out_cubic((lt - self.t_reveal) / 0.35)
+            k = ease_out_cubic((lt - self.t_reveal) / self.reveal_len)
             bx0, by0, bx1, by1 = (int(v) for v in self.cols[1])
             wv = int((bx1 - bx0 + 6) * k)
             if wv < bx1 - bx0 + 6:
                 pre = self.pre.crop((bx0 - rx0 + wv, by0 - ry0 - 2, bx1 - rx0 + 6, by1 - ry0 + 6))
                 img.paste(pre, (bx0 - rx0 + wv, by0 - ry0 - 2))
         for li, (x0, x1, y) in enumerate(self.strike_rows):  # satır satır çizilen kırmızı çizik
-            k = ease_out_cubic((lt - self.t_strike - li * 0.1) / 0.3)
+            k = ease_out_cubic((lt - self.t_strike - li * self.stagger) / self.strike_len)
             if k <= 0:
                 continue
             xe = int(x0 - 12 + (x1 - x0 + 24) * k) - rx0
@@ -1287,7 +1420,7 @@ class CompareCard(Card):
         return img
 
     def mood(self, lt, dur):
-        return "thinking" if (not self.hook and lt < self.t_reveal) else "normal"
+        return "thinking" if (not self.hook and not self.instant and lt < self.t_reveal) else "normal"
 
 
 class QuoteCard(Card):
@@ -1299,7 +1432,7 @@ class QuoteCard(Card):
         self.quote = (self.c.get("label") or self.spec.narration).strip().strip('"“”')
         self.src = (self.c.get("note") or "").strip()
         pen = self.pen()
-        ix0, iy0, ix1, iy1 = shell(pen, CARD, f"alıntı / {slug(self.src.split('·')[0], 20) or 'kaynak'}.txt",
+        ix0, iy0, ix1, iy1 = shell(pen, self.area, f"alıntı / {slug(self.src.split('·')[0], 20) or 'kaynak'}.txt",
                                    tr_upper("alıntı"))
         qm = ink_box("“", "anton", 200)
         pen.text(ix0 + 40 - qm[0], iy0 + 30 - qm[1], "“", "anton", 200, RED)
@@ -1402,15 +1535,17 @@ class InterstitialCard(Card):
         im.alpha_composite(tp.render(-3.0))
         im = im.crop(im.getchannel("A").point(lambda v: 255 if v > 4 else 0).getbbox())
         rx0, ry0, rx1, ry1 = CARD_REGION
-        bx0, by0, bx1, by1 = CARD[0] - 24, CARD[1] - 16, SAFE_X - 6, CARD_FLOOR - 4  # gölge ve bantlar dahil
+        box = self.area
+        bx0, by0, bx1, by1 = box[0] - 24, box[1] - 16, SAFE_X - 6, CARD_FLOOR - 4  # gölge ve bantlar dahil
         k = min(1.0, (bx1 - bx0) / im.width, (by1 - by0) / im.height)
         if k < 1:
             im = im.resize((int(im.width * k), int(im.height * k)), Image.LANCZOS)
         lay = Image.new("RGBA", (rx1 - rx0, ry1 - ry0), (0, 0, 0, 0))
-        cx, cy = (CARD[0] + CARD[2] + CARD_SH) / 2 - rx0, (by0 + by1) / 2 - ry0
+        cx, cy = (box[0] + box[2] + CARD_SH) / 2 - rx0, (by0 + by1) / 2 - ry0
         _comp(lay, im, cx - im.width / 2, cy - im.height / 2)
         self.sprite = lay
-        self.appear = 0.0 if self.hook else WIPE * 0.55
+        # kart, kırmızı önceki kartı tamamen örttükten sonra (kenar kart tabanının ~22 px altındayken) gelir
+        self.appear = 0.0 if self.hook else wipe_time(CLIP_FLOOR + 22)
 
     def layer(self, lt, dur):
         return self.sprite
@@ -1432,17 +1567,27 @@ class InterstitialCard(Card):
 class CtaCard(Card):
     """Son sahnenin soru kartı: soru, 'YORUMLARA YAZ' etiketi, kupon çizgisi ve kanal adı. Makas mutlu."""
     still = False
+    BUTTON = "yorumlara yaz"
+    GENERIC_Q = "Sen ne düşünüyorsun?"
+
+    @classmethod
+    def question(cls, label: str, narration: str, headline: list[str]) -> str:
+        """Kartın soru satırı: card_label, yoksa dış sesteki ilk soru cümlesi, yoksa başlık. Düğmedeki 'YORUMLARA YAZ'
+        sözünü içeren aday atlanır (aynı söz iki kez yazılmasın); hiçbiri kalmazsa genel bir soru."""
+        button = tr_upper(cls.BUTTON)
+
+        def repeats(s: str) -> bool:
+            return button in " ".join(re.sub(r"[^\w]+", " ", tr_upper(s)).split())
+
+        sents = re.split(r"(?<=[.?!])\s+", (narration or "").strip())
+        cands = [label.strip()] + [s for s in sents if s.endswith("?")] + [" ".join(headline).strip()]
+        return next((c for c in cands if c and not repeats(c)), cls.GENERIC_Q)
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        q = (self.c.get("label") or "").strip()
-        if not q:
-            sents = re.split(r"(?<=[.?!])\s+", self.spec.narration.strip())
-            qs = [s for s in sents if s.endswith("?")]
-            q = qs[0] if qs else (" ".join(self.spec.headline).strip() or "Sence?")
-        self.q = q
+        q = self.q = self.question(self.c.get("label") or "", self.spec.narration, self.spec.headline)
         pen = self.pen()
-        ix0, iy0, ix1, iy1 = shell(pen, CARD, "son / yorum.txt", tr_upper("soru"))
+        ix0, iy0, ix1, iy1 = shell(pen, self.area, "son / yorum.txt", tr_upper("soru"))
         cx = (ix0 + ix1) / 2
         qh = 222
         font, size, lines = fit_block(q, ("archivo",), ix1 - ix0 - 100, qh, 62, 38, lh=1.2, max_lines=3)
@@ -1452,7 +1597,7 @@ class CtaCard(Card):
             pen.text(cx, yb, " ".join(L), font, size, INK, anchor="ms")
             yb += lh
         # yorum etiketi (ayrı katman: hafifçe nabız atar)
-        st = tr_upper("yorumlara yaz")
+        st = tr_upper(self.BUTTON)
         ssz = 92
         while tw(st, "anton", ssz) + 150 > ix1 - ix0 - 120:
             ssz -= 4
@@ -1507,7 +1652,7 @@ class TextCard(Card):
 
     def static(self):
         pen = self.pen()
-        ix0, iy0, ix1, iy1 = shell(pen, CARD, "not / makas.txt", tr_upper("not"))
+        ix0, iy0, ix1, iy1 = shell(pen, self.area, "not / makas.txt", tr_upper("not"))
         lines = [tr_upper(x) for x in self.spec.headline if x.strip()] or [tr_upper(self.spec.narration[:30])]
         hl = self.spec.highlight_line
         note = (self.c.get("note") or "").strip()
@@ -1582,7 +1727,8 @@ def card_type(spec, idx: int, n: int) -> str:
 
 # ---------------------------------------------------------------- terminal
 class Terminal:
-    """Koyu terminal: makas@bilgimakasi:~/konu, son iki kayıt satırı (32 px), sahne/sahne sayısı kadar kesilmiş çizgi."""
+    """Koyu terminal: makas@bilgimakasi:~/konu, son iki kayıt satırı (32 px, sığmayan satır kelime sınırında '…' ile
+    kesilir), sahne/sahne sayısı kadar kesilmiş çizgi."""
     REGION = (52, 1288, 620, 1536)
     FS, TITLE_FS = 32, 28            # telefonda (390 px) ~11,5 px: okunur; başlık sığsın diye 28
     LY1, LY2 = 108, 152              # kayıt satırlarının taban çizgileri (TERM üstüne göre)
@@ -1614,8 +1760,8 @@ class Terminal:
             if i > 0:
                 ly = y0 + self.LY1
                 pen.svg(check_svg(YELLOW, 17), ICON_VB, x0 + 18, ly - 29, 34)
-                pen.text(x0 + 24 + self.prompt_w, ly, fit(self.logs[i - 1], "mono", fs, x1 - x0 - 48 - self.prompt_w),
-                         "mono", fs, OFF)
+                pen.text(x0 + 24 + self.prompt_w, ly,
+                         fit_words(self.logs[i - 1], "mono", fs, x1 - x0 - 48 - self.prompt_w), "mono", fs, OFF)
             by = y1 - 30
             bx0, bx1 = x0 + 28, x1 - 142
             x = bx0
@@ -1628,7 +1774,7 @@ class Terminal:
     def layer(self, i: int, lt: float, dark: bool, hook: bool) -> Image.Image:
         x0, y0, x1, y1 = TERM
         fs = self.FS
-        line = fit(self.logs[i], "mono", fs, x1 - x0 - 48 - self.prompt_w - 22)
+        line = fit_words(self.logs[i], "mono", fs, x1 - x0 - 48 - self.prompt_w - 22)
         n_ch = len(line) if hook else int(clamp((lt - 0.08) / 0.022, 0, len(line)))
         cur_on = n_ch < len(line) or int(lt * 2.2) % 2 == 0
         a, b = i / self.n, (i + 1) / self.n
@@ -1899,7 +2045,7 @@ def short_name(topic: str, max_w: float) -> str:
     return fit(out, "mono", HEADER_SIZE, max_w) if out else "bilgi"
 
 
-def cover_layer(kicker: str, stamp: str, note: bool = False) -> Image.Image | None:
+def cover_layer(kicker: str, stamp: str, note: bool = False, box=CARD0) -> Image.Image | None:
     """Kapak (sahne 0) kartının üstü: seri etiketi kartın üst kenarına yapışmış büyük sarı yırtık etiket (Anton, en az
     44 px) ve fotoğraflı/çizimli kartta başlığın vurgulu satırı kırmızı yırtık damga. Kapak karesi tek başına okunur."""
     if not kicker and not stamp:
@@ -1912,7 +2058,7 @@ def cover_layer(kicker: str, stamp: str, note: bool = False) -> Image.Image | No
             size -= 4
         lab = torn_label(stamp, size, OFF, RED, 4242, rim=OFF)
         im = lab.render(4.0, shadow=(7, 10, 0, 0.92))
-        cx, cy = (CARD[0] + CARD[2]) / 2 + 24, CARD[3] - (240 if note else 150)   # not çipinin üstünde
+        cx, cy = (box[0] + box[2]) / 2 + 24, box[3] - (240 if note else 150)   # not çipinin üstünde
         _comp(lay, im, cx - im.width / 2 - rx0, cy - im.height / 2 - ry0)
     if kicker:
         size = 52
@@ -1920,8 +2066,8 @@ def cover_layer(kicker: str, stamp: str, note: bool = False) -> Image.Image | No
             size -= 2
         lab = torn_label(kicker, size, INK, YELLOW, 4343, rim=OFF)
         im = lab.render(2.5, shadow=(5, 7, 0, 0.92))
-        cx, cy = CARD[0] + 14 + lab.w / 2, CARD[1] + 34   # üst kenar ≈ 457: kinetik yazının, vuruşunun ve açılış
-        # zıplamasının (ilk 0,5 sn, en çok 7 px yukarı) altında
+        cx, cy = box[0] + 14 + lab.w / 2, box[1] + 34   # üst kenar ≈ kart üstü - 25 (kapakta ≈ 515): kinetik yazının,
+        # vuruşunun ve açılış zıplamasının (ilk 0,5 sn, en çok 7 px yukarı) altında
         _comp(lay, im, cx - im.width / 2 - rx0, cy - im.height / 2 - ry0)
     return lay
 
@@ -1935,14 +2081,16 @@ class KartScene:
         self.dur = max(0.1, s.end - s.start)
         self.type = v.types[i]
         self.dark = self.type == "interstitial"
-        ctx = {"spec": s, "idx": i, "dur": self.dur, "slug": v.slug, "handle": v.handle}
+        # kapak sahnesinin kartı biraz aşağıda (CARD0): üstündeki uzun kinetik bantla (KIN0) çakışmaz
+        ctx = {"spec": s, "idx": i, "dur": self.dur, "slug": v.slug, "handle": v.handle,
+               "box": CARD0 if i == 0 else CARD}
         self.card = CARD_CLASSES[self.type](ctx)
         self.cover = None
         if i == 0 and not self.dark:
             lines = [tr_upper(x.strip()) for x in s.headline if x.strip()]
             hl = s.highlight_line if 0 <= s.highlight_line < len(lines) else len(lines) - 1
             stamp = lines[hl] if (lines and self.type in ("photo", "drawing")) else ""
-            self.cover = cover_layer(tr_upper((s.kicker or "").strip()), stamp, bool((s.card or {}).get("note")))
+            self.cover = cover_layer(tr_upper((s.kicker or "").strip()), stamp, self.card.has_chip, self.card.area)
         self._cov_src = self._cov = None
         kind = "count" if v.structure == "sayac" else "text"
         right = v.right_label(i)
@@ -1991,18 +2139,20 @@ class KartVideo:
             self.slug = (self.slug + "-" + part).strip("-")
         self.slug = self.slug or "bilgi"
         self.types = [card_type(s, i, n) for i, s in enumerate(scenes)]
-        # makas kesme geçişi: brand.json cut_transition_every > 0 iken her 3. sahnede (kart sahneleri kısa olduğundan
-        # 4 yerine 3). Ara kanca ya da ara kancadan hemen sonraki sahneye düşerse bir sonraki uygun sahneye kayar.
+        # makas kesme geçişi: brand.json cut_transition_every > 0 iken (0 her şablonda kapatır) kart şablonunda
+        # kart_kesme_her sahnede bir (varsayılan 3: kart sahneleri kısa olduğundan diğer şablonlardaki 4 yerine 3).
+        # Ara kanca ya da ara kancadan hemen sonraki sahneye düşerse bir sonraki uygun sahneye kayar.
         self.cut_at: set[int] = set()
-        if on and int(bcfg.get("cut_transition_every", 4) or 0) > 0:
+        every = int(bcfg.get("kart_kesme_her", CUT_EVERY) or 0)
+        if on and int(bcfg.get("cut_transition_every", 4) or 0) > 0 and every > 0:
             ok = [i > 0 and "interstitial" not in (self.types[i], self.types[i - 1]) for i in range(n)]
-            i = CUT_EVERY
+            i = every
             while i < n:
                 while i < n and not ok[i]:
                     i += 1
                 if i < n:
                     self.cut_at.add(i)
-                i += CUT_EVERY
+                i += every
         # kelime aralıkları (sahne sınırları korunur)
         ranges, a = [], 0
         for i, s in enumerate(scenes):
@@ -2078,8 +2228,8 @@ class KartVideo:
             w = self.words[hi]
             k = 1.0
             x = (t - w.start) / 0.12
-            if 0 <= x < 1:
-                k = 1 + 0.12 * (1 - x) ** 2
+            if 0 <= x < 1 and hi > 0:   # ilk kelime zıplamaz: t=0 kapak karesidir, değişen bir şey yok
+                k = 1 + self.kin.pop(ci) * (1 - x) ** 2
             put(img, cur_im, cur_c[0] - cur_im.width / 2, cur_c[1] - cur_im.height / 2, k=k)
 
     def _talk(self, t: float) -> str:
@@ -2105,14 +2255,15 @@ class KartVideo:
         put(img, im, x, y + bob)
 
     def _wipe_mask(self, lt: float) -> Image.Image:
-        """Kırmızı yukarıdan iner; ön kenarı küçülen yarım ton noktalara dağılır. Kenar görünür bantta (y 232→1540)
-        hareket eder, bitince ekran düz kırmızıdır (terminal ve maskotun arkasında yarım ton kalmaz)."""
+        """Kırmızı yukarıdan iner; ön kenarı küçülen yarım ton noktalara dağılır. Kenar ve noktalar yalnız görünür
+        bantta (y 232→1540) hareket eder: başta üstü (y < 232) dolu başlar, platform arayüzünün altına (y > 1540) hiç
+        inmez; son silme karesinde ekran tamamen düz kırmızıdır (terminal ve maskotun arkasında yarım ton
+        kalmaz)."""
         band, sp = 300, 34
-        p = ease_in_out(lt / WIPE)
-        e = lerp(232, SAFE[3] + band, p)
+        e = wipe_edge(lt)
         mask = Image.new("L", (W, H), 0)
         ImageDraw.Draw(mask).rectangle([0, 0, W, int(e)], fill=255)
-        bh = int(min(band, H - e)) + sp
+        bh = int(min(band + sp, WIPE_Y1 - (int(e) - sp // 2)))
         if bh > 0:
             dots = Image.new("L", (W * SS, bh * SS), 0)
             d = ImageDraw.Draw(dots)
@@ -2200,7 +2351,7 @@ class KartVideo:
         if debug_layers:  # yalnız içerik katmanları (güvenli alan denetimi için)
             img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
             img.alpha_composite(sc.header, HEADER_REGION[:2])
-        elif sc.dark and si > 0 and lt < WIPE:
+        elif sc.dark and si > 0 and lt < WIPE - 1 / FPS:   # son silme karesi (ve sonrası) düz kırmızı taban
             img = paper_bg().copy()  # kırmızı, önceki kartın üstünden aşağı doğru iner
             prev = self.scene(si - 1)
             if not prev.dark:
