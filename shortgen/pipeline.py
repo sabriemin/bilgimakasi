@@ -90,6 +90,13 @@ def kalip_sablonu(structure: str | None, template: str | None) -> str | None:
 TELIF_DURDU = ROOT / "output" / "telif_durdu.txt"  # uret.yml bu dosya varsa durumu Telegram'a yazar
 
 
+def adim_kartli(name: str | None) -> bool:
+    """Senaryosu Adım kartları düzeniyle (NASIL_RULES / URETIM_RULES: kanca, numaralı adım/aşama sahneleri, son sahne)
+    yazılacak şablon mu: renderer'ı nasil olanlar (nasil, uretim) ve aynı düzeni okuyan kurgu modülleri
+    (şablon dosyasında "adim_kartlari": true, ör. isemri)."""
+    return sablon_renderer(name) == "nasil" or bool(_sablon(name).get("adim_kartlari"))
+
+
 def kendi_secimli() -> set[str]:
     """Claude'un şablon listesine girmeyen şablonlar: kendi kurgu modülü olanlar (kart, nasil, ...)."""
     return {k for k in template_catalog() if sablon_renderer(k)}
@@ -354,7 +361,7 @@ def main() -> None:
     elif part2_due and not a.topic:
         print("Serinin 2. bölümü üretiliyor:", open_part["title"])
         script = generate_script(history, None, None, series_prev=open_part, kart=kart_on,
-                                 adim_kartlari=sablon_renderer(open_part.get("template")) == "nasil")
+                                 adim_kartlari=adim_kartli(open_part.get("template")))
     else:
         from . import konu_sirasi
         queued = None if a.topic else konu_sirasi.peek()  # panelden sıraya konan konu gündemden önce gelir
@@ -388,9 +395,9 @@ def main() -> None:
                                  # yapıya bağlı kart yönergesi yalnız şablon elle seçilmediyse (--template nasil kartsız)
                                  kart=kart_on or (not a.template and hedef == "kart"),
                                  structure=a.structure,
-                                 # Adım kartları düzeni (NASIL_RULES / URETIM_RULES) yalnız video renderer'ı nasil
-                                 # olan şablonla (nasil, uretim) çizilecekse istenir
-                                 adim_kartlari=sablon_renderer(hedef) == "nasil",
+                                 # Adım kartları düzeni (NASIL_RULES / URETIM_RULES) yalnız video bu düzeni okuyan
+                                 # şablonla (nasil, uretim, isemri) çizilecekse istenir
+                                 adim_kartlari=adim_kartli(hedef),
                                  # şablonun kendi ek yönergesi (templates/<ad>.json "istem"), ör. ek sahne alanları
                                  sablon_kurali=str(_sablon(hedef).get("istem") or ""))
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
