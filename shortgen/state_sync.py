@@ -48,9 +48,13 @@ def _keep_published(local: dict, remote: dict) -> dict:
     return out
 
 
+# panel metin düzenlemesinin yazdığı alanlar (aciklama_message_id: açıklama mesajı eski videoda yeniden gönderildiyse)
+_TEXT_KEYS = ("duzenleme", "title", "aciklama_message_id")
+
+
 def _decision(v: dict) -> dict:
     """Kaydın paylaşım kararıyla ilgili kısmı: panel metin düzenlemesi (başlık/açıklama) bir paylaşım kararı değildir."""
-    return {k: x for k, x in v.items() if k not in ("duzenleme", "title")}
+    return {k: x for k, x in v.items() if k not in _TEXT_KEYS}
 
 
 def _keep_edit(local: dict, remote: dict, base: dict | None) -> dict:
@@ -60,6 +64,9 @@ def _keep_edit(local: dict, remote: dict, base: dict | None) -> dict:
     out = local
     if remote.get("duzenleme") != base.get("duzenleme") and local.get("duzenleme") == base.get("duzenleme"):
         out = {**out, "duzenleme": remote.get("duzenleme")}
+    if remote.get("aciklama_message_id") != base.get("aciklama_message_id") \
+            and local.get("aciklama_message_id") == base.get("aciklama_message_id") and "aciklama_message_id" in remote:
+        out = {**out, "aciklama_message_id": remote["aciklama_message_id"]}
     if local.get("title") == base.get("title") and remote.get("title") != base.get("title") and "title" in remote:
         out = {**out, "title": remote["title"]}  # uzakta (panelde ya da elle) değişen başlık da kaybolmaz
     return out
@@ -88,7 +95,7 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
                 if rv != bv and _decision(v) == _decision(bv):
                     # bu çalışma yalnız metni düzenledi (panel): uzaktaki kararlar ve paylaşımlar aynen kalır,
                     # yalnız düzenlenen başlık/açıklama taşınır
-                    out[v["tag"]] = {**rv, **{k: v[k] for k in ("duzenleme", "title") if k in v}}
+                    out[v["tag"]] = {**rv, **{k: v[k] for k in _TEXT_KEYS if k in v}}
                 elif _decision(rv) != _decision(bv) and rv.get("platforms") == bv.get("platforms") \
                         and v.get("platforms") != bv.get("platforms"):
                     out[v["tag"]] = _keep_published(_keep_edit(rv, v, bv), v)

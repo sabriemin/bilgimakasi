@@ -44,22 +44,32 @@ FAKE_DT = types.SimpleNamespace(datetime=FakeDateTime, timezone=_dt.timezone, ti
 
 
 class Yanit:
-    def __init__(self, status=200, data=None):
+    def __init__(self, status=200, data=None, content=None):
         self.status_code, self._d = status, data if data is not None else {"ok": True, "result": {"message_id": 900}}
         self.ok = status < 400
         self.headers = {"content-type": "application/json"}
         self.text = json.dumps(self._d)
+        self.content = content if content is not None else self.text.encode()
 
     def json(self):
         return self._d
 
 
+GH_SURUM = "https://api.github.com/repos/sabriemin/bilgimakasi/releases/"
+
+
 class SahteRequests:
-    """telegram_bot.requests yerine: Telegram ve GitHub dispatch çağrılarını kaydeder."""
+    """telegram_bot.requests yerine: Telegram ve GitHub dispatch çağrılarını, release'ten metadata.json okumayı kaydeder."""
 
     def __init__(self):
         self.cagrilar: list[dict] = []
+        self.sifirla()
+
+    def sifirla(self):
         self.dispatch_durum = 204
+        self.hatalar: dict[str, str] = {}  # Telegram yöntemi -> hata açıklaması (400 döner)
+        self.mesaj_no: dict[str, int] = {}  # Telegram yöntemi -> dönen message_id (varsayılan 900)
+        self.surumler: dict[str, dict] = {}  # etiket -> GitHub Release'teki metadata.json (yoksa 404)
 
     def post(self, url, timeout=None, data=None, json=None, headers=None, files=None, **kw):  # noqa: A002
         if "api.telegram.org" in url:
@@ -67,15 +77,33 @@ class SahteRequests:
             for k in ("reply_markup", "commands"):
                 if isinstance(d.get(k), str):
                     d[k] = __import__("json").loads(d[k])
-            self.cagrilar.append({"tg": url.rsplit("/", 1)[1], "data": d})
-            return Yanit()
+            yontem = url.rsplit("/", 1)[1]
+            self.cagrilar.append({"tg": yontem, "data": d})
+            if yontem in self.hatalar:
+                return Yanit(400, {"ok": False, "description": self.hatalar[yontem]})
+            return Yanit(data={"ok": True, "result": {"message_id": self.mesaj_no.get(yontem, 900)}})
         m = re.search(r"/actions/workflows/([\w.]+)/dispatches$", url)
         if m:
             self.cagrilar.append({"gh": m.group(1), "json": json})
             return Yanit(self.dispatch_durum, {})
         raise AssertionError("beklenmeyen istek: " + url)
 
-    def get(self, url, **kw):
+    def get(self, url, headers=None, timeout=None, **kw):
+        self.cagrilar.append({"get": url, "accept": (headers or {}).get("Accept"),
+                              "yetki": (headers or {}).get("Authorization")})
+        etiketler = list(self.surumler)
+        m = re.fullmatch(re.escape(GH_SURUM) + r"tags/([\w.-]+)", url)
+        if m:
+            if m.group(1) not in self.surumler:
+                return Yanit(404, {"message": "Not Found"})
+            no = etiketler.index(m.group(1)) + 1
+            return Yanit(200, {"tag_name": m.group(1), "assets": [
+                {"name": "video.mp4", "url": f"{GH_SURUM}assets/{no}0"},
+                {"name": "metadata.json", "url": f"{GH_SURUM}assets/{no}1"}]})
+        m = re.fullmatch(re.escape(GH_SURUM) + r"assets/(\d+)1", url)
+        if m and (headers or {}).get("Accept") == "application/octet-stream":
+            meta = self.surumler[etiketler[int(m.group(1)) - 1]]
+            return Yanit(200, {}, content=__import__("json").dumps(meta, ensure_ascii=False).encode("utf-8"))
         raise AssertionError("beklenmeyen GET: " + url)
 
 
@@ -176,7 +204,7 @@ class Ortak(unittest.TestCase):
     def setUp(self):
         durum_sifirla(self.root)
         self.req.cagrilar.clear()
-        self.req.dispatch_durum = 204
+        self.req.sifirla()
         FakeDateTime.simdi = SIMDI
 
     def panel(self, **p):
@@ -313,10 +341,17 @@ class PanelIslemleri(Ortak):
         self.assertEqual(v["title"], "Yeni <b>Başlık</b> & ötesi")
         self.assertEqual(v["duzenleme"]["description"], "Yeni bilgi metni.")
         cap = self.tg(c, "editMessageCaption")[0]["data"]
-        self.assertTrue(cap["caption"].startswith("🎬 <b>Yeni &lt;b&gt;Başlık&lt;/b&gt; &amp; ötesi</b>"))
+        # kısa video başlığı: yalnız başlık ve şablon (Konu satırı yok)
+        self.assertEqual(cap["caption"], "🎬 <b>Yeni &lt;b&gt;Başlık&lt;/b&gt; &amp; ötesi</b>\nŞablon: " + v["template"])
         self.assertEqual(cap["parse_mode"], "HTML")
         self.assertEqual(cap["reply_markup"]["inline_keyboard"][0][0]["callback_data"], f"ok:{T}")
-        self.assertTrue(self.mesajlar(c)[0].startswith("🖥 Panelden: ✏️ Başlık ve açıklama düzenlendi"))
+        # onay mesajı metni tekrar yazmaz. Fikstürde release (metadata.json) yok: eksik açıklama mesajı yazılmaz, uyarılır
+        onay, = self.tg(c, "sendMessage")
+        self.assertEqual(onay["data"]["text"],
+                         "🖥 Panelden: ✏️ Başlık ve açıklama güncellendi; paylaşımda yeni metin kullanılacak.\n"
+                         "⚠️ Açıklama mesajı şimdi güncellenemedi; TikTok taslağı gönderilirken yenilenecek.")
+        self.assertEqual(onay["data"]["reply_to_message_id"], 2)
+        self.assertNotIn("aciklama_message_id", v)
 
     def test_duzenle_sinirlar_ve_durum(self):
         for title, desc in (("a" * 101, "b"), ("", "b"), ("a", ""), ("a", "b" * 2001)):
@@ -417,8 +452,9 @@ class PanelIslemleri(Ortak):
         self.assertEqual(tazele({"panel": {"action": "report"}}), [])
         self.assertEqual(tazele(cq("no:yok-boyle-video")), [])
 
-    def _paylas(self, meta):
-        """publish_due'yu sahte indirme/yükleme ile çalıştırır; platformlara giden meta'yı döndürür."""
+    def _paylas(self, meta, sonuc=None):
+        """publish_due'yu sahte indirme/yükleme ile çalıştırır; platformlara giden meta'yı döndürür.
+        sonuc: platform -> yükleme sonucu (verilmeyen platform bağlantısıyla paylaşılmış sayılır)."""
         import shortgen.publish as P
         giden = {}
 
@@ -428,7 +464,7 @@ class PanelIslemleri(Ortak):
 
         def publish(video, m, only=None):
             giden.update(m)
-            return {p: {"status": "ok", "url": f"https://{p}/1"} for p in only}
+            return {p: dict((sonuc or {}).get(p) or {"status": "ok", "url": f"https://{p}/1"}) for p in only}
         P.fetch_release, P.publish = fetch_release, publish
         with contextlib.redirect_stdout(io.StringIO()):
             self.tb.publish_due()
@@ -543,13 +579,20 @@ class PanelIslemleri(Ortak):
         d.encode("utf-8").decode("utf-8")  # yarım karakter kalmadı
 
     def test_video_mesaji_basligi_html_varligini_bolmez(self):
-        v = dict(self.vid(T), title="A&B " * 25, topic=("xyz&" * 220))
-        self.req.cagrilar.clear()
-        self.tb._edit_caption(v, CHAT)
-        cap = self.tg(self.req.cagrilar, "editMessageCaption")[0]["data"]["caption"]
-        self.assertLessEqual(len(cap), 1000)
-        self.assertFalse(re.search(r"&[a-z]*$", cap.split("\nŞablon")[0]), "kesik HTML varlığı")
-        self.assertTrue(cap.endswith("Şablon: " + (v.get("template") or "-")))
+        for baslik in ("A&B " * 25, "&\"<" * 100):  # ikincisi kaçışla 1000'i aşar: başlık kısalır
+            v = dict(self.vid(T), title=baslik, topic=("xyz&" * 220))
+            self.req.cagrilar.clear()
+            self.tb._edit_caption(v, CHAT)
+            cap = self.tg(self.req.cagrilar, "editMessageCaption")[0]["data"]["caption"]
+            self.assertLessEqual(len(cap), 1000)
+            self.assertFalse(re.search(r"&[a-z#0-9]*</b>", cap), "kesik HTML varlığı")
+            self.assertTrue(cap.startswith("🎬 <b>") and cap.endswith("</b>\nŞablon: " + (v.get("template") or "-")), cap)
+            self.assertNotIn("Konu", cap)
+        # başlık ve düğmeler aynıysa Telegram "not modified" der: hata sayılmaz, günlüğe yazılmaz
+        self.req.hatalar["editMessageCaption"] = "Bad Request: message is not modified: specified new message content"
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.tb._edit_caption(v, CHAT)
+        self.assertEqual(out.getvalue(), "")
 
     def test_oneriden_uret(self):
         c = self.panel(action="produce_suggestion", index=1, topic=ONERILER[1]["topic"])
@@ -678,6 +721,414 @@ class PanelIslemleri(Ortak):
         with contextlib.redirect_stdout(io.StringIO()):
             self.tb.process_update(msg("/panel"), CHAT)
         self.assertIn("Panel bağlantısını 7/24 kapı verir", self.req.cagrilar[0]["data"]["text"])
+
+
+class SadeMesajlar(Ortak):
+    """Video ve açıklama ayrı mesaj; açıklama bir daha gelmez: paylaşım sonucu ve panel düzenlemesi metni tekrar yazmaz,
+    düzenlemede açıklama mesajı yerinde güncellenir."""
+    TAG = "short-20261105-134746"
+    META = {"title": "Kraliçe <b>& Hitit</b> kralı", "topic": "Kraliçenin mektubu (kanca: dul kraliçe; gündem: Hititler)",
+            "category": "tarih", "template": "kart", "created": "2026-11-05T13:47:46", "structure": "efsane",
+            "hashtags": ["Hititler", "Hattuşa", "tarih", "Mısır", "bilgimakasi"],
+            "description": "Dul kraliçe Hitit kralından koca istedi.\n\n#Hititler #Hattuşa #tarih #Mısır #bilgimakasi"
+                           "\n\n📷 John Doe (CC BY-SA 4.0)"}
+    SURUM = {"title": "Eski başlık", "hashtags": ["tarih", "boston"], "structure": "efsane",
+             "description": "Eski bilgi.\n\n#tarih #boston\n\n📷 John Doe (CC BY-SA 4.0)"}
+    ONAY = "🖥 Panelden: ✏️ Başlık ve açıklama güncellendi; paylaşımda yeni metin kullanılacak."
+    YENI = "Yeni başlık\n\nYeni bilgi.\nİkinci satır.\n\n📷 John Doe (CC BY-SA 4.0)\n\n#tarih #boston #EfsaneMiGerçekMi"
+
+    def bildir(self, meta=None):
+        d = Path(tempfile.mkdtemp(prefix="bildir_", dir=self.root))
+        (d / "metadata.json").write_text(json.dumps(meta or self.META, ensure_ascii=False), encoding="utf-8")
+        (d / "video.mp4").write_bytes(b"x")
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.tb.notify(d, self.TAG)
+        self.cikti = out.getvalue()
+        return self.req.cagrilar[:]
+
+    # ------------------------------------------------------------ yeni video
+    def test_video_kisa_baslikla_aciklama_ayri_mesajla_gelir(self):
+        import shortgen.publish as P
+        self.req.mesaj_no.update(sendVideo=501, sendMessage=502)
+        c = self.bildir()
+        self.assertEqual([x["tg"] for x in c], ["sendVideo", "sendMessage"])
+        video, aciklama = c[0]["data"], c[1]["data"]
+        self.assertEqual(video["caption"], "🎬 <b>Kraliçe &lt;b&gt;&amp; Hitit&lt;/b&gt; kralı</b>\nŞablon: kart")
+        self.assertEqual(video["parse_mode"], "HTML")
+        self.assertEqual(video["reply_markup"], {"inline_keyboard": [[
+            {"text": "✅ Onayla", "callback_data": f"ok:{self.TAG}"}, {"text": "❌ Reddet", "callback_data": f"no:{self.TAG}"}]]})
+        # açıklama: videoya yanıt değil, başlıksız düz metin; TikTok'a gidecek açıklamanın aynısı (seri etiketi dahil)
+        self.assertEqual(aciklama["text"], P.tiktok_caption(P.apply_series_tag(self.META)))
+        self.assertEqual(aciklama["text"], "Kraliçe <b>& Hitit</b> kralı\n\nDul kraliçe Hitit kralından koca istedi.\n\n"
+                         "📷 John Doe (CC BY-SA 4.0)\n\n#Hititler #Hattuşa #tarih #EfsaneMiGerçekMi #bilgimakasi")
+        self.assertNotIn("reply_to_message_id", aciklama)
+        self.assertNotIn("parse_mode", aciklama)
+        v = self.vid(self.TAG)
+        self.assertEqual((v["status"], v["telegram_message_id"], v["aciklama_message_id"]), ("onay_bekliyor", 501, 502))
+        self.assertEqual((v["title"], v["topic"], v["template"]), (self.META["title"], self.META["topic"], "kart"))
+
+    def test_aciklama_gonderilemezse_video_yine_kayda_gecer(self):
+        self.req.mesaj_no["sendVideo"] = 501
+        self.req.hatalar["sendMessage"] = "Bad Request: chat not found"
+        c = self.bildir()
+        self.assertEqual([x["tg"] for x in c], ["sendVideo", "sendMessage"])
+        v = self.vid(self.TAG)
+        self.assertEqual((v["status"], v["telegram_message_id"]), ("onay_bekliyor", 501))
+        self.assertNotIn("aciklama_message_id", v)
+        self.assertIn("Açıklama mesajı gönderilemedi", self.cikti)
+        # onay akışı bozulmaz
+        self.req.hatalar.clear()
+        self.panel(action="approve", tag=self.TAG, code="now")
+        self.assertEqual(self.vid(self.TAG)["status"], "zamanlandi")
+
+    # ------------------------------------------------------------ paylaşım sonucu
+    def paylas(self, tiktok, **alanlar):
+        """T'yi onaylayıp paylaştırır (YouTube ve Instagram bağlantıyla); TikTok sonucu verilir."""
+        self.panel(action="approve", tag=T, code="now")
+        if alanlar:
+            self.video_degistir(T, **alanlar)
+        self.req.cagrilar.clear()
+        PanelIslemleri._paylas(self, PanelIslemleri.META, sonuc={"tiktok": tiktok})
+        return self.req.cagrilar[:]
+
+    SONUC = "📢 Paylaşıldı\n{}\n\n✅ YouTube: https://youtube/1\n✅ Instagram: https://instagram/1\n"
+    KOPYALA = "✅ TikTok: taslak gönderildi. Açıklamayı yanıtlanan mesajdan kopyala."
+
+    def test_paylasim_sonucu_aciklamayi_tekrar_yazmaz(self):
+        cap = "Başlık\n\nTikTok bilgi metni.\n\n#tarih"
+        self.panel(action="approve", tag=T, code="now")
+        self.video_degistir(T, aciklama_message_id=55)
+        self.req.cagrilar.clear()
+        self.req.hatalar["editMessageText"] = "Bad Request: message is not modified: specified new message content"
+        PanelIslemleri._paylas(self, PanelIslemleri.META, sonuc={
+            "instagram": {"status": "ok", "url": "https://www.instagram.com/reel/X/", "note": "Kapak seçilemedi"},
+            "tiktok": {"status": "ok", "id": "v_inbox", "draft": True, "caption": cap}})
+        c = self.req.cagrilar
+        # açıklama mesajı TikTok'a giden metne getirilir (aynıysa Telegram "not modified" der); yeni mesaj gitmez
+        self.assertEqual([x["tg"] for x in c], ["editMessageText", "editMessageReplyMarkup", "sendMessage"])
+        self.assertEqual((c[0]["data"]["message_id"], c[0]["data"]["text"]), (55, cap))
+        m = c[-1]["data"]
+        self.assertEqual(m["text"], f"📢 Paylaşıldı\n{self.vid(T)['title']}\n\n✅ YouTube: https://youtube/1\n"
+                         "✅ Instagram: https://www.instagram.com/reel/X/\n   ⚠️ Kapak seçilemedi\n" + self.KOPYALA)
+        self.assertNotIn("TikTok bilgi metni", m["text"])
+        # sonuç açıklama mesajına yanıt: alıntıya dokununca kopyalanacak metin açılır (videonun düğmeleri yine videoda)
+        self.assertEqual((m["reply_to_message_id"], m["allow_sending_without_reply"]), (55, "true"))
+        self.assertEqual(c[1]["data"]["message_id"], 2)
+        # açıklama panelin "Açıklamayı kopyala" düğmesi için kayıtta kalır
+        self.assertEqual(self.vid(T)["platforms"]["tiktok"]["caption"], cap)
+        self.assertEqual(self.vid(T)["aciklama_message_id"], 55)
+
+    def test_paylasimda_eski_aciklama_mesaji_tiktok_metnine_getirilir(self):
+        # ör. düzenlemede metadata.json alınamadığı için açıklama mesajı eski kaldı
+        c = self.paylas({"status": "ok", "id": "v", "draft": True, "caption": self.YENI}, aciklama_message_id=55)
+        ed, = self.tg(c, "editMessageText")
+        self.assertEqual((ed["data"]["message_id"], ed["data"]["text"]), (55, self.YENI))
+        m, = self.tg(c, "sendMessage")
+        self.assertEqual(m["data"]["text"], self.SONUC.format(self.vid(T)["title"]) + self.KOPYALA)
+        self.assertEqual(m["data"]["reply_to_message_id"], 55)
+
+    def test_eski_videoda_aciklama_paylasimda_bir_kez_gonderilir(self):
+        """Bu sürümden önce bildirilen videoların (ve notify'da açıklaması gönderilemeyenlerin) açıklama mesajı yok:
+        videonun altındaki eski yanıt TikTok açıklaması değildir. TikTok'a giden metin bir kez ayrı mesajla gelir."""
+        cap = "Başlık\n\nTikTok bilgi metni.\n\n📷 John Doe (CC BY-SA 4.0)\n\n#tarih #EfsaneMiGerçekMi"
+        self.req.mesaj_no["sendMessage"] = 61
+        c = self.paylas({"status": "ok", "id": "v", "draft": True, "caption": cap,
+                         "note": "TikTok taslağı hâlâ işliyor, birkaç dakikada gelir"})
+        self.assertEqual([x["tg"] for x in c], ["sendMessage", "editMessageReplyMarkup", "sendMessage"])
+        aciklama, sonuc = c[0]["data"], c[2]["data"]
+        self.assertEqual(aciklama["text"], cap)
+        self.assertNotIn("reply_to_message_id", aciklama)
+        self.assertEqual(sonuc["text"], self.SONUC.format(self.vid(T)["title"]) + self.KOPYALA
+                         + "\n   ⚠️ TikTok taslağı hâlâ işliyor, birkaç dakikada gelir")
+        self.assertNotIn("TikTok bilgi metni", sonuc["text"])
+        self.assertEqual(sonuc["reply_to_message_id"], 61)
+        self.assertEqual(self.vid(T)["aciklama_message_id"], 61)
+        # tekrar denemede (aynı metin) yeni mesaj gitmez: aynı mesaj kullanılır
+        durum_sifirla(self.root)
+        self.req.hatalar["editMessageText"] = "Bad Request: message is not modified"
+        c = self.paylas({"status": "ok", "id": "v", "draft": True, "caption": cap}, aciklama_message_id=61)
+        self.assertEqual([x["tg"] for x in c], ["editMessageText", "editMessageReplyMarkup", "sendMessage"])
+        self.assertEqual(c[-1]["data"]["reply_to_message_id"], 61)
+
+    def test_aciklama_mesaji_yazilamazsa_aciklama_sonucta_gelir(self):
+        cap = "Başlık\n\nTikTok bilgi metni.\n\n#tarih"
+        asil, ilk = self.req.post, []
+
+        def post(url, **kw):
+            if url.endswith("/sendMessage") and not ilk:  # açıklama mesajı gitmez; sonuç mesajı gider
+                ilk.append(url)
+                return Yanit(429, {"ok": False, "description": "Too Many Requests: retry after 5"})
+            return asil(url, **kw)
+        self.panel(action="approve", tag=T, code="now")
+        self.req.cagrilar.clear()
+        self.req.post = post
+        try:
+            PanelIslemleri._paylas(self, PanelIslemleri.META, sonuc={
+                "tiktok": {"status": "ok", "id": "v", "draft": True, "caption": cap}})
+        finally:
+            self.req.post = asil
+        self.assertEqual(len(ilk), 1)
+        m = self.tg(self.req.cagrilar, "sendMessage")[-1]["data"]
+        # tek kopya sonuçta: eskisi gibi açıklama burada, sonuç videoya yanıt
+        self.assertEqual(m["text"], self.SONUC.format(self.vid(T)["title"]) + f"✅ TikTok: taslak gönderildi.\n\n{cap}\n")
+        self.assertEqual(m["reply_to_message_id"], 2)
+        self.assertNotIn("allow_sending_without_reply", m)
+        self.assertNotIn("aciklama_message_id", self.vid(T))
+
+    def test_duzenlenen_eski_videonun_sonucu_yeni_aciklama_mesajina_yanittir(self):
+        """Eski videoda panel düzenlemesi açıklamayı sohbetin sonuna yeni mesajla gönderir; videonun hemen altındaki
+        eski yanıt düzenlenmemiş metindir. Sonuç yeni açıklama mesajına yanıt olur ki yanlış metin kopyalanmasın."""
+        self.req.surumler[T] = self.SURUM
+        self.req.mesaj_no["sendMessage"] = 77
+        self.duzenle()
+        self.assertEqual(self.vid(T)["aciklama_message_id"], 77)
+        self.req.mesaj_no.clear()
+        self.req.hatalar["editMessageText"] = "Bad Request: message is not modified"
+        c = self.paylas({"status": "ok", "id": "v", "draft": True, "caption": self.YENI})
+        self.assertEqual(self.tg(c, "editMessageText")[0]["data"]["message_id"], 77)
+        m, = self.tg(c, "sendMessage")
+        self.assertEqual(m["data"]["text"], self.SONUC.format("Yeni başlık") + self.KOPYALA)
+        self.assertEqual(m["data"]["reply_to_message_id"], 77)
+
+    def test_paylasim_sonucunda_diger_notlar_gorunur(self):
+        c = self.paylas({"status": "ok", "url": "https://www.tiktok.com/@b/video/7",
+                         "note": "Video 'yalnızca ben' olarak paylaşıldı"}, aciklama_message_id=55)
+        m, = self.tg(c, "sendMessage")
+        self.assertTrue(m["data"]["text"].endswith(
+            "✅ TikTok: https://www.tiktok.com/@b/video/7\n   ⚠️ Video 'yalnızca ben' olarak paylaşıldı"), m)
+        # taslak değilse açıklama mesajına dokunulmaz, sonuç videoya yanıttır
+        self.assertEqual(self.tg(c, "editMessageText"), [])
+        self.assertEqual(m["data"]["reply_to_message_id"], 2)
+
+    # ------------------------------------------------------------ panel düzenlemesi
+    def duzenle(self, **kw):
+        p = {"title": "Yeni başlık", "description": "Yeni bilgi.\nİkinci satır.", **kw}
+        return self.panel(action="edit", tag=T, **p)
+
+    def test_duzenleme_aciklama_mesajini_yerinde_gunceller(self):
+        import shortgen.publish as P
+        self.video_degistir(T, aciklama_message_id=55)
+        self.req.surumler[T] = self.SURUM
+        c = self.duzenle()
+        v = self.vid(T)
+        ed = self.tg(c, "editMessageText")
+        self.assertEqual(len(ed), 1)
+        self.assertEqual((ed[0]["data"]["chat_id"], ed[0]["data"]["message_id"]), (CHAT, 55))
+        self.assertEqual(ed[0]["data"]["text"],
+                         P.tiktok_caption(self.tb._apply_edit(P.apply_series_tag(self.SURUM), v["duzenleme"])))
+        self.assertEqual(ed[0]["data"]["text"], self.YENI)
+        self.assertNotIn("parse_mode", ed[0]["data"])
+        # yalnız release bilgisi ve metadata.json okunur (video indirilmez); anahtar yalnız GitHub API'ye gider
+        gets = [x for x in c if "get" in x]
+        self.assertEqual([x["get"] for x in gets], [GH_SURUM + "tags/" + T, GH_SURUM + "assets/11"])
+        self.assertEqual(gets[1]["accept"], "application/octet-stream")
+        self.assertEqual({x["yetki"] for x in gets}, {"Bearer ghs_TEST"})
+        # onay mesajı kısa ve metni tekrar etmez; yeni açıklama mesajı gönderilmez
+        self.assertEqual(self.mesajlar(c), [self.ONAY])
+        self.assertEqual(v["aciklama_message_id"], 55)
+        cap = self.tg(c, "editMessageCaption")[0]["data"]["caption"]
+        self.assertEqual(cap, "🎬 <b>Yeni başlık</b>\nŞablon: " + v["template"])
+
+    def test_paylasilmis_platform_notu_kalir(self):
+        self.video_degistir(T, aciklama_message_id=55, status="zamanlandi", schedule=None,
+                            publish_at=(SIMDI + _dt.timedelta(minutes=30)).isoformat(),
+                            platforms={"youtube": {"status": "ok", "url": "u"}})
+        self.req.surumler[T] = self.SURUM
+        c = self.duzenle()
+        self.assertEqual(self.mesajlar(c), [self.ONAY + "\n(Zaten paylaşılan YouTube paylaşımında eski metin kalır.)"])
+
+    def test_degismeyen_aciklama_hata_sayilmaz(self):
+        self.video_degistir(T, aciklama_message_id=55)
+        self.req.surumler[T] = self.SURUM
+        self.req.hatalar["editMessageText"] = ("Bad Request: message is not modified: specified new message content and "
+                                               "reply markup of the specified message are exactly the same")
+        c = self.duzenle()
+        self.assertEqual(len(self.tg(c, "editMessageText")), 1)
+        self.assertEqual(self.mesajlar(c), [self.ONAY])
+        self.assertEqual(self.vid(T)["aciklama_message_id"], 55)
+        self.assertNotIn("düzenlenemedi", self.cikti)
+
+    def test_eski_videoda_aciklama_yeni_mesajla_gelir_ve_kaydedilir(self):
+        self.req.surumler[T] = self.SURUM
+        self.req.mesaj_no["sendMessage"] = 77
+        c = self.duzenle()
+        self.assertEqual(self.tg(c, "editMessageText"), [])
+        aciklama, onay = self.tg(c, "sendMessage")
+        self.assertEqual(aciklama["data"]["text"], self.YENI)
+        self.assertNotIn("reply_to_message_id", aciklama["data"])
+        self.assertEqual(onay["data"]["text"], self.ONAY)
+        self.assertEqual(self.vid(T)["aciklama_message_id"], 77)
+        # sonraki düzenleme o mesajı yerinde günceller
+        self.req.cagrilar.clear()
+        c = self.duzenle(title="Üçüncü başlık")
+        self.assertEqual(self.tg(c, "editMessageText")[0]["data"]["message_id"], 77)
+        self.assertTrue(self.tg(c, "editMessageText")[0]["data"]["text"].startswith("Üçüncü başlık\n\n"))
+        self.assertEqual(self.mesajlar(c), [self.ONAY])
+
+    def test_silinmis_aciklama_mesaji_yerine_yenisi_gonderilir(self):
+        self.video_degistir(T, aciklama_message_id=55)
+        self.req.surumler[T] = self.SURUM
+        self.req.hatalar["editMessageText"] = "Bad Request: message to edit not found"
+        self.req.mesaj_no["sendMessage"] = 78
+        c = self.duzenle()
+        self.assertEqual(self.mesajlar(c), [self.YENI, self.ONAY])
+        self.assertEqual(self.vid(T)["aciklama_message_id"], 78)
+
+    UYARI = "\n⚠️ Açıklama mesajı şimdi güncellenemedi; TikTok taslağı gönderilirken yenilenecek."
+
+    def test_metadata_alinamazsa_aciklama_mesajina_dokunulmaz_ve_uyarilir(self):
+        """metadata.json yoksa TikTok açıklaması kurulamaz: görsel atfı ve etiketleri eksik metin yazılmaz, onayda uyarı
+        çıkar; TikTok taslağı gönderilirken açıklama mesajı TikTok'a giden metinle yenilenir."""
+        self.video_degistir(T, aciklama_message_id=55)  # release yok (404)
+        c = self.duzenle()
+        self.assertEqual(self.tg(c, "editMessageText"), [])
+        self.assertIn("metadata.json alınamadı", self.cikti)
+        self.assertIn("404", self.cikti)
+        self.assertEqual(self.vid(T)["duzenleme"]["title"], "Yeni başlık")
+        self.assertEqual(self.vid(T)["aciklama_message_id"], 55)
+        self.assertEqual(self.mesajlar(c), [self.ONAY + self.UYARI])
+        # sonra paylaşımda mesaj tam TikTok açıklamasına getirilir
+        c = self.paylas({"status": "ok", "id": "v", "draft": True, "caption": self.YENI})
+        self.assertEqual(self.tg(c, "editMessageText")[0]["data"]["text"], self.YENI)
+        # anahtar tanımlı değilse de aynı yol; GitHub'a istek gitmez
+        durum_sifirla(self.root)
+        self.video_degistir(T, aciklama_message_id=55)
+        self.req.surumler[T] = self.SURUM
+        self.req.cagrilar.clear()
+        eski = {k: os.environ.pop(k) for k in ("GITHUB_TOKEN", "GH_TOKEN") if k in os.environ}
+        try:
+            c = self.duzenle()
+        finally:
+            os.environ.update(eski)
+        self.assertEqual([x for x in c if "get" in x], [])
+        self.assertEqual(self.tg(c, "editMessageText"), [])
+        self.assertEqual(self.mesajlar(c), [self.ONAY + self.UYARI])
+        # eski videoda (açıklama mesajı yok) eksik metinle yeni mesaj da gönderilmez
+        durum_sifirla(self.root)
+        self.req.surumler.clear()
+        self.req.cagrilar.clear()
+        c = self.duzenle()
+        self.assertEqual(self.mesajlar(c), [self.ONAY + self.UYARI])
+        self.assertNotIn("aciklama_message_id", self.vid(T))
+
+    def test_tiktok_paylasildiysa_uyari_cikmaz(self):
+        self.video_degistir(T, aciklama_message_id=55, status="zamanlandi", schedule=None,
+                            publish_at=(SIMDI + _dt.timedelta(minutes=30)).isoformat(),
+                            platforms={"tiktok": {"status": "ok", "url": "u"}})
+        c = self.duzenle()  # release yok: mesaj güncellenemez ama TikTok'a artık kopyalanmayacak
+        self.assertEqual(self.mesajlar(c), [self.ONAY + "\n(Zaten paylaşılan TikTok paylaşımında eski metin kalır.)"])
+
+    def test_beklenmeyen_dosya_adresine_anahtar_gitmez(self):
+        self.video_degistir(T, aciklama_message_id=55)
+        asil = self.req.get
+
+        def get(url, headers=None, **kw):
+            self.req.cagrilar.append({"get": url})
+            return Yanit(200, {"assets": [{"name": "metadata.json", "url": "https://baska.example/metadata.json"}]})
+        self.req.get = get
+        try:
+            c = self.duzenle()
+        finally:
+            self.req.get = asil
+        self.assertEqual([x["get"] for x in c if "get" in x], [GH_SURUM + "tags/" + T])
+        self.assertEqual(self.tg(c, "editMessageText"), [])
+        self.assertEqual(self.mesajlar(c), [self.ONAY + self.UYARI])
+
+    def test_aciklama_mesaji_yazilamazsa_duzenleme_yine_kaydedilir(self):
+        self.video_degistir(T, aciklama_message_id=55)
+        self.req.surumler[T] = self.SURUM
+        self.req.hatalar["editMessageText"] = "Bad Request: message can't be edited"
+        asil, ilk = self.req.post, []
+
+        def post(url, **kw):
+            if url.endswith("/sendMessage") and not ilk:  # yeni açıklama mesajı da gitmez; onay mesajı gider
+                ilk.append(url)
+                return Yanit(429, {"ok": False, "description": "Too Many Requests: retry after 5"})
+            return asil(url, **kw)
+        self.req.post = post
+        try:
+            c = self.duzenle()
+        finally:
+            self.req.post = asil
+        self.assertEqual(len(ilk), 1)
+        self.assertEqual(self.vid(T)["duzenleme"]["description"], "Yeni bilgi.\nİkinci satır.")
+        self.assertEqual(self.vid(T)["aciklama_message_id"], 55)
+        self.assertEqual(self.mesajlar(c), [self.ONAY + self.UYARI])
+        self.assertIn("Açıklama mesajı güncellenemedi", self.cikti)
+
+    def test_uzun_aciklama_telegram_sinirina_sigar(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.tb._send_desc(CHAT, "😀" * 3000)  # TikTok açıklaması 2200'ü geçmez; yine de sınır korunur
+        metin = self.tg(self.req.cagrilar, "sendMessage")[0]["data"]["text"]
+        self.assertLessEqual(len(metin.encode("utf-16-le")) // 2, 4096)
+
+    # ------------------------------------------------------------ TikTok açıklaması değişmedi
+    def _tiktok(self, meta, taslak=False):
+        import shortgen.publish as P
+        giden = {}
+
+        class R:
+            def __init__(s, d):
+                s._d, s.ok, s.status_code, s.text = d, True, 200, ""
+
+            def json(s):
+                return s._d
+
+        def post(url, headers=None, json=None, timeout=None, **kw):  # noqa: A002
+            if url.endswith("/creator_info/query/"):
+                return R({"data": {"privacy_level_options": ["PUBLIC_TO_EVERYONE", "SELF_ONLY"]}})
+            if url.endswith("/post/publish/video/init/"):
+                giden["title"] = json["post_info"]["title"]
+                if taslak:
+                    return R({"error": {"code": "unaudited_client_can_only_post_to_private_accounts"}})
+                return R({"data": {"publish_id": "p1", "upload_url": "https://up"}, "error": {"code": "ok"}})
+            if url.endswith("/post/publish/inbox/video/init/"):
+                return R({"data": {"publish_id": "p1", "upload_url": "https://up"}, "error": {"code": "ok"}})
+            if url.endswith("/status/fetch/"):
+                return R({"data": {"status": "SEND_TO_USER_INBOX"} if taslak
+                          else {"status": "PUBLISH_COMPLETE", "publicaly_available_post_id": [7]}})
+            raise AssertionError(url)
+        eski = (P._tt_token, P.requests)
+        P._tt_token = lambda: "act.test"
+        P.requests = types.SimpleNamespace(post=post, put=lambda *a, **k: types.SimpleNamespace(status_code=201, text=""))
+        try:
+            video = self.root / "tt.mp4"
+            video.write_bytes(b"x")
+            res = P.tiktok(video, meta)
+        finally:
+            P._tt_token, P.requests = eski
+        return giden["title"], res
+
+    TT_META = {"title": "Tutankamon'un dul eşi & Hitit kralı",
+               "hashtags": ["Tutankamon Mektubu", "Hititler", "Hattuşa", "tarih", "bilgimakasi", "fazla"],
+               "description": "Firavunun dul eşi, Hattuşa'daki kraldan oğullarından birini koca istedi. 😀 #gömülü\n"
+                              "Sence prens Mısır'a varsaydı ne olurdu?   \n\n\nKaynaklar: Wikipedia\n"
+                              "🎙 Seslendirme: yapay zekâ\n\n#TutankamonHititMektubu #Hititler #Hattuşa #tarih #bilgimakasi"
+                              "\n\n📷 Scan by Pataki Márta (CC BY-SA 3.0), Celpunken (CC BY 3.0)",
+               "structure": "efsane"}
+
+    def test_tiktok_aciklamasi_onceki_surumle_ayni(self):
+        """Beklenen metinler tiktok_caption ayrılmadan önceki tiktok() ile üretildi."""
+        import hashlib
+        import shortgen.publish as P
+        eski = ("Tutankamon'un dul eşi & Hitit kralı\n\nFiravunun dul eşi, Hattuşa'daki kraldan oğullarından birini koca "
+                "istedi. 😀\nSence prens Mısır'a varsaydı ne olurdu?\n\n📷 Scan by Pataki Márta (CC BY-SA 3.0), Celpunken "
+                "(CC BY 3.0)\n\n#TutankamonMektubu #Hititler #Hattuşa #tarih #bilgimakasi")
+        baslik, res = self._tiktok(self.TT_META)
+        self.assertEqual(baslik, eski)
+        self.assertEqual(P.tiktok_caption(self.TT_META), eski)
+        self.assertEqual(res, {"id": "7", "privacy": "PUBLIC_TO_EVERYONE", "url": "https://www.tiktok.com/@bilgimakasi/video/7"})
+        seri, _ = self._tiktok(P.apply_series_tag(self.TT_META))
+        self.assertEqual(seri, eski.replace("#tarih #bilgimakasi", "#EfsaneMiGerçekMi #bilgimakasi"))
+        uzun = {**self.TT_META, "description": ("Uzun bilgi cümlesi 😀. " * 200) + "\n\n#a #b\n\n📷 Jane Doe (CC BY-SA 3.0)"}
+        baslik, _ = self._tiktok(uzun)
+        self.assertEqual(hashlib.sha256(baslik.encode()).hexdigest(),
+                         "c5cac939c94c5b8057ae480c1e919f8ba317be90e60b43cd485ff07d54cc1c1c")
+        self.assertEqual(P._u16(baslik), 2200)
+        # taslak: aynı açıklama saklanır (panelin kopyala düğmesi), uzun yapıştırma notu yok
+        baslik, res = self._tiktok(self.TT_META, taslak=True)
+        self.assertEqual(baslik, eski)
+        self.assertEqual(res, {"id": "p1", "draft": True, "caption": eski})
 
 
 class Gizleme(Ortak):
@@ -1036,6 +1487,26 @@ class Birlestirme(unittest.TestCase):
                   {**b, "status": "kismen", "platforms": {"youtube": {"status": "ok"}, "instagram": {"status": "hata"}}}):
             out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
             self.assertEqual(out, {**r, "title": "Yeni", "duzenleme": l["duzenleme"]})
+
+    def test_aciklama_mesaji_numarasi_karar_sayilmaz_ve_kaybolmaz(self):
+        b = {"tag": "t", "title": "Eski", "status": "zamanlandi", "publish_at": "P", "platforms": {}}
+        d = lambda v: json.dumps([v])  # noqa: E731
+        # eski videoda panel düzenlemesi açıklamayı yeni mesajla gönderdi; uzakta aynı anda reddedildi: ret geçerli
+        l = {**b, "title": "Yeni", "duzenleme": {"title": "Yeni"}, "aciklama_message_id": 77}
+        r = {**b, "status": "reddedildi", "publish_at": None}
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
+        self.assertEqual(out, {**r, "title": "Yeni", "duzenleme": {"title": "Yeni"}, "aciklama_message_id": 77})
+        # paylaşım işi (yerel) kaydı yazarken uzakta açıklama mesajı numarası kaydedildi: numara kalır
+        r = {**b, "aciklama_message_id": 77}
+        l = {**b, "platforms": {"youtube": {"status": "ok"}}}
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
+        self.assertEqual(out, {**l, "aciklama_message_id": 77})
+        # paylaşım işi eski videonun açıklama mesajını gönderdi; uzakta aynı anda kalanlar iptal edildi: numara kalır
+        l = {**b, "platforms": {"tiktok": {"status": "ok", "draft": True}}, "aciklama_message_id": 61}
+        r = {**b, "status": "iptal", "publish_at": None}
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
+        self.assertEqual((out["status"], out["aciklama_message_id"]), ("iptal", 61))
+        self.assertEqual(out["platforms"]["tiktok"]["status"], "ok")
 
     def test_uzaktaki_yalniz_baslik_degisikligi_korunur(self):
         b = {"tag": "t", "title": "Eski", "status": "zamanlandi", "platforms": {}}

@@ -335,6 +335,16 @@ def _tt_token() -> str:
     return _remember_secret(d["access_token"])
 
 
+def tiktok_caption(meta: dict) -> str:
+    """TikTok açıklaması (2200 UTF-16 birimi). TikTok aramayı açıklama metninden de okur: başlık + bilgi cümleleri
+    (arama ifadesi burada) + görsel kaynağı + en çok 5 etiket. Telegram'daki açıklama mesajı da bu metindir
+    (TikTok taslağına oradan kopyalanıp yapıştırılır)."""
+    body = re.sub(r"#[^\s#]+", "", _clean_desc(meta.get("description") or ""))
+    body = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", body)).strip()
+    tags = " ".join(_hashtags(meta, 5))
+    return _fit_caption("\n\n".join(x for x in (meta["title"], body) if x), tags, 2200)
+
+
 def tiktok(video: Path, meta: dict) -> dict:
     token = _tt_token()
     h = {"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=UTF-8"}
@@ -342,11 +352,7 @@ def tiktok(video: Path, meta: dict) -> dict:
     opts = info.get("data", {}).get("privacy_level_options", [])
     want = os.environ.get("TIKTOK_PRIVACY", "PUBLIC_TO_EVERYONE")
     privacy = want if want in opts else ("SELF_ONLY" if "SELF_ONLY" in opts else (opts or ["SELF_ONLY"])[0])
-    # TikTok aramayı açıklama metninden de okur: başlık + bilgi cümleleri (arama ifadesi burada) + görsel kaynağı + etiketler
-    body = re.sub(r"#[^\s#]+", "", _clean_desc(meta.get("description", "")))
-    body = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", body)).strip()
-    tags = " ".join(_hashtags(meta, 5))
-    title = _fit_caption("\n\n".join(x for x in (meta["title"], body) if x), tags, 2200)
+    title = tiktok_caption(meta)
     size = video.stat().st_size
     if size <= 64 * 1024 * 1024:
         chunk, count = size, 1
@@ -383,14 +389,14 @@ def tiktok(video: Path, meta: dict) -> dict:
                 "Content-Range": f"bytes {start}-{end}/{size}"})
             if u.status_code not in (200, 201, 206):
                 raise RuntimeError(f"TikTok parça yükleme hatası: {u.status_code} {u.text[:300]}")
-    draft_note = ("TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de "
-                  "(uygulama incelemeden geçince bu adım kalkacak)")
     for _ in range(60):
         s = requests.post(f"{TT}/post/publish/status/fetch/", headers=h, json={"publish_id": pid},
                           timeout=30).json().get("data", {})
         st = s.get("status")
         if draft and st == "SEND_TO_USER_INBOX":
-            return {"id": pid, "draft": True, "note": draft_note, "caption": title}
+            # açıklama Telegram'daki açıklama mesajından yapıştırılır (uzun not yok); caption panelin
+            # "Açıklamayı kopyala" düğmesi için saklanır
+            return {"id": pid, "draft": True, "caption": title}
         if st == "PUBLISH_COMPLETE":
             ids = s.get("publicaly_available_post_id") or s.get("publicly_available_post_id") or []
             res = {"id": str(ids[0]) if ids else pid, "privacy": privacy}
@@ -402,7 +408,10 @@ def tiktok(video: Path, meta: dict) -> dict:
         if st == "FAILED":
             raise RuntimeError(f"TikTok paylaşımı başarısız: {s.get('fail_reason')}")
         time.sleep(10)
-    return {"id": pid, "note": draft_note if draft else "TikTok hâlâ işliyor, birkaç dakika içinde profilde görünür"}
+    if draft:  # taslak olarak yüklendi ama TikTok henüz gelen kutusuna koymadı
+        return {"id": pid, "draft": True, "caption": title,
+                "note": "TikTok taslağı hâlâ işliyor, birkaç dakikada gelir"}
+    return {"id": pid, "note": "TikTok hâlâ işliyor, birkaç dakika içinde profilde görünür"}
 
 
 PLATFORMS = {"youtube": youtube, "instagram": instagram, "tiktok": tiktok}

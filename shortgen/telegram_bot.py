@@ -82,27 +82,49 @@ def save(path: Path, data) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _video_caption(title, template) -> str:
+    """Video mesajının kısa başlığı (HTML): yalnız başlık ve şablon; açıklama ayrı mesajda gelir.
+    Kaçışlı: "<" ya da "&" içeren başlık Telegram'ın HTML ayrıştırmasını bozup videoyu düşürmesin. Kesme kaçıştan
+    önce yapılır: kaçışlı metni kesmek &amp; gibi bir varlığı bölüp HTML'i bozabilir (1024 sınırı içinde kalır)."""
+    import html
+    title, tpl = str(title or "")[:300], str(template or "-")[:40]
+    while True:
+        cap = f"🎬 <b>{html.escape(title)}</b>\nŞablon: {html.escape(tpl)}"
+        if len(cap) <= 1000 or len(title) <= 1:
+            return cap
+        title = title.rstrip("…")[:-max(1, (len(cap) - 1000) // 5 + 1)] + "…"
+
+
+def _send_desc(chat: str, text: str) -> int:
+    """Açıklama mesajı: başlıksız, yanıt olmayan düz metin (uzun basıp kopyalanır, TikTok taslağına yapıştırılır)."""
+    msg = api("sendMessage", data={"chat_id": chat, "text": _cut16(text, 4096), "disable_web_page_preview": "true"})
+    return msg["message_id"]
+
+
 def notify(out_dir: Path, tag: str) -> None:
+    from .publish import apply_series_tag, tiktok_caption
     meta = json.loads((out_dir / "metadata.json").read_text(encoding="utf-8"))
     chat = os.environ["TELEGRAM_CHAT_ID"]
-    import html
-    # başlık/konu kaçışlı: "<" ya da "&" içeren başlık Telegram'ın HTML ayrıştırmasını bozup videoyu düşürmesin
-    caption = (f"🎬 <b>{html.escape(str(meta['title'])[:300])}</b>\n\nKonu: {html.escape(str(meta['topic'])[:500])}"
-               f"\nŞablon: {html.escape(str(meta.get('template', '-')))}")
     kb = {"inline_keyboard": [[
         {"text": "✅ Onayla", "callback_data": f"ok:{tag}"},
         {"text": "❌ Reddet", "callback_data": f"no:{tag}"},
     ]]}
     with (out_dir / "video.mp4").open("rb") as f:
-        msg = api("sendVideo", data={"chat_id": chat, "caption": caption, "parse_mode": "HTML",
-                                     "supports_streaming": "true", "reply_markup": json.dumps(kb)},
-                  files={"video": f})
-    api("sendMessage", data={"chat_id": chat, "text": meta["description"][:4000],
-                             "reply_to_message_id": msg["message_id"]})
+        msg = api("sendVideo", data={"chat_id": chat, "caption": _video_caption(meta["title"], meta.get("template")),
+                                     "parse_mode": "HTML", "supports_streaming": "true",
+                                     "reply_markup": json.dumps(kb)}, files={"video": f})
+    # Açıklama ayrı mesaj (videoya yanıt değil): TikTok'a gidecek açıklamanın aynısı, bir daha gönderilmez.
+    # Gönderilemezse video yine kayda geçer: onay akışı bozulmasın.
+    desc_id = None
+    try:
+        desc_id = _send_desc(chat, tiktok_caption(apply_series_tag(meta)))
+    except Exception as e:  # noqa: BLE001
+        print("Açıklama mesajı gönderilemedi:", _redact_safe(e))
     videos = load(VIDEOS, [])
     videos.append({"tag": tag, "title": meta["title"], "topic": meta["topic"], "category": meta["category"],
                    "template": meta.get("template"), "created": meta["created"], "status": "onay_bekliyor",
-                   "telegram_message_id": msg["message_id"], "platforms": {}})
+                   "telegram_message_id": msg["message_id"],
+                   **({"aciklama_message_id": desc_id} if desc_id else {}), "platforms": {}})
     save(VIDEOS, videos)
 
 
@@ -690,19 +712,71 @@ def _check_edit(p: dict) -> tuple[str, str]:
 
 def _edit_caption(v: dict, chat: str) -> None:
     """Video mesajındaki başlığı günceller; düğmeler videonun durumuna göre aynı kalır."""
-    import html
-    topic = v.get('topic') or '-'
-    while True:  # kaçışlı metni kesmek &amp; gibi bir varlığı bölüp HTML'i bozabilir: kesme kaçıştan önce yapılır
-        cap = (f"🎬 <b>{html.escape(v['title'])}</b>\n\nKonu: {html.escape(topic)}"
-               f"\nŞablon: {html.escape(v.get('template') or '-')}")
-        if len(cap) <= 1000 or len(topic) <= 1:
-            break
-        topic = topic.rstrip("…")[:-max(1, (len(cap) - 1000) // 5 + 1)] + "…"
     try:
-        api("editMessageCaption", data={"chat_id": chat, "message_id": v["telegram_message_id"], "caption": cap[:1000],
+        api("editMessageCaption", data={"chat_id": chat, "message_id": v["telegram_message_id"],
+                                        "caption": _video_caption(v["title"], v.get("template")),
                                         "parse_mode": "HTML", "reply_markup": _kb(_kb_rows(v["tag"], v["status"]))})
     except Exception as e:  # noqa: BLE001
-        print("Video mesajının başlığı güncellenemedi:", _redact_safe(e))
+        if "not modified" not in str(e):  # başlık ve düğmeler aynıysa Telegram hata verir: mesaj zaten güncel
+            print("Video mesajının başlığı güncellenemedi:", _redact_safe(e))
+
+
+def _release_meta(tag: str) -> dict:
+    """Videonun GitHub Release'indeki yalnız metadata.json dosyası (video indirilmez). İşle.yml'in hafif ortamında
+    çalışır: gh yerine GitHub API + requests."""
+    from urllib.parse import quote
+    repo, token = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if not (repo and token):
+        raise RuntimeError("GITHUB_REPOSITORY ya da GITHUB_TOKEN tanımlı değil")
+    auth = {"Authorization": f"Bearer {token}"}
+    r = requests.get(f"https://api.github.com/repos/{repo}/releases/tags/{quote(tag, safe='')}",
+                     headers={**auth, "Accept": "application/vnd.github+json"}, timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"GitHub Release okunamadı ({r.status_code})")
+    asset = next((a for a in r.json().get("assets") or [] if isinstance(a, dict) and a.get("name") == "metadata.json"),
+                 None)
+    # anahtar yalnız bu deponun release dosyası adresine gider (dosya alanına yönlendirmede requests onu göndermez)
+    if not asset or not str(asset.get("url") or "").startswith(f"https://api.github.com/repos/{repo}/releases/assets/"):
+        raise RuntimeError("GitHub Release'te metadata.json yok")
+    r = requests.get(asset["url"], headers={**auth, "Accept": "application/octet-stream"}, timeout=60)
+    if r.status_code != 200 or len(r.content) > 1_000_000:
+        raise RuntimeError(f"metadata.json indirilemedi ({r.status_code})")
+    return json.loads(r.content.decode("utf-8"))
+
+
+def _write_desc(tag: str, v: dict, chat: str, text: str) -> int | None:
+    """Açıklama mesajını verilen metne getirir: varsa yerinde düzenler; yoksa (eski video, notify'da gönderilemedi) ya da
+    düzenlenemezse yenisini gönderip numarasını kaydeder. Güncel mesajın numarasını, yazılamazsa None döndürür."""
+    mid = v.get("aciklama_message_id")
+    try:
+        if mid:
+            try:
+                api("editMessageText", data={"chat_id": chat, "message_id": mid,
+                                             "text": _cut16(text, 4096), "disable_web_page_preview": "true"})
+                return mid
+            except Exception as e:  # noqa: BLE001
+                if "not modified" in str(e):  # metin aynı: Telegram hata verir ama mesaj zaten güncel
+                    return mid
+                print("Açıklama mesajı düzenlenemedi, yenisi gönderiliyor:", _redact_safe(e))
+        mid = _send_desc(chat, text)
+        _update(tag, aciklama_message_id=mid)
+        return mid
+    except Exception as e:  # noqa: BLE001
+        print("Açıklama mesajı güncellenemedi:", _redact_safe(e))
+        return None
+
+
+def _refresh_desc(tag: str, v: dict, chat: str) -> bool:
+    """Panel düzenlemesinden sonra açıklama mesajını TikTok'a gidecek yeni açıklamayla günceller (_write_desc).
+    metadata.json alınamazsa mesaja dokunulmaz: görsel atfı ve etiketleri eksik bir metin yazılmaz; TikTok taslağı
+    gönderilirken publish_due mesajı TikTok'a giden metinle yeniler. Hata düzenlemeyi düşürmez: False döner."""
+    try:
+        from .publish import apply_series_tag, tiktok_caption
+        text = tiktok_caption(_apply_edit(apply_series_tag(_release_meta(tag)), v.get("duzenleme") or {}))
+    except Exception as e:  # noqa: BLE001
+        print("metadata.json alınamadı; açıklama mesajı şimdi güncellenmedi:", _redact_safe(e))
+        return False
+    return _write_desc(tag, v, chat, text) is not None
 
 
 def process_panel(p: dict, chat: str) -> None:
@@ -761,9 +835,14 @@ def process_panel(p: dict, chat: str) -> None:
                 v = _update(tag, title=title, duzenleme={"title": title, "description": desc, "ilk_baslik": first,
                                                          "at": dt.datetime.now(TR).isoformat(timespec="seconds")})
                 _edit_caption({**v, "status": fresh.get("status", v.get("status"))}, chat)
+                # metin tekrar yazılmaz: açıklama mesajı yerinde güncellenir (TikTok'a oradan kopyalanır)
+                desc_ok = _refresh_desc(tag, {**v, "aciklama_message_id": v.get("aciklama_message_id")
+                                              or fresh.get("aciklama_message_id")}, chat)
                 done = [PLATFORM_NAMES[x] for x in PLATFORM_NAMES if x in _done(v) | _done(fresh)]
                 old_note = f"\n(Zaten paylaşılan {', '.join(done)} paylaşımında eski metin kalır.)" if done else ""
-                say(f"✏️ Başlık ve açıklama düzenlendi; paylaşımda bu metin kullanılacak.{old_note}\n\n{title}\n\n{desc}")
+                say(f"✏️ Başlık ve açıklama güncellendi; paylaşımda yeni metin kullanılacak.{old_note}"
+                    + ("" if desc_ok or "tiktok" in _done(v) | _done(fresh)
+                       else "\n⚠️ Açıklama mesajı şimdi güncellenemedi; TikTok taslağı gönderilirken yenilenecek."))
         elif action == "produce_suggestion":
             from .trends import load_saved
             items, i = load_saved(), p.get("index")
@@ -933,14 +1012,23 @@ def publish_due() -> None:
         else:
             _update(tag, status=status, platforms=platforms,
                     published=dt.datetime.now(TR).isoformat(timespec="seconds"))
+        # TikTok taslağı: açıklama mesajı TikTok'a giden metne getirilir (eski videoda ya da notify'da gönderilemediyse
+        # şimdi gönderilir, düzenlemede yazılamadıysa yenilenir) ve sonuç ona yanıt olur: alıntıya dokununca o mesaj açılır
+        tt = res.get("tiktok") or {}
+        desc_mid = None
+        if tt.get("status") == "ok" and tt.get("draft"):
+            desc_mid = _write_desc(tag, v, chat, tt["caption"]) if tt.get("caption") else v.get("aciklama_message_id")
         lines = []
         for p, r in platforms.items():
             if p not in todo:
                 continue  # yalnız bu turda paylaşılanları yaz
             name = PLATFORM_NAMES[p]
-            if r["status"] == "ok":
-                lines.append(f"✅ {name}: {r.get('url') or ('taslak olarak gönderildi' if r.get('draft') else 'paylaşıldı')}" + (f"\n   ⚠️ {r['note']}" if r.get("note") else "")
-                             + (f"\n\n{r['caption']}\n" if r.get("caption") else ""))
+            if r["status"] == "ok":  # açıklama tekrar yazılmaz: taslağa açıklama mesajından kopyalanır
+                done_text = (("taslak gönderildi. Açıklamayı yanıtlanan mesajdan kopyala." if desc_mid
+                              else "taslak gönderildi.") if r.get("draft") else r.get("url") or "paylaşıldı")
+                lines.append(f"✅ {name}: {done_text}" + (f"\n   ⚠️ {r['note']}" if r.get("note") else "")
+                             # açıklama mesajı yazılamadıysa açıklama yalnız burada gelir (taslağa yapıştırılacak)
+                             + (f"\n\n{r['caption']}\n" if r.get("draft") and not desc_mid and r.get("caption") else ""))
             elif r["status"] == "hata":
                 lines.append(f"❌ {name}: {_redact_safe(r.get('error'))[:300]}")
             else:
@@ -953,8 +1041,10 @@ def publish_due() -> None:
         kb = (_kb([[("🚫 Kalanları iptal et", f"cancel:{tag}")]]) if later
               else _kb([[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]]) if failed else _kb([]))
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"], "reply_markup": kb})
+        reply = ({"reply_to_message_id": desc_mid, "allow_sending_without_reply": "true"} if desc_mid
+                 else {"reply_to_message_id": v["telegram_message_id"]})
         api("sendMessage", data={"chat_id": chat, "text": f"{head}\n{v['title']}\n\n" + "\n".join(lines),
-                                 "reply_to_message_id": v["telegram_message_id"], "disable_web_page_preview": "true"})
+                                 **reply, "disable_web_page_preview": "true"})
 
 
 def _redact_safe(text) -> str:
