@@ -20,13 +20,22 @@ sekerek gelir (sağ kenarda yumuşakça belirir, x=935'te düz kesilmez), numara
 kesilip söndükten sonra gelir.
 
 Senaryo eşlemesi (plan, script.adim_isaretleri / adim_gruplari ile normalize_nasil'in aynısı): sahnenin adımı
-spec.card["step"] (Scene.step), yoksa başlığın ilk satırındaki "ADIM n" ya da "n. ADIM" (ilk ve son sahnede okunmaz).
-İlk adımdan önceki sahneler kanca, en son sahne özet; aynı adımın art arda sahneleri ve adımsız ara sahneler (son adımdan
-sonrakiler dahil) o adımın kartıdır. Adım işareti hiç yoksa ilk sahne kanca, son sahne özet, aradakiler birer adım olur.
+spec.card["step"] (Scene.step), yoksa başlığın ilk satırındaki "ADIM n" ya da "n. ADIM" ("AŞAMA n" / "n. AŞAMA" da
+aynı; ilk ve son sahnede okunmaz). İlk adımdan önceki sahneler kanca, en son sahne özet; aynı adımın art arda sahneleri
+ve adımsız ara sahneler (son adımdan sonrakiler dahil) o adımın kartıdır. Adım işareti hiç yoksa ilk sahne kanca, son
+sahne özet, aradakiler birer adım olur.
+
+Varyantlar (VARSAYILAN; şablon ayarından: templates/<ad>.json, renderer "nasil"): Nasıl yapılır? (nasil.json) yukarıdaki
+gibidir. Nasıl üretiliyor? (uretim.json, "yapi": "uretim") aynı düzende "ADIM" yerine "AŞAMA" der ("4 AŞAMA",
+"AŞAMA 2/4", ÜRETİM HATTI özeti) ve fabrika görünüşündedir: kraft karton zemin + silik teknik çizim ızgarası; ilerleme
+çubuğu yürüyen banttır (y 306-440): numaralı aşama kutuları bandın üstünde durur (sıradaki kırık beyaz, şimdiki kırmızı,
+biten mürekkep + sarı ✓), Makas bandın üstünde kutudan kutuya ilerler; bandın diş izleri ve makaraları Makas'la birlikte
+kayar/döner, bandın işlenen kısmı kırmızıdır.
 """
 from __future__ import annotations
 
 import bisect
+import json
 import math
 import re
 from dataclasses import dataclass, field
@@ -40,9 +49,28 @@ from . import render
 from .script import ADIM_RE, adim_gruplari, adim_isaretleri
 from .voice import Word
 
+# 'AŞAMA 2', 'AŞAMA 2:', '2. AŞAMA' (Nasıl üretiliyor?): 'ADIM n' ile aynı kural (script.ADIM_RE); '4 AŞAMA' aşama
+# sayısıdır, işaret değil
+ASAMA_RE = re.compile(r"^\s*(?:AŞAMA\s*(\d+)|(\d+)\s*\.\s*AŞAMA)\b[\s:.,\-–—]*")
+
+# Şablon varyantı: Adım kartları renderer'ını kullanan her seri (templates/*.json, renderer "nasil") kelimelerini ve
+# görünüşünü şablonundan alır; anahtar yoksa Nasıl yapılır? değeri geçerlidir (nasil.json bu anahtarları yazmaz).
+VARSAYILAN = {
+    "adim_kelimesi": "ADIM",              # kanca "4 ADIM", başlık "ADIM 2/4", başlıksız kart "ADIM 3"
+    "seri_adi": "NASIL YAPILIR?",         # adım başlığındaki seri etiketi; kancada seri etiketi (kicker) yoksa o da
+    "ozet_etiketi": "ÖZET",               # özet başlığındaki kırmızı etiket
+    "ozet_adi": "ADIMLAR",                # özet sahnesinin başlığı yoksa
+    "ozet_kutusu": "NEDEN?",              # özette dış ses kutusunun etiketi (soru gelince SENCE?)
+    "kapanis": "KAYDET, SONRA DENE!",     # özetin kapanış etiketi (yorum çağrısı söylenmeden önce)
+    "zemin": "sari",                      # sari: sarı noktalı | kraft: kraft karton + silik teknik çizim ızgarası
+    "ilerleme": "dugum",                  # dugum: 1-2-3-4 düğümleri | bant: aşama kutularını taşıyan yürüyen bant
+}
+
 W, H, FPS, SS = K.W, K.H, K.FPS, K.SS
 RED, YELLOW, INK, OFF, WHITE = K.RED, K.YELLOW, K.INK, K.OFF, K.WHITE
 DOT = (238, 196, 16)                       # sarı zeminin sessiz noktaları
+KRAFT = (224, 202, 163)                    # kraft karton zemin (uretim)
+KRAFT_GRID, KRAFT_MAJOR = (212, 189, 148), (200, 175, 132)   # silik teknik çizim ızgarası: ince / her 5. çizgi
 GHOST = (112, 109, 104)                    # balonda sıradaki kelimeler: mürekkep zeminde soluk ama okunur
 RULE_GREY = (190, 187, 180)
 X0, X1 = 72, 920                           # yazı alanı
@@ -72,6 +100,15 @@ T_REACH, T_HOP = 0.30, 0.20                # ilerleme makası düğüme varır, 
 CUT_SHARE = 0.62                           # makas bir adım boyunca aradaki çizginin bu kadarını keser
 SC_W, SC_PIN = 84, 58 / 124                # ilerleme makası genişliği, pimin soldan oranı
 FEATHER = 60                               # gelen kart sağ kırpma kenarında (x=935) bu kadar px'te yumuşakça belirir
+# yürüyen bant (uretim): kutular bandın üstünde durur (tabanları BELT_Y0), Makas bandın üstünde ilerler
+BELT_X0, BELT_X1 = 70, 906
+BELT_Y0, BELT_Y1 = 394, 428                # bandın (dış mürekkep halka) üst ve alt kenarı
+BELT_LEG = 440                             # ayakların alt ucu (PROG içinde; kanca başlığı 452'den başlar)
+BELT_RUN = 7                               # bandın mürekkep kalınlığı (üst kol: diş izleri, işlenen kısım kırmızı)
+BELT_COL = (198, 192, 181)                 # bandın içi (makaraların arkası)
+TREAD = 24                                 # diş izleri aralığı: fazda 4 px kayar, makara çizgisi 15 derece döner
+BOX = {"up": (68, 60), "cur": (82, 72), "done": (68, 60)}   # aşama kutusu (genişlik, yükseklik)
+BOX_POP = 0.5                              # kutunun durum değişimindeki büyümesi düğümünkinin yarısı (PROG'a sığar)
 Q_RE = re.compile(r"\byorumlara\s+yaz", re.I)
 
 
@@ -83,27 +120,68 @@ def cap_h(font: str, size: float) -> float:
     return -K.tbox("H", font, size)[1]
 
 
+def step_marker(line: str):
+    """Başlık satırının başındaki adım işareti ('ADIM n', 'n. ADIM', 'AŞAMA n', 'n. AŞAMA'): re.Match ya da None."""
+    u = up(line)
+    return ADIM_RE.match(u) or ASAMA_RE.match(u)
+
+
+def _as_adim(line: str) -> str:
+    """'AŞAMA n ...' satırını 'ADIM n ...' yapar (script.adim_isaretleri ADIM işaretini okur); diğerleri aynen."""
+    m = ASAMA_RE.match(up(line))
+    if not m:
+        return line
+    return f"ADIM {m.group(1) or m.group(2)} {up(line)[m.end():]}".strip()
+
+
 def step_marks(specs) -> list[int]:
     """Sahnelerin ham adım işaretleri: card['step'] (Scene.step), yoksa başlığın ilk satırındaki 'ADIM n' / 'n. ADIM'
-    (script.adim_isaretleri: ilk ve son sahnenin başlığı okunmaz); adımsız sahnede 0."""
+    / 'AŞAMA n' / 'n. AŞAMA' (script.adim_isaretleri: ilk ve son sahnenin başlığı okunmaz); adımsız sahnede 0."""
     steps = []
     for spec in specs:
         try:
             steps.append(max(0, int((spec.card or {}).get("step") or 0)))
         except (TypeError, ValueError):
             steps.append(0)
-    return adim_isaretleri(steps, [(spec.headline or [""])[0] for spec in specs])
+    return adim_isaretleri(steps, [_as_adim((spec.headline or [""])[0]) for spec in specs])
 
 
 def step_title(headline: list[str]) -> list[str]:
-    """Adım başlığı: 'ADIM n' satırı (ya da satır başındaki 'ADIM n:' öneki) çıkarılmış başlık satırları."""
+    """Adım başlığı: 'ADIM n' / 'AŞAMA n' satırı (ya da satır başındaki 'ADIM n:' öneki) çıkarılmış başlık satırları."""
     lines = [up(x) for x in headline if x and x.strip()]
     if lines:
-        m = ADIM_RE.match(lines[0])
+        m = step_marker(lines[0])
         if m:
             rest = lines[0][m.end():].strip()
             lines = ([rest] if rest else []) + lines[1:]
     return lines
+
+
+def sablon_of(yapi: str | None) -> dict:
+    """Yapıya (anlatım kalıbı) ait Adım kartları şablonunun ayarı: templates/*.json içinde renderer 'nasil' ve 'yapi'
+    alanı yapıya eşit olan (yapi yoksa 'nasil' sayılır); yoksa {}."""
+    if not yapi:
+        return {}
+    for f in sorted(render.TEMPLATE_DIR.glob("*.json")):
+        try:
+            t = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(t, dict) and t.get("renderer") == "nasil" and (t.get("yapi") or "nasil") == yapi:
+            return t
+    return {}
+
+
+def varyant(meta: dict | None) -> dict:
+    """Videonun varyantı: VARSAYILAN, üstüne şablon ayarındaki anahtarlar. Şablon ayarı meta['sablon'] (pipeline.build
+    verir), yoksa meta['structure']'a ait şablon (sablon_of)."""
+    meta = meta or {}
+    cfg = meta.get("sablon")
+    if not isinstance(cfg, dict):
+        cfg = sablon_of(meta.get("structure"))
+    out = dict(VARSAYILAN)
+    out.update({k: v for k, v in cfg.items() if k in VARSAYILAN and isinstance(v, str) and v.strip()})
+    return out
 
 
 # ---------------------------------------------------------------- senaryo -> bölümler
@@ -125,8 +203,9 @@ class Segment:
     b: int = 0
 
 
-def plan(specs) -> list[Segment]:
-    """Sahneleri kanca / adım / özet bölümlerine ayırır (modül açıklamasındaki kurallar)."""
+def plan(specs, word: str = "ADIM") -> list[Segment]:
+    """Sahneleri kanca / adım / özet bölümlerine ayırır (modül açıklamasındaki kurallar). word: başlığı olmayan adım
+    kartının adı ('ADIM 3' / 'AŞAMA 3')."""
     n = len(specs)
     raw = step_marks(specs)
     if not any(raw):   # adım işareti yok: ilk sahne kanca, son sahne özet, aradakiler birer adım
@@ -144,7 +223,7 @@ def plan(specs) -> list[Segment]:
         if kind == "step":
             k += 1
             seg.number = k
-            seg.title = step_title(s0.headline) or [f"ADIM {k}"]
+            seg.title = step_title(s0.headline) or [f"{word} {k}"]
             seg.callouts = [up(x) for x in (c.get("callouts") or []) if str(x).strip()][:2]
         else:
             seg.title = [up(x) for x in s0.headline if x and x.strip()]
@@ -177,6 +256,27 @@ def yellow_bg() -> Image.Image:
                 bg.paste(tile, (x, y))
         _static["bg"] = bg.convert("RGBA")
     return _static["bg"]
+
+
+def kraft_bg() -> Image.Image:
+    """Kraft karton + silik teknik çizim ızgarası (28 px; her 5. çizgi biraz koyu) ve hafif lif dalgası (bir kez
+    çizilir; kâğıt greni kare sonunda kart.finish ile eklenir)."""
+    if "kraft" not in _static:
+        sp = 28
+        rng = np.random.default_rng(11)
+        n = rng.normal(0, 1, (H // 16 + 1, W // 16 + 1)).astype(np.float32)
+        low = np.asarray(Image.fromarray(n).resize((W, H), Image.BICUBIC)) * 3.0     # yumuşak lif dalgası (±3)
+        base = np.empty((H, W, 3), np.float32)
+        base[:] = KRAFT
+        base += low[..., None]
+        bg = Image.fromarray(np.clip(base, 0, 255).astype(np.uint8), "RGB")
+        d = ImageDraw.Draw(bg)
+        for k, x in enumerate(range(X0 % sp, W, sp)):
+            d.line([(x, 0), (x, H)], fill=KRAFT_MAJOR if k % 5 == 0 else KRAFT_GRID, width=2 if k % 5 == 0 else 1)
+        for k, y in enumerate(range(0, H, sp)):
+            d.line([(0, y), (W, y)], fill=KRAFT_MAJOR if k % 5 == 0 else KRAFT_GRID, width=2 if k % 5 == 0 else 1)
+        _static["kraft"] = bg.convert("RGBA")
+    return _static["kraft"]
 
 
 def label_w(text: str, size: float, font: str = "anton") -> float:
@@ -528,7 +628,10 @@ class NasilVideo:
         on = bcfg.get("enabled", False)
         self.intro = bool(on and bcfg.get("intro_cut", True))
         self.handle = (bcfg.get("handle") or "") if on and bcfg.get("subtitle_handle", True) else ""
-        self.segs = plan(scenes)
+        self.var = varyant(self.meta)
+        self.word = self.var["adim_kelimesi"]
+        self.belt = self.var["ilerleme"] == "bant"
+        self.segs = plan(scenes, self.word)
         ranges, a = [], 0
         n = len(scenes)
         for i, s in enumerate(scenes):
@@ -544,7 +647,7 @@ class NasilVideo:
         self.node_x = ([NODE_X0 + k * (NODE_X1 - NODE_X0) / max(1, self.N - 1) for k in range(self.N)]
                        if self.N > 1 else [(NODE_X0 + NODE_X1) / 2] * self.N)
         self.starts = [w.start for w in words]
-        self.kicker = up(scenes[0].kicker) if scenes and (scenes[0].kicker or "").strip() else "NASIL YAPILIR?"
+        self.kicker = up(scenes[0].kicker) if scenes and (scenes[0].kicker or "").strip() else self.var["seri_adi"]
         self.mascot = Mascot()
         self._layers: dict = {}
         self._speech: dict = {}
@@ -574,23 +677,24 @@ class NasilVideo:
         size = 52
         base = cy + cap_h("anton", size) / 2
         if seg.kind == "recap":
-            lw = label_w("ÖZET", 56)
-            paste_label(pen, "ÖZET", 56, OFF, RED, 720, X0 + lw / 2 + 4, cy, rot=-2.5)
+            tag = self.var["ozet_etiketi"]
+            lw = label_w(tag, 56)
+            paste_label(pen, tag, 56, OFF, RED, 720, X0 + lw / 2 + 4, cy, rot=-2.5)
             right = f"{self.N}/{self.N}" if self.N else ""
             pen.text(X1, base, right, "anton", size, RED, anchor="rs")
             room = X1 - K.tw(right, "anton", size) - 30 - (X0 + lw + 30)
-            name = " ".join(seg.title) or "ADIMLAR"
+            name = " ".join(seg.title) or self.var["ozet_adi"]
             ts = size
             while ts > 34 and K.tw(name, "anton", ts) > room:
                 ts -= 2
             pen.text(X0 + lw + 30, cy + cap_h("anton", ts) / 2, K.fit_words(name, "anton", ts, room), "anton", ts, INK)
         else:
             if seg.kind == "hook":
-                parts = [(str(self.N), RED), (" ADIM", INK)] if self.N else []
+                parts = [(str(self.N), RED), (" " + self.word, INK)] if self.N else []
                 text, ls = self.kicker, 46
             else:
-                parts = [("ADIM ", INK), (str(seg.number), RED), (f"/{self.N}", INK)]
-                text, ls = "NASIL YAPILIR?", 40
+                parts = [(self.word + " ", INK), (str(seg.number), RED), (f"/{self.N}", INK)]
+                text, ls = self.var["seri_adi"], 40
             rw = sum(K.tw(p, "anton", size) for p, _ in parts)
             while ls > 30 and label_w(text, ls) > X1 - rw - 120 - X0:
                 ls -= 2
@@ -697,6 +801,9 @@ class NasilVideo:
     def progress(self, img: Image.Image, t: float) -> None:
         if not self.N:
             return
+        if self.belt:
+            self.belt_progress(img, t)
+            return
         lay = self.prog_base().copy()
         ox, oy = PROG[:2]
         x, dy, cutting, bar = self.scissors_at(t)
@@ -716,6 +823,91 @@ class NasilVideo:
             ang = (32 if int(t * 16) % 2 else 12) if snip else 26
             sc = K.scissors_icon(SC_W, ang)
             K._comp(lay, sc, x - SC_W * SC_PIN - ox, PROG_CY - sc.height / 2 + dy - oy)
+        K.put(img, lay, ox, oy, clip=CLIP)
+
+    # ------------------------------------------------------------ yürüyen bant (uretim)
+    def belt_base(self, phase: int) -> Image.Image:
+        """Bandın faz başına bir kez çizilen hâli: ayaklar, sert gölge, mürekkep halka, içte makaralar (çapraz çizgileri
+        faz x 15° döner) ve üst koldaki açık diş izleri (faz x 4 px kayar)."""
+        key = ("belt", phase)
+        if key not in self._layers:
+            pen = K.Pen(*PROG)
+            x0, x1, y0, y1 = BELT_X0, BELT_X1, BELT_Y0, BELT_Y1
+            r = (y1 - y0) / 2
+            for lx in (x0 + 70, (x0 + x1) / 2, x1 - 70):              # ayaklar
+                pen.poly([(lx - 12, y1 - 2), (lx + 12, y1 - 2), (lx + 18, BELT_LEG), (lx - 18, BELT_LEG)], INK)
+            pen.rr((x0 + 6, y0 + 6, x1 + 6, y1 + 6), r, fill=INK)     # sert gölge
+            pen.rr((x0, y0, x1, y1), r, fill=INK)
+            pen.rr((x0 + BELT_RUN, y0 + BELT_RUN, x1 - BELT_RUN, y1 - BELT_RUN), r - BELT_RUN, fill=BELT_COL)
+            cy, rr = (y0 + y1) / 2, r - BELT_RUN - 3
+            ang = math.radians(phase * 15)
+            n = 13
+            for i in range(n):                                        # makaralar
+                cx = x0 + r + (x1 - x0 - 2 * r) * i / (n - 1)
+                pen.ell(cx, cy, rr, fill=OFF, outline=INK, width=3)
+                for a in (ang, ang + math.pi / 2):
+                    dx, dy = math.cos(a) * (rr - 2), math.sin(a) * (rr - 2)
+                    pen.line([(cx - dx, cy - dy), (cx + dx, cy + dy)], INK, 2.5)
+                pen.ell(cx, cy, 2.6, fill=YELLOW)
+            x = x0 + r + phase * TREAD / 6                            # diş izleri (üst kol)
+            while x < x1 - r - 6:
+                pen.rr((x, y0 + 2, x + 8, y0 + BELT_RUN - 2), 1.5, fill=(112, 109, 104))
+                x += TREAD
+            self._layers[key] = pen.done()
+        return self._layers[key]
+
+    def box(self, state: str, k: int) -> Image.Image:
+        """Aşama kutusu (karton): sıradaki kırık beyaz + mürekkep numara, şimdiki kırmızı + kırık beyaz numara, biten
+        mürekkep + sarı ✓; üstte sarı bant, sert gölge. Görüntünün alt ortası kutunun tabanıdır (gölge payı hariç)."""
+        key = ("box", state, k)
+        if key not in self._nodes:
+            w, h = BOX[state]
+            sh, pad = 6, 4
+            pen = K.Pen(0, 0, w + sh + 2 * pad, h + sh + 2 * pad)
+            bx = (pad, pad, pad + w, pad + h)
+            fill, num = {"up": (OFF, INK), "cur": (RED, OFF), "done": (INK, None)}[state]
+            pen.rr((bx[0] + sh, bx[1] + sh, bx[2] + sh, bx[3] + sh), 7, fill=INK)
+            pen.rr(bx, 7, fill=fill, outline=INK, width=5 if state != "cur" else 6)
+            flap = bx[1] + h * 0.24
+            pen.line([(bx[0] + 4, flap), (bx[2] - 4, flap)], INK if state != "done" else (90, 88, 85), 3)
+            tw_ = w * 0.26                                             # bant: kapak çizgisinden üste
+            pen.rr((pad + w / 2 - tw_ / 2, bx[1] + 3, pad + w / 2 + tw_ / 2, flap + 2), 2, fill=YELLOW)
+            cyb = flap + (bx[3] - flap) / 2
+            if num is None:
+                s = h * 0.62
+                pen.svg(K.check_svg(YELLOW, 16), K.ICON_VB, pad + w / 2 - s / 2, cyb - s / 2, s)
+            else:
+                s = 50 if state == "cur" else 40
+                pen.text(pad + w / 2, cyb + cap_h("anton", s) / 2, str(k + 1), "anton", s, num, anchor="ms")
+            self._nodes[key] = pen.done()
+        return self._nodes[key]
+
+    def belt_progress(self, img: Image.Image, t: float) -> None:
+        """Yürüyen bant: kutular düğümlerin yerinde bandın üstünde, Makas (ilerleme makası) bandın üstünde kutudan
+        kutuya ilerler; bant onunla birlikte kayar, işlenen kısmı (ilk kutudan Makas'a) kırmızıdır."""
+        x, dy, cutting, bar = self.scissors_at(t)
+        nx = self.node_x
+        pin = x if x is not None else nx[-1]
+        phase = int(round(pin / (TREAD / 6))) % 6
+        lay = self.belt_base(phase).copy()
+        ox, oy = PROG[:2]
+        bar = max(nx[0], bar)
+        if bar > nx[0] + 1:
+            ImageDraw.Draw(lay).rounded_rectangle([nx[0] - ox, BELT_Y0 - oy, bar - ox, BELT_Y0 + BELT_RUN - oy], 3,
+                                                  fill=RED + (255,))
+        for k, (state, sc) in enumerate(self.node_states(t)):
+            im = self.box(state, k)
+            w, h = BOX[state]
+            # tabanı bantta kalarak büyür; çerçevesi katmanın (PROG) üst kenarına değmez
+            sc = min(1 + (sc - 1) * BOX_POP, (BELT_Y0 - PROG[1] - 4) / (4 + h))
+            if abs(sc - 1) > 0.01:
+                im = im.resize((max(1, int(im.width * sc)), max(1, int(im.height * sc))), Image.BILINEAR)
+            K._comp(lay, im, nx[k] - (4 + w / 2) * sc - ox, BELT_Y0 + 1 - (4 + h) * sc - oy)
+        if x is not None:
+            snip = cutting or (self.intro and t < 0.8)
+            ang = (32 if int(t * 16) % 2 else 12) if snip else 26
+            sc = K.scissors_icon(SC_W, ang)
+            K._comp(lay, sc, x - SC_W * SC_PIN - ox, BELT_Y0 - sc.height + 4 + dy - oy)
         K.put(img, lay, ox, oy, clip=CLIP)
 
     # ------------------------------------------------------------ kanca
@@ -996,12 +1188,12 @@ class NasilVideo:
         if self.handle:
             self._handle_tab(pen, nb[0] + 30, nb[3] - 2, anchor="left_bottom")
         box_img = (pen.done(), (nb[0] - 2, nb[1] - 2))
-        tags = {}
-        for tag in ("NEDEN?", "SENCE?"):
-            tags[tag] = label_img(tag, 50, INK, YELLOW, 721 if tag == "NEDEN?" else 723, rot=-3, shadow=None, rim=INK)
+        tags = {}                       # dış ses kutusunun etiketi: neden (NEDEN?) ve soru (SENCE?)
+        for kind, tag, seed in (("neden", self.var["ozet_kutusu"], 721), ("soru", "SENCE?", 723)):
+            tags[kind] = label_img(tag, 50, INK, YELLOW, seed, rot=-3, shadow=None, rim=INK)
         rect = (nb[0] + 40, nb[1] + 62, nb[2] - 40, nb[3] - 26)
         # kapanış: kaydet etiketi; "Yorumlara yaz" söylenince kart şablonunun yorum çıkartması
-        save = label_img("KAYDET, SONRA DENE!", 52, OFF, RED, 722, rot=-1.5, shadow=(6, 8, 0, 0.9))
+        save = label_img(self.var["kapanis"], 52, OFF, RED, 722, rot=-1.5, shadow=(6, 8, 0, 0.9))
         sticker = K.cta_sticker(up(K.CtaCard.BUTTON), 600, size=76)
         cta_y = nb[3] + (SAFE[3] - 24 - nb[3]) / 2
         out = dict(rows=rows, tick=tick, box=box_img, nb=nb, tags=tags, rect=rect, save=save, sticker=sticker,
@@ -1061,7 +1253,7 @@ class NasilVideo:
         breaks = self.recap_breaks(seg)
         cur = min(self.cur_word(t, seg), sp.b)    # çağrı kelimeleri okunurken kutudaki metnin hepsi söylenmiş
         q = sp.page_kind(cur, breaks)
-        tag = R["tags"]["SENCE?" if q else "NEDEN?"]
+        tag = R["tags"]["soru" if q else "neden"]
         nb = R["nb"]
         k = 1.0
         if q:
@@ -1181,7 +1373,7 @@ class NasilVideo:
         si = self.seg_at(t)
         seg = self.segs[si]
         lt = t - seg.start
-        img = yellow_bg().copy()
+        img = (kraft_bg() if self.var["zemin"] == "kraft" else yellow_bg()).copy()
         img.alpha_composite(self.header(seg), HEAD[:2])
         self.progress(img, t)
         ox, oy = CONTENT[:2]

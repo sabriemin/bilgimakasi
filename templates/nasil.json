@@ -2,6 +2,7 @@
   "name": "Nasıl yapılır?",
   "description": "Adım kartları: sarı noktalı zemin, 1-2-3-4 ilerleme çubuğu, numaralı adım kartları, kartı gösteren maskot Makas ve konuşma balonunda kelime kelime dış ses; özette adım listesi. Yalnız Nasıl yapılır? serisi (nasil kalıbı) için.",
   "renderer": "nasil",
+  "yapi": "nasil",
   "colors": {
     "accent": [221, 32, 39],
     "highlight": [252, 213, 33],

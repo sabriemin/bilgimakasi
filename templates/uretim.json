@@ -1,0 +1,36 @@
+{
+  "name": "Nasıl üretiliyor?",
+  "description": "Üretim hattı: kraft karton zemin ve silik teknik çizim ızgarası, aşama kutularını taşıyan yürüyen bant (Makas bant boyunca kutudan kutuya ilerler), numaralı aşama kartları, kartı gösteren maskot Makas ve konuşma balonunda kelime kelime dış ses; özette üretim hattının aşama listesi. Yalnız Nasıl üretiliyor? serisi (uretim kalıbı) için.",
+  "renderer": "nasil",
+  "yapi": "uretim",
+  "adim_kelimesi": "AŞAMA",
+  "seri_adi": "NASIL ÜRETİLİYOR?",
+  "ozet_etiketi": "ÜRETİM HATTI",
+  "ozet_adi": "AŞAMALAR",
+  "ozet_kutusu": "BİLİYOR MUYDUN?",
+  "kapanis": "KAYDET, BİRİNE GÖSTER!",
+  "zemin": "kraft",
+  "ilerleme": "bant",
+  "colors": {
+    "accent": [221, 32, 39],
+    "highlight": [252, 213, 33],
+    "dark": [20, 19, 19],
+    "light": [224, 202, 163],
+    "box": [250, 249, 245],
+    "muted": [150, 148, 145]
+  },
+  "fonts": {
+    "headline": "Anton-Regular.ttf",
+    "subtitle": "CourierPrime-Bold.ttf"
+  },
+  "subtitle_size": 40,
+  "subtitle_y": 1400,
+  "headline_scale": 1.0,
+  "grain": true,
+  "label_style": "box",
+  "rotation": 1.8,
+  "text_entry": "pop",
+  "subtitle_box": "torn",
+  "stars": false,
+  "case": "upper"
+}

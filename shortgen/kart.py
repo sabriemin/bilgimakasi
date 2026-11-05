@@ -71,8 +71,11 @@ CUT_SLICE, CUT_SPLIT, CUT_FADE = 0.2, 0.15, 2 / FPS   # kesme: makas geçer, par
 CUT_LEN = CUT_SLICE + CUT_SPLIT + CUT_FADE
 
 FONTS = {"anton": "Anton-Regular.ttf", "archivo": "ArchivoBlack-Regular.ttf", "mono": "DMMono-Medium.ttf",
-         "oswald": "Oswald-Bold.ttf", "courier": "CourierPrime-Bold.ttf"}
-CARD_TYPES = ("photo", "drawing", "counter", "compare", "quote", "interstitial", "cta", "text")
+         "oswald": "Oswald-Bold.ttf", "courier": "CourierPrime-Bold.ttf", "plex": "IBMPlexMono-SemiBold.ttf"}
+CARD_TYPES = ("photo", "drawing", "counter", "compare", "quote", "interstitial", "cta", "receipt", "text")
+TL = "₺"
+# ₺ işareti olmayan yazı yüzleri: işaret yedek yüzle çizilir (DM Mono / Courier yerine aynı genişlikte IBM Plex Mono)
+TL_YEDEK = {"mono": "plex", "courier": "plex", "archivo": "oswald"}
 
 
 # ---------------------------------------------------------------- küçük yardımcılar
@@ -87,8 +90,40 @@ def fnt(name: str, px: float) -> ImageFont.FreeTypeFont:
     return f
 
 
+def runs(s: str, font: str) -> list[tuple[str, str]]:
+    """Yazıyı (parça, yüz) dizisine böler: ₺ işareti olmayan yüzde işaret TL_YEDEK yüzüyle çizilir."""
+    alt = TL_YEDEK.get(font)
+    if not alt or TL not in s:
+        return [(s, font)]
+    out = []
+    for i, part in enumerate(s.split(TL)):
+        if i:
+            out.append((TL, alt))
+        if part:
+            out.append((part, font))
+    return out
+
+
+def draw_text(d: ImageDraw.ImageDraw, xy, s: str, font: str, px: float, fill, anchor: str = "ls") -> None:
+    """ImageDraw.text (px: çizim pikseli boyutu); ₺ işareti olmayan yüzde işaret yedek yüzle çizilir: yatay hiza
+    korunur, parçalar aynı dikey hizaya (çoğunlukla taban çizgisi) oturur."""
+    rs = runs(s, font)
+    if len(rs) == 1 and rs[0][1] == font:
+        d.text(xy, s, font=fnt(font, px), fill=fill, anchor=anchor)
+        return
+    total = sum(fnt(f, px).getlength(p) for p, f in rs)
+    x, y = xy
+    x -= {"m": total / 2, "r": total}.get(anchor[0], 0.0)
+    va = anchor[1] if len(anchor) > 1 else "s"
+    for p, f in rs:
+        d.text((x, y), p, font=fnt(f, px), fill=fill, anchor="l" + va)
+        x += fnt(f, px).getlength(p)
+
+
 def tw(s: str, font: str, size: float) -> float:
     """Yazının tasarım pikseli cinsinden genişliği."""
+    if TL in s and font in TL_YEDEK:
+        return sum(fnt(f, size * SS).getlength(p) for p, f in runs(s, font)) / SS
     return fnt(font, size * SS).getlength(s) / SS
 
 
@@ -240,7 +275,7 @@ class Pen:
         self.d.polygon([self.p(x, y) for x, y in pts], fill=fill)
 
     def text(self, x, y, s, font, size, fill, anchor="ls"):
-        self.d.text(self.p(x, y), s, font=fnt(font, size * self.s), fill=fill, anchor=anchor)
+        draw_text(self.d, self.p(x, y), s, font, size * self.s, fill, anchor)
 
     def paste(self, im: Image.Image, x, y):
         """im zaten SS ölçeğinde; sol üst köşesi tasarım koordinatı (x, y)."""
@@ -398,7 +433,7 @@ class Sprite:
         self.d.ellipse([a, b, c, d], fill=fill)
 
     def text(self, xy, s, font, size, fill, anchor="ls"):
-        self.d.text(self.p(*xy), s, font=fnt(font, size * SS), fill=fill, anchor=anchor)
+        draw_text(self.d, self.p(*xy), s, font, size * SS, fill, anchor)
 
     def render_ss(self, rot=0.0, shadow=None) -> Image.Image:
         """SS ölçeğinde (2x) döndürülmüş görüntü; Pen.paste ile 2x katmana yapıştırmak için."""
@@ -853,7 +888,7 @@ def chip_label(pen: Pen, x, y, text, size=28, rot=2.0, max_w=640):
     d.rounded_rectangle([6 * s, 6 * s, (cw + 6) * s, (ch + 6) * s], 10 * s, fill=INK)
     d.rounded_rectangle([0, 0, cw * s, ch * s], 10 * s, fill=YELLOW, outline=INK, width=4 * s)
     d.ellipse([16 * s, (ch / 2 - 6) * s, 28 * s, (ch / 2 + 6) * s], fill=RED)
-    d.text((40 * s, (ch / 2 + 10) * s), text, font=fnt("mono", size * s), fill=INK, anchor="ls")
+    draw_text(d, (40 * s, (ch / 2 + 10) * s), text, "mono", size * s, INK)
     im = im.rotate(rot, resample=Image.BICUBIC, expand=True)
     pen.paste(im, x, y)
 
@@ -1065,7 +1100,10 @@ class DrawingCard(Card):
 
 
 def parse_value(s: str):
-    """'21.196' / '%90' / '1,5 milyon' -> (ön ek, değer, ondalık hane, binlik ayraç var mı, son ek)."""
+    """'21.196' / '%90' / '1,5 milyon' / '450.000 ₺' -> (ön ek, değer, ondalık hane, binlik ayraç var mı, son ek).
+    Oran ya da olasılık ('1 / 90 MİLYON', '3:1') sayılmaz: None (sayaç değeri sayarak değil, olduğu gibi gösterir)."""
+    if re.search(r"\d\s*[/:]\s*\d", s or ""):
+        return None
     m = re.search(r"\d[\d.,]*", s or "")
     if not m:
         return None
@@ -1100,8 +1138,13 @@ class CounterCard(Card):
         self.raw = raw
         self.land, self.count_start = self.COUNT, 0.0
         digits = re.sub(r"\D", "", raw)
-        for w in (self.spec.words if digits else []):
-            if digits in re.sub(r"\D", "", w.text):
+        # sayı söylendiği anda oturur; sayılmayan oranda tam rakam dizisi geçmiyorsa ('1 / 90 MİLYON' -> '90
+        # milyonda bir') en uzun rakam grubu aranır
+        groups = ([digits] + (sorted(re.findall(r"\d+", raw), key=len, reverse=True)[:1] if self.parsed is None else [])
+                  if digits else [])
+        for g in groups:
+            w = next((w for w in self.spec.words if g in re.sub(r"\D", "", w.text)), None)
+            if w is not None:
                 self.land = max(0.25, w.start - self.spec.start + 0.05)
                 self.count_start = max(0.0, self.land - self.COUNT)
                 break
@@ -1215,6 +1258,342 @@ class CounterCard(Card):
 
     def mood(self, lt, dur):
         return "surprised" if (self.hook or lt >= self.land) else "normal"
+
+
+def parse_receipt(lines, limit: int = 5) -> list[tuple[str, str]]:
+    """Hesap fişi satırları (Scene.card_lines): 'KALEM|TUTAR' -> (KALEM, TUTAR), Türkçe büyük harf, fazla boşluklar
+    teke iner. Tutar yoksa '' ('KİRA', 'KİRA|'); birden çok '|' varsa kalem ilk parça, tutar son dolu parça; '|' hiç
+    yoksa 'KİRA: 135.000 ₺' gibi son iki noktadan ayrılır. Boş satırlar atlanır, ilk limit (5) satır kalır."""
+    out = []
+    for raw in lines or []:
+        text = re.sub(r"\s+", " ", str(raw or "")).strip()
+        if "|" in text:
+            parts = [p.strip() for p in text.split("|")]
+            label, amount = parts[0], next((p for p in reversed(parts[1:]) if p), "")
+        else:
+            m = re.match(r"^(.*[^\d\s])\s*:\s*([^:]*\d[^:]*)$", text)    # '10:30' gibi saat bölünmez
+            label, amount = (m.group(1), m.group(2).strip()) if m else (text, "")
+        if not label and not amount:
+            continue
+        out.append((tr_upper(label), tr_upper(amount)))
+        if len(out) >= limit:
+            break
+    return out
+
+
+# hesap fişi satırını dış sese bağlarken sayılmayan kelimeler (bağlaç, edat, niteleyen)
+RECEIPT_STOP = CLITICS | MODIFIERS | {"ve", "ya", "veya", "için", "+", "-", "&"}
+
+
+class ReceiptCard(Card):
+    """Hesap fişi (olsaydin kalıbı): kırık beyaz termal kâğıt, zikzak yırtık üst/alt kenar, hafif eğik, sert mürekkep
+    gölge, üstte sarı bant. Satırlar ('KALEM ........ TUTAR', mono ≥ 40 px, eksi tutarlar kırmızı) dış ses ilerledikçe
+    birer birer basılır: kâğıt aşağı doğru beslenir, alt yırtık kenar yeni satırın altına iner (satırın kalemi ya da
+    tutarı söylenince; söylenmiyorsa sahneye eşit yayılır). Son satırdan sonra çift çizginin altına toplam basılır,
+    tutar kırmızı yırtık etikette damga gibi iner ve Makas şaşırır; card_note fişin altında küçük. Kapak sahnesinde
+    fiş ilk karede tam basılı."""
+    still = False
+    PW = 700                       # kâğıt genişliği
+    PAD = 34                       # kâğıt iç kenar boşluğu (yan)
+    ROT = -1.6                     # eğim (derece)
+    TOOTH, TEETH = 12, 26          # zikzak kenar: diş yüksekliği, yaklaşık diş genişliği
+    M = 34                         # çizim payı (bant, diş, gölge)
+    SHADOW = (10, 10)
+    PAPER_COL = (253, 251, 245)
+    FEED = 0.24                    # bir satırlık kâğıt besleme süresi (sn)
+    HOLD = 1.2                     # toplam, sahne bitmeden en az bu kadar ekranda
+    T0 = 0.3                       # ilk satırın en erken basıldığı an
+
+    def __init__(self, ctx):
+        super().__init__(ctx)
+        self.rows = parse_receipt(self.c.get("lines")) or [("", "")]
+        self.total = tr_upper((self.c.get("value") or "").strip())
+        self.total_label = tr_upper((self.c.get("label") or "").strip()) or "TOPLAM"
+        self.note = (self.c.get("note") or "").strip()
+        x0, y0, x1, y1 = self.area
+        # görünen kâğıdın (bant, dişler, gölge dahil) üst sınırı: kapakta seri etiketi kartın üst kenarında durur,
+        # diğer sahnelerde kayan başlığın (KIN) hemen altı
+        top = y0 + 86 if self.hook else KIN[3] + 12
+        avail = CARD_FLOOR - 4 - top
+        for fs, wrap_ok, lhk in ((44, True, 1.3), (42, True, 1.3), (40, True, 1.3), (40, False, 1.3),
+                                 (40, False, 1.18)):
+            self._layout(fs, wrap_ok, lhk)
+            if self.full_h() <= avail:
+                break
+        self.scale = min(1.0, avail / self.full_h())   # son çare: fiş bütünüyle küçülür
+        self._content = self._draw_content()
+        self._paper: dict = {}
+        vx0, vy0, vx1, vy1 = self.paper(self.L_full).getchannel("A").getbbox()
+        if vy1 - vy0 > avail:                          # tahmin tutmadıysa ölçülen yüksekliğe göre küçülür
+            self.scale *= avail / (vy1 - vy0)
+            self._paper.clear()
+            vx0, vy0, vx1, vy1 = self.paper(self.L_full).getchannel("A").getbbox()
+        # tam basılmış fişin görünen kutusu: kapakta üstten, diğer sahnelerde boşlukta ortalı
+        cy = top + ((vy1 - vy0) if self.hook else avail) / 2
+        self.pos = ((x0 + x1) / 2 - (vx0 + vx1) / 2, cy - (vy0 + vy1) / 2)
+        self.stamp = self._stamp()
+        self._fin = None
+        self.timing(max(0.6, ctx["dur"]))
+
+    # ------------------------------------------------------------ yerleşim (kâğıdın yerel koordinatları, y aşağı)
+    def _layout(self, fs: int, wrap_ok: bool, lhk: float) -> None:
+        self.fs, self.lh = fs, round(fs * lhk)
+        iw = self.PW - 2 * self.PAD
+        cap_m = -tbox("H", "mono", fs)[1]
+        self.head_base = 24 - tbox("H", "archivo", 40)[1]
+        self.sub_base = self.head_base + 38
+        self.rule_y = self.sub_base + 20
+        y = self.rule_y + 22
+        self.row_geo = []                          # (satır taban çizgileri, kalem satırları, tutar, alt)
+        for label, amount in self.rows:
+            aw = tw(amount, "mono", fs) if amount else 0.0
+            room = iw - (aw + 48 if amount else 0)
+            lines = [label]
+            if tw(label, "mono", fs) > room:
+                lines = self._wrap_label(label, iw, room, fs) if wrap_ok else [fit_words(label, "mono", fs, room)]
+            bases = [y + cap_m + j * self.lh for j in range(len(lines))]
+            bottom = bases[-1] + fs * 0.3
+            self.row_geo.append((bases, lines, amount, bottom))
+            y = bottom + 10
+        self.feed = [self.rule_y + 10] + [g[3] + 12 for g in self.row_geo]
+        y += 10
+        self.rule2 = y if self.total else None
+        if self.total:
+            y += 30
+            lsz = 40
+            ts = 76
+            while ts > 44 and tw(self.total, "anton", ts) + 0.4 * ts > iw - tw(self.total_label, "archivo", lsz) - 36:
+                ts -= 4
+            self.total_size = ts
+            lab = torn_label(self.total, ts, OFF, RED, 4500 + self.idx)
+            self.total_h = lab.h
+            self.total_c = (self.PW - self.PAD - lab.w / 2 + 6, y + lab.h / 2)
+            self.total_base = y + lab.h / 2 - tbox("H", "archivo", lsz)[1] / 2
+            y += lab.h + 26                        # etiketin eğimi ve gölgesi nota binmesin
+        if self.note:
+            self.note_base = y - tbox("H", "mono", 28)[1]
+            y = self.note_base + 12
+        self.L_full = y + 20
+        self.feed.append(self.L_full)
+
+    def _wrap_label(self, label: str, iw: float, room: float, fs: int) -> list[str]:
+        """Uzun kalem iki satıra: ilk satır tam genişlik, ikinci satır tutarın soluna sığar (en dengeli bölme);
+        hiçbir bölme sığmazsa tek satır '…' ile kısalır."""
+        words = label.split()
+        best = None
+        for j in range(1, len(words)):
+            a, b = " ".join(words[:j]), " ".join(words[j:])
+            wa, wb = tw(a, "mono", fs), tw(b, "mono", fs)
+            if wa <= iw and wb <= room and (best is None or abs(wa - wb) < best[0]):
+                best = (abs(wa - wb), [a, b])
+        if best:
+            return best[1]
+        if len(words) > 1:          # ilk kelime ilk satırda, kalanı tutarın solunda ('…' ile kısalabilir)
+            return [fit_words(words[0], "mono", fs, iw), fit_words(" ".join(words[1:]), "mono", fs, room)]
+        return [fit_words(label, "mono", fs, room)]
+
+    def full_h(self) -> float:
+        """Tam basılmış fişin ekranda görünen yüksekliğinin tahmini (eğim, dişler, bant ve gölge dahil; çizim payı
+        hariç). Yerleşim ölçülen yükseklikle düzeltilir."""
+        return self.rot_size()[1] - 2 * self.M + 38
+
+    def rot_size(self) -> tuple[float, float]:
+        w, h = self.PW + 2 * self.M, self.L_full + self.TOOTH + 2 * self.M
+        a = math.radians(abs(self.ROT))
+        return w * math.cos(a) + h * math.sin(a), w * math.sin(a) + h * math.cos(a)
+
+    def _poly(self, L: float, dx=0.0, dy=0.0) -> list[tuple[float, float]]:
+        """Kâğıdın zikzak kenarlı dış çizgisi: üst kenar y=0, alt kenar L (dişler dışarı)."""
+        n = max(2, round(self.PW / self.TEETH))
+        tw_ = self.PW / n
+        pts = [(i * tw_ / 2 + dx, (-self.TOOTH if i % 2 else 0) + dy) for i in range(2 * n + 1)]
+        pts += [(self.PW - i * tw_ / 2 + dx, L + (self.TOOTH if i % 2 else 0) + dy) for i in range(2 * n + 1)]
+        return pts
+
+    def _sprite(self) -> Sprite:
+        return Sprite(self.PW, self.L_full + self.TOOTH, margin=self.M)
+
+    def _draw_content(self) -> Image.Image:
+        sp = self._sprite()
+        cx = self.PW / 2
+        iw = self.PW - 2 * self.PAD
+        x0, x1 = self.PAD, self.PW - self.PAD
+        head = "HESAP FİŞİ"
+        hw = tw(head, "archivo", 40)
+        sp.text((cx + 26, self.head_base), head, "archivo", 40, INK, anchor="ms")
+        sc = svg_img(scissors_svg(26), SCISSORS_VB, 60 * SS, 60 * 84 / 124 * SS)
+        px_, py_ = sp.p(cx + 26 - hw / 2 - 74, self.head_base - 36)
+        _comp(sp.im, sc, px_, py_)
+        sub = fit(f"// {self.topic_slug} · {self.idx + 1:02d}", "mono", 26, iw)
+        sp.text((cx, self.sub_base), sub, "mono", 26, INK, anchor="ms")
+        x = x0
+        while x < x1:
+            sp.line([(x, self.rule_y), (min(x + 14, x1), self.rule_y)], INK, 3)
+            x += 24
+        fs = self.fs
+        for bases, lines, amount, _ in self.row_geo:
+            for b, L in zip(bases, lines):
+                if L:
+                    sp.text((x0, b), L, "mono", fs, INK)
+            if amount:
+                col = RED if amount[:1] in "-−" else INK
+                sp.text((x1, bases[-1]), amount, "mono", fs, col, anchor="rs")
+                lx0 = x0 + (tw(lines[-1], "mono", fs) + 14 if lines[-1] else 0)
+                lx1 = x1 - tw(amount, "mono", fs) - 14
+                d = lx0 + 6
+                while d <= lx1 - 2:
+                    sp.dot(d, bases[-1] - fs * 0.1, 2.6, GREY)
+                    d += 13
+        if self.rule2 is not None:
+            for yy in (self.rule2, self.rule2 + 10):
+                sp.line([(x0, yy), (x1, yy)], INK, 3.5)
+            sp.text((x0, self.total_base), self.total_label, "archivo", 40, INK)
+        if self.note:
+            sp.text((cx, self.note_base), fit(self.note, "mono", 28, iw), "mono", 28, DGREY, anchor="ms")
+        return sp.im
+
+    def _stamp(self) -> tuple[Image.Image, tuple[float, float]] | None:
+        """Toplam tutarın kırmızı yırtık etiketi (1x) ve fişin döndürülmüş görüntüsündeki merkezi."""
+        if not self.total:
+            return None
+        lab = torn_label(self.total, self.total_size, OFF, RED, 4500 + self.idx)
+        im = lab.render(self.ROT + 3.0, shadow=(6, 8, 0, 0.9))
+        if self.scale < 1:
+            im = im.resize((max(1, int(im.width * self.scale)), max(1, int(im.height * self.scale))), Image.LANCZOS)
+        return im, self.to_screen(*self.total_c)
+
+    def to_screen(self, x: float, y: float) -> tuple[float, float]:
+        """Kâğıdın yerel noktası -> ekran (fişin eğimi, konumu ve ölçeğiyle)."""
+        w, h = self.PW + 2 * self.M, self.L_full + self.TOOTH + 2 * self.M
+        rw, rh = self.rot_size()
+        dx, dy = x + self.M - w / 2, y + self.M - h / 2
+        a = math.radians(self.ROT)
+        rx, ry = dx * math.cos(a) + dy * math.sin(a), -dx * math.sin(a) + dy * math.cos(a)
+        return self.pos[0] + (rw / 2 + rx) * self.scale, self.pos[1] + (rh / 2 + ry) * self.scale
+
+    def paper(self, L: float) -> Image.Image:
+        """Alt kenarı L'de olan fişin 1x görüntüsü (sabit boyut: üst kenar her durumda aynı yerde)."""
+        key = int(round(L))
+        if key in self._paper:
+            return self._paper[key]
+        sp = self._sprite()
+        sx, sy = self.SHADOW
+        sp.polygon(self._poly(key, sx, sy), INK + (255,))
+        sp.polygon(self._poly(key), self.PAPER_COL + (255,))
+        mask = Image.new("L", sp.im.size, 0)
+        ImageDraw.Draw(mask).polygon([sp.p(x, y) for x, y in self._poly(key - 4)], fill=255)
+        content = self._content.copy()
+        content.putalpha(ImageChops.multiply(content.getchannel("A"), mask))
+        sp.im.alpha_composite(content)
+        pts = self._poly(key)
+        sp.line(pts + [pts[0]], INK, 4)
+        tape(sp, self.PW / 2, -4, 180, 46, -3, 4600 + self.idx, alpha=215)
+        im = sp.im.rotate(self.ROT, resample=Image.BICUBIC, expand=True)
+        rw, rh = self.rot_size()
+        im = im.resize((max(1, int(round(rw * self.scale))), max(1, int(round(rh * self.scale)))), Image.LANCZOS)
+        if len(self._paper) > 48:
+            self._paper.clear()
+        self._paper[key] = im
+        return im
+
+    # ------------------------------------------------------------ zamanlama
+    def timing(self, dur: float) -> None:
+        """Olay anları (sahne başına göre): her satır ve toplam/not. Satır, kalemi ya da tutarı dış seste geçtiğinde
+        basılır; geçmiyorsa satırlar sahneye eşit yayılır. Toplam söylendiği anda (yoksa son satırdan 0,7 sn sonra)
+        basılır ama en az HOLD sn ekranda kalır. Sahne çok kısaysa fiş baştan basılı durur."""
+        n = len(self.rows)
+        ev = n + 1
+        self.instant = self.hook or dur < 1.2
+        if self.instant:
+            self.events = [-1.0] * ev
+            return
+        words = self.spec.words or []
+        st = self.spec.start
+        t_end = max(self.T0 + 0.1, dur - self.HOLD - self.FEED)
+        gap = min(0.35, (t_end - self.T0) / max(1, n))
+        times, prev = [], self.T0 - gap
+        used = -1
+        for k, (label, amount) in enumerate(self.rows):
+            latest = t_end - (n - k) * gap
+            lo = prev + gap
+            stems = {_bare(x)[:4] for x in label.split() if len(_bare(x)) >= 2 and _bare(x) not in RECEIPT_STOP}
+            dig = re.sub(r"\D", "", amount)
+            t = None
+            # kalem ya da tutar söylenmeye başlayınca (en erken bir önceki satırdan gap sonra)
+            for wi, w in enumerate(words):
+                lt = w.start - st - 0.08
+                if wi <= used or lt > latest:
+                    continue
+                if _bare(w.text)[:4] in stems or (len(dig) >= 2 and dig in re.sub(r"\D", "", w.text)):
+                    t, used = lt, wi
+                    break
+            if t is None:
+                span = (t_end - 0.5 - self.T0) / max(1, n - 1) if n > 1 else 0.0
+                t = min(max(lo, self.T0 + k * span), latest)
+            times.append(max(lo, t))
+            prev = times[-1]
+        t_tot = None
+        dig = re.sub(r"\D", "", self.total)
+        if len(dig) >= 2:
+            w = next((w for w in words if dig in re.sub(r"\D", "", w.text)), None)
+            if w is not None:
+                t_tot = w.start - st - 0.08
+        lo = prev + self.FEED + 0.15
+        if t_tot is None:
+            t_tot = prev + (0.7 if self.total else 0.4)
+        times.append(min(max(lo, t_tot), max(lo, t_end)))
+        self.events = times
+
+    def length(self, lt: float) -> float:
+        """Kâğıdın o anki uzunluğu (alt kenar): son olayın beslemesi ease_out ile ilerler."""
+        if self.instant:
+            return self.L_full
+        j = bisect.bisect_right(self.events, lt) - 1
+        if j < 0:
+            return self.feed[0]
+        p = ease_out_cubic((lt - self.events[j]) / self.FEED)
+        return lerp(self.feed[j], self.feed[j + 1], p)
+
+    def stamp_state(self, lt: float) -> tuple[float, float] | None:
+        """Toplam damgasının (ölçek, saydamlık): büyükten iner, hafifçe ezilip oturur (Nasıl yapılır? numarası gibi)."""
+        if self.stamp is None:
+            return None
+        if self.instant:
+            return 1.0, 1.0
+        ps = (lt - self.events[-1] - self.FEED * 0.7) / 0.16
+        if ps <= 0:
+            return None
+        if ps < 1:
+            return lerp(1.8, 0.94, ps ** 2), min(1.0, ps * 3)
+        return lerp(0.94, 1.0, ease_out_cubic((ps - 1) * 0.16 / 0.12)), 1.0
+
+    def _compose(self, L: float, st) -> Image.Image:
+        rx0, ry0, rx1, ry1 = CARD_REGION
+        img = Image.new("RGBA", (rx1 - rx0, ry1 - ry0), (0, 0, 0, 0))
+        _comp(img, self.paper(L), self.pos[0] - rx0, self.pos[1] - ry0)
+        if st is not None:
+            k, al = st
+            im, (cx, cy) = self.stamp
+            if abs(k - 1) > 1e-3:
+                im = im.resize((max(1, int(im.width * k)), max(1, int(im.height * k))), Image.BILINEAR)
+            if al < 0.999:
+                im = im.copy()
+                im.putalpha(im.getchannel("A").point(lambda v: int(v * al)))
+            _comp(img, im, cx - im.width / 2 - rx0, cy - im.height / 2 - ry0)
+        return img
+
+    def layer(self, lt, dur):
+        settled = self.FEED if self.stamp is None else max(self.FEED, self.FEED * 0.7 + 0.16 + 0.12)
+        if self.instant or lt >= self.events[-1] + settled:
+            if self._fin is None:
+                self._fin = self._compose(self.L_full, (1.0, 1.0) if self.stamp is not None else None)
+            return self._fin
+        return self._compose(self.length(lt), self.stamp_state(lt))
+
+    def mood(self, lt, dur):
+        if self.instant or lt >= self.events[-1] + self.FEED * 0.7:
+            return "surprised"
+        return "thinking" if lt >= self.T0 else "normal"
 
 
 def _rich(text: str) -> list[tuple[str, bool]]:
@@ -1710,7 +2089,8 @@ class TextCard(Card):
 
 
 CARD_CLASSES = {"photo": PhotoCard, "drawing": DrawingCard, "counter": CounterCard, "compare": CompareCard,
-                "quote": QuoteCard, "interstitial": InterstitialCard, "cta": CtaCard, "text": TextCard}
+                "quote": QuoteCard, "interstitial": InterstitialCard, "cta": CtaCard, "receipt": ReceiptCard,
+                "text": TextCard}
 
 
 def series_cliff(narration: str) -> bool:
@@ -1721,11 +2101,12 @@ def series_cliff(narration: str) -> bool:
 
 def card_type(spec, idx: int, n: int) -> str:
     """Sahnenin kart türü. Açık seçim (card) veriyle destekleniyorsa geçerli; 'auto' için: son sahne cta,
-    'AMA ASIL…'/'ASIL…' başlık interstitial, card_value counter, card_myth+card_fact compare, sonra fotoğraf,
-    çizim, yoksa yazı kartı. quote yalnız açıkça istenince (card_label sayaç etiketi de olabildiği için)."""
+    'AMA ASIL…'/'ASIL…' başlık interstitial, card_lines (hesap fişi satırları) receipt, card_value counter,
+    card_myth+card_fact compare, sonra fotoğraf, çizim, yoksa yazı kartı. quote yalnız açıkça istenince (card_label
+    sayaç etiketi de olabildiği için)."""
     c = spec.card or {}
     has_photo, has_drawing = spec.image is not None, spec.sprite is not None
-    data = {"counter": bool((c.get("value") or "").strip()),
+    data = {"receipt": bool(parse_receipt(c.get("lines"))), "counter": bool((c.get("value") or "").strip()),
             "compare": bool((c.get("myth") or "").strip() and (c.get("fact") or "").strip()),
             "quote": bool((c.get("label") or "").strip()), "photo": has_photo, "drawing": has_drawing,
             "cta": True, "interstitial": True, "text": True}
@@ -1738,6 +2119,8 @@ def card_type(spec, idx: int, n: int) -> str:
             return "cta"
         if head.startswith("AMA ASIL") or head.startswith("ASIL "):
             return "interstitial"
+        if data["receipt"]:
+            return "receipt"
         if data["counter"]:
             return "counter"
         if data["compare"]:
@@ -2070,7 +2453,10 @@ class Mascot:
 
 
 # ---------------------------------------------------------------- video
-STRUCT_RIGHT = {"efsane": "EFSANE Mİ?", "neden": "NEDEN?", "nasil": "NASIL?"}
+# "olsaydin" serisinin adı geçici (sahibi seçiyor): ekrandaki adı yalnız bu sabitte durur
+OLSAYDIN_ADI = "YA SEN OLSAYDIN?"
+STRUCT_RIGHT = {"efsane": "EFSANE Mİ?", "neden": "NEDEN?", "nasil": "NASIL?", "uretim": "NASIL ÜRETİLİYOR?",
+                "olsaydin": OLSAYDIN_ADI}
 
 
 def short_name(topic: str, max_w: float) -> str:
@@ -2266,8 +2652,8 @@ class KartVideo:
         if self.structure == "sayac":
             k = round(3 * i / max(1, self.n - 1))
             return f"{tr_upper('bilgi')} {k}/3"
-        if self.structure == "nasil":  # adım sahnesinde adım numarası (headline 'ADIM 2' ile başlar)
-            m = re.match(r"ADIM \d+", tr_upper(" ".join((self.scenes[i].headline or [""])[:1])).strip())
+        if self.structure in ("nasil", "uretim"):  # adım/aşama sahnesinde numara (headline 'ADIM 2' / 'AŞAMA 2')
+            m = re.match(r"(?:ADIM|AŞAMA) \d+", tr_upper(" ".join((self.scenes[i].headline or [""])[:1])).strip())
             if m:
                 return m.group(0)
         if self.structure in STRUCT_RIGHT:
@@ -2285,6 +2671,11 @@ class KartVideo:
             return f"makas kes {self.slug}"
         if t == "counter":
             return tr_lower(f"{c.get('value', '')} {c.get('label', '')}".strip())
+        if t == "receipt":
+            total = (c.get("value") or "").strip()
+            if not total:
+                return "hesap basılıyor"
+            return tr_lower(f"hesap: {(c.get('label') or 'toplam').strip()} {total}")
         if t == "compare":
             return "efsane kesildi"
         if t == "quote" and (c.get("note") or "").strip():

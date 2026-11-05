@@ -203,7 +203,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         from . import kart
         for i, (spec, sc) in enumerate(zip(specs, script.scenes)):
             spec.card = {"type": sc.card, "value": sc.card_value, "label": sc.card_label, "myth": sc.card_myth,
-                         "fact": sc.card_fact, "note": sc.card_note, "mascot": sc.mascot}
+                         "fact": sc.card_fact, "note": sc.card_note, "mascot": sc.mascot, "lines": list(sc.card_lines)}
             if spec.image is not None and i in photo_credit:  # not yoksa fotoğraf kartının çipi künyeden yazılır
                 cd = images.credit_dict(photo_credit[i])
                 spec.card["credit"] = {k: cd.get(k, "") for k in ("author", "license", "source")}
@@ -217,8 +217,10 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
             if spec.image is not None and i in photo_credit:  # çizim yoksa kullanılan fotoğrafın çipi künyeden
                 cd = images.credit_dict(photo_credit[i])
                 spec.card["credit"] = {k: cd.get(k, "") for k in ("author", "license", "source")}
+        # şablonun varyantı (adım kelimesi, zemin, ilerleme çubuğu; ör. uretim.json: AŞAMA, kraft zemin, yürüyen bant)
         nasil.render_nasil(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
-                                                             "title": script.title, "category": script.category})
+                                                             "title": script.title, "category": script.category,
+                                                             "sablon": tcfg})
     else:
         render.render(specs, words, video, mp3, music, template=template)
 
