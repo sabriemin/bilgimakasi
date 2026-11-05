@@ -4,12 +4,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import worker, { hedefAdi } from "../../cloudflare/worker.js";
-import { SAYFA_HTML, UYGULAMA_JS } from "../../cloudflare/panel_ui.js";
+import { SAYFA_HTML, UYGULAMA_JS, ONERI_SERILERI, SERI_NOTU } from "../../cloudflare/panel_ui.js";
 import { calistir, SENARYOLAR, SABIT_SAAT } from "./webhook_senaryolar.mjs";
 import { ORTAM, BURASI, META, FIKSTUR, fetchKur, ctxYap, saatKur, saatIlerlet, saatBirak, cacheKur, imza, oturumImza,
-  girisImza, girisMesajiKur, TG_MESAJLAR } from "./sahte.mjs";
+  girisImza, girisMesajiKur, TG_MESAJLAR, ALTI_SERI } from "./sahte.mjs";
 import { mkdtempSync, cpSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { createRequire } from "node:module";
 import { gizle } from "../../cloudflare/panel.js";
 
 const HOST = "https://bilgimakasi-kapi.bilgimakasi.workers.dev";
@@ -48,10 +49,10 @@ describe("Telegram webhook davranışı değişmedi", () => {
     for (let i = 0; i < golden.length; i++) {
       const g = golden[i], y = yeni[i];
       if (g.ad === "mesaj /start" || g.ad === "mesaj /yardim") {
-        // bilinçli farklar: yardım metnine /panel satırı eklendi, /oneri dört seriden 12 öneri veriyor
+        // bilinçli farklar: yardım metnine /panel satırı eklendi, /oneri altı seriden 18 öneri veriyor
         const eski = g.cagrilar[0].govde.text, yeniMetin = y.cagrilar[0].govde.text;
         assert.equal(yeniMetin, eski.replace("/yardim: bu liste", "/panel: yönetim paneline giriş bağlantısı\n/yardim: bu liste")
-          .replace("/oneri: gündemden 5 konu önerisi", "/oneri: 4 seriden 12 konu önerisi"));
+          .replace("/oneri: gündemden 5 konu önerisi", "/oneri: 6 seriden 18 konu önerisi"));
         assert.deepEqual({ ...y, cagrilar: [] }, { ...g, cagrilar: [] });
         continue;
       }
@@ -603,6 +604,36 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
     assert.deepEqual([p.action, p.index, p.topic], ["produce_suggestion", 11, it.topic]);
   });
 
+  test("altı seri: uretim ve olsaydin önerileri de yalnız sıra ve konuyla üretilir; kalıp/seri gönderilemez", async () => {
+    const kok = mkdtempSync(join(tmpdir(), "panel-alti-"));
+    cpSync(FIKSTUR, kok, { recursive: true });
+    writeFileSync(join(kok, "oneriler.json"), JSON.stringify(ALTI_SERI));
+    saatIlerlet(30000);
+    const { r } = await istek("/panel/api/durum", { cerez: await oturum(18 * 86400), fetchAyar: { kok } });
+    const d = await r.json();
+    assert.deepEqual(d.oneriler, ALTI_SERI, "öneriler (seri alanıyla) olduğu gibi gelir");
+    const items = ALTI_SERI.items;
+    assert.deepEqual([items[12].seri, items[14].seri, items[15].seri, items[17].seri], ["uretim", "uretim", "olsaydin", "olsaydin"]);
+    for (const i of [12, 17]) {
+      // tarayıcı kalıp ya da seri seçemez: fazladan alanlar dispatch'e geçmez, Python tarafı kayıttaki seriden bulur
+      const { r: r2, j, cagrilar } = await gonder({ action: "produce_suggestion", index: i, topic: items[i].topic,
+        kalip: "olsaydin", seri: "uretim", structure: "hikaye" }, { fetchAyar: { kok } });
+      assert.equal(r2.status, 202, JSON.stringify(j));
+      const p = panelOlayi(cagrilar);
+      assert.deepEqual(Object.keys(p).sort(), ["action", "at", "index", "rid", "topic"], String(i));
+      assert.deepEqual([p.action, p.index, p.topic], ["produce_suggestion", i, items[i].topic]);
+    }
+    // listede olmayan sıra (18 öneri: 0-17) ve sınır dışı/yanlış türde sıra reddedilir, hiçbir şey gönderilmez
+    for (const [govde, durum, hata] of [[{ index: 18 }, 409, /değişmiş/], [{ index: 20 }, 400, /öneri/],
+      [{ index: -1 }, 400, /öneri/], [{ index: 12.5 }, 400, /öneri/], [{ index: "olsaydin" }, 400, /öneri/],
+      [{ index: 15, topic: items[16].topic }, 409, /değişmiş/]]) {
+      const { r: r3, j, cagrilar } = await gonder({ action: "produce_suggestion", ...govde }, { fetchAyar: { kok } });
+      assert.equal(r3.status, durum, JSON.stringify(govde));
+      assert.match(j.hata, hata);
+      assert.equal(dispatchlar(cagrilar).length, 0);
+    }
+  });
+
   test("paylaşıma 10 dakikadan az kalan videoda düzenleme reddedilir", async () => {
     const kok = mkdtempSync(join(tmpdir(), "panel-yakin-"));
     cpSync(FIKSTUR, kok, { recursive: true });
@@ -927,6 +958,157 @@ describe("zamanlayıcı: saati yaklaşan paylaşım için onay.yml", () => {
     await worker.scheduled({}, { ...ORTAM, GH_PAT: undefined }, ctxYap().ctx);
     assert.equal(f.cagrilar.length, 0);
   });
+});
+
+// ------------------------------------------------------------------ Konular: öneri serileri
+// Playwright (ekran.mjs'in kullandığı) yoksa tarayıcı testi atlanır; kapı istekleri tarayıcıdan doğrudan worker.fetch'e gider
+let chromium = null;
+try {
+  ({ chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT || "/opt/node22/lib/node_modules/playwright"));
+} catch { /* yok */ }
+const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin"]; // kalıbı sabit seriler: sıraya eklenmez
+
+describe("Konular: öneri serileri", () => {
+  const DEPO = join(BURASI, "..", "..");
+
+  test("altı seri trends.SERILER sırasıyla; kalıbı sabit dört serinin notu var", () => {
+    assert.deepEqual(ONERI_SERILERI.map(([k]) => k), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin"]);
+    // olsaydin'in adı geçici (sahibi seçiyor): yalnız simgesi sabit; adı Python'la karşılaştırılır (sonraki test)
+    assert.deepEqual(ONERI_SERILERI[4], ["uretim", "Üretim", "Nasıl üretiliyor?", "🏭"]);
+    assert.equal(ONERI_SERILERI[5][3], "💭");
+    for (const s of ONERI_SERILERI) assert.ok(s.length === 4 && s.every((x) => typeof x === "string" && x.trim()), String(s));
+    assert.equal(new Set(ONERI_SERILERI.map(([, kisa]) => kisa)).size, ONERI_SERILERI.length, "süzgeç adları ayrı");
+    assert.deepEqual(Object.keys(SERI_NOTU), KALIPLI);
+    for (const k of KALIPLI) {
+      const ad = ONERI_SERILERI.find(([x]) => x === k)[2];
+      assert.ok(SERI_NOTU[k].startsWith(`“${ad}” kalıbıyla`), k);
+      assert.ok(SERI_NOTU[k].endsWith(". "), "onay metninde 'Video yaklaşık…' cümlesinden önce gelir: " + k);
+    }
+    assert.match(SERI_NOTU.uretim, /aşama kartları şablonu/);
+    assert.match(SERI_NOTU.olsaydin, /kart şablonunda sayaç ve hesap fişi kartlarıyla/);
+    // uygulama listeyi ve notları kapıdan (AYAR) alır: tarayıcıdaki kopya aynı
+    assert.ok(UYGULAMA_JS.includes(JSON.stringify(ONERI_SERILERI)) && UYGULAMA_JS.includes(JSON.stringify(SERI_NOTU)));
+  });
+
+  test("Python'daki seriler panelde aynı sıra, ad ve simgeyle var; kalıbı sabit her serinin notu var", () => {
+    // trends.py birleşince altı seri olur; panel önden giderse fazlası zararsızdır (o seriden öneri gelmez)
+    const tr = readFileSync(join(DEPO, "shortgen", "trends.py"), "utf8");
+    const sozluk = (ad) => {
+      const m = new RegExp(`^${ad} = \\{([^}]*)\\}`, "m").exec(tr);
+      assert.ok(m, `trends.${ad} okunamadı`);
+      return [...m[1].matchAll(/"(\w+)":\s*("([^"]*)")?/g)].map((x) => [x[1], x[3]]);
+    };
+    const seriler = sozluk("SERILER"), panel = ONERI_SERILERI.map(([k]) => k);
+    assert.ok(seriler.length >= 4);
+    assert.deepEqual(panel.filter((k) => seriler.some(([s]) => s === k)), seriler.map(([s]) => s), "panelde eksik ya da sırası farklı seri");
+    for (const [k, ad] of seriler) if (ad !== undefined) assert.equal(ONERI_SERILERI.find(([x]) => x === k)[2], ad, k);
+    for (const [k, ik] of sozluk("SERI_IKON")) if (ik !== undefined) assert.equal(ONERI_SERILERI.find(([x]) => x === k)[3], ik, k);
+    for (const [k] of sozluk("SERI_KALIP")) assert.ok(SERI_NOTU[k], "kalıbı sabit serinin notu yok: " + k);
+  });
+
+  test("olsaydin serisinin geçici adı panelde tek yerde (ONERI_SERILERI); kapı kodunda hiç yok", () => {
+    const kaynak = (ad) => readFileSync(join(DEPO, "cloudflare", ad), "utf8");
+    const say = (metin, aranan) => metin.split(aranan).length - 1;
+    const ui = kaynak("panel_ui.js");
+    const [, kisa, ad] = ONERI_SERILERI.find(([k]) => k === "olsaydin");
+    assert.equal(say(ui, ad), 1);
+    assert.equal(say(ui, `"${kisa}"`), 1);
+    assert.equal(say(ui, "SERI_ADI.olsaydin"), 1, "not adı listeden alır");
+    for (const d of ["panel.js", "worker.js"]) {
+      for (const x of [ad, kisa, "olsaydin"]) assert.equal(say(kaynak(d).toLocaleLowerCase("tr"), x.toLocaleLowerCase("tr")), 0, d + ": " + x);
+    }
+  });
+
+  test("tarayıcıda (390 px): seri sırası, notlar, sıra düğmesi yok, süzgeç kendi satırında kayar", { skip: !chromium && "Playwright yok" },
+    async () => {
+      const kok = mkdtempSync(join(tmpdir(), "panel-alti-ui-"));
+      cpSync(FIKSTUR, kok, { recursive: true });
+      writeFileSync(join(kok, "oneriler.json"), JSON.stringify(ALTI_SERI));
+      saatIlerlet(30000);
+      const cerez = await oturum(19 * 86400); // başka testin önbelleğe aldığı durum gelmesin
+      const gidenler = [];
+      const tarayici = await chromium.launch();
+      try {
+        const ctx = await tarayici.newContext({ viewport: { width: 390, height: 844 }, locale: "tr-TR" });
+        await ctx.addCookies([{ name: "bm_oturum", value: cerez, url: HOST }]);
+        await ctx.route("**/*", async (route) => {
+          const r = route.request();
+          if (!r.url().startsWith(HOST + "/")) return route.abort(); // yazı tipi vb.: dış istek yok
+          const f = fetchKur({ kok });
+          const { ctx: c, bitir } = ctxYap();
+          const govde = r.postDataBuffer();
+          const y = await worker.fetch(new Request(r.url(), { method: r.method(), headers: await r.allHeaders(),
+            body: govde || undefined }), { ...ORTAM }, c);
+          await bitir();
+          gidenler.push(...f.cagrilar);
+          return route.fulfill({ status: y.status, headers: Object.fromEntries(y.headers), body: Buffer.from(await y.arrayBuffer()) });
+        });
+        const page = await ctx.newPage();
+        const hatalar = [];
+        page.on("pageerror", (e) => hatalar.push(e.message));
+        await page.goto(HOST + "/panel#konular");
+        await page.waitForSelector(".oneri");
+        const ozet = () => page.evaluate(() => ({
+          basliklar: [...document.querySelectorAll(".seri-baslik span")].map((x) => x.textContent),
+          cipler: [...document.querySelectorAll(".cip")].map((c) => [c.dataset.seri, c.firstChild.textContent,
+            c.querySelector("small").textContent, c.getAttribute("aria-pressed")]),
+          kartlar: [...document.querySelectorAll(".oneri")].map((k) => [k.dataset.seri, k.querySelector(".oneri-no").textContent,
+            [...k.querySelectorAll("button")].map((b) => b.textContent), (k.querySelector(".oneri-not") || {}).textContent || ""]),
+        }));
+        let o = await ozet();
+        assert.deepEqual(o.basliklar, ONERI_SERILERI.map(([, , ad, ik]) => `${ik} ${ad}`));
+        assert.deepEqual(o.cipler, [["tumu", "Tümü", "18", "true"], ...ONERI_SERILERI.map(([k, kisa]) => [k, kisa, "3", "false"])]);
+        assert.deepEqual(o.kartlar.map(([s, no]) => [s, no]), ALTI_SERI.items.map((it, i) => [it.seri, `${i + 1}.`]));
+        for (const [seri, , dugmeler, not] of o.kartlar) {
+          assert.equal(dugmeler.includes("Sıraya ekle"), !KALIPLI.includes(seri), seri);
+          assert.equal(Boolean(not), KALIPLI.includes(seri), seri);
+          assert.ok(dugmeler.includes("Üret"), seri);
+        }
+        // telefonda: sayfa yana kaymaz, süzgeç kendi satırında kayar, her çip en az 44 px yüksek
+        const olcu = () => page.evaluate(() => {
+          const s = document.querySelector(".cipler"), sec = s.querySelector('[aria-pressed="true"]').getBoundingClientRect();
+          return { sayfa: document.documentElement.scrollWidth, satir: [s.scrollWidth, s.clientWidth],
+            boy: Math.min(...[...s.children].map((c) => c.getBoundingClientRect().height)), secili: [sec.left, sec.right],
+            satirlar: new Set([...s.children].map((c) => Math.round(c.getBoundingClientRect().top))).size,
+            kenar: ["sol-var", "sag-var"].filter((k) => s.classList.contains(k)) };
+        });
+        let m = await olcu();
+        assert.ok(m.sayfa <= 390, "sayfa yana kayıyor: " + m.sayfa);
+        assert.ok(m.satir[0] > m.satir[1], "çipler tek satırda, satır kendi içinde kayar");
+        assert.equal(m.satirlar, 1);
+        assert.ok(m.boy >= 44, "dokunma alanı: " + m.boy);
+        assert.deepEqual(m.kenar, ["sag-var"], "sağda sığmayan çip var: sağ kenar solar");
+        // en sondaki seriyi seç: yalnız o seri görünür, seçili çip yeniden çizimde görünür kalır
+        await page.click('.cip[data-seri="olsaydin"]');
+        o = await ozet();
+        assert.deepEqual(o.basliklar, [ONERI_SERILERI[5][3] + " " + ONERI_SERILERI[5][2]]);
+        assert.deepEqual(o.kartlar.map(([s, no]) => [s, no]), [["olsaydin", "16."], ["olsaydin", "17."], ["olsaydin", "18."]]);
+        assert.equal(o.cipler.find(([k]) => k === "olsaydin")[3], "true");
+        m = await olcu();
+        assert.ok(m.secili[0] >= 0 && m.secili[1] <= 390, "seçili çip görünür: " + m.secili);
+        assert.deepEqual(m.kenar, ["sol-var"], "son çip seçili: satır sona kaydı, yalnız sol kenar solar");
+        await page.click('.cip[data-seri="uretim"]');
+        o = await ozet();
+        assert.deepEqual(o.basliklar, ["🏭 Nasıl üretiliyor?"]);
+        assert.deepEqual(o.kartlar.map(([s]) => s), ["uretim", "uretim", "uretim"]);
+        // Üret: onay penceresi serinin notunu söyler; gönderilen işlem yalnız sıra ve konu taşır
+        await page.click('.cip[data-seri="olsaydin"]');
+        await page.click(".oneri >> nth=0 >> text=Üret");
+        const metin = await page.textContent("dialog[open]");
+        assert.ok(metin.includes(SERI_NOTU.olsaydin + "Video yaklaşık 15 dakikada hazır olur ve onaya gelir."), metin);
+        assert.ok(metin.includes(ALTI_SERI.items[15].topic));
+        await page.click("dialog[open] .btn-ana");
+        await page.waitForSelector(".bildirim");
+        const d = gidenler.filter((x) => x.url.endsWith("/actions/workflows/isle.yml/dispatches"));
+        assert.equal(d.length, 1);
+        const p = JSON.parse(d[0].govde.inputs.update).panel;
+        assert.deepEqual([p.action, p.index, p.topic], ["produce_suggestion", 15, ALTI_SERI.items[15].topic]);
+        assert.deepEqual(Object.keys(p).sort(), ["action", "at", "index", "rid", "topic"]);
+        assert.deepEqual(hatalar, []);
+      } finally {
+        await tarayici.close();
+      }
+    });
 });
 
 test("webhook senaryo listesi boş değil", () => assert.ok(SENARYOLAR.length > 20));

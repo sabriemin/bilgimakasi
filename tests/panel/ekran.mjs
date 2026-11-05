@@ -1,5 +1,6 @@
 // Panel ekran görüntüleri (Playwright + Chromium): 390x844 ve 1280x900, açık ve koyu tema, her sekme.
-//   OUT=<klasör> [PORT=8790] [FONTS=<Google Fonts önbelleği>] [VIDEO=<örnek video>] node tests/panel/ekran.mjs
+//   OUT=<klasör> [PORT=8790] [FONTS=<Google Fonts önbelleği>] [VIDEO=<örnek video>] [BOLUM=seriler] node tests/panel/ekran.mjs
+// BOLUM=seriler: yalnız Konular sekmesindeki altı serili öneriler (panel_konular_*.png, 390x844 ve 1280x800).
 // PORT, PORT+1 ve PORT+2 kullanılır. Takvim bölümü dokunmatik uzun basışla sürükleme ve Saat seç sayfasını da dener.
 // Sunucu (sunucu.mjs) ayrı süreçte sabit saatle çalışır; yazı tipleri yerelden verilir, dış ağa çıkılmaz.
 import { spawn } from "node:child_process";
@@ -7,7 +8,8 @@ import { mkdirSync, readFileSync, existsSync, mkdtempSync, cpSync, writeFileSync
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
-import { BURASI, FIKSTUR } from "./sahte.mjs";
+import { BURASI, FIKSTUR, ALTI_SERI } from "./sahte.mjs";
+import { SERI_NOTU } from "../../cloudflare/panel_ui.js";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT || "/opt/node22/lib/node_modules/playwright");
@@ -16,11 +18,11 @@ const FONTS = process.env.FONTS;
 const SAAT = process.env.SAAT || "2026-11-05T00:45:00+03:00";
 mkdirSync(OUT, { recursive: true });
 
-// örnek duruma ek: bir sorunlu (kısmen paylaşılmış) video, Sorunlu bölümü de görünsün; seriler: dört serili öneriler
+// örnek duruma ek: bir sorunlu (kısmen paylaşılmış) video, Sorunlu bölümü de görünsün; seriler: altı serili öneriler
 function durumHazirla(sorunlu, seriler = false) {
   const kok = mkdtempSync(join(tmpdir(), "panel_ekran_"));
   cpSync(FIKSTUR, kok, { recursive: true });
-  if (seriler) cpSync(join(BURASI, "fixtures", "oneriler_seriler.json"), join(kok, "oneriler.json"));
+  if (seriler) writeFileSync(join(kok, "oneriler.json"), JSON.stringify(ALTI_SERI, null, 1));
   if (sorunlu) {
     const vs = JSON.parse(readFileSync(join(kok, "videos.json"), "utf8"));
     vs.push({ tag: "short-20261103-150200", title: "Kahve Avrupa'ya Gelince Neden Yasaklandı?", topic: "Kahvenin 1500'lerde Mekke ve İstanbul'da yasaklanması",
@@ -78,9 +80,13 @@ async function main() {
   const browser = await chromium.launch();
   const kayit = [];
   const port = Number(process.env.PORT || 8790);
+  const hatalar = [];
+  if (process.env.BOLUM === "seriler") {
+    await seriEkranlari(browser, port + 1, kayit, hatalar);
+    return bitir(browser, kayit, hatalar);
+  }
   const sunucu = await sunucuBaslat(durumHazirla(false), port);
   const URL = `http://127.0.0.1:${port}`;
-  const hatalar = [];
   try {
     for (const tema of ["light", "dark"]) {
       for (const [ad, viewport, dsf] of GORUNUMLER) {
@@ -195,40 +201,96 @@ async function main() {
     s2.kill();
   }
   await takvimEkranlari(browser, port + 2, kayit, hatalar);
-  // dört serili öneriler: kalıbı sabit seriler (Efsane, Nasıl yapılır) sıraya eklenmez ve nedenini söyler
-  const s3 = await sunucuBaslat(durumHazirla(false, true), port + 1);
-  try {
-    for (const tema of ["light", "dark"]) {
-      const t = tema === "light" ? "acik" : "koyu";
-      const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: tema,
-        locale: "tr-TR", timezoneId: "Europe/Istanbul" });
-      await yaziTipleri(ctx);
-      const page = await ctx.newPage();
-      page.on("pageerror", (e) => hatalar.push(`seriler/${tema}: ${e.message}`));
-      await page.goto(`http://127.0.0.1:${port + 1}/__giris`);
-      await bekle(page);
-      await page.goto(`http://127.0.0.1:${port + 1}/panel#konular`);
-      await bekle(page);
-      const kartlar = await page.$$eval(".oneri[data-seri]", (ks) => ks.map((k) => ({ seri: k.dataset.seri,
-        sira: [...k.querySelectorAll("button")].some((b) => b.textContent.includes("Sıraya ekle")),
-        not: Boolean(k.querySelector(".oneri-not")) })));
-      if (kartlar.length !== 12) hatalar.push(`seriler/${tema}: ${kartlar.length} öneri kartı (12 bekleniyordu)`);
-      for (const k of kartlar) {
-        const kalipli = ["efsane", "nasil"].includes(k.seri);
-        if (k.sira === kalipli || k.not !== kalipli) hatalar.push(`seriler/${tema}: ${k.seri} kartında sıra düğmesi/notu yanlış`);
-      }
-      const genislik = await page.evaluate(() => document.documentElement.scrollWidth);
-      if (genislik > 390) hatalar.push(`seriler/${tema}: yatay kaydırma (${genislik}px)`);
-      const dosya = join(OUT, `konular_seriler_mobil_${t}.png`);
-      await page.screenshot({ animations: "disabled", path: dosya, fullPage: true }); kayit.push(dosya);
-      await ctx.close();
-    }
-  } finally {
-    s3.kill();
-  }
+  await seriEkranlari(browser, port + 1, kayit, hatalar);
+  return bitir(browser, kayit, hatalar);
+}
+
+async function bitir(browser, kayit, hatalar) {
   await browser.close();
   console.log(kayit.join("\n"));
   if (hatalar.length) { console.error("SORUNLAR:\n" + hatalar.join("\n")); process.exitCode = 1; }
+}
+
+// ---------------------------------------------------------------- Konular: öneri serileri
+// Altı serili öneriler (sahte.mjs ALTI_SERI): kalıbı sabit seriler (efsane, nasil, uretim, olsaydin) sıraya eklenmez
+// ve nedenini söyler; yedi süzgeç çipi telefonda kendi satırında kayar, sayfa yana kaymaz.
+// Görüntüler: Tümü ve iki yeni serinin süzgeci (açık tema), Tümü (koyu tema), olsaydin önerisinin Üret onayı (telefon).
+const SERI_GORUNUMLER = [["mobil", { width: 390, height: 844 }, 2], ["masaustu", { width: 1280, height: 800 }, 1]];
+const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin"];
+
+async function seriEkranlari(browser, port, kayit, hatalar) {
+  const sunucu = await sunucuBaslat(durumHazirla(false, true), port);
+  const URL = `http://127.0.0.1:${port}`;
+  try {
+    for (const tema of ["light", "dark"]) {
+      for (const [ad, viewport, dsf] of SERI_GORUNUMLER) {
+        const t = tema === "light" ? "acik" : "koyu", yer = `seriler/${ad}/${tema}`;
+        const ctx = await browser.newContext({ viewport, deviceScaleFactor: dsf, colorScheme: tema, locale: "tr-TR",
+          timezoneId: "Europe/Istanbul" });
+        await yaziTipleri(ctx);
+        const page = await ctx.newPage();
+        page.on("pageerror", (e) => hatalar.push(`${yer}: ${e.message}`));
+        page.on("console", (m) => { if (m.type() === "error") hatalar.push(`${yer} console: ${m.text()}`); });
+        await page.goto(`${URL}/__giris`);
+        await bekle(page);
+        await page.goto(`${URL}/panel#konular`);
+        await bekle(page);
+        const denetle = async (filtre, beklenen) => {
+          const d = await page.evaluate(() => {
+            const s = document.querySelector(".cipler");
+            const cip = [...s.children].map((c) => c.getBoundingClientRect());
+            const sec = s.querySelector('[aria-pressed="true"]').getBoundingClientRect();
+            return { sayfa: document.documentElement.scrollWidth, gen: window.innerWidth,
+              kartlar: [...document.querySelectorAll(".oneri[data-seri]")].map((k) => ({ seri: k.dataset.seri,
+                sira: [...k.querySelectorAll("button")].some((b) => b.textContent.includes("Sıraya ekle")),
+                not: Boolean(k.querySelector(".oneri-not")) })),
+              boy: Math.min(...cip.map((r) => r.height)), secili: [sec.left, sec.right],
+              sRect: [s.getBoundingClientRect().left, s.getBoundingClientRect().right] };
+          });
+          if (d.kartlar.length !== beklenen) hatalar.push(`${yer}/${filtre}: ${d.kartlar.length} öneri kartı (${beklenen} bekleniyordu)`);
+          if (filtre !== "tumu" && d.kartlar.some((k) => k.seri !== filtre)) hatalar.push(`${yer}/${filtre}: başka serinin kartı görünüyor`);
+          for (const k of d.kartlar) {
+            const kalipli = KALIPLI.includes(k.seri);
+            if (k.sira === kalipli || k.not !== kalipli) hatalar.push(`${yer}: ${k.seri} kartında sıra düğmesi/notu yanlış`);
+          }
+          if (d.sayfa > d.gen) hatalar.push(`${yer}/${filtre}: yatay kaydırma (${d.sayfa}px)`);
+          if (d.boy < 44) hatalar.push(`${yer}/${filtre}: süzgeç çipi ${d.boy}px (en az 44)`);
+          if (d.secili[0] < Math.max(0, d.sRect[0]) || d.secili[1] > Math.min(d.gen, d.sRect[1])) {
+            hatalar.push(`${yer}/${filtre}: seçili çip görünmüyor (${d.secili})`);
+          }
+        };
+        const ekranAl = async (filtre) => {
+          const dosya = join(OUT, `panel_konular_${filtre}_${ad}_${t}.png`);
+          await page.screenshot({ animations: "disabled", path: dosya, fullPage: true }); kayit.push(dosya);
+        };
+        await denetle("tumu", 18);
+        await ekranAl("tumu");
+        if (tema === "light") {
+          for (const filtre of ["uretim", "olsaydin"]) {
+            await page.click(`.cip[data-seri="${filtre}"]`);
+            await page.waitForTimeout(150);
+            await denetle(filtre, 3);
+            await ekranAl(filtre);
+          }
+          if (ad === "mobil") { // olsaydin önerisinin Üret onayı: serinin notu söylenir
+            await page.click(".oneri >> nth=0 >> text=Üret");
+            await page.waitForSelector("dialog[open]");
+            const metin = await page.textContent("dialog[open]");
+            if (!metin.includes(SERI_NOTU.olsaydin + "Video yaklaşık 15 dakikada")) {
+              hatalar.push(`${yer}: olsaydin onay metni: ${metin}`);
+            }
+            await page.waitForTimeout(250);
+            const dosya = join(OUT, `panel_konular_olsaydin_onay_${ad}_${t}.png`);
+            await page.screenshot({ animations: "disabled", path: dosya }); kayit.push(dosya);
+            await page.click("dialog[open] >> text=Vazgeç");
+          }
+        }
+        await ctx.close();
+      }
+    }
+  } finally {
+    sunucu.kill();
+  }
 }
 
 // ---------------------------------------------------------------- Takvim

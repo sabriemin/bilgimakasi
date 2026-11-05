@@ -74,6 +74,49 @@ export const META = {
   credits: [{ author: "John Doe", license: "CC BY-SA 4.0", page: "https://commons.wikimedia.org/x", title: "x" }],
 };
 
+// Altı serili öneri listesi (state/oneriler.json biçimi; trends.SERILER sırası, her seriden 3, seride puana göre):
+// populer 0-2, konu 3-5, efsane 6-8, nasil 9-11, uretim 12-14, olsaydin 15-17.
+// Ekran görüntüleri (ekran.mjs) ve seri testleri (worker.test.mjs) kullanır.
+const oneri = (seri, topic, hook, trend, scope, category, score) => ({ topic, hook, trend, scope, category, score, seri });
+export const ALTI_SERI = { date: "2026-11-05", items: [
+  oneri("populer", "Leonid meteor yağmurundaki göktaşlarının atmosfere saniyede 71 kilometreyle girmesi ve çoğunun bir kum tanesinden küçük olması",
+    "Bu hafta gökten saniyede 71 kilometreyle kum yağacak.", "Leonid meteor yağmuru 17-18 Kasım gecesi zirve yapacak", "Global", "uzay", 8),
+  oneri("populer", "Kış lastiğinin asıl farkının diş değil kauçuk olması: yaz lastiği 7 derecenin altında sertleşip tutunmayı kaybediyor",
+    "Kış lastiği kar için değil, 7 derece için var.", "Ticari araçlarda kış lastiği zorunluluğu 1 Aralık'ta başlıyor", "TR", "teknoloji", 7),
+  oneri("populer", "Mevsimin ilk karı: kar tanelerinin neden hep altı köşeli olduğu",
+    "Hiçbir kar tanesi beş ya da yedi köşeli değildir.", "Doğu Anadolu'da mevsimin ilk karı yağdı", "TR", "bilim", 7),
+  oneri("konu", "'Kahvaltı' kelimesinin 'kahve altı'ndan, yani kahveden önce yenen yemekten gelmesi",
+    "Kahvaltı aslında kahveden önce yenen yemek demek.", "Her sabah söylenen bir kelimenin unutulan anlamı", "TR", "dil ve kültür", 8),
+  oneri("konu", "Ahtapotların üç kalbinin olması ve yüzerken birinin durması",
+    "Ahtapotun üç kalbi var, biri yüzerken duruyor.", "Herkesin bildiği bir hayvanın kimsenin bilmediği yanı", "Global", "doğa ve hayvanlar", 7),
+  oneri("konu", "Hezarfen Ahmed Çelebi'nin Galata Kulesi'nden uçuşunu anlatan tek kaynağın Evliya Çelebi olması",
+    "Hezarfen'in uçuşunu anlatan yalnızca bir kaynak var.", "İstanbul'un en çok merak edilen hikâyelerinden", "TR", "tarih", 6),
+  oneri("efsane", "Efsane: Japon balıklarının hafızası 3 saniyedir. Gerçek: aylarca hatırlayabilir, deneylerde ses ve renk sinyallerini öğrenebilirler",
+    "Japon balığı seni aylar sonra bile hatırlayabilir.", "Türkiye'de en yaygın hayvan efsanelerinden biri", "Global", "doğa ve hayvanlar", 8),
+  oneri("efsane", "Efsane: Çin Seddi uzaydan çıplak gözle görülür. Gerçek: alçak yörüngedeki astronotlar bile göremediğini söylüyor",
+    "Çin Seddi uzaydan görünmüyor; astronotlar da doğruluyor.", "Ders kitaplarında bile geçen bir yanlış", "Global", "uzay", 7),
+  oneri("efsane", "Efsane: Boğalar kırmızıya kızar. Gerçek: kırmızıyı ayırt edemezler, pelerinin hareketine saldırırlar",
+    "Boğalar kırmızıya kızmaz; kırmızıyı göremezler bile.", "Herkesin bildiği ama yanlış olan bir bilgi", "Global", "doğa ve hayvanlar", 6),
+  oneri("nasil", "Pilavı tane tane pişirmek: pirinci suyu berraklaşana kadar yıkamak, tereyağında kavurmak ve demlenirken kapağın altına havlu koymak",
+    "Pilavı lapa yapan şey pirincin üstündeki nişasta.", "Her evde pişen ama çoğu zaman tutturulamayan yemek", "TR", "bilim", 8),
+  oneri("nasil", "Duvara dübelle raf asmak: matkap ucunu dübelle aynı çapta seçmek ve deliği dübelden 5 milimetre derin açmak",
+    "Dübel boşta dönüyorsa suçlu yanlış matkap ucu.", "İlk evine taşınan öğrencilerin ve kiracıların en çok aradığı iş", "TR", "teknoloji", 7),
+  oneri("nasil", "Okuduğunu daha kalıcı ezberlemek: tekrar okumak yerine kendini sınamak ve tekrarları günlere yaymak",
+    "Kendini sınamak, tekrar okumaktan çok daha iyi ezberletir.", "Sınav dönemine giren öğrencilerin işine yarar", "TR", "psikoloji", 6),
+  oneri("uretim", "Lokum nasıl üretiliyor? Şeker, su ve nişastanın kazanda saatlerce pişirilmesinden tepside dinlenip kesilmesine ve pudralanmasına",
+    "Bir tepsi lokum, kazanda saatlerce karıştırılarak doğar.", "Bayram ikramlarının vazgeçilmezinin görülmeyen yolculuğu", "TR", "dil ve kültür", 8),
+  oneri("uretim", "Cam şişe nasıl üretiliyor? Kum, soda ve kireç taşının 1500 derecede eritilip kalıba damlatılması, şişirilmesi ve tavlanması",
+    "Her cam şişe, bir damla erimiş kumdan saniyeler içinde şekilleniyor.", "Her gün elimize aldığımız şişenin fırından rafa yolculuğu", "Global", "bilim", 7),
+  oneri("uretim", "Kurşun kalem nasıl üretiliyor? Grafitle kilin fırınlanıp çubuk olması, iki tahta arasına yapıştırılıp tek tek kesilmesi",
+    "Kurşun kalemin içinde hiç kurşun yok.", "Öğrencilerin her gün kullandığı eşyanın fabrika yolculuğu", "Global", "icatlar", 7),
+  oneri("olsaydin", "Piyango sana çıksaydı: vergiden sonra eline ne geçerdi?",
+    "Büyük ikramiye sana çıksa, eline geçen para afişteki değil.", "Yılbaşı biletleri satışta; herkesin bir kez hayal ettiği an", "TR", "ekonomi ve markalar", 9),
+  oneri("olsaydin", "Kuyumcu olsaydın: çıraklıktan dükkân açmaya, bir günün akışı, aylık gelir ve giderler, gramdan değil işçilikten kazanılan kâr",
+    "Kuyumcu, sattığı altından çok işçilikten kazanır.", "Altın fiyatları rekor kırarken en çok merak edilen meslek", "TR", "ekonomi ve markalar", 8),
+  oneri("olsaydin", "Yurt dışına taşınsaydın ilk ay kaç lira harcardın: Berlin'de kira, depozito, sigorta, ulaşım ve market hesabı",
+    "Berlin'de ilk ay kiradan önce depozito ödersin.", "Yurt dışına taşınmayı düşünen gençlerin ilk sorusu", "Global", "coğrafya", 7),
+] };
+
 // Telegram mesajları (editMessageText "not modified" davranışı için): message_id -> içerik
 export const TG_MESAJLAR = new Map();
 let sonMesaj = 1000;
