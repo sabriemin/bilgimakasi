@@ -169,8 +169,15 @@
     "created": "2026-11-04T20:48:24",
     "status": "zamanlandi",
     "telegram_message_id": 56,
-    "platforms": {},
-    "publish_at": "2026-11-05T17:00:00+00:00",
+    "platforms": {
+      "instagram": {
+        "status": "ok",
+        "id": "18089417126700972",
+        "url": "https://www.instagram.com/reel/DfXhLCHinTE/",
+        "at": "2026-11-05T20:01:21+03:00"
+      }
+    },
+    "publish_at": "2026-11-05T18:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-05T18:00:00+00:00",
       "instagram": "2026-11-05T17:00:00+00:00",
