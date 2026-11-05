@@ -668,6 +668,8 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
             f"- {k}: {v}" for k, v in templates.items())
     if used and not series_prev:
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
+        if topic_hint:  # elle verilen konu (ör. aynı konunun yeni şablonla yeniden üretimi) listede olsa da değişmez
+            ask += f"\nBu liste yalnız başka konu seçerken geçerlidir: verilen konuyu ({topic_hint}) değiştirme."
     yapi = (series_prev or {}).get("structure", structure)
     nasil = adim_kartlari and yapi in ADIM_KELIMESI  # Adım kartları düzeni (nasil: adımlar, uretim: aşamalar)
     web = yapi in WEB_KALIPLARI
