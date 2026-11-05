@@ -37,7 +37,12 @@ jobs:
           git config user.name "shortgen-bot"
           git config user.email "shortgen-bot@users.noreply.github.com"
           python -m shortgen.state_sync "Gündem önerileri"
-      - name: Butonları 30 dakika dinle
+      - name: Kapı yoksa butonları 30 dakika dinle
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run onay.yml -f dakika=30 || true
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          # Kapı (webhook) kuruluyken düğmeleri kapı, saatli paylaşımları kapının zamanlayıcısı karşılar; 30 dakikalık
+          # dinleme yalnız Actions dakikası harcar. Dinleme yalnız kapı kurulu değilse başlatılır.
+          KAPI=$(python3 -c "import json,os,urllib.request as u; print(json.load(u.urlopen('https://api.telegram.org/bot' + os.environ['TELEGRAM_BOT_TOKEN'] + '/getWebhookInfo', timeout=20))['result'].get('url', ''))" 2>/dev/null || echo "?")
+          if [ -z "$KAPI" ]; then gh workflow run onay.yml -f dakika=30 || true; else echo "Kapı kurulu (ya da denetlenemedi): dinleme başlatılmadı."; fi

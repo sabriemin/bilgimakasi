@@ -5,7 +5,7 @@ run-name: ${{ inputs.hedef && format('Paylaşım {0}', inputs.hedef) || github.w
 
 on:
   # Yalnız paylaşım saatlerinde çalışır (UTC; Türkiye = UTC+3), Actions dakikası harcamamak için.
-  # Düğmelere anında yanıt, her yeni videodan sonra açılan 30 dk'lık dinleme ile verilir.
+  # Düğmelere anında yanıtı kapı (webhook) verir; kapı yoksa her yeni videodan sonra 30 dk dinleme açılır.
   # Kapı kuruluyken seçilen saatteki paylaşımı kapının zamanlayıcısı başlatır; bu saatler yedektir: saati gelmiş paylaşım
   # yoksa çalışma Python kurulumu yapmadan biter.
   # TR saatleri: 12:00 12:30 18:00 19:00 19:30 20:00 21:00 22:00
