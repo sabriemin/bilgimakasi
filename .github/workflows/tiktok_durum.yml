@@ -1,0 +1,61 @@
+name: TikTok yüklemelerinin durumu
+
+# Son videoların TikTok yüklemelerinin (gelen kutusu taslakları dahil) TikTok'taki son durumunu günlüğe yazar.
+# Hiçbir şey yüklemez, depoya yazmaz. Anahtar yenilenirse paylaşım işiyle çakışmasın diye aynı sırada (state) çalışır.
+on:
+  workflow_dispatch:
+    inputs:
+      adet:
+        description: "Kaç video geriye bakılsın"
+        required: false
+        default: "6"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: state
+  cancel-in-progress: false
+
+jobs:
+  durum:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-bot.txt
+      - run: pip install -r requirements-bot.txt
+      - name: Durumları sor
+        env:
+          ADET: ${{ inputs.adet }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+          GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          import requests
+          from shortgen import publish as P
+          n = int(os.environ.get("ADET") or 6) if (os.environ.get("ADET") or "6").isdigit() else 6
+          vids = json.load(open("state/videos.json", encoding="utf-8"))[-max(1, min(n, 30)):]
+          h = {"Authorization": f"Bearer {P._tt_token()}", "Content-Type": "application/json; charset=UTF-8"}
+          info = requests.post(f"{P.TT}/post/publish/creator_info/query/", headers=h, timeout=30).json()
+          d = info.get("data") or {}
+          print("creator_info:", {k: d.get(k) for k in ("creator_username", "privacy_level_options", "max_video_post_duration_sec",
+                                                       "comment_disabled")}, "| hata:", (info.get("error") or {}).get("code"))
+          for v in vids:
+              recs = [("güncel", (v.get("platforms") or {}).get("tiktok"))] + [("önceki", r) for r in v.get("tiktok_onceki") or []]
+              for kind, r in recs:
+                  if not r or not r.get("id"):
+                      continue
+                  s = requests.post(f"{P.TT}/post/publish/status/fetch/", headers=h, json={"publish_id": r["id"]}, timeout=30).json()
+                  sd = s.get("data") or {}
+                  print(v["tag"], kind, (v.get("title") or "")[:40], "|", r.get("at", ""), "|", sd.get("status"),
+                        "| fail:", sd.get("fail_reason"), "| bytes:", sd.get("uploaded_bytes"), "/", sd.get("downloaded_bytes"),
+                        "| hata:", (s.get("error") or {}).get("code"), (s.get("error") or {}).get("message", "")[:120])
+          PY
