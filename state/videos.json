@@ -611,10 +611,11 @@
     "template": "ajanda",
     "structure": "olsaydin",
     "created": "2026-11-05T23:04:25",
-    "status": "onay_bekliyor",
+    "status": "reddedildi",
     "telegram_message_id": 202,
     "aciklama_message_id": 203,
-    "platforms": {}
+    "platforms": {},
+    "decided": "2026-11-06T02:38:02+03:00"
   },
   {
     "tag": "short-20261105-232827",
