@@ -254,6 +254,7 @@ class SceneSpec:
     start: float = 0.0
     end: float = 0.0
     words: list[Word] = field(default_factory=list)
+    card: dict = field(default_factory=dict)  # yalnız kart şablonu: kart türü ve verisi (pipeline.build doldurur)
 
 
 class SceneRenderer:

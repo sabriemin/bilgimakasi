@@ -64,6 +64,16 @@ class Scene(BaseModel):
     motion: Literal["none", "fly_up", "fly_right", "fly_left", "drop_in", "zoom_in", "float", "spin", "shake", "orbit", "pulse", "rise"] = "none"
     trail: bool = Field(default=False, description="Hareket eden nesnenin arkasında duman/iz olsun mu (roket, uçak için true; dalga, hayvan için false).")
     anim_query: str = Field(default="", description="(Eski alan) Kullanma.")
+    # Yalnız "kart" şablonu kullanır; diğer şablonlar yok sayar. Eski senaryolar için hepsi isteğe bağlı.
+    card: Literal["auto", "photo", "drawing", "counter", "compare", "quote", "interstitial", "cta"] = Field(
+        default="auto", description="Kart şablonunda bu sahnenin kartı; çoğu sahnede auto.")
+    card_value: str = Field(default="", description="counter kartı: sayılacak sayı, ör. '3.300' ya da '%90'.")
+    card_label: str = Field(default="", description="counter: sayının etiketi (ör. 'YIL ÖNCE'); quote: alıntının kendisi.")
+    card_myth: str = Field(default="", description="compare: yaygın inanış, en fazla 6 kelime.")
+    card_fact: str = Field(default="", description="compare: doğrusu, en fazla 6 kelime.")
+    card_note: str = Field(default="", description="Kartın küçük notu ya da kaynağı (ör. 'NASA arşivi · 1999'), en fazla 32 karakter.")
+    mascot: Literal["auto", "normal", "surprised", "thinking", "happy"] = Field(
+        default="auto", description="Kart şablonunda maskot Makas'ın ifadesi; çoğu sahnede auto.")
 
 
 class ShortScript(BaseModel):
@@ -151,6 +161,13 @@ gösteren sahneler (en fazla 3 tane) saf tipografik olabilir.
   uçak/kuş/tren geçiyorsa fly_right veya fly_left, sel/dalga/akıntı ilerliyorsa fly_right veya rise (trail false),
   bir şey düşüyorsa drop_in, ortaya çıkış/keşif anında zoom_in, gezegen için spin veya orbit, kalp/beyin için pulse,
   patlama/deprem/yarılma için shake, balon/astronot/su altı için float. Hareketsiz çizimlerde motion none.
+KART ALANLARI (yalnız "kart" şablonu kullanır, diğer şablonlar yok sayar; emin değilsen card "auto", diğerleri boş):
+- card "counter": tek büyük sayının sahnesi (card_value yalnız sayı, ör. "3.300"; card_label 1-3 kelimelik birim/etiket).
+- card "compare": efsane kalıbında inanışın çürütüldüğü sahne (card_myth inanış, card_fact doğrusu).
+- card "interstitial": videonun ortasındaki ikinci merak anı; headline "AMA ASIL ..." diye başlasın.
+- card "quote": doğrulanmış kısa bir alıntı (card_label alıntı, card_note kim · yıl). card "cta": son soru sahnesi.
+- Fotoğraflı/çizimli sahnelerde auto bırak; card_note kartın küçük notu ya da kaynağıdır. mascot çoğunlukla auto.
+Kartlardaki sayı, inanış ve alıntılar da doğrulanmış bilgi olmalı.
 headline kelimeleri narration içinde geçen en vurucu kelimeler olsun. Temaları çeşitlendir, art arda aynı temayı
 en fazla iki kez kullan. icon sadece gerçekten anlam katıyorsa."""
 
@@ -349,7 +366,8 @@ def polish_script(script: ShortScript) -> ShortScript:
     if len(fixed.scenes) != len(script.scenes):  # güvenlik: sahne yapısı bozulduysa yalnız metinleri al
         return script
     for a, b in zip(script.scenes, fixed.scenes):  # görsel alanları kesin olarak koru
-        for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon", "anim_query"):
+        for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon", "anim_query",
+                  "card", "card_value", "card_label", "card_myth", "card_fact", "card_note", "mascot"):
             setattr(b, f, getattr(a, f))
     fixed.sources, fixed.category = script.sources, script.category
     fixed.search_phrase, fixed.structure = script.search_phrase, script.structure

@@ -36,6 +36,15 @@ def template_catalog() -> dict[str, str]:
     return out
 
 
+def kart_uygun(script: ShortScript, kart: dict) -> bool:
+    """Kart şablonu yalnız eslesme.json'da açıksa ve yapı ya da kategori listedeyse seçilir. Tarih kategorilerinin
+    hikâye anlatımları her zaman kolaj şablonunda kalır."""
+    cat = script.category.strip().lower()
+    if not kart.get("acik") or (cat in ("tarih", "az bilinen insan hikâyeleri") and script.structure == "hikaye"):
+        return False
+    return script.structure in kart.get("yapilar", []) or cat in kart.get("kategoriler", [])
+
+
 def pick_template(script: ShortScript, override: str | None = None) -> str:
     cat = template_catalog()
     if override:
@@ -43,7 +52,10 @@ def pick_template(script: ShortScript, override: str | None = None) -> str:
             raise SystemExit(f"Şablon yok: {override}. Mevcut: {', '.join(cat)}")
         return override
     m = json.loads((ROOT / "templates" / "eslesme.json").read_text(encoding="utf-8"))
-    if m.get("claude_secsin") and script.template in cat:
+    kart = m.get("kart") or {}
+    if "kart" in cat and kart_uygun(script, kart):
+        return "kart"
+    if m.get("claude_secsin") and script.template in cat and (script.template != "kart" or kart.get("acik")):
         return script.template
     t = m.get("kategoriler", {}).get(script.category.strip().lower(), m.get("varsayilan", "kolaj"))
     return t if t in cat else "kolaj"
@@ -100,11 +112,17 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
 
     # 2) çizimler: animasyonlu sahneler + fotoğrafı bulunamayan veya fotoğrafsız sahneler
     want: dict[int, str] = {}
+    local: dict[int, Path] = {}
     for i, sc in enumerate(script.scenes):
         desc = sc.illustration.strip() or (sc.anim_query.strip() if sc.motion != "none" else "")
         if desc and (sc.motion != "none" or i not in photos):
-            want[i] = desc
+            path = (ROOT / desc[6:]).resolve() if desc.startswith("local:") else None
+            if path and path.is_relative_to(ROOT.resolve()) and path.is_file():
+                local[i] = path  # deneme senaryoları: depodaki hazır çizim dosyası (Claude çağrısı yok)
+            elif not path:
+                want[i] = desc
     drawings = illustrate.draw_scenes(want, script.topic, out_dir / "cizimler") if use_drawings else {}
+    drawings.update(local)
 
     specs: list[render.SceneSpec] = []
     for i, sc in enumerate(script.scenes):
@@ -145,7 +163,16 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
 
     # 5) kurgu
     video = out_dir / "video.mp4"
-    render.render(specs, words, video, mp3, music, template=template)
+    if template == "kart":
+        from . import kart
+        for i, (spec, sc) in enumerate(zip(specs, script.scenes)):
+            spec.card = {"type": sc.card, "value": sc.card_value, "label": sc.card_label, "myth": sc.card_myth,
+                         "fact": sc.card_fact, "note": sc.card_note, "mascot": sc.mascot}
+            spec.card["type"] = kart.card_type(spec, i, len(specs))
+        kart.render_kart(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
+                                                           "title": script.title, "category": script.category})
+    else:
+        render.render(specs, words, video, mp3, music, template=template)
 
     # 6) yayın paketi
     desc = "\n\n".join(filter(None, [
