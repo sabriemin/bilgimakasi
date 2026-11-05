@@ -1,11 +1,11 @@
-"""Konu önerileri: altı seride (Popüler, Konular, Efsane mi gerçek mi?, Nasıl yapılır?, Nasıl üretiliyor?, Ya sen
-olsaydın?) short fikri önerir.
+"""Konu önerileri: yedi seride (Popüler, Konular, Efsane mi gerçek mi?, Nasıl yapılır?, Nasıl üretiliyor?, Ya sen
+olsaydın?, Bir Kitap Bir Dakika) short fikri önerir.
 
 Claude tek bir web aramalı çağrıyla güncel gündemi (Google Trends TR, haber manşetleri, sosyal medya gündemi,
 YouTube'da yükselen konular) tarar; her seriden 3 öneri döndürür. Popüler gündeme bağlı "az bilinen bilgi" açısıdır,
-diğer seriler gündemden bağımsızdır.
+Bir Kitap Bir Dakika gündeme bağlanabilir (yıl dönümü, uyarlama, ödül); diğer seriler gündemden bağımsızdır.
 
-    python -m shortgen.trends notify   # 18 öneriyi seri seri Telegram'a butonlarla gönderir (üç serilik mesajlar)
+    python -m shortgen.trends notify   # 21 öneriyi seri seri Telegram'a butonlarla gönderir (en çok üç serilik mesajlar)
     python -m shortgen.trends best     # en iyi öneriyi yazdırır (otomatik üretim için; yalnız OTOMATIK_SERILER)
 """
 from __future__ import annotations
@@ -21,8 +21,8 @@ from typing import List, Literal
 
 from pydantic import BaseModel, Field
 
-from .script import (CATEGORIES, NASIL_YASAK, OLSAYDIN_YASAK, URETIM_YASAK, YIL, _history, allowed_structures,
-                     ask_claude, nasil_alanlari)
+from .script import (CATEGORIES, KAMU_MALI_FARK, KITAP_YASAK, NASIL_YASAK, OLSAYDIN_YASAK, URETIM_YASAK, YIL,
+                     _history, allowed_structures, ask_claude, nasil_alanlari)
 
 ROOT = Path(__file__).resolve().parent.parent
 STATE = ROOT / "state" / "oneriler.json"
@@ -31,20 +31,24 @@ STATE = ROOT / "state" / "oneriler.json"
 NASIL_ALANLARI = "; ".join(f"({i}) {a}" for i, a in enumerate(nasil_alanlari(), 1))
 # Seriler (kayıt sırası = Telegram ve paneldeki sıra). "seri" alanı olmayan eski öneriler Popüler sayılır.
 SERILER = {"populer": "Popüler", "konu": "Konular", "efsane": "Efsane mi, gerçek mi?", "nasil": "Nasıl yapılır?",
-           "uretim": "Nasıl üretiliyor?", "olsaydin": "Ya sen olsaydın?"}
-SERI_IKON = {"populer": "🔥", "konu": "📚", "efsane": "🧐", "nasil": "🛠", "uretim": "🏭", "olsaydin": "💭"}
+           "uretim": "Nasıl üretiliyor?", "olsaydin": "Ya sen olsaydın?", "kitap": "Bir Kitap Bir Dakika"}
+# simgeler ayrı olsun: Konular 📚, Bir Kitap Bir Dakika 📖
+SERI_IKON = {"populer": "🔥", "konu": "📚", "efsane": "🧐", "nasil": "🛠", "uretim": "🏭", "olsaydin": "💭",
+             "kitap": "📖"}
 # öneriden üretimde zorunlu anlatım kalıbı (script.STRUCTURES); listede olmayan seriler normal dönüşümü kullanır
-SERI_KALIP = {"efsane": "efsane", "nasil": "nasil", "uretim": "uretim", "olsaydin": "olsaydin"}
-# otomatik üretimin seçebileceği seriler: Nasıl yapılır?, Nasıl üretiliyor? ve Ya sen olsaydın? yalnız elle seçilir
+SERI_KALIP = {"efsane": "efsane", "nasil": "nasil", "uretim": "uretim", "olsaydin": "olsaydin", "kitap": "kitap"}
+# otomatik üretimin seçebileceği seriler: Nasıl yapılır?, Nasıl üretiliyor?, Ya sen olsaydın? ve Bir Kitap Bir Dakika
+# yalnız elle seçilir
 OTOMATIK_SERILER = ("populer", "konu", "efsane")
 SERI_BASI = 3  # her seriden öneri sayısı
 TG_SINIR = 4096  # Telegram mesaj sınırı (UTF-16 birimi)
-# /oneri mesajı başına seri: 18 öneri ayrıntısıyla tek mesaja sığmaz. Seriler kayıt sırasıyla üçerli mesajlara bölünür
-# (Popüler, Konular, Efsane | Nasıl yapılır, Nasıl üretiliyor, Ya sen olsaydın); bir serinin yeri hep aynı mesajdır.
+# /oneri mesajı başına seri: 21 öneri ayrıntısıyla tek mesaja sığmaz. Seriler kayıt sırasıyla üçerli mesajlara bölünür
+# (Popüler, Konular, Efsane | Nasıl yapılır, Nasıl üretiliyor, Ya sen olsaydın | Bir Kitap Bir Dakika); bir serinin yeri
+# hep aynı mesajdır.
 MESAJ_SERI = 3
 
 SYSTEM = f"""Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için konu editörüsün. Görevin, 30-35 saniyelik short'lar için
-ALTI SERİDE konu önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa gönderilmesi,
+YEDİ SERİDE konu önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa gönderilmesi,
 bu yüzden "bunu görünce birine atarım" dedirten açıları seç. Her önerinin 'seri' alanını doldur.
 SERİLER:
 - populer (Popüler): BUGÜN Türkiye'de ve dünyada çok konuşulan, aranan bir konuya bağlı şaşırtıcı, doğrulanabilir bir açı.
@@ -80,6 +84,17 @@ SERİLER:
   dağılsın; topic somut durumu adıyla söylesin. Rakamlar resmî ya da güvenilir kaynaklarla (Resmî Gazete, SGK, TÜİK,
   Milli Piyango, meslek odaları, ilan ortalamaları) doğrulanabilsin. Şu alanlarda ÖNERME: {OLSAYDIN_YASAK}.
   trend: durumun neden merak edildiği.
+- kitap (Bir Kitap Bir Dakika): tek bir kitabın konusunu ve ana fikrini sürprizini ele vermeden anlatan, kitap ya da
+  yazarı hakkında şaşırtıcı ve doğrulanabilir bir bilgi içeren 30-38 saniyelik tanıtım. Mümkünse gündeme bağlansın;
+  web aramasıyla yakın tarihleri bul: yayımının, yazarının doğumunun ya da ölümünün yıl dönümü, vizyondaki ya da yeni
+  duyurulan film/dizi uyarlaması, edebiyat ödülü (Nobel, Booker, Orhan Kemal, Sait Faik...), okul okuma listeleri ve
+  sınav dönemi. Türk edebiyatından ve dünya klasiklerinden karışık öner; 3 öneriden en az biri Türk edebiyatından
+  olsun. topic kitabın adını, yazarını ve açıyı söylesin (ör. 'Franz Kafka, Dönüşüm: bir sabah dev bir böceğe
+  dönüşen pazarlamacı; Kafka yayıncısından kapağa böceğin çizilmemesini istedi'). Telif: yazarı {YIL - KAMU_MALI_FARK}
+  ya da daha önce ölmüş kitaplar kamu malıdır ve ilk cümlesi kendi çevirimizle ekrana yazılabilir; diğer kitaplar da
+  önerilebilir ama videoda alıntı olmaz, kitap yalnız anlatılır. 3 öneriden en az biri kamu malı olsun. Kitabın sonunu
+  ya da büyük sürprizini ele veren topic ve hook yazma. Şu alanlarda ÖNERME: {KITAP_YASAK}.
+  trend: bağlandığı gündem (yıl dönümü, uyarlama, ödül, okuma listesi) ya da kitabın neden şimdi ilgi çekeceği.
 Ortak kurallar:
 - Siyasi kutuplaştırıcı, trajik (ölüm, afet, suç mağdurları), sağlık iddiası ve magazin dedikodusu konularını ÖNERME.
 - Doğrulanabilir olmalı; güvenilir kaynakta geçmeli.
@@ -99,7 +114,7 @@ class Suggestion(BaseModel):
     category: str = Field(description=f"Şunlardan biri: {', '.join(CATEGORIES)}")
     score: int = Field(description="Tahmini izlenme potansiyeli 1-10 (populer'de gündem sıcaklığı x merak x arkadaşa "
                                    "gönderilme ihtimali x Türkiye bağlantısı x görsel zenginlik)")
-    seri: Literal["populer", "konu", "efsane", "nasil", "uretim", "olsaydin"] = Field(
+    seri: Literal["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap"] = Field(
         description="Önerinin serisi (sistem yönergesindeki tanımlar)")
 
 
@@ -176,7 +191,7 @@ def uretim_konusu(it) -> str:
 
 
 def sirala(items: list) -> list:
-    """Seri sırasıyla (SERILER: Popüler ... Ya sen olsaydın?), her seride puana göre; seri başına en çok SERI_BASI."""
+    """Seri sırasıyla (SERILER: Popüler ... Bir Kitap Bir Dakika), her seride puana göre; seri başına en çok SERI_BASI."""
     out = []
     for s in SERILER:
         grup = sorted((x for x in items if seri_of(x) == s), key=lambda x: -(_alan(x, "score") or 0))
@@ -204,7 +219,7 @@ def suggest(kaydet: bool = True, seriler: tuple = tuple(SERILER)) -> list[Sugges
 
 def best() -> Suggestion:
     """Otomatik üretimin konusu: OTOMATIK_SERILER'in (Popüler, Konular, Efsane) en yüksek puanlı önerisi (eşitlikte
-    seri sırası); Nasıl yapılır?, Nasıl üretiliyor? ve Ya sen olsaydın? hiç istenmez.
+    seri sırası); Nasıl yapılır?, Nasıl üretiliyor?, Ya sen olsaydın? ve Bir Kitap Bir Dakika hiç istenmez.
     Liste kaydedilmez: sahibin Telegram'da ve panelde seçtiği öneriler değişmesin. Kalıbı şu an dönüşümde olmayan seri
     seçilmez (ör. son video efsane kalıbındaysa Efsane önerisi): aynı kalıp art arda gelmesin."""
     izinli = allowed_structures(ROOT / "history.jsonl")
@@ -309,7 +324,7 @@ def notify() -> None:
     if not items:
         api("sendMessage", data={"chat_id": chat, "text": "Bugün öneri çıkmadı; /oneri ile yeniden dene."})
         return
-    for text, rows in mesajlar(items):  # seriler üçerli mesajlarda; her mesaj kendi serilerinin düğmeleriyle
+    for text, rows in mesajlar(items):  # seriler en çok üçerli mesajlarda; her mesaj kendi serilerinin düğmeleriyle
         api("sendMessage", data={"chat_id": chat, "text": text, "reply_markup": _kb(rows),
                                  "disable_web_page_preview": "true"})
 

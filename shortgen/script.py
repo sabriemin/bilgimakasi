@@ -94,6 +94,39 @@ OLSAYDIN_YASAK = ("yasa dışı ya da ruhsatsız işler, kumar ve bahis siteleri
                   "çekme tavsiyesi, vergi kaçırma ya da kayıt dışı kazanç, gerçek bir kişinin ya da işletmenin gelirini "
                   "ifşa etme, garanti kazanç iddiası, sağlık ve tıbbi senaryolar, siyasi kutuplaştırıcı açılar")
 
+# Bir Kitap Bir Dakika serisinde önerilmeyecek ve senaryoda bulunmayacak kitaplar ve açılar (öneri, senaryo ve
+# doğrulama aynı listeyi kullanır)
+KITAP_YASAK = ("kutsal kitaplar ve dinî metinler, siyasi ya da ideolojik propaganda kitapları ve siyasi kutuplaştırıcı "
+               "açılar, müstehcen içerik, şiddeti, intiharı ya da kendine zarar vermeyi özendiren anlatım, sağlık ya da "
+               "tedavi iddiası taşıyan kitaplar, yaşayan yazarlar hakkında magazin ve dedikodu, kitabın sonunu ya da "
+               "büyük sürprizini ele veren açılar")
+
+# Kitap telif koruması (FSEK: yazarın ölümünü izleyen yıldan başlayarak 70 yıl): Y yılında yazarı Y-71 ya da daha önce
+# ölmüş kitap kamu malıdır (2026'da 1955 ve öncesi). Yalnız kamu malı kitabın ilk cümlesi (kendi çevirimizle) ekrana
+# yazılır; diğer kitaplarda alıntı yok, ilk sayfa künyedir. Kural kodda da uygulanır (normalize_kitap, kitap_alintilari).
+KAMU_MALI_FARK = 71
+# Kitap kapağının amblemleri (çizici kitap.py'nin anahtarlarıyla aynı liste, aynı sıra) ve kapak renkleri
+KITAP_AMBLEMLER = ["kapi", "anahtar", "goz", "kalp", "gemi", "saat", "mektup", "tac", "kus", "agac", "dalga", "yildiz",
+                   "kilic", "maske", "ev", "ay"]
+KITAP_RENKLERI = ["kirmizi", "sari", "lacivert", "yesil", "siyah"]
+# Kitabın sayfa bölümleri, videodaki sırasıyla (her bölüm 1-2 sahne). Sekme adları: İLK CÜMLE (alıntı yoksa KÜNYE) /
+# KONU / FİKİR / BİLGİ / SORU.
+KITAP_BOLUMLERI = ("giris", "konu", "fikir", "bilgi", "soru")
+KITAP_SAYFA_KELIME = 22          # sayfa_metni en çok bu kadar kelime
+KITAP_KAPANIS = "Okudun mu? Yorumlara yaz."
+
+
+def kamu_mali(yazar_olum: int | None, yil: int | None = None) -> bool:
+    """Kitap Türkiye'de (FSEK) kamu malı mı: yazar yil - 71 ya da daha önce ölmüşse. Ölüm yılı 0 (yaşıyor ya da
+    bilinmiyor), eksi ya da gelecekte ise kamu malı sayılmaz."""
+    yil = yil or dt.date.today().year
+    try:
+        olum = int(yazar_olum or 0)
+    except (TypeError, ValueError):
+        return False
+    return 0 < olum <= yil - KAMU_MALI_FARK
+
+
 # Anlatım kalıpları: aynı şablonun tekrarı "seri üretim" gibi görünmesin diye dönüşümlü kullanılır.
 # label: ilk sahnenin üstündeki seri etiketi (ör. "EFSANE Mİ, GERÇEK Mİ? #4"), izleyiciye tanıdık bir format verir.
 STRUCTURES = {
@@ -129,11 +162,19 @@ STRUCTURES = {
                  "bir ayrıntı → son sahne 'Sen olsan ne yapardın? Yorumlara yaz.' ile bitsin. Rakamlar yuvarlanmış ve "
                  "resmî ya da güvenilir kaynaktan olsun; tahminse 'yaklaşık' ya da 'tahmini' de. Şu alanlara giren konu ve "
                  "açı YOK: " + OLSAYDIN_YASAK + "."),
+    "kitap": ("BİR KİTAP BİR DAKİKA", "BİR KİTAP BİR DAKİKA: tek bir kitabın tanıtımı, sürprizi ele vermeden. İlk "
+              "sahne kanca: ilk cümlede kitabın en çarpıcı öncülü ('Bir sabah uyandığında dev bir böceğe dönüşmüştü.') "
+              "ya da, yalnız kamu malı bir kitapsa, ilk cümlesinin kendi çevirimiz → konu: kim, nerede, hangi durumla "
+              "karşı karşıya (yalnız öncül ve ilk perde) → ana fikir: kitabın asıl derdi tek cümlede → kitap ya da "
+              "yazarı hakkında şaşırtıcı ve doğrulanmış tek bir bilgi → son cümle 'Okudun mu? Yorumlara yaz.' Kitabın "
+              "sonu, büyük sürprizi ve ilk perdeden sonraki dönüşleri anlatılmaz. Şu alanlara giren kitap ve açı YOK: "
+              + KITAP_YASAK + "."),
 }
 # Yalnız açıkça istendiğinde (öneriden üretim: --structure) kullanılan kalıplar: otomatik dönüşüme girmez.
-FORCED_ONLY = {"nasil", "uretim", "olsaydin"}
-# Senaryosu web aramasıyla araştırılarak yazılan kalıplar (süreç bilgileri ve güncel rakamlar)
-WEB_KALIPLARI = {"uretim", "olsaydin"}
+# kitap (Bir Kitap Bir Dakika) sahibi örnek videoyu onaylayana kadar yalnız elle seçilir.
+FORCED_ONLY = {"nasil", "uretim", "olsaydin", "kitap"}
+# Senaryosu web aramasıyla araştırılarak yazılan kalıplar (süreç bilgileri, güncel rakamlar, kitabın künyesi)
+WEB_KALIPLARI = {"uretim", "olsaydin", "kitap"}
 # Adım kartlarıyla (nasil kurgu modülü) çizilen kalıplar ve başlıktaki numaranın kelimesi ('ADIM 2' / 'AŞAMA 2')
 ADIM_KELIMESI = {"nasil": "ADIM", "uretim": "AŞAMA"}
 
@@ -181,6 +222,35 @@ class Scene(BaseModel):
     callouts: List[str] = Field(default_factory=list, description=(
         "Yalnız nasil kalıbının adım sahneleri: çizimin üstüne konacak en fazla 2 küçük not etiketi, her biri en fazla "
         "3 kelime/18 karakter, BÜYÜK HARF (ör. 'TAŞMA SINIRI', '12-15 DK'). Çoğu sahnede boş."))
+    # Yalnız 'kitap' kalıbı (Bir Kitap Bir Dakika / "kitap" şablonu) kullanır; eski senaryolar için isteğe bağlı.
+    kitap_bolum: Literal["", "giris", "konu", "fikir", "bilgi", "soru"] = Field(default="", description=(
+        "Yalnız kitap kalıbı: sahnenin ait olduğu kitap sayfası; sahneler giris → konu → fikir → bilgi → soru "
+        "sırasıyla gelir, her bölüm 1-2 sahne. Diğer kalıplarda boş."))
+    sayfa_metni: str = Field(default="", description=(
+        "Yalnız kitap kalıbı: bölümün sağ sayfasına yazılan kısa metin, en fazla 22 kelime (dış sesle aynı olmak "
+        "zorunda değil). Bölümün ilk sahnesine yazılır, ikinci sahnede boş kalır. Diğer kalıplarda boş."))
+    vurgu: str = Field(default="", description=(
+        "Yalnız kitap kalıbı: sayfa_metni içinden harfi harfine alınmış, sarı fosforlu kalemle çizilecek anahtar ifade "
+        "(2-5 kelime). Diğer kalıplarda boş."))
+
+
+class KitapBilgi(BaseModel):
+    """Bir Kitap Bir Dakika videosunun kitabı: kod çizilen kapak (başlık, yazar, amblem, renk) ve künye sayfası bu
+    alanlardan çizilir. ilk_cumle yalnız kamu malı kitapta dolu (kendi çevirimiz); kamu malı kararı yazar_olum'a
+    bağlıdır ve kodda da uygulanır (normalize_kitap)."""
+    baslik: str = Field(description="Kitabın Türkçe adı (ör. 'Dönüşüm').")
+    yazar: str = Field(description="Yazarın adı (ör. 'Franz Kafka').")
+    yil: int = Field(description="Kitabın ilk yayım yılı (ör. 1915).")
+    tur: str = Field(description="Türü, küçük harf (ör. 'uzun öykü', 'roman', 'öykü kitabı', 'oyun', 'deneme').")
+    ozgun_dil: str = Field(description="Özgün dili (ör. 'Almanca', 'Türkçe').")
+    yazar_olum: int = Field(default=0, description="Yazarın ölüm yılı; yaşıyorsa ya da bilinmiyorsa 0.")
+    ilk_cumle: str = Field(default="", description=(
+        "Yalnız kamu malı kitapta (yazar bu yıldan en az 71 yıl önce ölmüşse): kitabın ilk cümlesinin özgün dilden "
+        "KENDİ kısa çevirimiz (yayımlanmış çeviri değil; özgün dili Türkçeyse özgün cümle), tırnaksız, en fazla 22 "
+        "kelime. Diğer kitaplarda boş."))
+    amblem: Literal[tuple(KITAP_AMBLEMLER)] = Field(description=(  # type: ignore[valid-type]
+        "Kapaktaki amblem: kitabın merkezindeki imgeye en yakın olanı."))
+    kapak_rengi: Literal[tuple(KITAP_RENKLERI)] = Field(description="Kapak rengi.")  # type: ignore[valid-type]
 
 
 class ShortScript(BaseModel):
@@ -211,6 +281,8 @@ class ShortScript(BaseModel):
     alkollu: bool = Field(default=False, description=(
         "Yalnız nasil kalıbı: tarif alkollü bir içecek içeriyorsa true (açıklamaya yaş uyarısı eklenir). Diğer "
         "durumlarda false."))
+    kitap: KitapBilgi | None = Field(default=None, description=(
+        "Yalnız kitap kalıbı (Bir Kitap Bir Dakika): kitabın künyesi, kapak amblemi ve rengi. Diğer kalıplarda null."))
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
@@ -380,12 +452,65 @@ OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; vid
 - Şu alanlara giren konu, açı ve ayrıntı YOK: """ + OLSAYDIN_YASAK + "."
 
 
+_AMBLEM_LISTESI = ", ".join(KITAP_AMBLEMLER)
+_RENK_LISTESI = ", ".join(KITAP_RENKLERI)
+
+# Yalnız 'kitap' kalıbında sisteme eklenir (Bir Kitap Bir Dakika serisi, "kitap" şablonu: kodla çizilen kitap kapağı ve
+# sekmeli sayfalar). Telif kuralı kodda da uygulanır (normalize_kitap, kitap_alintilari). Diğer kalıpların yönergesi
+# değişmez.
+KITAP_RULES = f"""BİR KİTAP BİR DAKİKA DÜZENİ (yalnız 'kitap' kalıbı; video kodla çizilen bir kitapla kurulur: önce kapak, sonra
+sekmeli sayfalar; her sahne bu kitabın bir sayfa anıdır):
+- SÜRE: dış ses 30-38 saniye, toplam 75-90 kelime (genel kuraldaki 65-75 kelime ve 78 sınırı bu kalıpta geçerli değil).
+  Sahne sayısı 5-8 (genel kuraldaki 9-12 değil). Her sahnenin narration'ı tam cümle(ler)le başlayıp biter.
+- BÖLÜMLER: her sahnenin kitap_bolum alanı dolu; sıra giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne, sıra
+  bozulmaz ve geri dönülmez. Ekrandaki sekmeler İLK CÜMLE (alıntı yoksa KÜNYE) / KONU / FİKİR / BİLGİ / SORU'dur.
+  1) giris (kanca, ~10-16 kelime): ilk cümle kitabın en çarpıcı öncülü ya da, yalnız kamu malı kitapta, ilk cümlesinin
+     kendi çevirimiz (o zaman ilk cümle 16 kelimeye kadar olabilir; değilse genel kuraldaki gibi en fazla 10 kelime).
+     Kitabın adı ve yazarı ilk iki cümlede geçer.
+  2) konu (~20-28 kelime): kahraman kim, nerede, hangi durumla karşı karşıya; yalnız öncül ve ilk perde.
+  3) fikir (~14-20 kelime): kitabın asıl derdi, ana fikri tek cümlede; Makas'ın yorumunun yerine geçer, ayrıca yorum
+     cümlesi ekleme.
+  4) bilgi (~14-20 kelime): kitap ya da yazarı hakkında şaşırtıcı, doğrulanmış tek bir gerçek (yazılış hikâyesi, yasak,
+     ilk baskı, uyarlama, yazarın hayatı); videonun ikinci merak anı budur.
+  5) soru (son sahne): kitabın fikrine bağlı en fazla 8 kelimelik kısa bir soru olabilir; son cümle tam olarak
+     "{KITAP_KAPANIS}"
+- SAYFA METNİ: her bölümün ilk sahnesinde sayfa_metni o sayfaya yazılan kısa metindir (en fazla {KITAP_SAYFA_KELIME} kelime,
+  düz cümle, BÜYÜK HARF değil); dış sesin aynısı olmak zorunda değil, özü olsun. Aynı bölümün ikinci sahnesinde
+  sayfa_metni boş kalır (sayfa değişmez). vurgu: sayfa_metni içinden HARFİ HARFİNE alınmış 2-5 kelimelik anahtar ifade
+  (sarı fosforlu kalemle çizilir). giris sayfası: kamu malı kitapta ilk_cumle'nin kendisi; değilse boş (sayfaya kitabın
+  künyesi basılır). soru sayfası: kısa soru ya da "{KITAP_KAPANIS}"
+- KİTAP ALANI (kitap): baslik (Türkçe adı), yazar, yil (ilk yayım yılı), tur ("roman", "uzun öykü", "öykü kitabı",
+  "oyun"...), ozgun_dil, yazar_olum (ölüm yılı; yaşıyorsa ya da emin değilsen 0), amblem (kapakta çizilir; kitabın
+  merkezindeki imgeye en yakın olanı: {_AMBLEM_LISTESI}), kapak_rengi ({_RENK_LISTESI}).
+- TELİF (kesin kural): yayınevi kapakları, yayınevi görselleri ve yayımlanmış çeviriler KULLANILMAZ; kapak kodla
+  çizilir. Kitap ancak yazarı {YIL - KAMU_MALI_FARK} ya da daha önce ölmüşse kamu malıdır (Türkiye'de koruma, ölümü
+  izleyen yıldan başlayarak 70 yıl sürer). Kamu malı kitapta ilk_cumle kitabın ilk cümlesinin özgün dilden KENDİ kısa
+  çevirimizdir (yayımlanmış ya da sadeleştirilmiş bir Türkçe baskıdan alınmaz; özgün dili Türkçeyse özgün cümle,
+  bugünkü harflerle); ilk cümle {KITAP_SAYFA_KELIME} kelimeden uzunsa ilk bölümünü çevir ve "…" ile bitir. Kamu malı
+  olmayan kitapta ilk_cumle boştur ve dış seste, sayfa_metni'nde, başlıkta ve açıklamada kitaptan ya da yazardan HİÇBİR
+  alıntı yoktur: tırnak içinde cümle yazma, aktarmayı kendi sözlerinle, dolaylı yap.
+- SÜRPRİZ YOK: kitabın sonunu, katilini, büyük sürprizini ya da ilk perdeden sonraki dönüşleri anlatma; yalnız öncül,
+  ilk perde ve ana fikir.
+- GÖRSELLER: kapak ve sayfalar kodla çizilir; genel kuraldaki "ilk sahnede fotoğraf ya da büyük çizim" ve "her sahnede
+  fotoğraf ya da çizim" kuralları bu kalıpta geçerli değil. Sahnelerde image_mode none, image_queries boş, illustration
+  boş, motion none, theme paper, card auto; mascot çoğunlukla auto (bilgi sahnesinde surprised olabilir). Yalnız bilgi
+  bölümü yazarla ilgiliyse o sahne image_mode framed olabilir ve image_queries yazarın Wikimedia Commons'taki
+  portresini arar (ör. ["Franz Kafka portrait 1923"]); kitap kapağı, baskı, film afişi ya da film karesi ARANMAZ.
+  headline sahnenin 1-2 satırlık kısa anahtar kelimeleri (BÜYÜK HARF).
+- DİL: belgesel tonu sürer: sakin, merak uyandıran, abartısız. Gerçek olmayan hiçbir bilgi yok; yıl, tarih ve sayılar
+  doğrulanmış olsun.
+- category genellikle "dil ve kültür"; search_phrase kitabın adı ve yazarıyla aranan ifade (ör. "Dönüşüm Kafka konusu").
+- Şu alanlara giren kitap ve açı YOK: """ + KITAP_YASAK + "."
+
+
 def kalip_kurallari(yapi: str | None, adim_kartlari: bool) -> str:
     """Kalıba özel ek yönerge (sistem istemine eklenir): nasil ve uretim yalnız Adım kartlarıyla çizilecekse ekran
-    düzenini (NASIL_RULES / URETIM_RULES), olsaydin her zaman kendi düzenini (OLSAYDIN_RULES) ister. Diğer kalıplarda
-    boş: yönergeleri değişmez."""
+    düzenini (NASIL_RULES / URETIM_RULES), olsaydin ve kitap her zaman kendi düzenini (OLSAYDIN_RULES / KITAP_RULES)
+    ister. Diğer kalıplarda boş: yönergeleri değişmez."""
     if yapi == "olsaydin":
         return "\n" + OLSAYDIN_RULES
+    if yapi == "kitap":
+        return "\n" + KITAP_RULES
     if adim_kartlari and yapi == "nasil":
         return "\n" + NASIL_RULES
     if adim_kartlari and yapi == "uretim":
@@ -474,6 +599,265 @@ def _adim_basligi(sc: Scene, n: int, new: bool, kelime: str = "ADIM") -> None:
         if sc.highlight_line >= 0:
             sc.highlight_line += 1
     sc.headline = head
+
+
+# ---- Bir Kitap Bir Dakika: bölüm düzeni, telif koruması, sayfa metinleri
+# Tırnak içindeki metin (alıntı adayı): “...”, "...", «...», „...“, ‘...’. Düz kesme işareti (') Türkçede eki ayırır
+# ("Kafka'nın"): tırnak sayılmaz.
+_TIRNAK_RE = re.compile(r"“([^”\n]+)”|\"([^\"\n]+)\"|«([^»\n]+)»|„([^“”\n]+)[“”]|‘([^’\n]+)’")
+_ALINTI_KELIME = 4  # tırnak içinde bu kadar ya da daha çok kelime alıntı sayılır (kitabın adı sayılmaz)
+_KANCA_RE = re.compile(r"\bKANCA\b\s*[:：\-–—]?\s*", re.IGNORECASE)        # ekranda görünen yazılardan silinir
+_KANCA_BAS_RE = re.compile(r"^\s*KANCA\s*[:：\-–—]\s*", re.IGNORECASE)     # dış sesin başındaki 'Kanca:' etiketi
+# Kitap videosunda aranmayacak görseller: yayınevi kapakları, baskılar, film afişleri ve kareleri
+_GORSEL_YASAK_RE = re.compile(r"(?i)\b(cover|jacket|edition|poster|still|film|movie|screenshot|book|kapa[kğ]|bask[ıi]|"
+                              r"afi[sş])")
+_SAYFA_SON = (".", "!", "?", "…")
+
+
+def _tr_lower(s: str) -> str:
+    return (s or "").replace("I", "ı").replace("İ", "i").lower()
+
+
+def _duz(s: str) -> str:
+    """Karşılaştırma için: Türkçe küçük harf, noktalamasız, tek boşluklu."""
+    return " ".join(re.sub(r"[^\w\s]", " ", _tr_lower(s)).split())
+
+
+def _tirnaksiz(s: str) -> str:
+    return " ".join((s or "").split()).strip("\"“”«»„‘’ ")
+
+
+def _alintilar(metin: str, baslik: str = "") -> list[str]:
+    """Metindeki alıntılar: tırnak içinde en az _ALINTI_KELIME kelimelik parçalar (tırnaklarıyla). Kitabın adı alıntı
+    sayılmaz."""
+    b, out = _duz(baslik), []
+    for m in _TIRNAK_RE.finditer(metin or ""):
+        ic = next(g for g in m.groups() if g is not None)
+        if len(ic.split()) >= _ALINTI_KELIME and _duz(ic) != b:
+            out.append(m.group(0))
+    return out
+
+
+def _kancasiz(s: str) -> str:
+    return " ".join(_KANCA_RE.sub(" ", s or "").split())
+
+
+def _bolum_plani(n: int) -> list[str]:
+    """n sahnelik kitap videosunun varsayılan bölüm dağılımı: her bölüm bir sahne, artan sahneler sırayla konu, bilgi,
+    fikir, giris ve soruya; 5'ten az sahnede ara bölümler düşer."""
+    if n <= 1:
+        return ["giris"] * n
+    if n < len(KITAP_BOLUMLERI):
+        return list(KITAP_BOLUMLERI[:n - 1]) + ["soru"]
+    say = [1] * len(KITAP_BOLUMLERI)
+    for k in range(n - len(KITAP_BOLUMLERI)):
+        say[(1, 3, 2, 0, 4)[k % 5]] += 1
+    return [b for b, c in zip(KITAP_BOLUMLERI, say) for _ in range(c)]
+
+
+def kitap_bolumleri(raw: list[str]) -> list[str]:
+    """Sahnelerin kitap_bolum değerlerini düzene sokar: giris → konu → fikir → bilgi → soru, sıra geri dönmez, ilk sahne
+    giris, son sahne soru, her bölüm 1-2 sahne (5'ten az sahnede ara bölümler düşebilir, 10'dan çok sahnede bölüm başına
+    daha çok sahne olur). Yazılan bölümlerden en azını değiştiren dağılım seçilir; boş ya da tanınmayan değerli sahne
+    önceki sahnenin bölümünün devamıdır (sığmazsa sonraki bölüme geçer). Hiç bölüm yazılmamışsa ya da eşitlikte varsayılan
+    plan (_bolum_plani: artan sahneler önce konu, sonra bilgi) kazanır."""
+    n, K = len(raw), len(KITAP_BOLUMLERI)
+    plan = _bolum_plani(n)
+    sira = {b: j for j, b in enumerate(KITAP_BOLUMLERI)}
+    if n <= 1 or not any(r in sira for r in raw):
+        return plan
+    alt = [1] * K if n >= K else [1] + [0] * (K - 2) + [1]  # bölüm başına en az sahne
+    ust = max(2, -(-n // K))                                  # bölüm başına en çok sahne
+
+    def maliyet(i: int, onceki: int, s: int) -> float:
+        plana_uzak = 0.0 if sira[plan[i]] == s else 0.001
+        if raw[i] in sira:
+            return (0.0 if sira[raw[i]] == s else 1.0) + plana_uzak
+        return (0.0 if s == onceki else 0.01) + plana_uzak  # yazılmamış sahne: önceki bölümün devamı
+    # durum: (bölüm, o bölümdeki sahne sayısı) -> (maliyet, bölüm yolu)
+    dp: dict[tuple[int, int], tuple[float, list[int]]] = {(0, 1): (maliyet(0, 0, 0), [0])}
+    for i in range(1, n):
+        yeni: dict[tuple[int, int], tuple[float, list[int]]] = {}
+        for (s, c), (m, yol) in dp.items():
+            adaylar = [(s, c + 1)] if c < ust else []
+            if c >= alt[s]:
+                for t in range(s + 1, K):
+                    adaylar.append((t, 1))
+                    if alt[t]:
+                        break  # en az bir sahnesi olması gereken bölüm atlanamaz
+            for d in adaylar:
+                m2 = m + maliyet(i, s, d[0])
+                if d not in yeni or m2 < yeni[d][0] - 1e-9:
+                    yeni[d] = (m2, yol + [d[0]])
+        dp = yeni
+    sonlar = [v for (s, c), v in dp.items() if s == K - 1 and c >= alt[-1]]
+    if not sonlar:
+        return plan
+    return [KITAP_BOLUMLERI[s] for s in min(sonlar, key=lambda v: v[0])[1]]
+
+
+def _sayfa_kirp(metin: str, n: int = KITAP_SAYFA_KELIME) -> str:
+    """Sayfa metnini en çok n kelimeye indirir: mümkünse son tam cümlede (en az 8 kelime kalırsa), değilse '…' ile."""
+    kel = (metin or "").split()
+    if len(kel) <= n:
+        return " ".join(kel)
+    son = max((j for j in range(7, n) if kel[j].endswith(_SAYFA_SON)), default=-1)
+    if son >= 0:
+        return " ".join(kel[:son + 1])
+    return " ".join(kel[:n]).rstrip(" ,;:–—-") + "…"
+
+
+def _vurgu_onar(sayfa: str, vurgu: str) -> str:
+    """vurgu sayfa_metni'nin harfi harfine bir parçası olsun: aynen geçiyorsa kalır; büyük/küçük harf, boşluk ya da
+    noktalama farkıyla geçiyorsa sayfadaki yazılışı alınır; hiç geçmiyorsa boş."""
+    v = _tirnaksiz(_kancasiz(vurgu)).strip(" .,;:!?…")
+    if not sayfa or not v:
+        return ""
+    if v in sayfa:
+        return v
+    kel = [(m.start(), m.end(), _tr_lower(m.group())) for m in re.finditer(r"\w+", sayfa)]
+    hedef = [_tr_lower(w) for w in re.findall(r"\w+", v)]
+    for i in range(len(kel) - len(hedef) + 1):
+        if hedef and [k[2] for k in kel[i:i + len(hedef)]] == hedef:
+            return sayfa[kel[i][0]:kel[i + len(hedef) - 1][1]]
+    return ""
+
+
+def _kapanis(narration: str) -> str:
+    """Son sahnenin dış sesi 'Okudun mu? Yorumlara yaz.' ile biter (zaten bitiyorsa aynen kalır)."""
+    n = " ".join((narration or "").split())
+    if _duz(n).endswith(_duz(KITAP_KAPANIS)):
+        return n
+    n = re.sub(r"\s*Yorumlara yaz[.!…]*\s*$", "", n, flags=re.IGNORECASE)
+    n = re.sub(r"\s*Okudun mu\?*\s*$", "", n, flags=re.IGNORECASE)
+    return (n + " " + KITAP_KAPANIS).strip()
+
+
+def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript:
+    """Bir Kitap Bir Dakika (kitap kalıbı) senaryosunu sağlamlaştırır (yerinde; başka kalıba dokunmaz):
+    - telif: kitap year yılında kamu malı değilse (kamu_mali; yazar_olum 0 ise kamu malı sayılmaz) ilk_cumle silinir,
+      giris sayfası boşalır (çizici künye basar) ve sayfa metinlerindeki alıntılar (tırnak içinde 4+ kelime ya da
+      kitabın ilk cümlesi) çıkar; kamu malıysa giris sayfası ilk_cumle'dir. Dış ses, başlık ve açıklamada kalan
+      alıntıyı kitap_alintilari bildirir (üretim durur);
+    - kitap_bolum sırası giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne (kitap_bolumleri); bölümün sayfa
+      metni ilk sahnesindedir;
+    - sayfa metni en çok KITAP_SAYFA_KELIME kelime; vurgu sayfa metninin harfi harfine bir parçası ya da boş;
+    - ekranda 'KANCA' kelimesi görünmez; son cümle 'Okudun mu? Yorumlara yaz.'; kapak, baskı ve afiş araması yapılmaz."""
+    if script.structure != "kitap" or not script.scenes:
+        return script
+    yil = year or dt.date.today().year
+    kb = script.kitap
+    pd = kb is not None and kamu_mali(kb.yazar_olum, yil)
+    baslik, eski_ilk = (kb.baslik if kb else ""), ""
+    if kb is not None:
+        kb.yazar_olum = max(0, int(kb.yazar_olum or 0))
+        kb.ilk_cumle = _tirnaksiz(kb.ilk_cumle)
+        if pd:
+            kb.ilk_cumle = _sayfa_kirp(kb.ilk_cumle)
+        else:
+            eski_ilk, kb.ilk_cumle = kb.ilk_cumle, ""
+    sahneler = script.scenes
+    for sc, b in zip(sahneler, kitap_bolumleri([sc.kitap_bolum for sc in sahneler])):
+        sc.kitap_bolum = b
+    ilk_sahne: dict[str, int] = {}
+    for i, sc in enumerate(sahneler):
+        ilk_sahne.setdefault(sc.kitap_bolum, i)
+    for b, i in ilk_sahne.items():  # bölümün sayfa metni ilk sahnesinde (ikinci sahneye yazılmışsa öne alınır)
+        if not sahneler[i].sayfa_metni.strip():
+            devam = next((sc for sc in sahneler[i + 1:] if sc.kitap_bolum == b and sc.sayfa_metni.strip()), None)
+            if devam is not None:
+                sahneler[i].sayfa_metni, sahneler[i].vurgu = devam.sayfa_metni, devam.vurgu
+                devam.sayfa_metni, devam.vurgu = "", ""
+    for i, sc in enumerate(sahneler):
+        if sc.kitap_bolum == "giris":  # İLK CÜMLE sayfası yalnız kamu malı kitapta; değilse çizici künyeyi basar
+            sc.sayfa_metni = kb.ilk_cumle if (pd and kb.ilk_cumle and i == ilk_sahne["giris"]) else ""
+        elif not pd:  # telifli kitap: sayfalarda alıntı yok
+            s = sc.sayfa_metni
+            for a in _alintilar(s, baslik):
+                s = s.replace(a, " ")
+            if len(eski_ilk.split()) >= _ALINTI_KELIME and _duz(eski_ilk) in _duz(s):
+                s = ""
+            if s != sc.sayfa_metni:
+                s = " ".join(s.split())
+                sc.sayfa_metni = s if len(s.split()) >= 3 else ""
+        sc.sayfa_metni = _sayfa_kirp(_kancasiz(sc.sayfa_metni))
+        sc.vurgu = _vurgu_onar(sc.sayfa_metni, sc.vurgu)
+        sc.kicker = _kancasiz(sc.kicker)
+        if any(_KANCA_RE.search(h or "") for h in sc.headline):
+            yeni, hl = [], -1
+            for j, h in enumerate(sc.headline):
+                h = _kancasiz(h)
+                if h:
+                    hl = len(yeni) if j == sc.highlight_line else hl
+                    yeni.append(h)
+            sc.headline, sc.highlight_line = yeni, hl
+        sc.narration = _KANCA_BAS_RE.sub("", sc.narration)
+        if sc.image_queries or sc.image_query:  # yayınevi kapağı, baskı ya da film afişi aranmaz
+            sc.image_queries = [q for q in sc.image_queries if not _GORSEL_YASAK_RE.search(q)]
+            if _GORSEL_YASAK_RE.search(sc.image_query or ""):
+                sc.image_query = ""
+            if not sc.image_queries and not sc.image_query:
+                sc.image_mode = "none"
+    sahneler[-1].narration = _kapanis(sahneler[-1].narration)
+    if "soru" in ilk_sahne and not sahneler[ilk_sahne["soru"]].sayfa_metni:
+        sahneler[ilk_sahne["soru"]].sayfa_metni = KITAP_KAPANIS
+    return script
+
+
+def kitap_alintilari(script, year: int | None = None) -> list[str]:
+    """Kamu malı olmayan kitabın senaryosunda kalan alıntılar: dış seste, sayfa metinlerinde, başlıkta ve açıklamada
+    tırnak içinde en az 4 kelime (kitabın adı hariç) ya da kitabın ilk cümlesi. Kamu malı kitapta ve diğer kalıplarda
+    boş liste. Üretim bu liste boş değilse durur (generate_script)."""
+    if getattr(script, "structure", "") != "kitap":
+        return []
+    kb = getattr(script, "kitap", None)
+    if kb is not None and kamu_mali(kb.yazar_olum, year):
+        return []
+    baslik, ilk = (kb.baslik, _duz(kb.ilk_cumle)) if kb is not None else ("", "")
+    yerler = ([(f"{i}. sahnenin dış sesi", sc.narration) for i, sc in enumerate(script.scenes, 1)]
+              + [(f"{i}. sahnenin sayfa metni", sc.sayfa_metni) for i, sc in enumerate(script.scenes, 1)]
+              + [("başlık", script.title), ("açıklama", script.description)])
+    out = []
+    for yer, metin in yerler:
+        out += [f"{yer}: {a}" for a in _alintilar(metin, baslik)]
+        if len(ilk.split()) >= _ALINTI_KELIME and ilk in _duz(metin):
+            out.append(f"{yer}: kitabın ilk cümlesi")
+    return out
+
+
+def kitap_sorunlari(script, year: int | None = None) -> list[str]:
+    """Bir Kitap Bir Dakika senaryosunun kural denetimi (doğrulayıcıya düzeltmesi için verilir, üretim sonunda
+    günlüğe yazılır): kitap alanı, telif (kitap_alintilari ve kamu malı olmayan kitapta ilk_cumle), sahne ve kelime
+    sayısı, bölüm sırası, sayfa metni uzunluğu, vurgu ve kapanış cümlesi."""
+    if getattr(script, "structure", "") != "kitap":
+        return []
+    yil = year or dt.date.today().year
+    kb, out = getattr(script, "kitap", None), []
+    if kb is None:
+        out.append("kitap alanı (künye, amblem, kapak rengi) boş")
+    elif kb.ilk_cumle.strip() and not kamu_mali(kb.yazar_olum, yil):
+        out.append(f"kitap kamu malı değil (yazar_olum {kb.yazar_olum}; {yil} yılında yazarı {yil - KAMU_MALI_FARK} "
+                   "ya da önce ölmüş olmalı): ilk_cumle boş olmalı")
+    out += ["kamu malı olmayan kitapta alıntı (çıkar, dolaylı anlat): " + a for a in kitap_alintilari(script, yil)]
+    n = len(script.scenes)
+    if not 5 <= n <= 8:
+        out.append(f"{n} sahne var (5-8 olmalı)")
+    kelime = sum(len(sc.narration.split()) for sc in script.scenes)
+    if not 75 <= kelime <= 90:
+        out.append(f"toplam dış ses {kelime} kelime (75-90 olmalı)")
+    raw = [sc.kitap_bolum for sc in script.scenes]
+    if raw != kitap_bolumleri(raw):
+        out.append(f"kitap_bolum sırası bozuk ({', '.join(b or '-' for b in raw)}); giris → konu → fikir → bilgi → "
+                   "soru, her bölüm 1-2 sahne olmalı")
+    for i, sc in enumerate(script.scenes, 1):
+        if len(sc.sayfa_metni.split()) > KITAP_SAYFA_KELIME:
+            out.append(f"{i}. sahnenin sayfa_metni {len(sc.sayfa_metni.split())} kelime "
+                       f"(en fazla {KITAP_SAYFA_KELIME})")
+        if sc.vurgu and sc.vurgu not in sc.sayfa_metni:
+            out.append(f"{i}. sahnenin vurgusu sayfa_metni içinde harfi harfine geçmiyor: {sc.vurgu}")
+    if script.scenes and not _duz(script.scenes[-1].narration).endswith(_duz(KITAP_KAPANIS)):
+        out.append(f"son cümle '{KITAP_KAPANIS}' değil")
+    return out
 
 
 def _history(path: Path) -> list[str]:
@@ -657,6 +1041,7 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     web = yapi in WEB_KALIPLARI
     if web:
         ask += arastirma_ask(yapi)
+    kart = kart and yapi != "kitap"  # kitap videosu kendi şablonuyla çizilir: kart alanları istenmez
     script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + kalip_kurallari(yapi, nasil),
                         web=web)
     forced = None if series_prev else structure
@@ -685,12 +1070,26 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     if structure == "olsaydin":
         for p in fis_sorunlari(out):  # doğrulayıcı düzeltemediyse günlükte görünsün (onaydan önce bakılır)
             print("UYARI hesap fişi:", p)
+    if structure == "kitap":
+        normalize_kitap(out)
+        alinti = kitap_alintilari(out)
+        if alinti:  # telif kesin kural: kamu malı olmayan kitaptan alıntı yayına gitmez
+            raise RuntimeError("Senaryo kamu malı olmayan bir kitaptan alıntı içeriyor (" + "; ".join(alinti)
+                               + "): senaryo kullanılmadı.")
+        for p in kitap_sorunlari(out):  # doğrulayıcı düzeltemediyse günlükte görünsün (onaydan önce bakılır)
+            print("UYARI kitap:", p)
     return normalize_nasil(out)
 
 
 def arastirma_ask(yapi: str) -> str:
     """Senaryosu web aramasıyla yazılan kalıpların (WEB_KALIPLARI) araştırma yönergesi."""
     bugun = dt.date.today().strftime("%d.%m.%Y")
+    if yapi == "kitap":
+        return (f"\nBugünün tarihi: {bugun}. Yazmadan önce kitabı ve yazarını web aramasıyla araştır (ansiklopediler, "
+                "kütüphane kayıtları, edebiyat tarihleri, güvenilir haber kaynakları): ilk yayım yılı, özgün dili, "
+                "yazarın ölüm yılı (kamu malı kararı buna bağlı), gündem bağlantısı (yıl dönümü, uyarlama, ödül) ve "
+                "şaşırtıcı bilgi bu kaynaklara dayansın; kaynakları 'sources' alanına URL olarak yaz. Yayımlanmış "
+                "çevirilerden ve yayınevi tanıtım metinlerinden cümle alma.")
     if yapi == "olsaydin":
         return (f"\nBugünün tarihi: {bugun}. Yazmadan önce bütün rakamları ve prosedürleri web aramasıyla {YIL} Türkiye "
                 "verilerinden araştır (Resmî Gazete, ÇSGB ve SGK, TÜİK, Milli Piyango'nun resmî tabloları, meslek odaları, "
@@ -785,6 +1184,23 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         sorun = fis_sorunlari(script)
         if sorun:
             kalip += "Hesap fişinde bulunan sorunlar (düzelt): " + "; ".join(sorun) + ". "
+    elif yapi == "kitap":
+        kalip += ("Kitabın künyesini (kitap alanı: yazar, ilk yayım yılı, tür, özgün dil) ve özellikle yazarın ölüm "
+                  "yılını (yazar_olum; yaşıyorsa 0) web aramasıyla doğrula: kamu malı kararı buna bağlıdır. Şaşırtıcı "
+                  "bilgiyi güvenilir bir kaynakla doğrula; doğrulanamıyorsa doğrulanabilen başka bir bilgiyle değiştir. "
+                  "Kitabın sonunu, büyük sürprizini ya da ilk perdeden sonraki dönüşleri ele veren cümleyi çıkar. "
+                  f"TELİF: yazar {YIL - KAMU_MALI_FARK} ya da daha önce ölmemişse (kamu malı değilse) ilk_cumle boş "
+                  "olsun ve dış seste, sayfa_metni'nde, başlıkta ve açıklamada tırnak içinde alıntı kalmasın (aktarmayı "
+                  "dolaylı anlatıma çevir); kamu malıysa ilk_cumle özgün ilk cümlenin kendi çevirimiz olsun, "
+                  "yayımlanmış bir çeviriden alınmasın. Bu kalıpta toplam dış ses 75-90 kelime olur (78 kelime sınırı "
+                  "geçerli değil); ilk cümle kamu malı kitabın kendi ilk cümlesiyse 16 kelimeye kadar olabilir. "
+                  "kitap_bolum düzenini (giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne), sayfa_metni ve vurgu "
+                  "alanlarını koru; dış sesi değiştirdiğin bölümün sayfa_metni'ni de uydur, vurgu sayfa_metni'nden harfi "
+                  f"harfine alınsın. Son cümle '{KITAP_KAPANIS}' olsun. Şu alanlara giren açıyı çıkar: "
+                  + KITAP_YASAK + ". ")
+        sorun = kitap_sorunlari(script)
+        if sorun:
+            kalip += "Kitap kurallarında bulunan sorunlar (düzelt): " + "; ".join(sorun) + ". "
     if duzen:
         kalip += (("Kanca, numaralı adım sahneleri (step 1, 2, 3...; başlığın ilk satırı 'ADIM n') ve son özet sahnesi "
                    "düzenini koru; adım çıkarırsan kalanları yeniden numarala. ") if yapi == "nasil" else
@@ -796,14 +1212,39 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         "(özellikle toplam dış ses 78 kelimeyi geçmesin, ilk cümle en fazla 10 kelimelik doğrudan bir kanca olsun, search_phrase "
         "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). " + kalip +
         "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
-        "alanında döndür.\n\n" + script.model_dump_json(indent=1),
+        "alanında döndür.\n\n" + _senaryo_json(script),
         Review, SYSTEM + kalip_kurallari(yapi, duzen)
         + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
     if review.problems:
         print("Doğrulama notları:", *review.problems, sep="\n - ")
     if keep_structure:
         review.fixed.structure = script.structure
-    return normalize_nasil(review.fixed)
+    if review.fixed.structure == "kitap":
+        _kitap_alanlarini_tamamla(script, review.fixed)
+    return normalize_kitap(normalize_nasil(review.fixed))
+
+
+# Kitap kalıbının sahne alanları: diğer kalıpların doğrulama ve dil düzeltmesi istemlerine yazılmaz
+_KITAP_SAHNE_ALANLARI = {"kitap_bolum", "sayfa_metni", "vurgu"}
+
+
+def _senaryo_json(script: ShortScript) -> str:
+    """Doğrulayıcıya ve editöre giden senaryo metni. Kitap alanları yalnız kitap kalıbında yazılır: diğer kalıpların
+    istemleri bu alanlar eklenmeden önceki hâliyle aynı kalır."""
+    if script.structure == "kitap":
+        return script.model_dump_json(indent=1)
+    return script.model_dump_json(indent=1, exclude={"kitap": True, "scenes": {"__all__": _KITAP_SAHNE_ALANLARI}})
+
+
+def _kitap_alanlarini_tamamla(once: ShortScript, sonra: ShortScript) -> None:
+    """Doğrulayıcı kitap alanını ya da sahnelerin bölüm/sayfa alanlarını boş döndürdüyse önceki hâlinden alınır (sahne
+    sayısı değişmediyse)."""
+    if sonra.kitap is None and once.kitap is not None:
+        sonra.kitap = once.kitap.model_copy(deep=True)
+    if (len(sonra.scenes) == len(once.scenes)
+            and not any(sc.kitap_bolum or sc.sayfa_metni for sc in sonra.scenes)):
+        for a, b in zip(once.scenes, sonra.scenes):
+            b.kitap_bolum, b.sayfa_metni, b.vurgu = a.kitap_bolum, a.sayfa_metni, a.vurgu
 
 
 EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün. Görevin, sana verilen kısa video senaryosunun dış sesini
@@ -849,8 +1290,15 @@ tutarlara, yüzdelere, şehir adlarına ve 'yaklaşık'/'tahmini' nitelemelerine
 '48.000' olmasın); dış sesteki rakamlar kartlardakilerle aynı kalsın. Son cümle 'Sen olsan ne yapardın? Yorumlara yaz.'
 olarak kalsın."""
 
+# Yalnız kitap kalıbında editöre eklenir (Bir Kitap Bir Dakika).
+EDITOR_KITAP = f"""
+BİR KİTAP BİR DAKİKA: kitap, kitap_bolum, sayfa_metni ve vurgu alanlarına DOKUNMA (ekrandaki kitap sayfalarıdır; kod
+korur). Bu videoda toplam dış ses 75-90 kelime (65-75 aralığı ve 78 sınırı geçerli değil); ilk cümle kamu malı kitabın
+kendi ilk cümlesiyse 16 kelimeye kadar olabilir. Kitabın sonunu ya da sürprizini ele veren bilgi ekleme. Tırnak içinde
+alıntı ekleme; aktarmalar dolaylı kalsın. Yılları ve sayıları değiştirme. Son cümle '{KITAP_KAPANIS}' olarak kalsın."""
+
 # Dil düzeltmesinde rakamları korunan kalıplar: editör bir sahnenin sayılarını değiştirirse o sahnenin metni geri alınır.
-SAYI_KORUNAN = {"uretim", "olsaydin"}
+SAYI_KORUNAN = {"uretim", "olsaydin", "kitap"}
 
 
 def _sayilar(metin: str) -> list[str]:
@@ -865,13 +1313,13 @@ class Polished(BaseModel):
 def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScript:
     """Üçüncü geçiş: belgesel dili ve akış için Türkçe editör (web araması yok). adim_kartlari: nasil / uretim
     kalıbının Adım kartları düzeninde başlıklar (soru kancası, adım ve özet başlıkları) editörden önceki hâliyle kalır.
-    Kart ve adım alanları (hesap fişi satırları dahil) hiç değişmez; uretim ve olsaydin kalıplarında sayıları değişen
-    sahnenin metni editörden önceki hâline döner."""
+    Kart, adım ve kitap alanları (hesap fişi satırları, kitap sayfaları ve künyesi dahil) hiç değişmez; uretim,
+    olsaydin ve kitap kalıplarında sayıları değişen sahnenin metni editörden önceki hâline döner."""
     yapi = script.structure
     duzen = adim_kartlari and yapi in ADIM_KELIMESI
     ek = ((EDITOR_NASIL if duzen else "") + (EDITOR_URETIM if yapi == "uretim" else "")
-          + (EDITOR_OLSAYDIN if yapi == "olsaydin" else ""))
-    res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + script.model_dump_json(indent=1), Polished, EDITOR + ek)
+          + (EDITOR_OLSAYDIN if yapi == "olsaydin" else "") + (EDITOR_KITAP if yapi == "kitap" else ""))
+    res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + _senaryo_json(script), Polished, EDITOR + ek)
     if res.notes:
         print("Dil düzeltmeleri:", *res.notes[:12], sep="\n - ")
     fixed = res.fixed
@@ -879,7 +1327,8 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
         return script
     korunan = [f for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon",
                            "anim_query", "card", "card_value", "card_label", "card_myth", "card_fact", "card_note",
-                           "card_lines", "mascot", "step", "callouts") if f in Scene.model_fields]
+                           "card_lines", "mascot", "step", "callouts", "kitap_bolum", "sayfa_metni", "vurgu")
+               if f in Scene.model_fields]
     for i, (a, b) in enumerate(zip(script.scenes, fixed.scenes)):  # görsel alanları kesin olarak koru
         for f in korunan:
             setattr(b, f, getattr(a, f))
@@ -891,6 +1340,7 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
     fixed.sources, fixed.category = script.sources, script.category
     fixed.search_phrase, fixed.structure = script.search_phrase, script.structure
     fixed.alkollu = script.alkollu
+    fixed.kitap = script.kitap.model_copy(deep=True) if script.kitap is not None else None
     return fixed
 
 

@@ -60,7 +60,7 @@ async function dispatch(env, update) {
 }
 
 const HELP = "Merhaba! Yeni videolar buraya onaya gelir.\n\n" +
-  "/oneri: 6 seriden 18 konu önerisi (butonla üret)\n" +
+  "/oneri: 7 seriden 21 konu önerisi (butonla üret)\n" +
   "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n" +
   "/durum: bekleyen ve zamanlanan videolar\n" +
   "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n" +
