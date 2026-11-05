@@ -1,11 +1,11 @@
 {
- "time": "2026-11-05T10:03+03:00",
+ "time": "2026-11-05T13:47+03:00",
  "platforms": {
   "youtube": {
    "account": {
     "followers": 893,
     "views": 173868,
-    "videos": 5
+    "videos": 6
    },
    "videos": {
     "short-20261104-1307": {
@@ -14,12 +14,12 @@
      "comments": 0
     },
     "short-20261104-1839": {
-     "views": 74,
+     "views": 76,
      "likes": 2,
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 337,
+     "views": 388,
      "likes": 8,
      "comments": 0
     },
@@ -29,54 +29,73 @@
      "comments": 0
     },
     "short-20261105-042947": {
-     "views": 132,
+     "views": 234,
      "likes": 1,
+     "comments": 0
+    },
+    "short-20261105-061537": {
+     "views": 0,
+     "likes": 0,
      "comments": 0
     }
    }
   },
   "instagram": {
    "account": {
-    "followers": 4,
-    "videos": 5,
-    "views": 5010,
-    "likes": 73,
+    "followers": 5,
+    "videos": 7,
+    "views": 6388,
+    "likes": 81,
     "comments": 4,
     "saves": 10,
     "shares": 21
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 352,
-     "likes": 3,
+     "views": 474,
+     "likes": 4,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 897,
-     "likes": 5,
+     "views": 1147,
+     "likes": 7,
      "comments": 0,
      "saves": 4,
      "shares": 2
     },
+    "short-20261104-2023": {
+     "views": 781,
+     "likes": 3,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
     "short-20261104-2033": {
-     "views": 2097,
+     "views": 2107,
      "likes": 54,
      "comments": 4,
      "saves": 6,
      "shares": 19
     },
     "short-20261104-212900": {
-     "views": 240,
+     "views": 295,
      "likes": 3,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261105-042947": {
-     "views": 1424,
-     "likes": 8,
+     "views": 1584,
+     "likes": 10,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261105-061537": {
+     "views": 0,
+     "likes": 0,
      "comments": 0,
      "saves": 0,
      "shares": 0
@@ -86,9 +105,9 @@
   "tiktok": {
    "account": {
     "followers": 17,
-    "likes": 262,
+    "likes": 263,
     "videos": 5,
-    "views": 1309,
+    "views": 1398,
     "comments": 0,
     "shares": 1
    },
@@ -96,28 +115,28 @@
    "list": [
     {
      "title": "Ahtapotun üç kalbi ve mavi kanı var; üstelik jetle yüzerken ",
-     "views": 137,
+     "views": 145,
      "likes": 10,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
-     "views": 282,
-     "likes": 10,
+     "views": 323,
+     "likes": 11,
      "comments": 0,
      "shares": 1
     },
     {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 213,
+     "views": 251,
      "likes": 7,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "You'll Never Walk Alone, Liverpool tribünlerinden önce 1945'",
-     "views": 189,
+     "views": 191,
      "likes": 8,
      "comments": 0,
      "shares": 0
@@ -135,8 +154,10 @@
  "titles": {
   "short-20261104-1307": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi",
   "short-20261104-1839": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı",
+  "short-20261104-2023": "GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurtardı",
   "short-20261104-2033": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı",
   "short-20261104-212900": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi",
-  "short-20261105-042947": "Ahtapotun üç kalbi ve mavi kanı: Yüzerken kalbi bile duruyor"
+  "short-20261105-042947": "Ahtapotun üç kalbi ve mavi kanı: Yüzerken kalbi bile duruyor",
+  "short-20261105-061537": "Kredi kartını kim icat etti? Ezberlenen hikâye uydurmaymış"
  }
 }
