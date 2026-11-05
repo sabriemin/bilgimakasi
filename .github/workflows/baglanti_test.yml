@@ -51,6 +51,16 @@ jobs:
           BUTCE: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD }}
         run: |
           [ -n "$ANTHROPIC_API_KEY" ] && echo "ANTHROPIC_API_KEY tanımlı." || echo "::warning::ANTHROPIC_API_KEY tanımlı değil."
+          # biçim denetimi: anahtarın kendisi ya da bir parçası yazdırılmaz, yalnız evet/hayır ve uzunluk
+          python3 - <<'PY'
+          import os, re
+          k = os.environ.get("ANTHROPIC_API_KEY", "")
+          print("Uzunluk:", len(k), "| baş/son boşluk:", "var" if k != k.strip() else "yok",
+                "| sk-ant-api ile başlıyor:", "evet" if k.strip().startswith("sk-ant-api") else "hayır",
+                "| kısaltma (...) içeriyor:", "evet" if ("..." in k or "\u2026" in k) else "hayır",
+                "| geçersiz karakter:", "var" if re.search(r"[^A-Za-z0-9_\-]", k.strip()) else "yok")
+          PY
+          export ANTHROPIC_API_KEY="$(printf '%s' "$ANTHROPIC_API_KEY" | tr -d '[:space:]')"
           echo "Depo bütçe değişkeni: ${BUTCE:-tanımsız (varsayılan 90 $)}"
           claude -p "Yalnız 'tamam' yaz." --model haiku --output-format stream-json --verbose --tools "" \
             --max-budget-usd 0.05 > cikti.jsonl 2> hata.txt || true
