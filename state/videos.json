@@ -293,7 +293,7 @@
     "category": "ekonomi ve markalar",
     "template": "kart",
     "created": "2026-11-05T06:15:37",
-    "status": "yayinlandi",
+    "status": "zamanlandi",
     "telegram_message_id": 110,
     "platforms": {
       "youtube": {
@@ -307,8 +307,14 @@
         "id": "17969460471188866",
         "url": "https://www.instagram.com/reel/DfW2RGaCUcC/",
         "at": "2026-11-05T13:46:32+03:00"
-      },
-      "tiktok": {
+      }
+    },
+    "publish_at": "2026-11-05T11:02:10+00:00",
+    "schedule": null,
+    "decided": "2026-11-05T13:44:52+03:00",
+    "published": "2026-11-05T13:46:32+03:00",
+    "tiktok_onceki": [
+      {
         "status": "ok",
         "id": "v_inbox_file~v2.7704636682137651220",
         "draft": true,
@@ -316,10 +322,6 @@
         "caption": "Kredi kartını kim icat etti? Ezberlenen hikâye uydurmaymış\n\nKredi kartını kim icat etti sorusunun ezber cevabı, Diners Club'ın basın sorumlusunun kurguladığı bir hikâyeydi. Sen bu hikâyeyi ilk nerede duydun?\n\n📷 People's Pictorial\nKingdon Ward\nWalter H (CC BY-SA 4.0), Lhzss8 (CC BY-SA 4.0)\n\n#kredikartınıkimicatetti #kredikartı #dinersclub #ekonomitarihi #bilgimakasi",
         "at": "2026-11-05T13:46:32+03:00"
       }
-    },
-    "publish_at": "2026-11-05T10:44:52+00:00",
-    "schedule": null,
-    "decided": "2026-11-05T13:44:52+03:00",
-    "published": "2026-11-05T13:46:32+03:00"
+    ]
   }
 ]
