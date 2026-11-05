@@ -1,0 +1,35 @@
+{
+  "_aciklama": "Karar Senin 1. sezon hikâye planı. Panel Hikâye bölümünde salt okunur gösterir. bolumler listesi her yayından sonra dolar: {bolum, yayin (ISO tarih), secenekler: {A, B}, oylar: {A, B}, kazanan: \"A\"|\"B\"}.",
+  "seri": "karar",
+  "sezon": 1,
+  "ad": "Mahalleden Yıldıza",
+  "ozet": "Kuzey 15 yaşında; Sinop'ta balıkçı Hasan Reis'in oğlu ve Sinopspor gençlerinin golcüsü. Seyirci her bölümün sonunda onun yerine karar veriyor: hangi seçenek çok oy alırsa hikâye o yoldan devam ediyor.",
+  "bolum_sayisi": 8,
+  "bolum_suresi": "60-75 sn",
+  "yayin": "Pazartesi, Çarşamba, Cuma 21:00",
+  "ilk_bolum": "2026-11-16T21:00:00+03:00",
+  "oylama": "24 saat, YouTube ve Instagram yorumlarında A/B",
+  "sablon": "Çizgi Roman",
+  "plan_belgesi": "https://claude.ai/artifact/RT4aBRHV2GFBzVzpoQRXkz",
+  "karakter_notu": "Kişiler kurgusal, kulüpler gerçek.",
+  "karakterler": [
+    {"ad": "Kuzey", "yas": 15, "rol": "Sinopspor gençlerinin golcüsü, hikâyenin kahramanı"},
+    {"ad": "Hasan Reis", "yas": 48, "rol": "Babası, balıkçı"},
+    {"ad": "Nermin", "yas": 44, "rol": "Annesi, okul kantininde çalışıyor"},
+    {"ad": "Elif", "yas": 11, "rol": "Kız kardeşi"},
+    {"ad": "Yılmaz Hoca", "yas": 62, "rol": "Sinopspor gençler hocası"},
+    {"ad": "Selim Bey", "yas": 50, "rol": "Galatasaray gözcüsü"},
+    {"ad": "Orhan Bey", "yas": 45, "rol": "Samsunspor gözcüsü"}
+  ],
+  "donum_noktalari": [
+    {"bolum": 1, "yas": 15, "baslik": "İki teklif", "ikilem": "İstanbul'da Galatasaray altyapısı mı, Samsunspor'da erken A takım şansı mı?", "bilgi": "Sinop'taki İnceburun, Türkiye'nin en kuzey ucu."},
+    {"bolum": 2, "yas": 15, "baslik": "İlk bedel: yeni şehir, yedek kulübesi", "ikilem": "Hoca onu kanada çekmek istiyor. Kabul mü, golcülükte ısrar mı?", "bilgi": "sezon başında seçilir"},
+    {"bolum": 3, "yas": 16, "baslik": "Yeni yüz: aynı mevkide bir rakip", "ikilem": "Rakibiyle ekstra antrenmana mı kalsın, kendi yolunda mı çalışsın?", "bilgi": "sezon başında seçilir"},
+    {"bolum": 4, "yas": 16, "baslik": "Orta nokta sürprizi", "ikilem": "Genç milli takım çağrısı kulübün kritik maçıyla aynı haftaya denk geliyor.", "bilgi": "sezon başında seçilir"},
+    {"bolum": 5, "yas": 17, "baslik": "Yurt dışı kapısı", "ikilem": "Avrupa'dan ilgi var ama 18'ini beklemek gerek. Beklesin mi, burada mı imzalasın?", "bilgi": "FIFA kurallarına göre 18 yaş altı oyuncunun yurt dışına transferi, istisnalar dışında yasak."},
+    {"bolum": 6, "yas": 17, "baslik": "İlk profesyonel sözleşme", "ikilem": "Uzun sözleşmeyle güvence mi, kısa sözleşmeyle özgürlük mü?", "bilgi": "FIFA kurallarına göre 18 yaş altı bir oyuncunun profesyonel sözleşmesi en fazla 3 yıl olabilir."},
+    {"bolum": 7, "yas": 18, "baslik": "En büyük baskı", "ikilem": "Kupa maçında penaltıyı kendisi mi atsın, kaptana mı bıraksın?", "bilgi": "sezon başında seçilir"},
+    {"bolum": 8, "yas": 18, "baslik": "A takımda ilk maç (final)", "ikilem": "Bütün seçimlerin sonucu; son karede 2. sezonun oyu: Avrupa mı, Süper Lig mi?", "bilgi": "sezon başında seçilir"}
+  ],
+  "bolumler": []
+}
