@@ -20,7 +20,7 @@
   },
   "_kart_notu": "Kart şablonu (Makas maskotlu kartlar). acik true olunca yapı ya da kategori eşleşen senaryolar kart şablonunu kullanır; tarih kategorilerinin hikâye anlatımları her zaman kolajda kalır. Sahibi örnek videoyu onaylayana kadar kapalı.",
   "kart": {
-    "acik": false,
+    "acik": true,
     "yapilar": ["sayac", "efsane", "neden"],
     "kategoriler": ["bilim", "teknoloji", "psikoloji", "insan vücudu"]
   }
