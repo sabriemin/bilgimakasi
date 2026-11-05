@@ -232,11 +232,33 @@
     "category": "doğa ve hayvanlar",
     "template": "kart",
     "created": "2026-11-05T04:23:51",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 97,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "A_cMHY_s348",
+        "url": "https://youtube.com/shorts/A_cMHY_s348",
+        "at": "2026-11-05T07:31:54+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18022534775728602",
+        "url": "https://www.instagram.com/reel/DfWLXZBDzBb/",
+        "at": "2026-11-05T07:31:54+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704540036964042759",
+        "draft": true,
+        "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
+        "caption": "Ahtapotun üç kalbi ve mavi kanı: Yüzerken kalbi bile duruyor\n\nAhtapotun üç kalbi ve mavi kanı var; üstelik jetle yüzerken ana kalbi bir süre duruyor. Sence hangisi daha tuhaf: üç kalp mi, mavi kan mı?\n\n📷 Victor Micallef (CC BY-SA 4.0), RupamInsilico (CC BY-SA 4.0), Didier Descouens (CC BY-SA 4.0), James St. John (CC BY 2.0), Alessandro Dona - I created this work en (CC BY-SA 3.0)\n\n#ahtapotunüçkalbi #ahtapot #mavikan #denizcanlıları #bilgimakasi",
+        "at": "2026-11-05T07:31:54+03:00"
+      }
+    },
     "publish_at": "2026-11-05T04:29:56+00:00",
     "schedule": null,
-    "decided": "2026-11-05T07:29:56+03:00"
+    "decided": "2026-11-05T07:29:56+03:00",
+    "published": "2026-11-05T07:31:54+03:00"
   }
 ]
