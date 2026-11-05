@@ -224,5 +224,16 @@
     "schedule": null,
     "decided": "2026-11-05T00:30:56+03:00",
     "published": "2026-11-05T00:32:48+03:00"
+  },
+  {
+    "tag": "short-20261105-042947",
+    "title": "Ahtapotun üç kalbi ve mavi kanı: Yüzerken kalbi bile duruyor",
+    "topic": "Ahtapotun neden üç kalbi ve mavi kanı var?",
+    "category": "doğa ve hayvanlar",
+    "template": "kart",
+    "created": "2026-11-05T04:23:51",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 97,
+    "platforms": {}
   }
 ]
