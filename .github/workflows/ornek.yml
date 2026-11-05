@@ -12,11 +12,11 @@ on:
         description: "Senaryo yoksa Claude'un yazacağı konu"
         required: false
       sablon:
-        description: "Şablon (ör. kart, nasil). nasil şablonunda konuyla üretim nasil kalıbıyla yazılır."
+        description: "Şablon (ör. kart, nasil, uretim). nasil ve uretim şablonlarında konuyla üretim şablonun kalıbıyla (nasil / uretim) yazılır."
         required: false
         default: "kart"
       kalip:
-        description: "İsteğe bağlı sabit anlatım kalıbı, yalnız konuyla üretimde (ör. nasil, efsane; nasil şablonu yalnız nasil kalıbıyla)"
+        description: "İsteğe bağlı sabit anlatım kalıbı, yalnız konuyla üretimde (ör. efsane, nasil, uretim, olsaydin; nasil ve uretim şablonları yalnız kendi kalıbıyla)"
         required: false
       not:
         description: "Telegram mesajına eklenecek kısa not"
@@ -41,7 +41,7 @@ jobs:
           fi
           # kalıp yalnız ortam değişkeniyle geçer; tam listeyi pipeline (--structure seçenekleri) denetler
           if ! [[ "$KALIP" =~ ^[a-z]{0,20}$ ]]; then
-            echo "::error::Kalıp yalnız küçük harflerden oluşur (ör. nasil, efsane)."; exit 1
+            echo "::error::Kalıp yalnız küçük harflerden oluşur (ör. nasil, uretim, olsaydin)."; exit 1
           fi
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

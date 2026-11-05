@@ -99,12 +99,12 @@ def _u16(s: str) -> int:
 
 
 def _fit_caption(head: str, tags: str, limit: int, measure=None) -> str:
-    """Etiketler ve sondaki görsel atfı (📷 ...) paragrafları her zaman kalsın diye yalnız bilgi metnini kısaltır.
-    TikTok sınırı UTF-16 birimiyle sayar (emoji 2 birim); Instagram karakterle (measure=len)."""
+    """Etiketler ve sondaki görsel atfı (📷 ...) ile uyarı (apply_disclaimer) paragrafları her zaman kalsın diye yalnız bilgi
+    metnini kısaltır. TikTok sınırı UTF-16 birimiyle sayar (emoji 2 birim); Instagram karakterle (measure=len)."""
     measure = measure or _u16
     pars = head.split("\n\n")
     k = len(pars)
-    while k > 1 and all(ln.strip().startswith("📷") for ln in pars[k - 1].splitlines() if ln.strip()):
+    while k > 1 and all(ln.strip().startswith("📷") or _uyari_mi(ln) for ln in pars[k - 1].splitlines() if ln.strip()):
         k -= 1
     head, keep = "\n\n".join(pars[:k]), pars[k:]
     tail = "\n\n".join(keep + ([tags] if tags else []))
@@ -120,7 +120,58 @@ def _fit_caption(head: str, tags: str, limit: int, measure=None) -> str:
 
 # Format serilerinin kendi etiketi: izleyici etikete dokununca serinin bütün videolarını görür. En çok 5 etiket kuralı
 # (Instagram sınırı) korunur: seri etiketi son konu etiketinin yerine, kanal etiketinin (bilgimakasi) önüne girer.
-SERIES_TAGS = {"efsane": "EfsaneMiGerçekMi", "nasil": "NasılYapılır"}
+SERIES_TAGS = {"efsane": "EfsaneMiGerçekMi", "nasil": "NasılYapılır", "uretim": "NasılÜretiliyor",
+               "olsaydin": "YaSenOlsaydın"}
+
+# Açıklamanın uyarı satırları: bilgi metninden sonra, etiket satırından (ve görsel atfından) önce kendi paragrafı
+# olarak durur. Ya sen olsaydın? videolarında rakam uyarısı ({yil}: videonun üretildiği yıl), alkollü tarifli Nasıl
+# yapılır? videolarında (metadata 'alkollu', script.ALKOLLU_ICECEK) yaş uyarısı.
+OLSAYDIN_UYARI = ("Rakamlar {yil} Türkiye verilerine dayanan yaklaşık hesaplardır; kişiye ve şehre göre değişir. "
+                  "Yatırım tavsiyesi değildir.")
+ALKOL_UYARI = "18 yaş altı için uygun değildir; sorumlu tüketin."
+# uyarının açıklamada bulunup bulunmadığı bu kalıplarla aranır (rakam uyarısının yılı ne olursa olsun)
+_UYARI_KALIP = {"olsaydin": re.compile(re.escape(OLSAYDIN_UYARI).replace(re.escape("{yil}"), r"\d{4}")),
+                "alkol": re.compile(re.escape(ALKOL_UYARI))}
+_KUYRUK = ("#", "📷") + _DROP  # açıklamanın sonundaki etiket, görsel atfı ve eski kaynak satırları
+
+
+def _uyari_mi(satir: str) -> bool:
+    s = " ".join(str(satir).split())
+    return any(k.fullmatch(s) for k in _UYARI_KALIP.values())
+
+
+def _uyarilar(meta: dict) -> list[tuple[str, str]]:
+    """(tür, satır): videonun açıklamasında bulunması gereken uyarılar (seri ya da içerik gerektirmiyorsa boş)."""
+    out = []
+    if str(meta.get("structure") or "") == "olsaydin":
+        yil = str(meta.get("created") or "")[:4]
+        out.append(("olsaydin", OLSAYDIN_UYARI.format(yil=yil if re.fullmatch(r"\d{4}", yil) else
+                                                      time.localtime().tm_year)))
+    if meta.get("alkollu"):
+        out.append(("alkol", ALKOL_UYARI))
+    return out
+
+
+def uyari_satirlari(meta: dict) -> list[str]:
+    return [satir for _, satir in _uyarilar(meta)]
+
+
+def apply_disclaimer(meta: dict) -> dict:
+    """Uyarı satırlarını (uyari_satirlari) açıklamaya ekler: bilgi metninden sonra, etiket satırından ve görsel
+    atfından önce tek paragraf. Açıklamada zaten varsa (panel düzenlemesinde metnin içinde yazılmış olsa da) ikinci kez
+    eklenmez; düzenlemede silinmişse yeniden eklenir. Üretimde (pipeline), paylaşımda (publish) ve TikTok/Telegram
+    açıklamasında (tiktok_caption) çağrılır; meta aynen ya da açıklaması güncellenmiş kopyasıyla döner."""
+    desc = str(meta.get("description") or "")
+    duz = " ".join(desc.split())
+    eksik = [satir for tur, satir in _uyarilar(meta) if not _UYARI_KALIP[tur].search(duz)]
+    if not eksik:
+        return meta
+    pars = desc.strip().split("\n\n") if desc.strip() else []
+    k = len(pars)
+    while k > 0 and all(ln.strip().startswith(_KUYRUK) for ln in pars[k - 1].splitlines() if ln.strip()):
+        k -= 1
+    pars.insert(k, "\n".join(eksik))
+    return {**meta, "description": "\n\n".join(pars)}
 
 
 def apply_series_tag(meta: dict) -> dict:
@@ -166,15 +217,20 @@ def _yt_token() -> str:
     return _remember_secret(r.json()["access_token"])
 
 
+def youtube_description(meta: dict) -> str:
+    """YouTube açıklaması: bilgi metni + uyarı satırı (apply_disclaimer) + etiketler + görsel atfı, 4900 bayt."""
+    desc = _clean_desc(apply_disclaimer(meta)["description"]).replace("<", "").replace(">", "")
+    # düzeltmeden önce üretilmiş videolarda "#Galatasaray'ın" gibi etiketler kalmış olabilir: kesme işareti etiketi böler
+    desc = re.sub(r"#[^\s#]+", lambda m: "#" + re.sub(r"\W", "", m.group()[1:]), desc)
+    # YouTube açıklama sınırı 5000 BAYT (karakter değil): emojili/Türkçe metin karakter sayısıyla sığsa da reddedilir
+    return desc.encode("utf-8")[:4900].decode("utf-8", "ignore")
+
+
 def youtube(video: Path, meta: dict) -> dict:
     token = _yt_token()
     title = meta["title"].replace("<", "").replace(">", "")
     # #Shorts artık gerekmiyor (dikey ve kısa video otomatik Short sayılır); başlıkta arama kelimesine yer kalsın
-    desc = _clean_desc(meta["description"]).replace("<", "").replace(">", "")
-    # düzeltmeden önce üretilmiş videolarda "#Galatasaray'ın" gibi etiketler kalmış olabilir: kesme işareti etiketi böler
-    desc = re.sub(r"#[^\s#]+", lambda m: "#" + re.sub(r"\W", "", m.group()[1:]), desc)
-    # YouTube açıklama sınırı 5000 BAYT (karakter değil): emojili/Türkçe metin karakter sayısıyla sığsa da reddedilir
-    desc = desc.encode("utf-8")[:4900].decode("utf-8", "ignore")
+    desc = youtube_description(meta)
     body = {
         "snippet": {"title": title[:100], "description": desc, "categoryId": "27",  # Eğitim
                     "tags": [t for t in (re.sub(r"\W", "", h) for h in meta.get("hashtags", [])) if t][:15],
@@ -251,6 +307,18 @@ def instagram(video: Path, meta: dict) -> dict:
     return _instagram(video, meta)
 
 
+def instagram_caption(meta: dict) -> str:
+    """Instagram açıklaması (2200 karakter): başlık + bilgi metni + uyarı satırı (apply_disclaimer) + görsel atfı + en
+    çok 5 etiket. Sığmazsa yalnız bilgi metni kısalır; uyarı, atıf ve etiketler kalır."""
+    caption = meta["title"] + "\n\n" + _clean_desc(apply_disclaimer(meta)["description"])
+    tags = _hashtags(meta, 5)  # Instagram en fazla 5 etiket
+    caption = re.sub(r"#[^\s#]+", "", caption)  # etiketleri ayıkla, sonda bir kez (en fazla 5) ekle
+    caption = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", caption)).strip()
+    if len(caption) + len(" ".join(tags)) + 2 > 2152:  # sığmıyorsa yalnız bilgi metni kısalır, atıf ve etiketler kalır
+        return _fit_caption(caption, " ".join(tags), 2152, len)
+    return (caption + "\n\n" + " ".join(tags)).strip()
+
+
 def _instagram(video: Path, meta: dict) -> dict:
     (token,) = _env("IG_ACCESS_TOKEN")
     user = os.environ.get("IG_USER_ID", "").strip() or "me"  # numara verilmezse anahtarın sahibi kullanılır
@@ -263,15 +331,7 @@ def _instagram(video: Path, meta: dict) -> dict:
             token = _remember_secret(rr.json()["access_token"])
             _rotate_secret("IG_ACCESS_TOKEN", token)
 
-    caption = meta["title"] + "\n\n" + _clean_desc(meta["description"])
-    tags = _hashtags(meta, 5)  # Instagram en fazla 5 etiket
-    caption = re.sub(r"#[^\s#]+", "", caption)  # etiketleri ayıkla, sonda bir kez (en fazla 5) ekle
-    caption = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", caption)).strip()
-    if len(caption) + len(" ".join(tags)) + 2 > 2152:  # sığmıyorsa yalnız bilgi metni kısalır, atıf ve etiketler kalır
-        caption = _fit_caption(caption, " ".join(tags), 2152, len)
-    else:
-        caption = (caption + "\n\n" + " ".join(tags)).strip()
-
+    caption = instagram_caption(meta)
     public_url = meta.get("public_video_url")
     cover = {"thumb_offset": os.environ.get("COVER_MS", "1000")}  # kapak: ilk sahnedeki kanca başlığı
     if public_url:  # en güvenilir yol: Instagram videoyu herkese açık linkten kendisi çeker
@@ -337,8 +397,9 @@ def _tt_token() -> str:
 
 def tiktok_caption(meta: dict) -> str:
     """TikTok açıklaması (2200 UTF-16 birimi). TikTok aramayı açıklama metninden de okur: başlık + bilgi cümleleri
-    (arama ifadesi burada) + görsel kaynağı + en çok 5 etiket. Telegram'daki açıklama mesajı da bu metindir
-    (TikTok taslağına oradan kopyalanıp yapıştırılır)."""
+    (arama ifadesi burada) + uyarı satırı (apply_disclaimer) + görsel kaynağı + en çok 5 etiket. Telegram'daki
+    açıklama mesajı da bu metindir (TikTok taslağına oradan kopyalanıp yapıştırılır)."""
+    meta = apply_disclaimer(meta)
     body = re.sub(r"#[^\s#]+", "", _clean_desc(meta.get("description") or ""))
     body = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", body)).strip()
     tags = " ".join(_hashtags(meta, 5))
@@ -418,7 +479,9 @@ PLATFORMS = {"youtube": youtube, "instagram": instagram, "tiktok": tiktok}
 
 
 def publish(video: Path, meta: dict, only: list[str] | None = None) -> dict:
-    """Her platformu ayrı dener; birinin hatası diğerlerini durdurmaz."""
+    """Her platformu ayrı dener; birinin hatası diğerlerini durdurmaz. Uyarı satırı (apply_disclaimer) panel
+    düzenlemesinden sonra da açıklamada bulunur."""
+    meta = apply_disclaimer(meta)
     out = {}
     for name, fn in PLATFORMS.items():
         if only and name not in only:

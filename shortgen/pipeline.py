@@ -36,15 +36,32 @@ def template_catalog() -> dict[str, str]:
     return out
 
 
-# Claude'a önerilmeyen, yalnız kendi kuralıyla seçilen şablonlar (kart: kart_uygun; nasil: yapi_sablon ya da --template)
-KENDI_SECIMLI = ("kart", "nasil")
+# Kendi kurgu modülü olan şablonlar Claude'a önerilmez, yalnız kendi kuralıyla seçilir (kart: kart_uygun; renderer'ı
+# nasil olanlar: yapi_sablon ya da --template). Yeni bir kart/nasil şablonu (ör. uretim) da kendiliğinden bu gruba girer.
+KENDI_RENDERER = ("kart", "nasil")
+
+
+def _sablon(name: str | None) -> dict:
+    if not name or name not in template_catalog():
+        return {}
+    return json.loads((ROOT / "templates" / f"{name}.json").read_text(encoding="utf-8"))
 
 
 def sablon_renderer(name: str | None) -> str:
     """Şablonun kurgu modülü ('kart', 'nasil'; diğerleri ''). Bilinmeyen şablon adı ''."""
-    if not name or name not in template_catalog():
-        return ""
-    return json.loads((ROOT / "templates" / f"{name}.json").read_text(encoding="utf-8")).get("renderer", "") or ""
+    return _sablon(name).get("renderer", "") or ""
+
+
+def sablon_yapisi(name: str | None) -> str:
+    """Adım kartları şablonunun (renderer nasil) zorunlu anlatım kalıbı: şablondaki "yapi" (nasil.json -> nasil,
+    uretim.json -> uretim; yazılmamışsa nasil). Diğer şablonlarda ''."""
+    t = _sablon(name)
+    return (t.get("yapi") or "nasil") if t.get("renderer") == "nasil" else ""
+
+
+def kendi_secimli() -> set[str]:
+    """Claude'un şablon listesine girmeyen şablonlar: kurgu modülü kart ya da nasil olanlar."""
+    return {k for k in template_catalog() if sablon_renderer(k) in KENDI_RENDERER}
 
 
 def kart_uygun(script: ShortScript, kart: dict) -> bool:
@@ -64,13 +81,13 @@ def pick_template(script: ShortScript, override: str | None = None) -> str:
         return override
     m = json.loads((ROOT / "templates" / "eslesme.json").read_text(encoding="utf-8"))
     by_structure = (m.get("yapi_sablon") or {}).get(script.structure)
-    if by_structure in cat:  # yapıya bağlı şablon (ör. nasil) kategori eşleşmesinden önce gelir
+    if by_structure in cat:  # yapıya bağlı şablon (ör. uretim -> uretim, olsaydin -> kart) kategori eşleşmesinden önce
         return by_structure
     kart = m.get("kart") or {}
     if "kart" in cat and kart_uygun(script, kart):
         return "kart"
-    if m.get("claude_secsin") and script.template in cat and script.template not in KENDI_SECIMLI:
-        return script.template  # kart yalnız kart_uygun ile, nasil yalnız yapi_sablon ya da --template ile seçilir
+    if m.get("claude_secsin") and script.template in cat and script.template not in kendi_secimli():
+        return script.template  # kart yalnız kart_uygun ile, nasil/uretim yalnız yapi_sablon ya da --template ile seçilir
     t = m.get("kategoriler", {}).get(script.category.strip().lower(), m.get("varsayilan", "kolaj"))
     return t if t in cat else "kolaj"
 
@@ -206,6 +223,13 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         render.render(specs, words, video, mp3, music, template=template)
 
     # 6) yayın paketi
+    meta = yayin_paketi(script, template, credits, use_voice)
+    (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+    return video
+
+
+def yayin_paketi(script: ShortScript, template: str, credits: list, ai_voice: bool) -> dict:
+    """metadata.json: başlık, açıklama (bilgi metni, uyarı satırı, etiketler, görsel atfı) ve kayıt alanları."""
     desc = "\n\n".join(filter(None, [
         script.description,
         " ".join("#" + t for t in (re.sub(r"\W", "", h) for h in script.hashtags) if t),
@@ -214,14 +238,15 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
     meta = {
         "title": script.title, "description": desc, "hashtags": script.hashtags,
         "topic": script.topic, "category": script.category, "template": template,
-        "credits": [images.credit_dict(c) for c in credits], "ai_voice": use_voice,
+        "credits": [images.credit_dict(c) for c in credits], "ai_voice": ai_voice,
         "series_part": script.series_part, "structure": script.structure, "search_phrase": script.search_phrase,
         "status": "onay_bekliyor", "created": dt.datetime.now().isoformat(timespec="seconds"),
     }
-    from .publish import apply_series_tag
+    if script.alkollu:  # alkollü tarif (script.ALKOLLU_ICECEK açıkken): açıklamaya yaş uyarısı
+        meta["alkollu"] = True
+    from .publish import apply_disclaimer, apply_series_tag
     meta = apply_series_tag(meta)  # "Efsane mi, gerçek mi?" gibi format serilerinin etiketi
-    (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
-    return video
+    return apply_disclaimer(meta)  # Ya sen olsaydın? rakam uyarısı / alkollü tarifin yaş uyarısı
 
 
 def main() -> None:
@@ -232,16 +257,20 @@ def main() -> None:
     ap.add_argument("--music", type=Path, help="Telifsiz müzik dosyası (mp3)")
     ap.add_argument("--template", help="Şablonu elle seç (templates/ klasöründeki ad)")
     ap.add_argument("--structure", choices=list(STRUCTURES),
-                    help="Anlatım kalıbını sabitle (öneri serisinden üretim, ör. efsane, nasil)")
+                    help="Anlatım kalıbını sabitle (öneri serisinden üretim, ör. efsane, nasil, uretim, olsaydin)")
     ap.add_argument("--out", type=Path, default=ROOT / "output")
     a = ap.parse_args()
     load_env(ROOT / ".env")
-    if sablon_renderer((a.template or "").strip()) == "nasil":
-        # Nasıl yapılır? şablonu adım düzenli senaryo ister: yeni senaryo nasil kalıbıyla yazılır; başka kalıp verilirse
-        # Claude'a gitmeden durur (her sahne bir adım olur, 8-10 adımlık ilerleme çubuğu sığmaz)
-        if a.structure and a.structure != "nasil":
-            raise SystemExit(f"nasil şablonu yalnız nasil kalıbıyla kullanılır (verilen kalıp: {a.structure}).")
-        a.structure = "nasil"
+    yapi = sablon_yapisi((a.template or "").strip())
+    if yapi:
+        # Adım kartları şablonu (nasil, uretim) adım düzenli senaryo ister: yeni senaryo şablonun kalıbıyla ("yapi")
+        # yazılır; başka kalıp verilirse Claude'a gitmeden durur (her sahne bir adım olur, 8-10 adımlık çubuk sığmaz)
+        if a.structure and a.structure != yapi:
+            raise SystemExit(f"{a.template.strip()} şablonu yalnız {yapi} kalıbıyla kullanılır "
+                             f"(verilen kalıp: {a.structure}).")
+        if yapi not in STRUCTURES:
+            raise SystemExit(f"{a.template.strip()} şablonunun kalıbı tanınmıyor: {yapi}")
+        a.structure = yapi
 
     history = ROOT / "history.jsonl"
     m = json.loads((ROOT / "templates" / "eslesme.json").read_text(encoding="utf-8"))
@@ -270,7 +299,7 @@ def main() -> None:
             print("Konu sırasından alınan konu:", queued)
         topic = a.topic or queued
         if not topic and os.environ.get("AUTO_TREND", "1") != "0":
-            try:  # konu verilmediyse önerilerin en yüksek puanlısını seç (Nasıl yapılır? serisi otomatik seçilmez)
+            try:  # konu verilmediyse önerilerin en yüksek puanlısını seç (nasil, uretim, olsaydin otomatik seçilmez)
                 from . import trends
                 s0 = trends.best()
                 topic = trends.uretim_konusu(s0)
@@ -282,14 +311,17 @@ def main() -> None:
             print("Sabit anlatım kalıbı:", a.structure)
         # seri formatı (sabit kalıp) videoları tek bölümlük: iki bölümlük seri yalnız serbest kalıpta
         allow = os.environ.get("SERIES", "1") != "0" and not open_part and not a.structure
-        catalog = {k: v for k, v in template_catalog().items() if k not in KENDI_SECIMLI}  # Claude'a önerilmez
-        # yapıya bağlı şablon senaryodan önce bilinir: elle seçilen ya da yapi_sablon (ör. nasil -> kart / nasil)
+        kendi = kendi_secimli()
+        catalog = {k: v for k, v in template_catalog().items() if k not in kendi}  # Claude'a önerilmez
+        # yapıya bağlı şablon senaryodan önce bilinir: elle seçilen ya da yapi_sablon (ör. nasil -> kart / nasil,
+        # uretim -> uretim, olsaydin -> kart)
         hedef = a.template or (m.get("yapi_sablon") or {}).get(a.structure or "")
         script = generate_script(history, topic, catalog if m.get("claude_secsin") else None, allow_series=allow,
                                  # yapıya bağlı kart yönergesi yalnız şablon elle seçilmediyse (--template nasil kartsız)
                                  kart=kart_on or (not a.template and hedef == "kart"),
                                  structure=a.structure,
-                                 # Adım kartları düzeni (NASIL_RULES) yalnız video nasil şablonuyla çizilecekse istenir
+                                 # Adım kartları düzeni (NASIL_RULES / URETIM_RULES) yalnız video renderer'ı nasil
+                                 # olan şablonla (nasil, uretim) çizilecekse istenir
                                  adim_kartlari=sablon_renderer(hedef) == "nasil")
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
@@ -300,8 +332,10 @@ def main() -> None:
         a.template = open_part["template"]
     template = pick_template(script, a.template)
     print(f"Şablon: {template}")
-    if sablon_renderer(template) == "nasil" and script.structure != "nasil":  # ör. hazır senaryo başka kalıpta
-        raise SystemExit(f"nasil şablonu yalnız nasil kalıbındaki senaryoyla kullanılır (senaryo: {script.structure}).")
+    yapi = sablon_yapisi(template)
+    if yapi and script.structure != yapi:  # ör. hazır senaryo başka kalıpta
+        raise SystemExit(f"{template} şablonu yalnız {yapi} kalıbındaki senaryoyla kullanılır "
+                         f"(senaryo: {script.structure}).")
     music = a.music or (Path(os.environ["MUSIC_FILE"]) if os.environ.get("MUSIC_FILE") else None)
     out_dir = a.out / f"{dt.datetime.now():%Y-%m-%d_%H%M}_{slugify(script.topic)}"
     video = build(script, out_dir, use_voice=not a.no_voice, music=music, template=template)

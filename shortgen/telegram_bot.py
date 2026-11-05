@@ -340,7 +340,8 @@ def _suggestion_topic(it: dict) -> str:
 
 
 def _produce_suggestion(it: dict) -> bool:
-    """Öneriden üretim: serinin kalıbı (Efsane mi, gerçek mi? -> efsane, Nasıl yapılır? -> nasil) üretimde sabitlenir."""
+    """Öneriden üretim: serinin kalıbı (trends.SERI_KALIP: Efsane mi, gerçek mi? -> efsane, Nasıl yapılır? -> nasil,
+    Nasıl üretiliyor? -> uretim, Ya sen olsaydın? -> olsaydin) üretimde sabitlenir."""
     from .trends import kalip_of
     return _dispatch(_suggestion_topic(it), kalip=kalip_of(it))
 
@@ -489,7 +490,7 @@ def _handle_callback(cq: dict, chat: str) -> None:
 
 
 COMMANDS = [
-    {"command": "oneri", "description": "Gündem, konu, efsane ve nasıl yapılır serilerinden 12 öneri"},
+    {"command": "oneri", "description": "Altı seriden 18 konu önerisi (butonla üret)"},
     {"command": "uret", "description": "Hemen yeni video üret (ör. /uret kara delikler)"},
     {"command": "durum", "description": "Bekleyen ve zamanlanan videolar"},
     {"command": "rapor", "description": "İzlenme, takipçi, beğeni, kaydetme raporu"},
@@ -626,7 +627,7 @@ def process_update(u: dict, chat: str) -> None:
             api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
         elif text.startswith("/start") or text.startswith("/yardim"):
             api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
-                                     "/oneri: 4 seriden 12 konu önerisi (butonla üret)\n"
+                                     "/oneri: 6 seriden 18 konu önerisi (butonla üret)\n"
                                      "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n"
                                      "/durum: bekleyen ve zamanlanan videolar\n"
                                      "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n"
