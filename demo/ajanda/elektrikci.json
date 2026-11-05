@@ -1,0 +1,132 @@
+{
+  "_not": "Yalnız yerel kurgu denemesi (Ajanda şablonu, gün akışı, parasız) içindir, yayınlanmaz. Saatler ve işler Türkiye'de bir elektrik tesisatçısının tipik gününden seçilmiş örneklerdir; çizimler depodaki yerel dosyalardır (Claude çağrısı yapılmaz).",
+  "topic": "Elektrikçi olsaydın günün nasıl geçerdi",
+  "category": "teknoloji",
+  "template": "ajanda",
+  "title": "Elektrikçi olsaydın günün nasıl geçerdi?",
+  "description": "Sabah atölyeden akşamki acil çağrıya bir elektrikçinin günü. Sen olsan ne yapardın?",
+  "hashtags": [
+    "elektrikciolsaydin",
+    "elektrikci",
+    "meslekler",
+    "isguvenligi",
+    "bilgimakasi"
+  ],
+  "scenes": [
+    {
+      "narration": "Sen elektrikçi olsaydın, günün yedi buçukta başlardı.",
+      "kicker": "",
+      "headline": ["SEN ELEKTRİKÇİ", "OLSAYDIN"],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/ajanda/olcu_aleti.png",
+      "motion": "none"
+    },
+    {
+      "narration": "Atölyede kabloyu ve ölçü aletini çantana koyarsın.",
+      "kicker": "07:30",
+      "headline": ["MALZEME", "HAZIRLIĞI"],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    },
+    {
+      "narration": "Dokuzda ilk arıza: sigortası atan bir daire.",
+      "kicker": "09:00",
+      "headline": ["İLK ARIZA"],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/ajanda/sigorta_panosu.png",
+      "motion": "none"
+    },
+    {
+      "narration": "Şalteri indirir, gerilim olmadığını ölçersin.",
+      "kicker": "",
+      "headline": ["ÖNCE ŞALTERİ", "İNDİR"],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    },
+    {
+      "narration": "Öğlen şantiyede yeni binanın panosunu bağlarsın.",
+      "kicker": "13:00",
+      "headline": ["ŞANTİYEDE", "PANO"],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    },
+    {
+      "narration": "Bu işte ustalık yetmez, mesleki yeterlilik belgesi de zorunlu.",
+      "kicker": "",
+      "headline": ["BELGESİZ", "OLMAZ"],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "interstitial"
+    },
+    {
+      "narration": "Akşamüstü acil çağrı: duvardaki priz kararmış.",
+      "kicker": "17:30",
+      "headline": ["ACİL ÇAĞRI"],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/ajanda/yanik_priz.png",
+      "motion": "none",
+      "mascot": "surprised"
+    },
+    {
+      "narration": "Kural hep aynı: önce enerjiyi kes. Sen olsan ne yapardın? Yorumlara yaz.",
+      "kicker": "",
+      "headline": ["SEN OLSAN?"],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "cta"
+    }
+  ],
+  "sources": [
+    "Mesleki Yeterlilik Kurumu: belge zorunluluğu getirilen meslekler (elektrik tesisatçısı)",
+    "Elektrik İç Tesisleri Yönetmeliği"
+  ],
+  "search_phrase": "elektrikçi olsaydın",
+  "structure": "olsaydin",
+  "series_part": 0,
+  "next_part_brief": ""
+}
