@@ -188,8 +188,12 @@ def _when(iso: str, ref: str | None = None) -> str:
 
 
 def _plain(title) -> str:
-    """Tablo hücresi için ad: emoji ve görünmez işaretler çıkar, boşluklar teke iner."""
-    t = "".join(c for c in str(title or "") if ord(c) < 0x2000 or 0x2010 <= ord(c) <= 0x2027)
+    """Tablo hücresi için ad: NFC'ye çevrilir; emoji, birleşen işaretler ve görünmez/denetim karakterleri çıkar (eş genişlikli
+    yazıda sütunları kaydırırlar), boşluklar teke iner."""
+    import unicodedata as u
+    t = u.normalize("NFC", str(title or ""))
+    t = "".join(c for c in t if (ord(c) < 0x2000 or 0x2010 <= ord(c) <= 0x2027) and not u.combining(c)
+                and u.category(c) not in ("Cf", "Cc", "Cs", "Co"))
     return " ".join(t.split())
 
 
@@ -197,26 +201,51 @@ def _cut(t: str, w: int) -> str:
     return t if len(t) <= w else t[:max(1, w - 1)].rstrip() + "…"
 
 
-def _table(head: list[str], rows: list[list[str]], first: int | None = None) -> str:
-    """İlk sütun sola, diğerleri sağa yaslı eş genişlikli tablo. first verilirse ilk sütun o genişliğe kesilir/doldurulur."""
+def _k(x: int) -> str:
+    """Kısa sayı (tablo W'ye sığmazsa), en çok 5 karakter: 9.999 / 12B / 124B / 1,2Mn / 12Mn / 999Mn."""
+    a, sign = abs(x), "-" if x < 0 else ""
+    if a < 10_000:
+        return sign + _n(a)
+    for div, unit in ((1_000_000, "Mn"), (1_000, "B")):
+        if a >= div * 0.9995:  # 999.999 -> 1Mn (1000B değil)
+            v = a / div
+            txt = f"{v:.1f}".replace(".", ",") if v < 9.95 else f"{v:.0f}"
+            return sign + txt.removesuffix(",0") + unit
+    return sign + _n(a)
+
+
+def _fmt(v, short: bool, signed: bool = False) -> str:
+    """Hücre: sayıysa biçimlenir (signed: +/− işaretli), değilse olduğu gibi."""
+    if not isinstance(v, int) or isinstance(v, bool):
+        return str(v)
+    txt = _k(v) if short else _n(abs(v) if signed else v)
+    if signed:
+        txt = txt.lstrip("-")
+        return ("+" if v > 0 else "−" if v < 0 else "") + txt
+    return txt
+
+
+def _table(head: list[str], rows: list[list], title: bool = False, signed: bool = False, label_w: int = 0) -> str:
+    """İlk sütun sola, diğerleri sağa yaslı eş genişlikli tablo; satırlar en çok W karakter. Sığmazsa sayılar kısaltılır
+    (12,3B), title=True ise ilk sütun (video adı) daraltılıp '…' ile kesilir."""
     import html
-    ws = [max(len(c) for c in col) for col in zip(*([head] + rows))]
-    if first is not None:
-        ws[0] = first
+    for short in (False, True):
+        cells = [list(head)] + [[r[0]] + [_fmt(c, short, signed) for c in r[1:]] for r in rows]
+        ws = [max(len(c) for c in col) for col in zip(*cells)]
+        ws[0] = max(ws[0], label_w)  # platform tabloları alt alta aynı hizada dursun
+        rest = sum(w + 1 for w in ws[1:])
+        if title:
+            ws[0] = max(6, min(ws[0], W - rest))
+        if ws[0] + rest <= W:
+            break
     out = [" ".join([_cut(r[0], ws[0]).ljust(ws[0])] + [c.rjust(w) for c, w in zip(r[1:], ws[1:])]).rstrip()
-           for r in [head] + rows]
+           for r in cells]
     return "<pre>" + html.escape("\n".join(out), quote=False) + "</pre>"
 
 
-def _title_width(head: list[str], rows: list[list[str]]) -> int:
-    """Video tablosunda ad sütununa kalan genişlik (en az 10)."""
-    rest = sum(max(len(c) for c in col) + 1 for col in list(zip(*([head] + rows)))[1:])
-    return max(10, W - rest)
-
-
 def render(snap: dict, prev: dict | None) -> str:
-    """Telegram raporu (HTML): platform tablosu (satırlar ölçü, sütunlar platform), toplam, son rapordan beri değişim,
-    en çok izlenen videolar tablosu ve TikTok tablosu."""
+    """Telegram raporu (HTML): platform tablosu (satırlar ölçü, sütunlar platform), toplam, platform platform son
+    rapordan beri değişim, en çok izlenen videolar tablosu ve TikTok tablosu."""
     import html
     prev = prev or {"platforms": {}}
     plats = snap.get("platforms") or {}
@@ -226,26 +255,37 @@ def render(snap: dict, prev: dict | None) -> str:
              if isinstance(plats.get(n), dict) and "error" in plats[n]]
     notes += [f"ℹ️ {NAMES[n]}: {html.escape(str(plats[n]['note']))}" for n in ok if plats[n].get("note")]
     acc = {n: plats[n].get("account") or {} for n in ok}
-    body = [[label] + [_n(acc[n][k]) if isinstance(acc[n].get(k), int) else "–" for n in ok]
-            for k, label in ROWS if any(isinstance(acc[n].get(k), int) for n in ok)]
+
+    def num(d, k):
+        v = d.get(k)
+        return v if isinstance(v, int) and not isinstance(v, bool) else None
+
+    body = [[label] + [num(acc[n], k) if num(acc[n], k) is not None else "–" for n in ok]
+            for k, label in ROWS if any(num(acc[n], k) is not None for n in ok)]
     if body:
-        lines += ["", _table([""] + [COL[n] for n in ok], body)]
+        lines += ["", _table([""] + [COL[n] for n in ok], body, label_w=max(len(label) for _, label in ROWS))]
         if len(ok) > 1:
-            tot = [f"{_n(sum(acc[n].get(k, 0) for n in ok if isinstance(acc[n].get(k), int)))} {WORD[k]}"
-                   for k in ("followers", "views", "likes") if any(isinstance(acc[n].get(k), int) for n in ok)]
+            tot = [f"{_n(sum(num(acc[n], k) or 0 for n in ok))} {WORD[k]}"
+                   for k in ("followers", "views", "likes") if any(num(acc[n], k) is not None for n in ok)]
             lines.append("<b>Toplam:</b> " + ", ".join(tot))
-    # son rapordan beri: yalnız iki ölçümde de okunabilen platformlar karşılaştırılır
-    if prev.get("platforms") and ok:
-        diff = {k: 0 for k, _ in ROWS}
-        for n in ok:
-            pd = prev["platforms"].get(n) or {}
-            pa = pd.get("account") or {} if "error" not in pd else {}
-            for k in diff:
-                if isinstance(acc[n].get(k), int) and isinstance(pa.get(k), int):
-                    diff[k] += acc[n][k] - pa[k]
-        parts = [f"{'+' if v > 0 else '−'}{_n(abs(v))} {WORD[k]}" for k, v in diff.items() if v]
-        since = _when(prev.get("time", ""), snap.get("time"))
-        lines.append(f"<b>Son rapordan ({since}) beri:</b> " + (", ".join(parts) if parts else "değişiklik yok"))
+    # son rapordan beri, platform platform: yalnız iki ölçümde de okunabilen değerler karşılaştırılır
+    pp = prev.get("platforms") or {}
+    if pp and ok:
+        pacc = {n: ((pp.get(n) or {}).get("account") or {}) if isinstance(pp.get(n), dict) and "error" not in pp[n]
+                else {} for n in ok}
+        diff = {(n, k): num(acc[n], k) - num(pacc[n], k) for n in ok for k, _ in ROWS
+                if num(acc[n], k) is not None and num(pacc[n], k) is not None}
+        since = _when(prev.get("time", ""), snap.get("time")) if prev.get("time") else ""
+        head = f"<b>Son rapordan{f' ({since})' if since else ''} beri</b>"
+        rows = [[label] + [diff.get((n, k), "–") for n in ok] for k, label in ROWS
+                if any(diff.get((n, k)) for n in ok)]
+        if rows:
+            views = sum(v for (n, k), v in diff.items() if k == "views")
+            lines += ["", head + (f" (toplam {'+' if views > 0 else '−' if views < 0 else ''}{_n(abs(views))} izlenme)"
+                                  if any(k == "views" for _, k in diff) else ""),
+                      _table([""] + [COL[n] for n in ok], rows, signed=True, label_w=max(len(label) for _, label in ROWS))]
+        elif diff:
+            lines.append(head + ": değişiklik yok")
     # video bazlı: YouTube ve Instagram aynı videoyu kayıttan eşleştirir; TikTok listesi ayrı (taslaktan elle paylaşıldı)
     rows = []
     for tag, title in (snap.get("titles") or {}).items():
@@ -255,18 +295,17 @@ def render(snap: dict, prev: dict | None) -> str:
             continue
         views = _int((yt or {}).get("views")) + _int((ig or {}).get("views"))
         likes = _int((yt or {}).get("likes")) + _int((ig or {}).get("likes"))
-        rows.append((views, [_plain(title) or tag, _n(_int(yt["views"])) if yt and "views" in yt else "–",
-                             _n(_int(ig["views"])) if ig and "views" in ig else "–", _n(likes)]))
+        rows.append((views, [_plain(title) or tag, _int(yt["views"]) if yt and "views" in yt else "–",
+                             _int(ig["views"]) if ig and "views" in ig else "–", likes]))
     if rows:
         top = [r for _, r in sorted(rows, key=lambda x: -x[0])[:10]]
-        head = ["Video", "YT", "Insta", "Beğeni"]
-        lines += ["", "<b>Videolar</b> (izlenme; beğeni iki platformun toplamı)", _table(head, top, _title_width(head, top))]
+        lines += ["", "<b>Videolar</b> (izlenme; beğeni iki platformun toplamı)",
+                  _table(["Video", "YT", "Insta", "Beğeni"], top, title=True)]
     tt = ((plats.get("tiktok") or {}).get("list") or []) if "tiktok" in ok else []
     if tt:
-        top = [[_plain(v.get("title")) or "(adsız)", _n(_int(v.get("views"))), _n(_int(v.get("likes")))]
+        top = [[_plain(v.get("title")) or "(adsız)", _int(v.get("views")), _int(v.get("likes"))]
                for v in sorted(tt, key=lambda v: -_int(v.get("views")))[:5]]
-        head = ["TikTok", "İzlenme", "Beğeni"]
-        lines += ["", _table(head, top, _title_width(head, top))]
+        lines += ["", _table(["TikTok", "İzlenme", "Beğeni"], top, title=True)]
     if notes:
         lines += [""] + notes
     lines += ["", "Grafikler ve ayrıntı: /panel"]

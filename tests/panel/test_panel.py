@@ -728,7 +728,29 @@ class Gizleme(Ortak):
             self.assertNotIn("🎬", gorunen)
             self.assertNotIn("<b>", b)  # başlıktaki etiket kaçışlı
         n = sum(1 for d in snap["platforms"].values() if isinstance((d.get("account") or {}).get("views"), int))
-        self.assertIn(f"beri:</b> +{10 * n} izlenme", txt)
+        self.assertIn(f"(toplam +{10 * n} izlenme)", txt)
+        self.assertRegex(H.unescape(txt), r"\nİzlenme +\+10 +\+10 +\+10(\n|</pre>)")  # platform platform değişim
+        # büyük sayılar: tablo yine W'yi geçmez (sayılar kısalır, video adı daralır)
+        buyuk = json.loads(json.dumps(snap))
+        for d in buyuk["platforms"].values():
+            if isinstance((d.get("account") or {}).get("views"), int):
+                d["account"]["views"] = 12345678
+            for v in (d.get("videos") or {}).values():
+                v.update(views=1234567, likes=123456)
+        t2 = st.render(buyuk, prev)
+        for b in re.findall(r"<pre>(.*?)</pre>", t2, re.S):
+            self.assertLessEqual(max(len(x) for x in H.unescape(b).split("\n")), st.W, H.unescape(b))
+        self.assertIn("12Mn", t2)
+        # bir platformda düşüş, ötekinde artış birbirini götürmez
+        az = json.loads(json.dumps(prev))
+        p1, p2 = [k for k, d in snap["platforms"].items() if isinstance((d.get("account") or {}).get("followers"), int)][:2]
+        az["platforms"][p1]["account"]["followers"] += 3
+        az["platforms"][p2]["account"]["followers"] -= 3
+        satir = [x for x in H.unescape(st.render(snap, az)).split("\n") if x.startswith("Takipçi") and ("−3" in x)]
+        self.assertTrue(satir and "+3" in satir[0], satir)
+        # ayrışık (NFD) Türkçe ad sütunları kaydırmaz
+        import unicodedata
+        self.assertEqual(st._plain(unicodedata.normalize("NFD", "Şişli İğneada")), "Şişli İğneada")
         # önceki ölçüm yoksa değişim satırı yok; hatalı platform tabloya girmez, notta görünür
         snap["platforms"]["youtube"] = {"error": "bağlı değil"}
         txt = st.render(snap, None)
@@ -737,12 +759,14 @@ class Gizleme(Ortak):
         self.assertNotIn("YouTube", re.findall(r"<pre>(.*?)</pre>", txt, re.S)[0])
         # azalma eksi ile yazılır; düz yazı hâli etiketsiz
         prev["platforms"]["instagram"]["account"]["followers"] = snap["platforms"]["instagram"]["account"]["followers"] + 2
-        self.assertIn("−2 takipçi", st.render(snap, prev))
+        self.assertRegex(st.render(snap, prev), r"\nTakipçi +−2 ")
         self.assertNotIn("<", st.plain(st.render(snap, prev)).replace("Uzun <b>", ""))
 
     def test_rapor_html_reddedilirse_duz_metin_gider(self):
         import shortgen.stats as st
         snap = json.loads((FIX / "state" / "stats.json").read_text(encoding="utf-8"))
+        eski_collect = st.collect
+        self.addCleanup(setattr, st, "collect", eski_collect)
         st.collect = lambda: json.loads(json.dumps(snap))
         giden = []
 

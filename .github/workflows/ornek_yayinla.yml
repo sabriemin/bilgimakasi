@@ -18,6 +18,11 @@ permissions:
   contents: write
   actions: write
 
+# aynı örnek iki kez başlatılırsa ikinci iş birincinin kaydını görür ve durur
+concurrency:
+  group: ornek-yayinla
+  cancel-in-progress: false
+
 jobs:
   yayinla:
     runs-on: ubuntu-latest
@@ -55,22 +60,28 @@ jobs:
         run: |
           ls -la ornek
           python3 - <<'PY'
-          import json, sys
+          import datetime as dt, json, os, sys
           meta = json.load(open("ornek/metadata.json", encoding="utf-8"))
           vids = json.load(open("state/videos.json", encoding="utf-8"))
-          dup = [v["tag"] for v in vids if v.get("created") == meta["created"] and v.get("topic") == meta["topic"]]
+          # etiket örneğin üretim anından gelir: aynı örnek her denemede aynı etiketi alır (yarım kalan iş yeniden çalışabilir)
+          tag = "short-" + dt.datetime.fromisoformat(meta["created"]).strftime("%Y%m%d-%H%M%S")
+          dup = [v["tag"] for v in vids if v.get("tag") == tag or
+                 (v.get("created") == meta["created"] and v.get("topic") == meta["topic"])]
           if dup:
               sys.exit(f"::error::Bu örnek zaten kayıtlı: {dup}")
-          print("Başlık:", meta["title"], "| şablon:", meta.get("template"))
+          print("Başlık:", meta["title"], "| şablon:", meta.get("template"), "| etiket:", tag)
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"TAG={tag}\n")
           PY
-          echo "TAG=short-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_ENV"
       - name: Videoyu sakla (GitHub Release)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TITLE=$(python -c "import json;print(json.load(open('ornek/metadata.json', encoding='utf-8'))['title'])")
-          gh release create "$TAG" ornek/video.mp4 ornek/metadata.json ornek/script.json \
-            --title "$TITLE" --notes "Onay bekliyor (örnek videodan)" --prerelease
+          if gh release view "$TAG" >/dev/null 2>&1; then echo "Release $TAG zaten var (yarım kalan iş), yeniden kullanılıyor."; else
+            gh release create "$TAG" ornek/video.mp4 ornek/metadata.json ornek/script.json \
+              --title "$TITLE" --notes "Onay bekliyor (örnek videodan)" --prerelease
+          fi
       - name: Geçmişe ekle ve Telegram'a gönder
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -94,7 +105,9 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          python3 - <<'PY'
+          # Telegram çağrısı düşse bile onay kaydedilir ve paylaşım başlar; adım yine hata olarak görünür
+          rc=0
+          python3 - <<'PY' || rc=$?
           import os
           from shortgen import telegram_bot as tb
           tag, chat = os.environ["TAG"], os.environ["TELEGRAM_CHAT_ID"]
@@ -105,3 +118,15 @@ jobs:
           PY
           python -m shortgen.state_sync "Örnek video onaylandı: $TAG"
           python -m shortgen.telegram_bot dispatch-if-due
+          exit $rc
+      - name: Hata bildir
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -n "$TELEGRAM_BOT_TOKEN" ] || exit 0
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=⚠️ Örnek videoyu yayına alma işi yarım kaldı. Aynı işi yeniden çalıştırmak güvenli: ${RUN_URL}" > /dev/null || true

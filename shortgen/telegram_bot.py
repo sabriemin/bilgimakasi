@@ -85,7 +85,10 @@ def save(path: Path, data) -> None:
 def notify(out_dir: Path, tag: str) -> None:
     meta = json.loads((out_dir / "metadata.json").read_text(encoding="utf-8"))
     chat = os.environ["TELEGRAM_CHAT_ID"]
-    caption = f"🎬 <b>{meta['title']}</b>\n\nKonu: {meta['topic']}\nŞablon: {meta.get('template', '-')}"
+    import html
+    # başlık/konu kaçışlı: "<" ya da "&" içeren başlık Telegram'ın HTML ayrıştırmasını bozup videoyu düşürmesin
+    caption = (f"🎬 <b>{html.escape(str(meta['title'])[:300])}</b>\n\nKonu: {html.escape(str(meta['topic'])[:500])}"
+               f"\nŞablon: {html.escape(str(meta.get('template', '-')))}")
     kb = {"inline_keyboard": [[
         {"text": "✅ Onayla", "callback_data": f"ok:{tag}"},
         {"text": "❌ Reddet", "callback_data": f"no:{tag}"},
