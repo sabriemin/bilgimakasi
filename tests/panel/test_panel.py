@@ -580,6 +580,28 @@ class PanelIslemleri(Ortak):
         c = self.panel(action="produce_topic", topic="x")
         self.assertEqual(self.mesajlar(c), ["🖥 Panelden: ⚠️ Üretim başlatılamadı."])
 
+    def test_zamanli_olcum_rapor_gondermez(self):
+        # Sabri (2026-11-05): istatistik yalnız istediğinde gelsin. rapor.yml artık "kaydet" çalıştırır:
+        # Telegram'a hiçbir şey gitmez, stats.json (son rapor) değişmez, panel geçmişine bir satır eklenir.
+        import shortgen.stats as st
+        snap = json.loads((FIX / "state" / "stats.json").read_text(encoding="utf-8"))
+        snap["time"] = "2026-11-05T10:00+03:00"
+        self.addCleanup(setattr, st, "collect", st.collect)
+        st.collect = lambda: json.loads(json.dumps(snap))
+        hist = self.root / "state" / "stats_gecmis.jsonl"
+        once = hist.read_text(encoding="utf-8").splitlines()
+        son_rapor = (self.root / "state" / "stats.json").read_text(encoding="utf-8")
+        self.req.cagrilar.clear()
+        st.record()
+        self.assertEqual([x for x in self.req.cagrilar if "telegram" in str(x).lower()], [])
+        self.assertEqual((self.root / "state" / "stats.json").read_text(encoding="utf-8"), son_rapor)
+        sonra = hist.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(sonra[:-1], once)
+        self.assertEqual(json.loads(sonra[-1])["time"], "2026-11-05T10:00+03:00")
+        wf = (REPO / ".github" / "workflows" / "rapor.yml").read_text(encoding="utf-8")
+        self.assertIn("python -m shortgen.stats kaydet", wf)
+        self.assertNotIn("shortgen.stats report", wf)
+
     def test_rapor_ve_istatistik_gecmisi(self):
         import shortgen.stats as st
         snap = json.loads((FIX / "state" / "stats.json").read_text(encoding="utf-8"))

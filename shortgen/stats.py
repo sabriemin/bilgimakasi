@@ -336,9 +336,24 @@ def report(send: bool = True) -> str:
             api("sendMessage", data={"chat_id": chat, "text": plain(text)})
         SNAP.parent.mkdir(exist_ok=True)
         SNAP.write_text(json.dumps(snap, ensure_ascii=False, indent=1))
-        with HIST.open("a", encoding="utf-8") as f:  # panel grafikleri için kısa geçmiş (state_sync satır birleştirir)
-            f.write(json.dumps(history_line(snap), ensure_ascii=False, separators=(",", ":")) + "\n")
+        _append_history(snap)
     return text
+
+
+def _append_history(snap: dict) -> None:
+    """Panel grafikleri için kısa geçmiş (state_sync satır birleştirir)."""
+    HIST.parent.mkdir(exist_ok=True)
+    with HIST.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(history_line(snap), ensure_ascii=False, separators=(",", ":")) + "\n")
+
+
+def record() -> dict:
+    """Telegram'a rapor GÖNDERMEDEN ölçer ve yalnız panel grafiklerinin geçmişine ekler (zamanlanmış rapor.yml).
+    Sabri raporu yalnız istediğinde (/rapor ya da panel) görmek istiyor (2026-11-05). stats.json'a dokunulmaz:
+    /rapor'daki "son rapordan beri" farkı Sabri'nin gördüğü son rapora göre kalır."""
+    snap = collect()
+    _append_history(snap)
+    return snap
 
 
 def history_line(snap: dict, days: int = 7) -> dict:
@@ -359,5 +374,10 @@ def history_line(snap: dict, days: int = 7) -> dict:
 if __name__ == "__main__":
     from .pipeline import load_env
     load_env(ROOT / ".env")
-    out = report(send=sys.argv[1:2] == ["report"])
-    print(out if sys.argv[1:2] == ["report"] else plain(out))
+    if sys.argv[1:2] == ["kaydet"]:  # sessiz ölçüm: yalnız panel grafikleri için
+        s = record()
+        print("Ölçüm kaydedildi:", s.get("time"), {k: ("hata" if isinstance(d, dict) and "error" in d else "ok")
+                                                   for k, d in (s.get("platforms") or {}).items()})
+    else:
+        out = report(send=sys.argv[1:2] == ["report"])
+        print(out if sys.argv[1:2] == ["report"] else plain(out))

@@ -1,4 +1,7 @@
-name: İstatistik raporu
+name: İstatistik ölçümü (sessiz)
+
+# Telegram'a rapor göndermez (Sabri raporu yalnız /rapor ya da panelden istiyor, 2026-11-05): ölçümü panel grafikleri
+# için state/stats_gecmis.jsonl'e ekler ve yeni yorumlara cevap taslağı hazırlar. Rapor /rapor ile isle.yml'de gönderilir.
 
 on:
   schedule:
@@ -23,10 +26,8 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - name: Raporu hazırla ve Telegram'a gönder
+      - name: Ölç ve panel geçmişine kaydet (Telegram'a rapor gitmez)
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
@@ -38,7 +39,7 @@ jobs:
           TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
           GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: python -m shortgen.stats report
+        run: python -m shortgen.stats kaydet
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
