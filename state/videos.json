@@ -17,9 +17,10 @@
     "category": "tarih",
     "template": "kolaj",
     "created": "2026-11-04T10:57:10",
-    "status": "onay_bekliyor",
+    "status": "reddedildi",
     "telegram_message_id": 4,
-    "platforms": {}
+    "platforms": {},
+    "decided": "2026-11-05T07:18:18+03:00"
   },
   {
     "tag": "short-20261104-1307",
