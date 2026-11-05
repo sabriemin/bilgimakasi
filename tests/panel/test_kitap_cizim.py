@@ -17,8 +17,8 @@
 
     python -B tests/panel/test_kitap_cizim.py
 
-Diğer şablonların karşılaştırma tabanı KITAP_CIZIM_TABAN (varsayılan: bu dalın ayrıldığı commit); taban depoda yoksa
-o test atlanır.
+Diğer şablonların karşılaştırma tabanı KITAP_CIZIM_TABAN (varsayılan: main ile ortak ata); taban bulunamazsa o test
+atlanır. eslesme.json'da yalnız yapi_sablon'daki kitap satırı (ve açıklaması) farklı olabilir.
 """
 from __future__ import annotations
 
@@ -44,8 +44,32 @@ import numpy as np  # noqa: E402
 from shortgen import kitap as KT, pipeline as P, render, script as S  # noqa: E402
 from shortgen.voice import Word  # noqa: E402
 
+# modül başında yüklenen shortgen modülleri (Birlesim, pipeline.build'in içeride içe aktardığı kitap modülü KT olsun
+# diye bunları geri koyar: aynı süreçte koşan başka test dosyaları shortgen'i yeniden yükleyebilir)
+_MODULLER = {m: mod for m, mod in sys.modules.items() if m == "shortgen" or m.startswith("shortgen.")}
+
+
+def _modulleri_koy(moduller: dict) -> dict:
+    once = {m: mod for m, mod in sys.modules.items() if m == "shortgen" or m.startswith("shortgen.")}
+    for ad in once:
+        del sys.modules[ad]
+    sys.modules.update(moduller)
+    return once
+
 DEMO = REPO / "demo/kitap/ornek_donusum.json"
-TABAN = os.environ.get("KITAP_CIZIM_TABAN", "35bcd8d")
+def _taban() -> str:
+    """Diğer şablonların karşılaştırma tabanı: KITAP_CIZIM_TABAN ya da main ile ortak ata (birleşimden sonra main'in
+    kendisi); ikisi de yoksa ''."""
+    if os.environ.get("KITAP_CIZIM_TABAN"):
+        return os.environ["KITAP_CIZIM_TABAN"]
+    try:
+        out = subprocess.run(["git", "-C", str(REPO), "merge-base", "HEAD", "main"], capture_output=True, text=True)
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
+TABAN = _taban()
 ADIM = 0.4                                      # kelime başına süre
 BCFG = {"enabled": True, "handle": "@bilgimakasi", "intro_cut": True}
 SAFE_X, SAFE_Y0, SAFE_Y1 = 935, 240, 1540
@@ -356,6 +380,16 @@ class Zaman(unittest.TestCase):
         self.assertFalse(var(yorum.start - 0.2, "yorumlara yaz"))
         self.assertTrue(var(yorum.start + 0.1, "yorumlara yaz"))
 
+    def test_arka_kapak_sorusu(self):
+        """Arka kapakta soru sayfasının metni durur; içerik kalıbı boş soru sayfasına yalnız 'Okudun mu? Yorumlara
+        yaz.' yazdıysa soru dış sesten gelir (OKUDUN MU? ayrı katmandır, arka kapak yazısında tekrar edilmez)."""
+        self.assertEqual(self.v.blurb, "Sence ailesi ona haksızlık mı etti?")
+        d = demo()
+        d["scenes"][-1]["sayfa_metni"] = S.KITAP_KAPANIS
+        self.assertEqual(kur(d)[3].blurb, "Sence ailesi ona haksızlık mı etti?")
+        d["scenes"][-1]["narration"] = S.KITAP_KAPANIS
+        self.assertEqual(kur(d)[3].blurb, "")
+
     def test_her_anda_kare(self):
         v = self.v
         for t in anlar(v, self.words):
@@ -547,27 +581,19 @@ class Hiz(unittest.TestCase):
 
 # ---------------------------------------------------------------- birleşim
 def kitap_senaryosu():
-    """Demo senaryo ShortScript olarak. Modelde kitap alanları henüz yoksa (içerik dalı birleşmeden) testin alt
-    sınıfı kullanılır: alanlar yine pipeline.build'e aynı adlarla ulaşır."""
-    try:
-        return S.load_script(DEMO)
-    except Exception:  # noqa: BLE001
-        pass
-
-    class KScene(S.Scene):
-        kitap_bolum: str = ""
-        sayfa_metni: str = ""
-        vurgu: str = ""
-
-    class KScript(S.ShortScript):
-        scenes: list[KScene]
-        structure: str = "kitap"
-        kitap: dict | None = None
-
-    return KScript.model_validate(demo())
+    """Demo senaryo, içerik kalıbının gerçek modeliyle (script.ShortScript, KitapBilgi, Scene.kitap_* alanları)."""
+    return S.load_script(DEMO)
 
 
 class Birlesim(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._onceki = _modulleri_koy(_MODULLER)
+
+    @classmethod
+    def tearDownClass(cls):
+        _modulleri_koy(cls._onceki)
+
     def test_sablon_yonlendirme(self):
         self.assertEqual(P.sablon_renderer("kitap"), "kitap")
         self.assertEqual(P.sablon_yapisi("kitap"), "kitap")
@@ -602,11 +628,44 @@ class Birlesim(unittest.TestCase):
         v = KT.KitapVideo(specs, [w for s in specs for w in s.words], meta, BCFG)
         self.assertEqual([b.ad for b in v.bolumler], list(KT.BOLUMLER))
 
+    def test_build_telif_kurali(self):
+        """pipeline.build hazır senaryoda da telif kuralını uygular: kamu malı olmayan kitapta ilk cümle silinir, giris
+        sayfasındaki ilk cümle ve sayfalardaki tırnaklı alıntı çıkar, KÜNYE çizilir; dış seste alıntı kalmışsa hiçbir
+        dosya yazılmadan durur."""
+        def telifli():
+            script = kitap_senaryosu()
+            script.kitap.yazar_olum = 0
+            script.scenes[1].narration = "Gregor bir sabah uyandığında artık başka bir şeydir."
+            script.scenes[0].sayfa_metni = script.kitap.ilk_cumle
+            script.scenes[2].sayfa_metni = "Annesi şöyle der: “Bu satır alıntı yasağını deneyen bir cümle” ve susar."
+            return script
+        script, cap = telifli(), {}
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(KT, "render_kitap", lambda sc, w, o, m, mu, meta: cap.update(specs=sc, meta=meta)):
+            P.build(script, Path(tmp) / "b", use_voice=False, music=None, template="kitap")
+            yazilan = (Path(tmp) / "b" / "script.json").read_text(encoding="utf-8")
+        self.assertEqual(cap["meta"]["kitap"]["ilk_cumle"], "")
+        self.assertNotIn("tedirgin rüyalardan", yazilan, "ilk cümle hiçbir yerde kalmaz")
+        self.assertNotIn("alıntı yasağını", yazilan)
+        self.assertEqual(cap["specs"][0].card["sayfa"], "")
+        self.assertNotIn("“", cap["specs"][2].card["sayfa"])
+        v = KT.KitapVideo(cap["specs"], [w for s in cap["specs"] for w in s.words], cap["meta"], BCFG)
+        self.assertEqual((v.sekme_adlari[0], v._sol_tur(v.bolumler[0])), (KT.KUNYE, "kunye"))
+        script = telifli()
+        script.scenes[3].narration = 'Kafka der ki: "Bu satır alıntı yasağını deneyen bir cümle" ve biter.'
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(KT, "render_kitap", side_effect=AssertionError("çizildi")):
+            with self.assertRaises(RuntimeError) as hata:
+                P.build(script, Path(tmp) / "b", use_voice=False, music=None, template="kitap")
+            self.assertFalse((Path(tmp) / "b").exists(), "hiçbir dosya yazılmaz")
+        self.assertIn("4. sahnenin dış sesi", str(hata.exception))
+
     def test_diger_sablonlar_degismedi(self):
-        """Diğer şablon dosyaları ve çizicileri (kart, nasil, render, brand) tabandakiyle aynı."""
+        """Diğer şablon dosyaları ve çizicileri (kart, nasil, render, brand) tabandakiyle aynı; eslesme.json'a yalnız
+        kitap -> kitap yönlendirmesi eklenir."""
         try:
-            ok = subprocess.run(["git", "-C", str(REPO), "cat-file", "-e", f"{TABAN}^{{commit}}"],
-                                capture_output=True).returncode == 0
+            ok = bool(TABAN) and subprocess.run(["git", "-C", str(REPO), "cat-file", "-e", f"{TABAN}^{{commit}}"],
+                                                capture_output=True).returncode == 0
         except (OSError, subprocess.SubprocessError):
             ok = False
         if not ok:
@@ -620,6 +679,14 @@ class Birlesim(unittest.TestCase):
             with self.subTest(dosya=f):
                 eski = subprocess.run(["git", "-C", str(REPO), "show", f"{TABAN}:{f}"], capture_output=True,
                                       check=True).stdout
+                if f == "templates/eslesme.json":
+                    yeni, eski = json.loads((REPO / f).read_text(encoding="utf-8")), json.loads(eski)
+                    self.assertEqual(yeni["yapi_sablon"].get("kitap"), "kitap")
+                    for d in (yeni, eski):
+                        d["yapi_sablon"].pop("kitap", None)
+                        d["yapi_sablon"].pop("_aciklama", None)
+                    self.assertEqual(yeni, eski)
+                    continue
                 self.assertEqual((REPO / f).read_bytes(), eski)
 
 

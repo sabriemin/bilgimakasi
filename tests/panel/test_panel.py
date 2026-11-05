@@ -210,6 +210,9 @@ def dugme_senaryolari(root: Path) -> list:
 class Ortak(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # kur() shortgen'i geçici kökten yükler; sınıf bitince önceki modüller geri konur (aynı süreçte sonra koşan
+        # test dosyalarının pipeline'ı, silinen geçici kökten kart/nasil içe aktarmaya çalışmasın)
+        cls._eski_moduller = {m: mod for m, mod in sys.modules.items() if m == "shortgen" or m.startswith("shortgen.")}
         cls.root = kok_hazirla(REPO)
         cls.tb, cls.req = kur(cls.root)
 
@@ -217,6 +220,9 @@ class Ortak(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.root, ignore_errors=True)
         sys.path.remove(str(cls.root))
+        for ad in [m for m in sys.modules if m == "shortgen" or m.startswith("shortgen.")]:
+            del sys.modules[ad]
+        sys.modules.update(cls._eski_moduller)
 
     def setUp(self):
         durum_sifirla(self.root)
@@ -694,11 +700,14 @@ class PanelIslemleri(Ortak):
             "Japonlar hiç hasta olmaz, doğru mu?": "efsane", "Saat 12:30'da ne oldu": "", "": "",
             "Ya Sen Olsaydın: Osmanlı'da yaşamak": "olsaydin", "NASIL YAPILIR: Raf takmak": "nasil",
             "genel: Çay nasıl demlenir?": "", "efsane:": "",
+            "kitap: Kürk Mantolu Madonna": "kitap", "Bir Kitap Bir Dakika: Dönüşüm": "kitap",
+            "Kürk Mantolu Madonna": "", "Dönüşüm kitabı nasıl yazıldı?": "",
         }
         for konu, kalip in ornekler.items():
             self.assertEqual(seri_tahmini(konu)[0], kalip, konu)
         self.assertEqual(seri_tahmini("  Ya Sen Olsaydın:  Osmanlı'da   yaşamak "), ("olsaydin", "Osmanlı'da yaşamak"))
         self.assertEqual(seri_tahmini("Saat 12:30'da ne oldu"), ("", "Saat 12:30'da ne oldu"))
+        self.assertEqual(seri_tahmini("KİTAP: Kürk Mantolu Madonna"), ("kitap", "Kürk Mantolu Madonna"))
 
     def test_zamanli_olcum_rapor_gondermez(self):
         # Sabri (2026-11-05): istatistik yalnız istediğinde gelsin. rapor.yml artık "kaydet" çalıştırır:

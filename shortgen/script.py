@@ -228,7 +228,9 @@ class Scene(BaseModel):
         "sırasıyla gelir, her bölüm 1-2 sahne. Diğer kalıplarda boş."))
     sayfa_metni: str = Field(default="", description=(
         "Yalnız kitap kalıbı: bölümün sağ sayfasına yazılan kısa metin, en fazla 22 kelime (dış sesle aynı olmak "
-        "zorunda değil). Bölümün ilk sahnesine yazılır, ikinci sahnede boş kalır. Diğer kalıplarda boş."))
+        "zorunda değil). Bölümün ilk sahnesine yazılır, ikinci sahnede boş kalır. giris bölümünde ilk cümle değil, "
+        "kitabı tanıtan kısa bir cümledir (ilk cümle ya da künye sol sayfaya kendiliğinden basılır). Diğer kalıplarda "
+        "boş."))
     vurgu: str = Field(default="", description=(
         "Yalnız kitap kalıbı: sayfa_metni içinden harfi harfine alınmış, sarı fosforlu kalemle çizilecek anahtar ifade "
         "(2-5 kelime). Diğer kalıplarda boş."))
@@ -477,8 +479,10 @@ sekmeli sayfalar; her sahne bu kitabın bir sayfa anıdır):
 - SAYFA METNİ: her bölümün ilk sahnesinde sayfa_metni o sayfaya yazılan kısa metindir (en fazla {KITAP_SAYFA_KELIME} kelime,
   düz cümle, BÜYÜK HARF değil); dış sesin aynısı olmak zorunda değil, özü olsun. Aynı bölümün ikinci sahnesinde
   sayfa_metni boş kalır (sayfa değişmez). vurgu: sayfa_metni içinden HARFİ HARFİNE alınmış 2-5 kelimelik anahtar ifade
-  (sarı fosforlu kalemle çizilir). giris sayfası: kamu malı kitapta ilk_cumle'nin kendisi; değilse boş (sayfaya kitabın
-  künyesi basılır). soru sayfası: kısa soru ya da "{KITAP_KAPANIS}"
+  (sarı fosforlu kalemle çizilir). Kitap açıkken sol sayfa kendiliğinden basılır: giris bölümünde kamu malı kitapta
+  ilk_cumle (İLK CÜMLE), değilse künye (ad, yazar, yıl, tür, özgün dil; KÜNYE). giris sayfa_metni bu yüzden ilk cümle
+  değil, sağ sayfada kitabı tanıtan kısa bir cümledir (ör. "1915'te yayımlanan bu uzun öykü, edebiyatın en ünlü
+  açılışlarından biriyle başlar."); ilk_cumle'yi sayfa_metni'ne yazma. soru sayfası: kısa soru ya da "{KITAP_KAPANIS}"
 - KİTAP ALANI (kitap): baslik (Türkçe adı), yazar, yil (ilk yayım yılı), tur ("roman", "uzun öykü", "öykü kitabı",
   "oyun"...), ozgun_dil, yazar_olum (ölüm yılı; yaşıyorsa ya da emin değilsen 0), amblem (kapakta çizilir; kitabın
   merkezindeki imgeye en yakın olanı: {_AMBLEM_LISTESI}), kapak_rengi ({_RENK_LISTESI}).
@@ -493,9 +497,8 @@ sekmeli sayfalar; her sahne bu kitabın bir sayfa anıdır):
   ilk perde ve ana fikir.
 - GÖRSELLER: kapak ve sayfalar kodla çizilir; genel kuraldaki "ilk sahnede fotoğraf ya da büyük çizim" ve "her sahnede
   fotoğraf ya da çizim" kuralları bu kalıpta geçerli değil. Sahnelerde image_mode none, image_queries boş, illustration
-  boş, motion none, theme paper, card auto; mascot çoğunlukla auto (bilgi sahnesinde surprised olabilir). Yalnız bilgi
-  bölümü yazarla ilgiliyse o sahne image_mode framed olabilir ve image_queries yazarın Wikimedia Commons'taki
-  portresini arar (ör. ["Franz Kafka portrait 1923"]); kitap kapağı, baskı, film afişi ya da film karesi ARANMAZ.
+  boş, motion none, theme paper, card auto; mascot çoğunlukla auto (bilgi sahnesinde surprised olabilir). Bu şablon
+  fotoğraf kullanmaz (yazar portresi de aranmaz); kitap kapağı, baskı, film afişi ya da film karesi hiçbir zaman ARANMAZ.
   headline sahnenin 1-2 satırlık kısa anahtar kelimeleri (BÜYÜK HARF).
 - DİL: belgesel tonu sürer: sakin, merak uyandıran, abartısız. Gerçek olmayan hiçbir bilgi yok; yıl, tarih ve sayılar
   doğrulanmış olsun.
@@ -710,9 +713,12 @@ def _sayfa_kirp(metin: str, n: int = KITAP_SAYFA_KELIME) -> str:
 def _vurgu_onar(sayfa: str, vurgu: str) -> str:
     """vurgu sayfa_metni'nin harfi harfine bir parçası olsun: aynen geçiyorsa kalır; büyük/küçük harf, boşluk ya da
     noktalama farkıyla geçiyorsa sayfadaki yazılışı alınır; hiç geçmiyorsa boş."""
-    v = _tirnaksiz(_kancasiz(vurgu)).strip(" .,;:!?…")
-    if not sayfa or not v:
+    v = _tirnaksiz(_kancasiz(vurgu))
+    if not sayfa or not v.strip(" .,;:!?…"):
         return ""
+    if v in sayfa:  # noktalamasıyla aynen geçiyorsa olduğu gibi kalır (ör. soru işareti)
+        return v
+    v = v.strip(" .,;:!?…")
     if v in sayfa:
         return v
     kel = [(m.start(), m.end(), _tr_lower(m.group())) for m in re.finditer(r"\w+", sayfa)]
@@ -735,10 +741,10 @@ def _kapanis(narration: str) -> str:
 
 def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript:
     """Bir Kitap Bir Dakika (kitap kalıbı) senaryosunu sağlamlaştırır (yerinde; başka kalıba dokunmaz):
-    - telif: kitap year yılında kamu malı değilse (kamu_mali; yazar_olum 0 ise kamu malı sayılmaz) ilk_cumle silinir,
-      giris sayfası boşalır (çizici künye basar) ve sayfa metinlerindeki alıntılar (tırnak içinde 4+ kelime ya da
-      kitabın ilk cümlesi) çıkar; kamu malıysa giris sayfası ilk_cumle'dir. Dış ses, başlık ve açıklamada kalan
-      alıntıyı kitap_alintilari bildirir (üretim durur);
+    - telif: kitap year yılında kamu malı değilse (kamu_mali; yazar_olum 0 ise kamu malı sayılmaz) ilk_cumle silinir
+      (çizici sol sayfaya künye basar) ve giris dahil bütün sayfa metinlerindeki alıntılar (tırnak içinde 4+ kelime ya
+      da kitabın ilk cümlesi) çıkar; kamu malıysa ilk cümle sol sayfaya basılır, sağ sayfada (giris sayfa_metni)
+      tekrar edilmez. Dış ses, başlık ve açıklamada kalan alıntıyı kitap_alintilari bildirir (üretim durur);
     - kitap_bolum sırası giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne (kitap_bolumleri); bölümün sayfa
       metni ilk sahnesindedir;
     - sayfa metni en çok KITAP_SAYFA_KELIME kelime; vurgu sayfa metninin harfi harfine bir parçası ya da boş;
@@ -768,10 +774,14 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
             if devam is not None:
                 sahneler[i].sayfa_metni, sahneler[i].vurgu = devam.sayfa_metni, devam.vurgu
                 devam.sayfa_metni, devam.vurgu = "", ""
+    ilk = _duz(kb.ilk_cumle) if (pd and kb.ilk_cumle) else ""
     for i, sc in enumerate(sahneler):
-        if sc.kitap_bolum == "giris":  # İLK CÜMLE sayfası yalnız kamu malı kitapta; değilse çizici künyeyi basar
-            sc.sayfa_metni = kb.ilk_cumle if (pd and kb.ilk_cumle and i == ilk_sahne["giris"]) else ""
-        elif not pd:  # telifli kitap: sayfalarda alıntı yok
+        sayfa = _duz(sc.sayfa_metni)
+        if ilk and sc.kitap_bolum == "giris" and sayfa and (
+                ilk in sayfa or (len(sayfa.split()) >= _ALINTI_KELIME and sayfa in ilk)):
+            # kamu malı kitabın ilk cümlesi sol sayfaya (İLK CÜMLE) basılır: sağ sayfada tekrar yazılmaz
+            sc.sayfa_metni, sc.vurgu = "", ""
+        elif not pd:  # telifli kitap: giris dahil sayfalarda alıntı yok (sol sayfa künyedir)
             s = sc.sayfa_metni
             for a in _alintilar(s, baslik):
                 s = s.replace(a, " ")
@@ -804,25 +814,47 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
     return script
 
 
-def kitap_alintilari(script, year: int | None = None) -> list[str]:
+_ILK_PARCA = 8  # kitabın ilk cümlesinin baştan bu kadar kelimesi aynen geçiyorsa da alıntıdır
+
+
+def kitap_alintilari(script, year: int | None = None, ilk_cumleler=()) -> list[str]:
     """Kamu malı olmayan kitabın senaryosunda kalan alıntılar: dış seste, sayfa metinlerinde, başlıkta ve açıklamada
-    tırnak içinde en az 4 kelime (kitabın adı hariç) ya da kitabın ilk cümlesi. Kamu malı kitapta ve diğer kalıplarda
-    boş liste. Üretim bu liste boş değilse durur (generate_script)."""
+    tırnak içinde en az 4 kelime (kitabın adı hariç) ya da kitabın ilk cümlesi (tamamı ya da ilk 8 kelimesi). Kamu malı
+    kitapta ve diğer kalıplarda boş liste. ilk_cumleler: normalize_kitap'ın sildiği ilk cümleler (taslakta ya da hazır
+    senaryoda yazılmış olanlar; silindikten sonra da aranır). Üretim bu liste boş değilse durur (generate_script,
+    pipeline.build)."""
     if getattr(script, "structure", "") != "kitap":
         return []
     kb = getattr(script, "kitap", None)
     if kb is not None and kamu_mali(kb.yazar_olum, year):
         return []
-    baslik, ilk = (kb.baslik, _duz(kb.ilk_cumle)) if kb is not None else ("", "")
+    baslik = kb.baslik if kb is not None else ""
+    ilkler = set()
+    for x in [kb.ilk_cumle if kb is not None else "", *ilk_cumleler]:
+        kel = _duz(x).split()
+        if len(kel) >= _ALINTI_KELIME:
+            ilkler.add(" ".join(kel))
+            ilkler.add(" ".join(kel[:_ILK_PARCA]))
     yerler = ([(f"{i}. sahnenin dış sesi", sc.narration) for i, sc in enumerate(script.scenes, 1)]
               + [(f"{i}. sahnenin sayfa metni", sc.sayfa_metni) for i, sc in enumerate(script.scenes, 1)]
               + [("başlık", script.title), ("açıklama", script.description)])
     out = []
     for yer, metin in yerler:
         out += [f"{yer}: {a}" for a in _alintilar(metin, baslik)]
-        if len(ilk.split()) >= _ALINTI_KELIME and ilk in _duz(metin):
+        duz = f" {_duz(metin)} "
+        if any(f" {x} " in duz for x in ilkler):
             out.append(f"{yer}: kitabın ilk cümlesi")
     return out
+
+
+def kitap_telif(script: ShortScript, year: int | None = None, ilk_cumleler=()) -> list[str]:
+    """Telif kuralını kodla uygular: normalize_kitap (yerinde) ve ardından kalan alıntılar (kitap_alintilari). Kamu
+    malı olmayan kitabın ilk cümlesi normalleştirmede silinse de dış seste, başlıkta ve açıklamada aranmaya devam eder
+    (ilk_cumleler: taslakta yazılmış ilk cümleler de). Liste boş değilse senaryo kullanılmaz."""
+    kb = getattr(script, "kitap", None)
+    ilkler = [kb.ilk_cumle] if kb is not None and kb.ilk_cumle else []
+    normalize_kitap(script, year)
+    return kitap_alintilari(script, year, [*ilkler, *ilk_cumleler])
 
 
 def kitap_sorunlari(script, year: int | None = None) -> list[str]:
@@ -1071,8 +1103,9 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
         for p in fis_sorunlari(out):  # doğrulayıcı düzeltemediyse günlükte görünsün (onaydan önce bakılır)
             print("UYARI hesap fişi:", p)
     if structure == "kitap":
-        normalize_kitap(out)
-        alinti = kitap_alintilari(out)
+        # taslağın ilk cümlesi de aranır: kitap kamu malı değilse doğrulamada silinir ama dış seste okunmuş olabilir
+        taslak = [script.kitap.ilk_cumle] if script.kitap is not None and script.kitap.ilk_cumle else []
+        alinti = kitap_telif(out, ilk_cumleler=taslak)
         if alinti:  # telif kesin kural: kamu malı olmayan kitaptan alıntı yayına gitmez
             raise RuntimeError("Senaryo kamu malı olmayan bir kitaptan alıntı içeriyor (" + "; ".join(alinti)
                                + "): senaryo kullanılmadı.")

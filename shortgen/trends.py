@@ -140,10 +140,11 @@ def kalip_of(it) -> str:
 
 # Elle yazılan konunun serisi (Telegram /uret, panel "Şimdi üret", panel konu sırası). Başta "seri:" öneki varsa o
 # seri kullanılır (ör. "olsaydin: Piyango sana çıksaydı"; "genel:" serbest kalıp demektir). Önek yoksa yalnız açık
-# işaretlerden tahmin edilir; emin olunmayan konu serbest kalıpta kalır.
+# işaretlerden tahmin edilir; emin olunmayan konu serbest kalıpta kalır. Bir Kitap Bir Dakika (kitap) yalnız önekle
+# seçilir ("kitap: Kürk Mantolu Madonna"): kitap adı tek başına tahmin edilmez.
 _SERI_ONEK = {"genel": "", "serbest": "", "efsane": "efsane", "efsane mi gercek mi": "efsane", "nasil": "nasil",
               "nasil yapilir": "nasil", "uretim": "uretim", "nasil uretiliyor": "uretim", "olsaydin": "olsaydin",
-              "ya sen olsaydin": "olsaydin"}
+              "ya sen olsaydin": "olsaydin", "kitap": "kitap", "bir kitap bir dakika": "kitap"}
 _NASIL_FIIL = ("yapılır|hazırlanır|demlenir|pişirilir|temizlenir|yıkanır|ütülenir|katlanır|dikilir|takılır|sökülür|"
                "değiştirilir|kullanılır|bağlanır|kurulur|saklanır|çıkarılır|onarılır|giderilir|ayıklanır|doğranır|"
                "soyulur|haşlanır|kızartılır|kaynatılır|boyanır|asılır|sıkılır|ayarlanır|açılır|tamir edilir")

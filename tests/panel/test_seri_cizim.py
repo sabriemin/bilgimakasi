@@ -112,8 +112,23 @@ sys.path.insert(0, str(REPO))
 sys.dont_write_bytecode = True
 from PIL import Image  # noqa: E402
 
-from shortgen import kart as K, nasil as N, render, script as S  # noqa: E402
+from shortgen import kart as K, nasil as N, pipeline as _pipeline, render, script as S  # noqa: E402
 from shortgen.voice import Word  # noqa: E402
+
+# modül başında yüklenen shortgen modülleri: aynı süreçte koşan başka test dosyaları shortgen'i yeniden yükleyebilir
+# (test_panel geçici kökten); Birlesim pipeline.build'in içeride içe aktardığı kart/nasil bu modüller olsun diye
+# bunları geri koyar
+_MODULLER = {m: mod for m, mod in sys.modules.items() if m == "shortgen" or m.startswith("shortgen.")}
+
+
+def _shortgen_modulleri() -> dict:
+    return {m: mod for m, mod in sys.modules.items() if m == "shortgen" or m.startswith("shortgen.")}
+
+
+def _modulleri_koy(moduller: dict) -> None:
+    for ad in _shortgen_modulleri():
+        del sys.modules[ad]
+    sys.modules.update(moduller)
 
 BCFG = {"enabled": True, "handle": "@bilgimakasi", "intro_cut": True, "subtitle_handle": True}
 
@@ -577,8 +592,14 @@ class Birlesim(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from shortgen import pipeline
-        cls.P = pipeline
+        # modül başında içe aktarılan pipeline ve modüller (mock.patch K ve N'ye uygulanır; build de bunları kullanır)
+        cls._onceki = _shortgen_modulleri()
+        _modulleri_koy(_MODULLER)
+        cls.P = _pipeline
+
+    @classmethod
+    def tearDownClass(cls):
+        _modulleri_koy(cls._onceki)
 
     def kur(self, ad: str, override: str | None = None):
         script = S.load_script(DEMO[ad])

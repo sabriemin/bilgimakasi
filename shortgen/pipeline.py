@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from . import illustrate, images, render, voice
-from .script import STRUCTURES, ShortScript, generate_script, load_script
+from .script import STRUCTURES, ShortScript, generate_script, kitap_telif, load_script
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -136,6 +136,14 @@ def series_label(script: ShortScript, history: Path) -> str:
 
 def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | None,
           template: str = "kolaj", use_drawings: bool = True) -> Path:
+    if script.structure == "kitap":
+        # Bir Kitap Bir Dakika: telif kuralı her senaryoda kodla uygulanır (hazır ya da bekleyen senaryo da Claude'dan
+        # geçmeden gelebilir): kamu malı olmayan kitapta ilk cümle silinir, sayfalardaki alıntılar çıkar; dış seste,
+        # başlıkta ya da açıklamada alıntı kalmışsa video hiç üretilmez.
+        alinti = kitap_telif(script)
+        if alinti:
+            raise RuntimeError("Senaryo kamu malı olmayan bir kitaptan alıntı içeriyor (" + "; ".join(alinti)
+                               + "): video üretilmedi.")
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "script.json").write_text(script.model_dump_json(indent=2), encoding="utf-8")
     cache = ROOT / "cache" / "images"

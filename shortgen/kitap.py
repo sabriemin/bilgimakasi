@@ -1151,10 +1151,12 @@ class KitapVideo:
                 self.t_yorum = max(self.t_okudun + 0.6, self.t_son + 0.9)
             self.t_okudun = max(self.t_okudun - 0.08, self.t_son + 0.05)
             self.t_yorum = max(self.t_yorum - 0.08, self.t_okudun + 0.25)
-            blurb = " ".join(p.metin for p in sb.paragraflar)
-            if not blurb.strip():
-                blurb = " ".join(self.scenes[i].narration for i in sb.sahneler)
-            self.blurb = _kirp_metin(blurb, 18)
+            # arka kapak yazısı: soru sayfasının metni; yalnız "Okudun mu? Yorumlara yaz." ise (içerik kalıbı boş soru
+            # sayfasına bunu yazar) soru dış sesten gelir. OKUDUN MU? ve Yorumlara yaz. ayrı katmandır, burada yazılmaz.
+            blurb = _kirp_metin(" ".join(p.metin for p in sb.paragraflar), 18)
+            if not blurb:
+                blurb = _kirp_metin(" ".join(self.scenes[i].narration for i in sb.sahneler), 18)
+            self.blurb = blurb
 
     def bolum_at(self, t: float) -> int:
         return max(0, bisect.bisect_right(self.gecis, t) - 1) if t >= self.gecis[0] else 0
