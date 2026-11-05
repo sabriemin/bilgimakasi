@@ -232,8 +232,11 @@
     "category": "doğa ve hayvanlar",
     "template": "kart",
     "created": "2026-11-05T04:23:51",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 97,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-05T04:29:56+00:00",
+    "schedule": null,
+    "decided": "2026-11-05T07:29:56+03:00"
   }
 ]
