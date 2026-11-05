@@ -240,6 +240,11 @@ class Scene(BaseModel):
         "Yalnız kitap kalıbı: sayfa_metni içinden harfi harfine alınmış, sarı fosforlu kalemle çizilecek anahtar ifade "
         "(2-5 kelime). Diğer kalıplarda boş."))
 
+    # --- dosya şablonu ---
+    delil: int = Field(default=0, ge=0, description=(
+        "Yalnız Dava Dosyası şablonu (efsane kalıbı): bu sahnenin delil numarası (1, 2, 3...); aynı delilin devam "
+        "sahnesi aynı numarayı alır. Kanca, iddia, ara ve hüküm sahnelerinde 0. Diğer şablonlarda 0."))
+
 
 class KitapBilgi(BaseModel):
     """Bir Kitap Bir Dakika videosunun kitabı: kod çizilen kapak (başlık, yazar, amblem, renk) ve künye sayfası bu
@@ -296,6 +301,10 @@ class ShortScript(BaseModel):
         "durumlarda false."))
     kitap: KitapBilgi | None = Field(default=None, description=(
         "Yalnız kitap kalıbı (Bir Kitap Bir Dakika): kitabın künyesi, kapak amblemi ve rengi. Diğer kalıplarda null."))
+    # --- dosya şablonu ---
+    hukum: Literal["", "EFSANE", "GERÇEK", "KISMEN DOĞRU"] = Field(default="", description=(
+        "Yalnız efsane kalıbı (Dava Dosyası şablonu): inanışın hükmü; inanış yanlışsa EFSANE, doğruysa GERÇEK, bir "
+        "kısmı doğruysa KISMEN DOĞRU. Diğer kalıplarda boş."))
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
@@ -436,7 +445,7 @@ ekrandır, adımların yerinde ürünün üretim AŞAMALARI vardır):
 
 # Yalnız 'olsaydin' kalıbında sisteme eklenir (Ya sen olsaydın? serisi, kart şablonu: sayaç kartları ve hesap fişi).
 # Hesap fişi yönergesi yalnız burada: diğer kart videolarının yönergesi (KART_RULES) değişmez.
-OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; video kart şablonuyla kurulur):
+OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; video kart ya da ajanda şablonuyla kurulur):
 - Konu her zaman para hesabı değildir. Üç türden biridir: (a) bir meslek ya da iş ('Kuyumcu olsaydın': işe nasıl
   girilir, bir iş günü, aylık gelir ve giderler, içeriden bir ayrıntı; ya da 'Elektrikçi olsaydın günün nasıl geçerdi':
   sabahtan akşama bir iş günü, işin zor ve güzel yanları, kimsenin bilmediği ayrıntılar); (b) bir para ya da hayat olayı ('Piyango sana çıksaydı': vergiden sonra eline geçen
@@ -1401,6 +1410,10 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         sorun = kitap_sorunlari(script)
         if sorun:
             kalip += "Kitap kurallarında bulunan sorunlar (düzelt): " + "; ".join(sorun) + ". "
+    if yapi == "efsane" and any(sc.delil for sc in script.scenes):  # Dava Dosyası: delil sırası korunur
+        kalip += ("Sahnelerin 'delil' alanını koru; delil sahnesi çıkarır ya da birleştirirsen kalan delilleri 1'den "
+                  "başlayarak sırayla yeniden numarala (aynı delili sürdüren sahneler aynı numara; kanca, compare, ara, "
+                  "sonuç ve soru sahnelerinde 0). ")
     if duzen:
         kalip += (("Kanca, numaralı adım sahneleri (step 1, 2, 3...; başlığın ilk satırı 'ADIM n') ve son özet sahnesi "
                    "düzenini koru; adım çıkarırsan kalanları yeniden numarala. ") if yapi == "nasil" else
@@ -1419,6 +1432,12 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         print("Doğrulama notları:", *review.problems, sep="\n - ")
     if keep_structure:
         review.fixed.structure = script.structure
+    # Dava Dosyası alanları: doğrulayıcı boş döndürürse (alanı atladıysa) yazarın değeri kalır; hükmü gerekçeyle
+    # değiştirebilir
+    if not review.fixed.hukum:
+        review.fixed.hukum = script.hukum
+    if not any(sc.delil for sc in review.fixed.scenes) and any(sc.delil for sc in script.scenes):
+        delil_geri_yukle(script, review.fixed)
     if review.fixed.structure == "kitap":
         _kitap_alanlarini_tamamla(script, review.fixed)
     return normalize_kitap(normalize_nasil(review.fixed))
@@ -1449,6 +1468,31 @@ def _kitap_alanlarini_tamamla(once: ShortScript, sonra: ShortScript) -> None:
             and not any(sc.kitap_bolum or sc.sayfa_metni for sc in sonra.scenes)):
         for a, b in zip(once.scenes, sonra.scenes):
             b.kitap_bolum, b.sayfa_metni, b.vurgu = a.kitap_bolum, a.sayfa_metni, a.vurgu
+
+
+def delil_geri_yukle(eski: ShortScript, yeni: ShortScript) -> None:
+    """Doğrulayıcı delil numaralarını düşürdüyse yazarınkileri geri koyar. Sahne sayısı aynıysa sırayla; değiştiyse
+    (sahne çıkarıldı ya da birleştirildi) her yeni sahne, kart türü aynı olan ve dış sesi en çok benzeyen eski sahneyle
+    eşlenir; numaralar sonra 1'den başlayarak boşluksuz yeniden sıralanır."""
+    if len(yeni.scenes) == len(eski.scenes):
+        for a, b in zip(eski.scenes, yeni.scenes):
+            b.delil = a.delil
+        return
+    import difflib
+    kullanilan: set[int] = set()
+    for b in yeni.scenes:
+        aday = [(difflib.SequenceMatcher(None, a.narration.lower(), b.narration.lower()).ratio(), i)
+                for i, a in enumerate(eski.scenes) if a.card == b.card and i not in kullanilan]
+        if not aday:
+            continue
+        oran, i = max(aday)
+        if oran >= 0.5:
+            kullanilan.add(i)
+            b.delil = eski.scenes[i].delil
+    sira: dict[int, int] = {}
+    for b in yeni.scenes:
+        if b.delil:
+            b.delil = sira.setdefault(b.delil, len(sira) + 1)
 
 
 EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün. Görevin, sana verilen kısa video senaryosunun dış sesini
@@ -1531,7 +1575,7 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
         return script
     korunan = [f for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon",
                            "anim_query", "card", "card_value", "card_label", "card_myth", "card_fact", "card_note",
-                           "card_lines", "mascot", "step", "callouts", "kitap_bolum", "sayfa_metni", "vurgu")
+                           "card_lines", "mascot", "step", "callouts", "kitap_bolum", "sayfa_metni", "vurgu", "delil")
                if f in Scene.model_fields]
     for i, (a, b) in enumerate(zip(script.scenes, fixed.scenes)):  # görsel alanları kesin olarak koru
         for f in korunan:
@@ -1545,6 +1589,7 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
     fixed.search_phrase, fixed.structure = script.search_phrase, script.structure
     fixed.alkollu = script.alkollu
     fixed.kitap = script.kitap.model_copy(deep=True) if script.kitap is not None else None
+    fixed.hukum = script.hukum  # Dava Dosyası hükmü: dil editörü değiştiremez
     return fixed
 
 

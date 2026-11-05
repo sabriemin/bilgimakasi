@@ -1,0 +1,123 @@
+{
+  "_not": "Yalnız yerel kurgu denemesi (Ajanda şablonu, para konusu) içindir, yayınlanmaz. Tutarlar Kasım 2026 için yuvarlanmış tahminlerdir (İstanbul'da çarşıda küçük bir dükkân; çalışan maliyeti asgari ücretin işveren maliyetiyle); fiş satırlarının toplamı card_value'ya eşittir. Çizimler depodaki yerel dosyalardır (Claude çağrısı yapılmaz).",
+  "topic": "Kuyumcu olsaydın dükkânın ayda kaça mal olurdu",
+  "category": "ekonomi ve markalar",
+  "template": "ajanda",
+  "title": "Kuyumcu olsaydın dükkânın ayda kaça mal olurdu?",
+  "description": "Kira, çalışan, güvenlik ve sigorta: küçük bir kuyumcu dükkânının aylık gideri. Sen olsan ne yapardın?",
+  "hashtags": [
+    "kuyumcuolsaydin",
+    "kuyumcu",
+    "altin",
+    "esnaf",
+    "bilgimakasi"
+  ],
+  "scenes": [
+    {
+      "narration": "Sen kuyumcu olsaydın, ay başlamadan büyük bir gider hesabı yapardın.",
+      "kicker": "",
+      "headline": ["SEN KUYUMCU", "OLSAYDIN"],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/ajanda/bilezikler.png",
+      "motion": "none"
+    },
+    {
+      "narration": "Çarşıda küçük bir dükkânın kirası ayda yaklaşık 80 bin lira.",
+      "kicker": "",
+      "headline": ["ÖNCE", "KİRA"],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/ajanda/dukkan.png",
+      "motion": "none",
+      "card": "counter",
+      "card_value": "80.000 ₺",
+      "card_label": "AYLIK KİRA",
+      "card_note": "tahmini, İstanbul"
+    },
+    {
+      "narration": "İki çalışanın işverene maliyeti, asgari ücretle bile ayda 78 bin lira.",
+      "kicker": "",
+      "headline": ["İKİ", "ÇALIŞAN"],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "counter",
+      "card_value": "78.000 ₺",
+      "card_label": "2 ÇALIŞAN",
+      "card_note": "asgari ücretle, tahmini"
+    },
+    {
+      "narration": "Güvenlik, sigorta, elektrik ve muhasebe de eklenince ayda 200 bin lira eder.",
+      "kicker": "",
+      "headline": ["AYLIK", "GİDER"],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "receipt",
+      "card_lines": [
+        "KİRA|80.000 ₺",
+        "2 ÇALIŞAN|78.000 ₺",
+        "GÜVENLİK + SİGORTA|25.000 ₺",
+        "ELEKTRİK + MUHASEBE|17.000 ₺"
+      ],
+      "card_value": "200.000 ₺",
+      "card_label": "AYLIK GİDER",
+      "card_note": "Tahmini · Kasım 2026"
+    },
+    {
+      "narration": "İçeriden bir bilgi: altının alış ve satış fiyatı arasındaki farka makas denir.",
+      "kicker": "",
+      "headline": ["BU FARKA", "MAKAS DENİR"],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "interstitial"
+    },
+    {
+      "narration": "Kâr o makastan çıkar. Sen olsan ne yapardın? Yorumlara yaz.",
+      "kicker": "",
+      "headline": ["SEN OLSAN?"],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "cta"
+    }
+  ],
+  "sources": [
+    "Çalışma ve Sosyal Güvenlik Bakanlığı: 2026 asgari ücret ve işveren maliyeti",
+    "İlan sitelerinde İstanbul çarşı içi dükkân kira ortalamaları (Kasım 2026, tahmini)"
+  ],
+  "search_phrase": "kuyumcu olsaydın",
+  "structure": "olsaydin",
+  "series_part": 0,
+  "next_part_brief": ""
+}
