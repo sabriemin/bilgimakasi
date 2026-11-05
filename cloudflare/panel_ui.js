@@ -410,8 +410,16 @@ textarea.alan{min-height:180px;resize:vertical;width:100%;display:block}
 .oneri .dugmeler .btn{flex:0 1 auto}
 .oneri-no{font:500 12px/1 var(--mono);color:var(--text)}
 .oneri-not{flex:1 1 150px;min-width:0;align-self:center;font:12.5px/1.35 var(--mono);color:var(--muted)}
-.cipler{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}
-.cip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 13px;border-radius:999px;cursor:pointer;
+/* seri süzgeci: telefonda kendi satırında yana kayar (sayfa kaymaz, gün şeridi gibi kenara taşar), genişte alt satıra geçer */
+.cipler{position:relative;display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}
+@media (max-width:559px){.cipler{flex-wrap:nowrap;overflow-x:auto;margin:-4px -16px -2px;padding:6px 16px;scroll-padding:0 44px;scrollbar-width:none}
+  .cipler::-webkit-scrollbar{display:none}
+  /* devamı olan kenar solar: sığmayan çip olduğu belli olsun (seritKenari) */
+  .cipler.sag-var{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent)}
+  .cipler.sol-var{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px);mask-image:linear-gradient(90deg,transparent,#000 44px)}
+  .cipler.sol-var.sag-var{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent)}}
+.cip{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:999px;cursor:pointer;white-space:nowrap;
   border:1px solid var(--line-strong);background:var(--surface);color:var(--text);font:500 13px/1 var(--mono)}
 .cip small{font:500 11px/1 var(--mono);color:var(--muted)}
 .cip[aria-pressed=true]{background:var(--btn-dark);color:var(--btn-dark-text);border-color:var(--btn-dark)}
@@ -434,7 +442,7 @@ textarea.alan{min-height:180px;resize:vertical;width:100%;display:block}
 .kaydet-cubuk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
 .kaydet-cubuk .durum{font:12.5px/1.3 var(--mono);color:var(--muted);flex:1 1 160px}
 .kaydet-cubuk .durum.kirli{color:var(--err)}
-.ikili{display:grid;grid-template-columns:1fr;gap:16px}
+.ikili{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
 @media (min-width:960px){.ikili{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}}
 .ikili .bolum:first-child{margin-top:4px}
 /* uyarı, bildirim, sayfa */
@@ -553,6 +561,22 @@ export function girisHataSayfasi(neden = "gecersiz") {
 export const KUYRUK_BASI = ["#", "📷", "🎙", "Görseller:", "Kaynaklar:", "Bu videoda yapay zekâ"];
 export const SINIR = { baslik: 100, aciklama: 2000, aciklamaBayt: 4000 };
 
+// Öneri serileri (trends.SERILER ile aynı sıra): [anahtar, süzgeç adı, başlık, simge]. Panelde seri adları yalnız
+// burada yazılır (SERI_NOTU da adı buradan alır); "olsaydin" adı geçicidir, değişirse yalnız bu satır değişir.
+export const ONERI_SERILERI = [["populer", "Popüler", "Popüler", "🔥"], ["konu", "Konular", "Konular", "📚"],
+  ["efsane", "Efsane", "Efsane mi, gerçek mi?", "🧐"], ["nasil", "Nasıl yapılır", "Nasıl yapılır?", "🛠"],
+  ["uretim", "Üretim", "Nasıl üretiliyor?", "🏭"],
+  ["olsaydin", "Olsaydın", "Ya sen olsaydın?", "💭"]];
+const SERI_ADI = Object.fromEntries(ONERI_SERILERI.map(([k, , ad]) => [k, ad]));
+// Kalıbı sabit seriler (anahtarlar = trends.SERI_KALIP): üretimde serinin kalıbı sabitlenir (telegram_bot._produce_suggestion),
+// onay penceresinde söylenir; konu sırası yalnız konu metnini tutar, bu seriler sıradan kalıpsız üretilirdi: sıraya eklenmez
+export const SERI_NOTU = {
+  efsane: `“${SERI_ADI.efsane}” kalıbıyla üretilir. `,
+  nasil: `“${SERI_ADI.nasil}” kalıbıyla üretilir; kendi şablonu hazır olana kadar kart şablonu kullanılır. `,
+  uretim: `“${SERI_ADI.uretim}” kalıbıyla, aşama kartları şablonuyla üretilir. `,
+  olsaydin: `“${SERI_ADI.olsaydin}” kalıbıyla, kart şablonunda sayaç ve hesap fişi kartlarıyla üretilir. `,
+};
+
 // ------------------------------------------------------------------ tarayıcı uygulaması
 function uygulama(AYAR) {
   "use strict";
@@ -605,7 +629,7 @@ function uygulama(AYAR) {
     bekleyen: new Map(), kuyruk: null, kuyrukTaban: null, kuyrukKirli: false, metrik: "followers", uretKonu: "", yeniKonu: "",
     tumPaylasilan: false, ertelenen: false,
     // takvim: seçili gün (bugünden uzaklık), gece saatleri, video başına kaydedilmemiş saatler {platform: ms}, derin bağlantı
-    takvimGun: 0, takvimGece: false, taslak: new Map(), surukleniyor: false, derin: null, gunKaydir: 0,
+    takvimGun: 0, takvimGece: false, taslak: new Map(), surukleniyor: false, derin: null, gunKaydir: 0, cipKaydir: 0,
   };
   const $ = (id) => document.getElementById(id);
 
@@ -831,21 +855,36 @@ function uygulama(AYAR) {
     cizimSonrasi();
   }
 
-  // yapışık takvim şeritleri üst çubuğun gerçek yüksekliğine göre durur; gün şeridi kaldığı yerden devam eder
+  // yapışık takvim şeritleri üst çubuğun gerçek yüksekliğine göre durur; yana kayan şeritler kaldığı yerden devam eder
   function cizimSonrasi() {
     const ust = document.querySelector(".ust");
     if (ust) document.documentElement.style.setProperty("--ust-h", ust.offsetHeight + "px");
     document.body.classList.toggle("sekme-takvim", S.sekme === "takvim");
     const kayit = document.querySelector(".tk-kayit");
     document.documentElement.style.setProperty("--kayit-h", kayit ? kayit.offsetHeight + 6 + "px" : "0px");
-    const serit = document.querySelector(".tk-gunler");
+    kaydirmaKoru(document.querySelector(".tk-gunler"), "gunKaydir");
+    kaydirmaKoru(document.querySelector(".cipler"), "cipKaydir");
+    seritKenari(document.querySelector(".cipler"));
+  }
+
+  // yana kayan şerit (gün şeridi, Konular'da seri süzgeci) kaldığı yerden devam eder (kaydırdıkça S[anah]'a yazılır);
+  // seçili öğe görünmüyorsa ortaya gelir
+  function kaydirmaKoru(serit, anah) {
     if (!serit) return;
-    serit.scrollLeft = S.gunKaydir || 0;
+    serit.scrollLeft = S[anah] || 0;
     const g = serit.querySelector('[aria-pressed="true"]');
     if (g && (g.offsetLeft < serit.scrollLeft || g.offsetLeft + g.offsetWidth > serit.scrollLeft + serit.clientWidth)) {
-      serit.scrollLeft = S.gunKaydir = Math.max(0, g.offsetLeft - serit.clientWidth / 2 + g.offsetWidth / 2);
+      serit.scrollLeft = S[anah] = Math.max(0, g.offsetLeft - serit.clientWidth / 2 + g.offsetWidth / 2);
     }
   }
+
+  // seri süzgecinin devamı olan kenarı solar (telefonda sığmayan çip olduğu belli olsun; genişte satır kaymaz, solmaz)
+  function seritKenari(s) {
+    if (!s) return;
+    s.classList.toggle("sol-var", s.scrollLeft > 1);
+    s.classList.toggle("sag-var", s.scrollLeft + s.clientWidth < s.scrollWidth - 1);
+  }
+  window.addEventListener("resize", () => seritKenari(document.querySelector(".cipler")));
 
   function ertelenmisiCiz() { if (S.ertelenen && guvenliMi()) ciz(); }
 
@@ -2032,14 +2071,10 @@ function uygulama(AYAR) {
     return (k.slice(0, k.lastIndexOf(" ") > n * 0.6 ? k.lastIndexOf(" ") : k.length)).trim() + "…";
   }
 
-  // öneri serileri (trends.SERILER ile aynı sıra): [anahtar, süzgeç adı, başlık, simge]
-  const ONERI_SERILERI = [["populer", "Popüler", "Popüler", "🔥"], ["konu", "Konular", "Konular", "📚"],
-    ["efsane", "Efsane", "Efsane mi, gerçek mi?", "🧐"], ["nasil", "Nasıl yapılır", "Nasıl yapılır?", "🛠"]];
+  // öneri serileri ve kalıbı sabit serilerin notları modül başında (ONERI_SERILERI, SERI_NOTU); AYAR ile gelir
+  const ONERI_SERILERI = AYAR.seriler, SERI_NOTU = AYAR.seriNotu;
   // "seri" alanı olmayan (eski) ya da tanınmayan öneriler Popüler sayılır
   const oneriSerisi = (it) => (ONERI_SERILERI.some(([k]) => k === it.seri) ? it.seri : "populer");
-  // üretimde serinin kalıbı sabitlenir (telegram_bot._produce_suggestion); onay penceresinde söylenir
-  const SERI_NOTU = { efsane: "“Efsane mi, gerçek mi?” kalıbıyla üretilir. ",
-    nasil: "“Nasıl yapılır?” kalıbıyla üretilir; kendi şablonu hazır olana kadar kart şablonu kullanılır. " };
 
   function oneriKarti(it, i, seri, siraKilit) {
     const sirada = (S.kuyruk || []).includes(kisalt(it.topic, 300));
@@ -2094,7 +2129,9 @@ function uygulama(AYAR) {
       liste: items.map((it, i) => [it, i]).filter(([it]) => oneriSerisi(it) === k) })).filter((g) => g.liste.length);
     const secili = gruplar.some((g) => g.k === S.oneriSeri) ? S.oneriSeri : "tumu";
     if (gruplar.length > 1) {
-      sol.append(h("div", { class: "cipler", role: "group", "aria-label": "Öneri serisi" },
+      // telefonda tek satırda yana kayar: kaydırma yeniden çizimde korunur, seçili seri görünür kalır (kaydirmaKoru)
+      sol.append(h("div", { class: "cipler", role: "group", "aria-label": "Öneri serisi",
+        onscroll: (e) => { S.cipKaydir = e.currentTarget.scrollLeft; seritKenari(e.currentTarget); } },
         [{ k: "tumu", kisa: "Tümü", liste: items }, ...gruplar].map((g) => h("button", { class: "cip", "data-seri": g.k,
           "aria-pressed": secili === g.k ? "true" : "false", onclick: () => { S.oneriSeri = g.k; ciz(true); } },
           g.kisa, h("small", null, g.liste.length)))));
@@ -2200,4 +2237,5 @@ function uygulama(AYAR) {
   yukle();
 }
 
-export const UYGULAMA_JS = `(${uygulama.toString()})(${JSON.stringify({ kuyrukBasi: KUYRUK_BASI, sinir: SINIR })});\n`;
+export const UYGULAMA_JS = `(${uygulama.toString()})(${JSON.stringify({ kuyrukBasi: KUYRUK_BASI, sinir: SINIR,
+  seriler: ONERI_SERILERI, seriNotu: SERI_NOTU })});\n`;
