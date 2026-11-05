@@ -1,29 +1,29 @@
 {
-  "date": "2026-11-04",
+  "date": "2026-11-05",
   "items": [
     {
-      "topic": "4 Kasım 1922'de bulunan Tutankamon mezarının Anadolu'yla bağı: Hattuşa'dan çıkan Hitit kayıtlarına göre büyük ihtimalle Tutankamon'un dul eşi Ankhesenamun, Hitit kralı I. Şuppiluliuma'ya 'Bana oğullarından birini gönder, onunla evleneyim' diye mektup yazdı; gönderilen prens Zannanza Mısır'a hiç varamadı",
-      "hook": "Tutankamon'un dul eşi, Anadolu'daki Hitit kralına evlilik mektubu yazdı.",
-      "trend": "Bugün Tutankamon mezarının bulunuşunun 104. yıl dönümü; Büyük Mısır Müzesi ilgisi sürüyor",
-      "scope": "Global",
-      "category": "tarih",
+      "topic": "Kredi kartının 'cüzdanını unutan iş insanı' efsanesi: Diners Club'ın basın sorumlusu Matty Simmons'ın 1950'deki Frank McNamara hikâyesini sonradan uydurduğunu itiraf etmesi; ve kartın Türkiye'ye 1968'de Koç'a bağlı Servis Turistik eliyle Diners Club olarak gelmesi",
+      "hook": "Kredi kartının doğuş hikâyesini ezbere biliyorsun. Ama o hikâye uydurmaydı.",
+      "trend": "Kredi kartı borçlarına 60 ay taksit öngören kanun teklifi Meclis'e sunuldu",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
       "score": 8
     },
     {
-      "topic": "'Kasım' adının hikâyesi: Ayın adı 1945'e kadar Teşrinisani'ydi; yeni adı, halk takviminde yılı Hızır (6 Mayıs) ve Kasım (8 Kasım) diye ikiye bölen ve kışın başladığı kabul edilen 'Kasım günü'nden geliyor",
-      "hook": "Kasım, 1945'e kadar bir ayın adı bile değildi.",
-      "trend": "Kasım başı ve 8 Kasım halk takviminde kışın başladığı 'Kasım günü'",
+      "topic": "Beşiktaş semtinin adı nereden geliyor: Barbaros'un gemi bağladığı 'beş taş', Bizans'tan kalma 'taş beşik' rivayeti ve Reşad Ekrem Koçu'nun en doğru bulduğu 'gemi beşiği' açıklaması",
+      "hook": "Beşiktaş'ın adı bir beşikten mi, beş taştan mı geliyor?",
+      "trend": "Beşiktaş bu gece Avrupa Ligi'nde Celtic deplasmanında; kulüp adı yine gündemde",
       "scope": "TR",
       "category": "dil ve kültür",
-      "score": 8
+      "score": 7
     },
     {
-      "topic": "Efsane-gerçek: Kış lastiği kar için değil sıcaklık için var; yaz lastiğinin kauçuğu yaklaşık 7°C'nin altında sertleşip tutunmayı kaybediyor, kış lastiğindeki silika ve yumuşak karışım ise soğukta esnek kalıyor",
-      "hook": "Kış lastiği kar için değil. Asıl sihirli sayı 7 derece.",
-      "trend": "15 Kasım'da başlayan kış lastiği uygulaması gündemde, fiyatlar ve sıralar konuşuluyor",
+      "topic": "Türk çayı sanıldığı kadar eski değil: Zihni Derin'in öncülük ettiği 1924 Rize kanunu, İkinci Dünya Savaşı yüzünden 1946'da gelen makineler ve 1947'de açılan ilk çay fabrikasıyla kahve ülkesinin çay ülkesine dönüşmesi",
+      "hook": "Dedenin dedesi bu çayı hiç içmedi. Çünkü daha yoktu.",
+      "trend": "Meteorolojinin Rize-Artvin dahil 16 ile yağış uyarısıyla Doğu Karadeniz gündemde",
       "scope": "TR",
-      "category": "bilim",
-      "score": 7
+      "category": "tarih",
+      "score": 6
     }
   ]
 }
