@@ -303,9 +303,10 @@ def _reject(tag: str, chat: str, v: dict) -> str:
                                         "reply_markup": _kb([])})
     note = "❌ Reddedildi."
     seri_file = STATE / "seri.json"
-    if "(1. Bölüm)" in v.get("title", "") and seri_file.exists():  # 1. bölüm reddedilirse 2. bölüm üretilmesin
+    first = (v.get("duzenleme") or {}).get("ilk_baslik") or v.get("title", "")  # panelde başlık değişmiş olabilir
+    if "(1. Bölüm)" in first and seri_file.exists():  # 1. bölüm reddedilirse 2. bölüm üretilmesin
         seri = json.loads(seri_file.read_text(encoding="utf-8"))
-        if seri.get("bekleyen", {}).get("title") == v["title"]:
+        if seri.get("bekleyen", {}).get("title") == first:
             seri.pop("bekleyen")
             seri_file.write_text(json.dumps(seri, ensure_ascii=False, indent=2), encoding="utf-8")
             note += " Serinin 2. bölümü de iptal edildi."
@@ -520,8 +521,9 @@ def process_update(u: dict, chat: str) -> None:
                                      "/panel: yönetim paneline giriş bağlantısı\n"
                                      "/yardim: bu liste"})
         elif text.startswith("/panel"):  # giriş bağlantısını Cloudflare kapısı verir (PANEL_SECRET orada)
-            api("sendMessage", data={"chat_id": chat, "text": "Panel bağlantısını 7/24 kapı verir; kapı şu an kapalı "
-                                     "görünüyor. GitHub'da 'Telegram kapısını kur' işini çalıştırıp /panel yaz."})
+            api("sendMessage", data={"chat_id": chat, "text": "Panel bağlantısını 7/24 kapı verir; kapı kapalı ya da "
+                                     "henüz panelli sürüme güncellenmemiş. GitHub'da 'Telegram kapısını kur' işini "
+                                     "çalıştırıp /panel yaz."})
 
 
 # ---- Panel: Cloudflare kapısı (/panel) -> işle.yml -> {"panel": {...}} ----
@@ -620,7 +622,8 @@ def process_panel(p: dict, chat: str) -> None:
                 say(f"🔁 {note}\n{v['title']}")
             elif action == "edit":
                 title, desc = _check_edit(p)
-                v = _update(tag, title=title, duzenleme={"title": title, "description": desc,
+                first = (v.get("duzenleme") or {}).get("ilk_baslik") or v["title"]  # seri bağı (seri.json) için
+                v = _update(tag, title=title, duzenleme={"title": title, "description": desc, "ilk_baslik": first,
                                                          "at": dt.datetime.now(TR).isoformat(timespec="seconds")})
                 _edit_caption(v, chat)
                 say(f"✏️ Başlık ve açıklama düzenlendi; paylaşımda bu metin kullanılacak.\n\n{title}\n\n{desc}")

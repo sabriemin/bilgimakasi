@@ -44,7 +44,9 @@ def _items(text: str | None) -> list[str]:
     except ValueError:
         return []
     items = d.get("konular") if isinstance(d, dict) else d
-    return [x for x in items if isinstance(x, str)] if isinstance(items, list) else []
+    if not isinstance(items, list):
+        return []
+    return [" ".join(x.split()) for x in items if isinstance(x, str) and x.strip()]  # boş konu sırayı tıkamasın
 
 
 def load(path: Path | None = None) -> list[str]:

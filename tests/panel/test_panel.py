@@ -2,7 +2,7 @@
 """Panelin Python tarafı testleri (gerçek Telegram/GitHub çağrısı yok; durum geçici klasörde).
 
     python -B tests/panel/test_panel.py              # tüm testler
-    python -B tests/panel/test_panel.py --dugme <kök>  # düğme senaryolarını <kök>/shortgen ile çalıştırıp JSON yazar
+    python -B tests/panel/test_panel.py --dugme <kök>  # <kök>/shortgen'in geçici kopyasıyla düğme senaryolarını çalıştırıp JSON yazar
 
 fixtures/buttons_golden.json panelden ÖNCEKİ telegram_bot.py ile üretildi: Telegram düğmelerinin davranışı
 (giden Telegram/GitHub çağrıları ve durum değişiklikleri) yeniden düzenlemeden sonra da aynı olmalı.
@@ -274,6 +274,18 @@ class PanelIslemleri(Ortak):
         c = self.panel(action="reject", tag=T)
         self.assertIn("İşlem yapılmadı", self.mesajlar(c)[0])
 
+    def test_baslik_duzenlenmis_1_bolum_reddedilince_seri_iptal(self):
+        self.video_degistir(T, title="Melas Seli (1. Bölüm)")
+        (self.root / "state" / "seri.json").write_text(json.dumps({"bekleyen": {"title": "Melas Seli (1. Bölüm)"}}),
+                                                       encoding="utf-8")
+        self.panel(action="edit", tag=T, title="Melas Seli: Boston 1919", description="Yeni bilgi.")
+        self.panel(action="edit", tag=T, title="Melas Seli: ikinci düzenleme", description="Yeni bilgi.")
+        self.assertEqual(self.vid(T)["duzenleme"]["ilk_baslik"], "Melas Seli (1. Bölüm)")
+        self.req.cagrilar.clear()
+        c = self.panel(action="reject", tag=T)
+        self.assertIn("Serinin 2. bölümü de iptal edildi", self.mesajlar(c)[0])
+        self.assertNotIn("bekleyen", json.loads((self.root / "state" / "seri.json").read_text()))
+
     def test_iptal(self):
         c = self.panel(action="cancel", tag=Z)
         v = self.vid(Z)
@@ -539,6 +551,26 @@ class Birlestirme(unittest.TestCase):
         self.assertEqual(self.m(["a"], ["a"], ["a", "b"]), ["a", "b"])
         self.assertEqual(self.m(None, ["a"], None), ["a"])
 
+    def test_paylasim_kaydi_panel_duzenlemesini_silmez(self):
+        b = {"tag": "t", "title": "Eski", "status": "zamanlandi", "platforms": {}}
+        r = {**b, "title": "Yeni", "duzenleme": {"title": "Yeni", "description": "d"}}  # panel önce kaydetti
+        l = {**b, "status": "zamanlandi", "platforms": {"youtube": {"status": "ok"}}}  # paylaşım işi sonra
+        d = lambda v: json.dumps([v])  # noqa: E731
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
+        self.assertEqual((out["title"], out["duzenleme"]["title"]), ("Yeni", "Yeni"))
+        self.assertEqual(out["platforms"]["youtube"]["status"], "ok")
+        # panel kullanılmadıysa yerel kayıt aynen kazanır
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d({**b, "status": "x"}), d(l)))[0]
+        self.assertEqual(out, l)
+
+    def test_bos_konu_sirayi_tikamaz(self):
+        with tempfile.TemporaryDirectory() as t:
+            f = Path(t) / "k.json"
+            f.write_text(json.dumps({"konular": ["", "  ", " Gerçek   konu "]}), encoding="utf-8")
+            self.assertEqual(self.k.peek(f), "Gerçek konu")
+            self.assertTrue(self.k.remove("Gerçek konu", f))
+            self.assertIsNone(self.k.peek(f))
+
     def test_temizle(self):
         self.assertEqual(self.k.clean([" a ", "a", "", "b\nc"]), ["a", "b c"])
         for kotu in ("x", [1], ["x" * 301], [str(i) for i in range(31)]):
@@ -581,6 +613,12 @@ class KapiIleTutarlilik(unittest.TestCase):
 
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--dugme"]:
-        print(json.dumps(dugme_senaryolari(Path(sys.argv[2])), ensure_ascii=False, indent=1))
+        # geçici kopyada çalışır: verilen kökün state/ klasörü ve history.jsonl dosyası silinmez
+        kok = kok_hazirla(Path(sys.argv[2]).resolve())
+        try:
+            print(json.dumps(dugme_senaryolari(kok), ensure_ascii=False, indent=1))
+        finally:
+            sys.path.remove(str(kok))
+            shutil.rmtree(kok, ignore_errors=True)
     else:
         unittest.main(verbosity=2)

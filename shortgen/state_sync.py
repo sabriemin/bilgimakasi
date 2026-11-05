@@ -48,6 +48,23 @@ def _keep_published(local: dict, remote: dict) -> dict:
     return out
 
 
+def _decision(v: dict) -> dict:
+    """Kaydın paylaşım kararıyla ilgili kısmı: panel metin düzenlemesi (başlık/açıklama) bir paylaşım kararı değildir."""
+    return {k: x for k, x in v.items() if k not in ("duzenleme", "title")}
+
+
+def _keep_edit(local: dict, remote: dict, base: dict | None) -> dict:
+    """Panelde yapılan başlık/açıklama düzenlemesi (duzenleme), bu çalışma onu değiştirmediyse kaybolmaz
+    (ör. paylaşım işi düzenleme sürerken kaydını yeniden yazarsa kalan platformlar yine düzenlenmiş metni kullanır)."""
+    base = base or {}
+    if remote.get("duzenleme") == base.get("duzenleme") or local.get("duzenleme") != base.get("duzenleme"):
+        return local
+    out = {**local, "duzenleme": remote.get("duzenleme")}
+    if local.get("title") == base.get("title") and "title" in remote:
+        out["title"] = remote["title"]
+    return out
+
+
 def _merge(path: str, base: str | None, remote: str | None, local: str | None) -> str | None:
     if local == base:  # bu çalışmada değişmedi: uzaktakini al
         return remote
@@ -67,11 +84,12 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
                 # platforms alanını yalnız paylaşım işi yazar. Uzak kayıt değişmiş ama platforms'u aynıysa bu bir
                 # kullanıcı kararıdır (iptal, ret, yeniden onay, tekrar dene, düzeltme). Bu çalışma paylaşım yaptıysa
                 # kullanıcının kararı geçerli olur, bu çalışmada yapılmış paylaşımlar (ok) yine korunur.
-                if rv != bv and rv.get("platforms") == bv.get("platforms") \
+                # Panel düzenlemesi (duzenleme/başlık) hangi taraf kazanırsa kazansın kaybolmaz (_keep_edit).
+                if _decision(rv) != _decision(bv) and rv.get("platforms") == bv.get("platforms") \
                         and v.get("platforms") != bv.get("platforms"):
-                    out[v["tag"]] = _keep_published(rv, v)
+                    out[v["tag"]] = _keep_published(_keep_edit(rv, v, bv), v)
                 else:
-                    out[v["tag"]] = _keep_published(v, rv)
+                    out[v["tag"]] = _keep_published(_keep_edit(v, rv, bv), rv)
         order = [v["tag"] for v in r] + [v["tag"] for v in l if v["tag"] not in {x["tag"] for x in r}]
         return json.dumps([out[t] for t in order], ensure_ascii=False, indent=2)
     if path.endswith("yorumlar.json"):

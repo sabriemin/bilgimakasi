@@ -1,4 +1,4 @@
-// Kapı ve panel testleri (gerçek ağ yok): /opt/node22/bin/node --test tests/panel/
+// Kapı ve panel testleri (gerçek ağ yok): /opt/node22/bin/node --test tests/panel/worker.test.mjs
 import { test, describe, before, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -216,6 +216,7 @@ describe("okuma API", () => {
     assert.equal(d.oneriler.items.length, 3);
     assert.equal(d.konu_sirasi.length, 3);
     assert.ok(d.stats_gecmis.length >= 10 && d.stats_gecmis[0].hesap.youtube);
+    assert.ok(d.stats_gecmis.every((x) => Object.keys(x).join() === "time,hesap"), "video başına değerler tarayıcıya gitmez");
     assert.deepEqual(d.saatler.en_iyi.youtube, ["18:00", "21:00"]);
     assert.deepEqual(d.uyarilar, []);
     assert.equal(cagrilar.length, 5);

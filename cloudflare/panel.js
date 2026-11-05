@@ -215,7 +215,8 @@ async function durumOku(env) {
   const uyarilar = adlar.filter((a) => f[a].hata).map((a) => `${DOSYALAR[a]} okunamadı (${f[a].hata})`);
   const kuyruk = jsonCoz(f.konu_sirasi.metin, null);
   const gecmis = (f.stats_gecmis.metin || "").split("\n").filter((s) => s.trim())
-    .slice(-400).map((s) => jsonCoz(s, null)).filter((x) => x && x.time);
+    .slice(-400).map((s) => jsonCoz(s, null)).filter((x) => x && x.time)
+    .map((x) => ({ time: x.time, hesap: x.hesap || {} })); // grafikler yalnız hesap toplamlarını kullanır: yanıt küçük kalır
   return {
     zaman: new Date().toISOString(),
     videos: jsonCoz(f.videos.metin, []) || [],
