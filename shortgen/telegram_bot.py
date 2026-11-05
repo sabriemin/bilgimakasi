@@ -49,6 +49,29 @@ def api(method: str, **kw):
     return r.json()["result"]
 
 
+def _err_text(e: BaseException, n: int = 200) -> str:
+    """Sohbete yazılacak hata metni. Ağ hatalarının metni tam adresi (Telegram'da bot anahtarı, Instagram'da
+    access_token) içerir: onlar için sabit bir cümle + iş bağlantısı gider, ayrıntı yalnız (maskelenmiş) günlüğe yazılır."""
+    from requests.exceptions import RequestException
+    from .publish import _redact
+    print("Hata ayrıntısı:", _redact(f"{type(e).__name__}: {e}")[:1000])
+    if isinstance(e, RequestException):
+        run = os.environ.get("GITHUB_RUN_ID")
+        url = (f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{os.environ.get('GITHUB_REPOSITORY', '')}"
+               f"/actions/runs/{run}") if run and os.environ.get("GITHUB_REPOSITORY") else ""
+        return "Telegram veya GitHub'a bağlanılamadı; birazdan tekrar dene." + (f"\nAyrıntı: {url}" if url else "")
+    return _redact(e)[:n]
+
+
+def _cut16(text: str, n: int = 4096) -> str:
+    """Telegram metin sınırı UTF-16 birimiyle sayılır (emoji 2 birim)."""
+    if len(text.encode("utf-16-le")) // 2 <= n:
+        return text
+    while len(text.encode("utf-16-le")) // 2 > n - 1:
+        text = text[:-max(1, (len(text.encode("utf-16-le")) // 2 - n + 1) // 2)]
+    return text + "…"
+
+
 def load(path: Path, default):
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else default
 
@@ -91,7 +114,7 @@ def _refresh_videos() -> None:
         remote = json.loads(subprocess.run(["git", "show", "origin/main:state/videos.json"], cwd=ROOT,
                                            capture_output=True, text=True, check=True).stdout)
     except Exception as e:  # noqa: BLE001
-        print("Uzak durum alınamadı:", e)
+        print("Uzak durum alınamadı:", _redact_safe(e))
         return
     videos = load(VIDEOS, [])
     have = {v["tag"] for v in videos}
@@ -414,7 +437,7 @@ def _put_back(cq: dict, chat: str) -> None:
                                             "reply_markup": json.dumps(cq["message"].get("reply_markup")
                                                                        or {"inline_keyboard": []})})
     except Exception as e:  # noqa: BLE001
-        print("Klavye geri konamadı:", e)
+        print("Klavye geri konamadı:", _redact_safe(e))
 
 
 def _kb_rows(tag: str, status: str) -> list:
@@ -435,7 +458,7 @@ def _restore_kb(tag: str, chat: str) -> None:
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"],
                                             "reply_markup": _kb(rows)})
     except Exception as e:  # noqa: BLE001
-        print("Düğmeler geri konamadı:", e)
+        print("Düğmeler geri konamadı:", _redact_safe(e))
 
 
 _wh: list = []
@@ -462,14 +485,15 @@ def process_update(u: dict, chat: str) -> None:
             try:
                 _handle_callback(cq, chat)
             except Exception as e:  # noqa: BLE001
-                print("Düğme işlenemedi:", e)
+                print("Düğme işlenemedi.")
+                note = _err_text(e)
                 if os.environ.get("TG_WEBHOOK") == "1":
                     tag = cq["data"].partition(":")[2].partition(":")[0]
                     if _find(load(VIDEOS, []), tag):
                         _restore_kb(tag, chat)
                     else:
                         _put_back(cq, chat)
-                    api("sendMessage", data={"chat_id": chat, "text": f"⚠️ Düğme işlenemedi: {str(e)[:200]}"})
+                    api("sendMessage", data={"chat_id": chat, "text": f"⚠️ Düğme işlenemedi: {note}"})
     elif (m := u.get("message")) and str(m["chat"]["id"]) == chat:
         text = (m.get("text") or "").strip()
         rep = (m.get("reply_to_message") or {}).get("message_id")
@@ -503,7 +527,7 @@ def process_update(u: dict, chat: str) -> None:
                 from . import stats
                 stats.report()
             except Exception as e:  # noqa: BLE001
-                api("sendMessage", data={"chat_id": chat, "text": f"Rapor hazırlanamadı: {str(e)[:200]}"})
+                api("sendMessage", data={"chat_id": chat, "text": f"Rapor hazırlanamadı: {_err_text(e)}"})
         elif text.startswith("/saatler"):
             lines = ["Platformların en iyi paylaşım saatleri (Türkiye):"]
             lines += [f"• {PLATFORM_NAMES[p]}: {', '.join(t)}" + (f" (ek saat: {', '.join(EXTRA_TIMES[p])})"
@@ -544,8 +568,9 @@ def _is_tail(par: str) -> bool:
 
 
 def _apply_edit(meta: dict, ed: dict | None) -> dict:
-    """Panelde düzenlenen başlık/açıklamayı paylaşım paketine uygular. Yeni açıklamada etiket satırı veya görsel
-    atfı yoksa orijinaldekiler sona eklenir (yalnız bilgi metni düzenlendiyse etiketler ve lisans atfı korunur)."""
+    """Panelde düzenlenen başlık/açıklamayı paylaşım paketine uygular. Orijinal açıklamanın görsel atfı (📷, lisans)
+    HER ZAMAN sona eklenir; kullanıcının metni yalnız etiket (#) satırının yerine geçebilir: kendi # satırını yazdıysa
+    orijinal etiket satırı eklenmez. (Kullanıcının "📷 ..." / "Kaynaklar: ..." satırı atfın yerine geçmez.)"""
     if not isinstance(ed, dict):
         return meta
     import re
@@ -554,34 +579,54 @@ def _apply_edit(meta: dict, ed: dict | None) -> dict:
         meta["title"] = ed["title"]
     desc = (ed.get("description") or "").strip()
     if desc:
-        new = [x.strip() for x in re.split(r"\n\s*\n", desc) if _is_tail(x)]
-        old = [x.strip() for x in re.split(r"\n\s*\n", meta.get("description") or "") if _is_tail(x)]
-        tags, credit = any(x.startswith("#") for x in new), any(not x.startswith("#") for x in new)
-        keep = [x for x in old if not (tags if x.startswith("#") else credit)]
+        pars = [x.strip() for x in re.split(r"\n\s*\n", desc) if x.strip()]
+        own_tags = any(_is_tail(x) and any(ln.strip().startswith("#") for ln in x.splitlines()) for x in pars)
+        keep = []
+        for x in re.split(r"\n\s*\n", meta.get("description") or ""):
+            x = x.strip()
+            if not _is_tail(x) or x in pars:  # bilgi metni değişti; aynen yazılmış ek paragraf iki kez eklenmez
+                continue
+            lines = [ln.strip() for ln in x.splitlines() if ln.strip() and not (own_tags and ln.strip().startswith("#"))]
+            if lines:
+                keep.append("\n".join(lines))
         meta["description"] = "\n\n".join([desc] + keep)
     return meta
 
 
 def _check_edit(p: dict) -> tuple[str, str]:
+    """Kapının (panel.js metinAl / aciklamaDenetle) denetiminin aynısı: buraya bozuk istek gelse de kayda geçmez."""
+    import re
     title = " ".join(str(p.get("title") or "").split())
     desc = "\n".join(ln.rstrip() for ln in str(p.get("description") or "").replace("\r\n", "\n").split("\n")).strip()
     if not 1 <= len(title) <= 100:
         raise ValueError("başlık 1-100 karakter olmalı")
     if not 1 <= len(desc) <= 2000:
         raise ValueError("açıklama 1-2000 karakter olmalı")
+    if re.search(r"[\x00-\x08\x0b-\x1f\x7f]", title + desc):
+        raise ValueError("metin geçersiz karakter içeriyor")
+    if len(desc.encode("utf-8")) > 4000:  # YouTube sınırı 5000 bayt; sona atıf ve etiketler de eklenir
+        raise ValueError("açıklama çok uzun (emoji ve özel karakterler daha çok yer kaplar), biraz kısalt")
+    for par in re.split(r"\n\s*\n", desc):
+        if _is_tail(par) and not all(ln.strip().startswith("#") for ln in par.splitlines() if ln.strip()):
+            raise ValueError("görsel atfı ve kaynak satırları sona kendiliğinden eklenir; bu satırları açıklamadan çıkar")
     return title, desc
 
 
 def _edit_caption(v: dict, chat: str) -> None:
     """Video mesajındaki başlığı günceller; düğmeler videonun durumuna göre aynı kalır."""
     import html
-    cap = (f"🎬 <b>{html.escape(v['title'])}</b>\n\nKonu: {html.escape(v.get('topic') or '-')}"
-           f"\nŞablon: {html.escape(v.get('template') or '-')}")
+    topic = v.get('topic') or '-'
+    while True:  # kaçışlı metni kesmek &amp; gibi bir varlığı bölüp HTML'i bozabilir: kesme kaçıştan önce yapılır
+        cap = (f"🎬 <b>{html.escape(v['title'])}</b>\n\nKonu: {html.escape(topic)}"
+               f"\nŞablon: {html.escape(v.get('template') or '-')}")
+        if len(cap) <= 1000 or len(topic) <= 1:
+            break
+        topic = topic.rstrip("…")[:-max(1, (len(cap) - 1000) // 5 + 1)] + "…"
     try:
         api("editMessageCaption", data={"chat_id": chat, "message_id": v["telegram_message_id"], "caption": cap[:1000],
                                         "parse_mode": "HTML", "reply_markup": _kb(_kb_rows(v["tag"], v["status"]))})
     except Exception as e:  # noqa: BLE001
-        print("Video mesajının başlığı güncellenemedi:", e)
+        print("Video mesajının başlığı güncellenemedi:", _redact_safe(e))
 
 
 def process_panel(p: dict, chat: str) -> None:
@@ -593,7 +638,7 @@ def process_panel(p: dict, chat: str) -> None:
     mid = (v or {}).get("telegram_message_id")
 
     def say(text: str) -> None:
-        data = {"chat_id": chat, "text": ("🖥 Panelden: " + text)[:4000]}
+        data = {"chat_id": chat, "text": _cut16("🖥 Panelden: " + text, 4000)}
         if mid:
             data.update(reply_to_message_id=mid, allow_sending_without_reply="true")
         api("sendMessage", data=data)
@@ -653,15 +698,21 @@ def process_panel(p: dict, chat: str) -> None:
         elif action == "queue_set":
             from . import konu_sirasi
             items = konu_sirasi.clean(p.get("queue"))
-            konu_sirasi.save(items)
+            rid = str(p.get("rid") or "")[:64] or None
+            if isinstance(p.get("queue_base"), list):
+                # sayfa listeyi yüklediğinden beri üretim sıradan konu aldıysa o konu geri gelmez (üç yollu birleştirme)
+                items = konu_sirasi.save_merged(konu_sirasi.clean(p["queue_base"]), items, rid=rid)
+            else:
+                konu_sirasi.save(items, rid=rid)
             say(f"📋 Konu sırası kaydedildi ({len(items)} konu)." + (f"\nSıradaki: {items[0]}" if items else ""))
         else:
             say(f"⚠️ Bilinmeyen panel işlemi: {action[:40]}")
     except Exception as e:  # noqa: BLE001
-        print("Panel işlemi yapılamadı:", e)
+        print("Panel işlemi yapılamadı.")
+        note = _err_text(e)
         if v:
             _restore_kb(tag, chat)
-        say(f"⚠️ İşlem yapılamadı: {str(e)[:200]}")
+        say(f"⚠️ İşlem yapılamadı: {note}")
 
 
 def poll(wait: int = 0) -> int:
@@ -672,7 +723,7 @@ def poll(wait: int = 0) -> int:
         try:
             api("setMyCommands", data={"commands": json.dumps(COMMANDS, ensure_ascii=False)})
         except Exception as e:  # noqa: BLE001
-            print("Komut menüsü ayarlanamadı:", e)
+            print("Komut menüsü ayarlanamadı:", _redact_safe(e))
         _menu_set = True
     if _webhook_mode():
         return 0
@@ -749,7 +800,7 @@ def listen(minutes: float) -> None:
             poll(wait=int(max(1, min(50, end - time.time()))))
             publish_due()
         except Exception as e:  # noqa: BLE001
-            print("Dinleme hatası:", e)
+            print("Dinleme hatası:", _redact_safe(e))
             time.sleep(5)
 
 
@@ -775,7 +826,8 @@ def publish_due() -> None:
                 video, meta = fetch_release(tag, Path(d))
                 res = publish(video, _apply_edit(meta, v.get("duzenleme")), todo)
         except Exception as e:  # noqa: BLE001
-            res = {p: {"status": "hata", "error": f"video indirilemedi: {e}"[:600]} for p in todo}
+            from .publish import _redact
+            res = {p: {"status": "hata", "error": _redact(f"video indirilemedi: {e}")[:600]} for p in todo}
         stamp = dt.datetime.now(TR).isoformat(timespec="seconds")
         for r in res.values():
             if r.get("status") == "ok":
@@ -798,7 +850,7 @@ def publish_due() -> None:
                 lines.append(f"✅ {name}: {r.get('url') or ('taslak olarak gönderildi' if r.get('draft') else 'paylaşıldı')}" + (f"\n   ⚠️ {r['note']}" if r.get("note") else "")
                              + (f"\n\n{r['caption']}\n" if r.get("caption") else ""))
             elif r["status"] == "hata":
-                lines.append(f"❌ {name}: {r['error'][:300]}")
+                lines.append(f"❌ {name}: {_redact_safe(r.get('error'))[:300]}")
             else:
                 lines.append(f"➖ {name}: bağlı değil")
         head = {"yayinlandi": "📢 Paylaşıldı", "kismen": "⚠️ Kısmen paylaşıldı", "hata": "❌ Paylaşılamadı",
@@ -811,6 +863,12 @@ def publish_due() -> None:
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"], "reply_markup": kb})
         api("sendMessage", data={"chat_id": chat, "text": f"{head}\n{v['title']}\n\n" + "\n".join(lines),
                                  "reply_to_message_id": v["telegram_message_id"], "disable_web_page_preview": "true"})
+
+
+def _redact_safe(text) -> str:
+    """Günlüğe yazılan hata metni (ağ hataları adreste anahtar taşır)."""
+    from .publish import _redact
+    return _redact(text or "")
 
 
 def _dispatch(topic: str, workflow: str = "uret.yml") -> bool:

@@ -1,7 +1,9 @@
 """Konu sırası: panelden düzenlenen, otomatik üretimde gündem önerisinden önce kullanılan konular.
 
-Dosya: state/konu_sirasi.json  {"konular": ["...", ...], "guncellendi": "<ISO>"}
+Dosya: state/konu_sirasi.json  {"konular": ["...", ...], "guncellendi": "<ISO>", "rid": "<son panel isteği>"}
 - Panel (işle.yml -> telegram_bot.process_panel) listeyi kaydeder (en fazla 30 konu, her biri en fazla 300 karakter).
+  Sayfanın yüklediği liste (taban) de gelir: kayıt save_merged ile üç yollu yapılır, sayfa açıkken üretimin sıradan
+  aldığı konu eski sayfadan kaydedilince geri gelmez. "rid", panelin kaydın işlendiğini görmesi içindir.
 - Konusuz üretimde (pipeline.main) ilk konu alınır; senaryo yazıldıktan sonra listeden çıkarılır.
 - state_sync aynı anda iki yerden değişen listeyi merge() ile birleştirir (ör. üretim ilk konuyu alırken panelden
   sıra değiştirildiyse ikisi de korunur).
@@ -38,6 +40,15 @@ def clean(items) -> list[str]:
     return out
 
 
+def _rid(text: str | None) -> str | None:
+    try:
+        d = json.loads(text or "")
+    except ValueError:
+        return None
+    r = d.get("rid") if isinstance(d, dict) else None
+    return r if isinstance(r, str) and r else None
+
+
 def _items(text: str | None) -> list[str]:
     try:
         d = json.loads(text or "")
@@ -54,15 +65,29 @@ def load(path: Path | None = None) -> list[str]:
     return _items(p.read_text(encoding="utf-8")) if p.exists() else []
 
 
-def _dump(items: list[str]) -> str:
-    return json.dumps({"konular": items, "guncellendi": dt.datetime.now(TR).isoformat(timespec="seconds")},
-                      ensure_ascii=False, indent=2)
+def _dump(items: list[str], rid: str | None = None) -> str:
+    d = {"konular": items, "guncellendi": dt.datetime.now(TR).isoformat(timespec="seconds")}
+    if rid:
+        d["rid"] = rid
+    return json.dumps(d, ensure_ascii=False, indent=2)
 
 
-def save(items: list[str], path: Path | None = None) -> None:
+def save(items: list[str], path: Path | None = None, rid: str | None = None) -> None:
+    """rid verilmezse (ör. üretim konu çıkarırken) dosyadaki son panel kaydının numarası korunur."""
     p = path or FILE
+    if rid is None and p.exists():
+        rid = _rid(p.read_text(encoding="utf-8"))
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(_dump(items), encoding="utf-8")
+    p.write_text(_dump(items, rid), encoding="utf-8")
+
+
+def save_merged(base: list[str], items: list[str], rid: str | None = None, path: Path | None = None) -> list[str]:
+    """Panel kaydı: base = sayfanın yüklediği liste, items = kullanıcının yeni listesi, dosya = şimdiki hâl."""
+    p = path or FILE
+    cur = p.read_text(encoding="utf-8") if p.exists() else None
+    out = _items(merge(_dump(base), cur, _dump(items)))
+    save(out, p, rid=rid)
+    return out
 
 
 def peek(path: Path | None = None) -> str | None:
@@ -90,4 +115,5 @@ def merge(base: str | None, remote: str | None, local: str | None) -> str:
         out = [x for x in l if x not in gone_r]
     else:
         out = [x for x in l if x not in gone_r] + [x for x in r if x not in l and x not in b]
-    return _dump(out[:MAX_ITEMS])
+    rb, rr, rl = _rid(base), _rid(remote), _rid(local)
+    return _dump(out[:MAX_ITEMS], rl if rl != rb else rr)

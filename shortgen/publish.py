@@ -31,6 +31,41 @@ class Skip(Exception):
     """Platform bağlı değil."""
 
 
+# ------------------------------------------------------------------ hata metinlerinde gizli değer
+# requests ağ hatalarında (DNS, bağlantı, SSL) tam adresi metne koyar; Instagram anahtarı adreste (access_token=...)
+# durur. Hata metni videos.json'a (panel gösterir), Telegram'a ve Actions günlüğüne gider; yenilenen anahtarı Actions
+# maskelemez. Bu yüzden her hata metni _redact'tan geçer (cloudflare/panel.js gizle() ile aynı kurallar).
+_SECRET_ENV = ("TELEGRAM_BOT_TOKEN", "IG_ACCESS_TOKEN", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN", "YT_API_KEY",
+               "TIKTOK_CLIENT_SECRET", "TIKTOK_REFRESH_TOKEN", "TIKTOK_AUTH_CODE", "GH_SECRETS_PAT", "GITHUB_TOKEN",
+               "ANTHROPIC_API_KEY", "ELEVENLABS_API_KEY")
+_runtime_secrets: set[str] = set()  # çalışma sırasında alınan anahtarlar (yenilenen IG anahtarı, erişim anahtarları)
+_REDACT = (
+    (re.compile(r"(access_token|input_token|refresh_token|client_secret|key|code)=[^&\s'\")]+", re.I), r"\1=***"),
+    (re.compile(r"""((?:access_token|input_token|refresh_token|id_token|client_secret)["']?\s*:\s*["']?)[^"'\s,}&)]+""",
+                re.I), r"\1***"),
+    (re.compile(r"bot\d+:[\w-]+"), "bot***"),
+    (re.compile(r"\b(?:EAA|IGAA|IGQ|ya29\.|AIza|github_pat_|gh[pousr]_)[\w.-]{16,}"), "***"),
+    (re.compile(r"\b(Bearer|OAuth)\s+[\w.~+/-]{8,}=*", re.I), r"\1 ***"),
+)
+
+
+def _remember_secret(value: str | None) -> str | None:
+    if value and len(value) >= 8:
+        _runtime_secrets.add(value)
+    return value
+
+
+def _redact(text) -> str:
+    """Metindeki anahtarları *** yapar: bilinen gizli ortam değişkenleri, çalışmada alınan anahtarlar ve kalıplar."""
+    s = str(text)
+    vals = {os.environ.get(n, "").strip() for n in _SECRET_ENV} | _runtime_secrets
+    for v in sorted((v for v in vals if len(v) >= 8), key=len, reverse=True):
+        s = s.replace(v, "***")
+    for rx, rep in _REDACT:
+        s = rx.sub(rep, s)
+    return s
+
+
 def _env(*names: str) -> list[str]:
     vals = [os.environ.get(n, "").strip() for n in names]
     if not all(vals):
@@ -85,7 +120,7 @@ def _yt_token() -> str:
         timeout=30)
     if not r.ok:
         raise RuntimeError(f"YouTube oturumu yenilenemedi: {r.status_code} {r.text[:300]}")
-    return r.json()["access_token"]
+    return _remember_secret(r.json()["access_token"])
 
 
 def youtube(video: Path, meta: dict) -> dict:
@@ -94,7 +129,9 @@ def youtube(video: Path, meta: dict) -> dict:
     # #Shorts artık gerekmiyor (dikey ve kısa video otomatik Short sayılır); başlıkta arama kelimesine yer kalsın
     desc = _clean_desc(meta["description"]).replace("<", "").replace(">", "")
     # düzeltmeden önce üretilmiş videolarda "#Galatasaray'ın" gibi etiketler kalmış olabilir: kesme işareti etiketi böler
-    desc = re.sub(r"#[^\s#]+", lambda m: "#" + re.sub(r"\W", "", m.group()[1:]), desc)[:4900]
+    desc = re.sub(r"#[^\s#]+", lambda m: "#" + re.sub(r"\W", "", m.group()[1:]), desc)
+    # YouTube açıklama sınırı 5000 BAYT (karakter değil): emojili/Türkçe metin karakter sayısıyla sığsa da reddedilir
+    desc = desc.encode("utf-8")[:4900].decode("utf-8", "ignore")
     body = {
         "snippet": {"title": title[:100], "description": desc, "categoryId": "27",  # Eğitim
                     "tags": [t for t in (re.sub(r"\W", "", h) for h in meta.get("hashtags", [])) if t][:15],
@@ -180,7 +217,7 @@ def _instagram(video: Path, meta: dict) -> dict:
         rr = requests.get(f"{IG_GRAPH}/refresh_access_token",
                           params={"grant_type": "ig_refresh_token", "access_token": token}, timeout=30)
         if rr.ok and rr.json().get("access_token"):
-            token = rr.json()["access_token"]
+            token = _remember_secret(rr.json()["access_token"])
             _rotate_secret("IG_ACCESS_TOKEN", token)
 
     caption = meta["title"] + "\n\n" + _clean_desc(meta["description"])
@@ -248,8 +285,8 @@ def _tt_token() -> str:
     if not r.ok or "access_token" not in d:
         raise RuntimeError(f"TikTok oturumu yenilenemedi: {r.status_code} {str(d)[:300]}")
     if d.get("refresh_token") and d["refresh_token"] != refresh:
-        _rotate_secret("TIKTOK_REFRESH_TOKEN", d["refresh_token"])
-    return d["access_token"]
+        _rotate_secret("TIKTOK_REFRESH_TOKEN", _remember_secret(d["refresh_token"]))
+    return _remember_secret(d["access_token"])
 
 
 def tiktok(video: Path, meta: dict) -> dict:
@@ -336,8 +373,8 @@ def publish(video: Path, meta: dict, only: list[str] | None = None) -> dict:
         except Skip as e:
             out[name] = {"status": "atlandi", "note": str(e)}
         except Exception as e:  # noqa: BLE001
-            out[name] = {"status": "hata", "error": str(e)[:600]}
-        print(name, json.dumps(out[name], ensure_ascii=False))
+            out[name] = {"status": "hata", "error": _redact(e)[:600]}
+        print(name, _redact(json.dumps(out[name], ensure_ascii=False)))
     return out
 
 

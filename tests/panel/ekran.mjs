@@ -104,20 +104,26 @@ async function main() {
           const ek = `${ad}_${tema === "light" ? "acik" : "koyu"}`;
           await page.goto(`${URL}/panel#videolar`);
           await bekle(page);
-          await page.click(".kart .btn-ana");
+          // iki görünüm ayrı videoyu onaylar: kapı aynı videoya 90 sn içinde ikinci işlemi almaz
+          const onayKarti = `.kart >> nth=${ad === "mobil" ? 0 : 1}`;
+          await page.click(`${onayKarti} >> .btn-ana`);
           await page.waitForSelector("dialog[open] .secenek");
           await page.screenshot({ animations: "disabled", path: join(OUT, `onay_secenekleri_${ek}.png`) }); kayit.push(join(OUT, `onay_secenekleri_${ek}.png`));
-          await page.click(`dialog[open] .secenek >> nth=${ad === "mobil" ? 0 : 1}`); // farklı işlem: kapının tekrar engeline takılmasın
+          await page.click(`dialog[open] .secenek >> nth=${ad === "mobil" ? 0 : 1}`);
           await page.waitForSelector(".bildirim");
           await page.waitForSelector('.kart [aria-busy="true"]');
+          // aynı kartın diğer düğmeleri de kilitli (onay sürerken Reddet gönderilemez)
+          const kilitsiz = await page.$$eval(`.kart:has([aria-busy="true"]) .dugmeler button:not([disabled])`, (b) => b.length);
+          if (kilitsiz) hatalar.push(`${ad}/${tema}: işlem sürerken kartta ${kilitsiz} düğme açık`);
           await page.screenshot({ animations: "disabled", path: join(OUT, `islem_suruyor_${ek}.png`) }); kayit.push(join(OUT, `islem_suruyor_${ek}.png`));
           await page.goto(`${URL}/panel#videolar`);
           await bekle(page);
-          await page.click(".kart >> nth=1 >> text=Düzenle");
+          const digerKart = `.kart >> nth=${ad === "mobil" ? 1 : 0}`; // işlemi sürmeyen kart (sayfa yeniden yüklenmez)
+          await page.click(`${digerKart} >> text=Düzenle`);
           await page.waitForSelector("dialog[open] #f-baslik");
           await page.screenshot({ animations: "disabled", path: join(OUT, `duzenle_${ek}.png`) }); kayit.push(join(OUT, `duzenle_${ek}.png`));
           await page.keyboard.press("Escape");
-          await page.click(".kart >> nth=1 >> text=Reddet");
+          await page.click(`${digerKart} >> text=Reddet`);
           await page.waitForSelector("dialog[open]");
           await page.screenshot({ animations: "disabled", path: join(OUT, `reddet_onay_${ek}.png`) }); kayit.push(join(OUT, `reddet_onay_${ek}.png`));
           await page.keyboard.press("Escape");

@@ -4,14 +4,16 @@
 import { createServer } from "node:http";
 import { readFileSync, statSync } from "node:fs";
 import worker from "../../cloudflare/worker.js";
-import { ORTAM, fetchKur, ctxYap, saatKurAkan, cacheKur, imza } from "./sahte.mjs";
+import { ORTAM, fetchKur, ctxYap, saatKurAkan, cacheKur, girisImza, girisMesajiKur } from "./sahte.mjs";
 
 const PORT = Number(process.env.PORT || 8787);
 const KOK = process.env.KOK;
 if (process.env.SAAT) saatKurAkan(Date.parse(process.env.SAAT));
 cacheKur();
 const yerel = `http://127.0.0.1:${PORT}`;
-const { cagrilar } = fetchKur({ kok: KOK, imzaliAdres: `${yerel}/__imzali/` });
+const { cagrilar } = fetchKur({ kok: KOK });
+// kapı imzalı adres olarak yalnız GitHub alan adlarına yönlendirir; yerelde bu adres sahte video sunucusuna çevrilir
+const IMZALI = "https://release-assets.githubusercontent.com/signed/";
 
 function videoGonder(req, res) {
   const yol = process.env.VIDEO;
@@ -34,7 +36,7 @@ createServer(async (req, res) => {
   try {
     if (req.url.startsWith("/__imzali/video.mp4")) return videoGonder(req, res);
     if (req.url === "/__giris") {
-      const t = await imza("giris", Math.floor(Date.now() / 1000) + 300);
+      const t = await girisImza(Math.floor(Date.now() / 1000) + 300, girisMesajiKur());
       res.writeHead(302, { location: "/panel/giris?t=" + t }).end();
       return;
     }
@@ -53,6 +55,7 @@ createServer(async (req, res) => {
     const r = await worker.fetch(istek, { ...ORTAM }, ctx);
     const h = {};
     r.headers.forEach((v, k) => { if (k !== "set-cookie") h[k] = v; });
+    if (h.location && h.location.startsWith(IMZALI)) h.location = `${yerel}/__imzali/` + h.location.slice(IMZALI.length);
     const cerez = r.headers.getSetCookie();
     if (cerez.length) h["set-cookie"] = cerez;
     res.writeHead(r.status, h);

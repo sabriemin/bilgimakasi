@@ -74,9 +74,13 @@ export const META = {
   credits: [{ author: "John Doe", license: "CC BY-SA 4.0", page: "https://commons.wikimedia.org/x", title: "x" }],
 };
 
+// Telegram mesajları (editMessageText "not modified" davranışı için): message_id -> içerik
+export const TG_MESAJLAR = new Map();
+let sonMesaj = 1000;
+
 /**
- * Sahte fetch kurar. ayar: { kok, dosyaHata: {ad: status}, dispatchDurum, tgDurum, imzaliAdres }
- * Dönen nesnede cagrilar listesi tüm giden istekleri tutar.
+ * Sahte fetch kurar. ayar: { kok, dosyaHata: {ad: status}, dispatchDurum, tgDurum, tgAgHatasi, imzaliAdres, konum,
+ * surum(json) (release yanıtını değiştirir) }. Dönen nesnede cagrilar listesi tüm giden istekleri tutar.
  */
 export function fetchKur(ayar = {}) {
   const kok = ayar.kok || FIKSTUR;
@@ -97,8 +101,25 @@ export function fetchKur(ayar = {}) {
     const json = (s, d) => new Response(JSON.stringify(d), { status: s, headers: { "content-type": "application/json" } });
     let m;
     if ((m = /^https:\/\/api\.telegram\.org\/bot([^/]+)\/(\w+)$/.exec(url))) {
+      if ((ayar.tgAgHatasi || []).includes(m[2])) throw new TypeError("fetch failed");
       const s = (ayar.tgDurum || {})[m[2]] || 200;
-      return json(s, s === 200 ? { ok: true, result: { message_id: 999 } } : { ok: false, description: "hata" });
+      if (s !== 200) return json(s, { ok: false, description: "hata" });
+      if (m[2] === "sendMessage") {
+        const id = ++sonMesaj;
+        TG_MESAJLAR.set(id, JSON.stringify([govde.text, govde.reply_markup || null]));
+        return json(200, { ok: true, result: { message_id: id } });
+      }
+      if (m[2] === "editMessageText") { // Telegram: aynı içeriğe ikinci düzenleme 400 "message is not modified"
+        const id = govde.message_id, yeni = JSON.stringify([govde.text, govde.reply_markup || null]);
+        if (!TG_MESAJLAR.has(id)) return json(400, { ok: false, description: "Bad Request: message to edit not found" });
+        if (TG_MESAJLAR.get(id) === yeni) {
+          return json(400, { ok: false, description: "Bad Request: message is not modified: specified new message content " +
+            "and reply markup are exactly the same as a current content and reply markup of the message" });
+        }
+        TG_MESAJLAR.set(id, yeni);
+        return json(200, { ok: true, result: { message_id: id } });
+      }
+      return json(200, { ok: true, result: { message_id: 999 } });
     }
     if (url.startsWith(`https://api.github.com/repos/${repo}/`)) {
       const yol = url.slice(`https://api.github.com/repos/${repo}/`.length);
@@ -114,15 +135,16 @@ export function fetchKur(ayar = {}) {
       if ((m = /^releases\/tags\/(.+)$/.exec(yol))) {
         const tag = decodeURIComponent(m[1]);
         if (!videolar().some((v) => v.tag === tag)) return json(404, { message: "Not Found" });
-        return json(200, { tag_name: tag, assets: [
-          { name: "video.mp4", url: `https://api.github.com/repos/${repo}/releases/assets/11` },
-          { name: "metadata.json", url: `https://api.github.com/repos/${repo}/releases/assets/12` },
-          { name: "script.json", url: `https://api.github.com/repos/${repo}/releases/assets/13` },
-        ] });
+        const surum = { tag_name: tag, assets: [
+          { name: "video.mp4", state: "uploaded", url: `https://api.github.com/repos/${repo}/releases/assets/11` },
+          { name: "metadata.json", state: "uploaded", url: `https://api.github.com/repos/${repo}/releases/assets/12` },
+          { name: "script.json", state: "uploaded", url: `https://api.github.com/repos/${repo}/releases/assets/13` },
+        ] };
+        return json(200, ayar.surum ? ayar.surum(surum) : surum);
       }
       if ((m = /^releases\/assets\/(\d+)$/.exec(yol))) {
         const ad = { 11: "video.mp4", 12: "metadata.json" }[m[1]];
-        const adres = (ayar.imzaliAdres || "https://release-assets.githubusercontent.com/signed/") + ad + "?sig=abc&exp=300";
+        const adres = ayar.konum || (ayar.imzaliAdres || "https://release-assets.githubusercontent.com/signed/") + ad + "?sig=abc&exp=300";
         return new Response(null, { status: 302, headers: { location: adres } });
       }
     }
@@ -145,8 +167,23 @@ function b64url(buf) {
   for (const b of new Uint8Array(buf)) s += String.fromCharCode(b);
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
-// test için bağımsız imzalayıcı (panel.js'in içini kullanmadan)
+// test için bağımsız imzalayıcı (panel.js'in içini kullanmadan): "<exp>.<imza>", imzalanan metin "<amac>:<exp>"
 export async function imza(amac, exp, anahtar = ORTAM.PANEL_SECRET) {
+  return `${exp}.${await hmac(`${amac}:${exp}`, anahtar)}`;
+}
+async function hmac(metin, anahtar = ORTAM.PANEL_SECRET) {
   const k = await crypto.subtle.importKey("raw", enc.encode(anahtar), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return `${exp}.${b64url(await crypto.subtle.sign("HMAC", k, enc.encode(`${amac}:${exp}`)))}`;
+  return b64url(await crypto.subtle.sign("HMAC", k, enc.encode(metin)));
+}
+// oturum çerezi: imzalanan metin "oturum:<dönem>:<exp>" (dönem = PANEL_EPOCH, yoksa 0)
+export const oturumImza = (exp, donem = 0, anahtar) => imza(`oturum:${donem}`, exp, anahtar);
+// giriş bağlantısı: "<exp>.<mesaj no>.<imza>", imzalanan metin "giris:<exp>:<mesaj no>"
+export async function girisImza(exp, mid, anahtar) {
+  return `${exp}.${mid}.${await hmac(`giris:${exp}:${mid}`, anahtar)}`;
+}
+// sahte Telegram'da bağlantı mesajı oluşturur (kapının /panel'de gönderdiği mesajın yerine)
+export function girisMesajiKur(icerik = "🖥 Bilgi Makası paneli") {
+  const id = ++sonMesaj;
+  TG_MESAJLAR.set(id, JSON.stringify([icerik, null]));
+  return id;
 }

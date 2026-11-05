@@ -4,9 +4,10 @@
 // Yalnız arayüz olan adımları (Onayla -> saat seçenekleri, Geri) kendisi anında yapar.
 // /panel altındaki adresler yönetim panelidir (cloudflare/panel.js); /panel komutuna giriş bağlantısını kapı verir.
 //
-// Gizli değerler (bot_kapi.yml yükler): TELEGRAM_BOT_TOKEN, CHAT_ID, GH_PAT, WEBHOOK_SECRET, PANEL_SECRET, REPO
+// Gizli değerler (bot_kapi.yml yükler): TELEGRAM_BOT_TOKEN, CHAT_ID, GH_PAT (KAPI_PAT: yalnız bilgimakasi için
+// Actions okuma/yazma + Contents okuma), WEBHOOK_SECRET, PANEL_SECRET, REPO; isteğe bağlı PANEL_EPOCH
 
-import { panel, girisMesaji } from "./panel.js";
+import { panel, girisGonder } from "./panel.js";
 
 const TR_OFFSET = 3 * 3600 * 1000; // Türkiye UTC+3, yaz saati yok
 
@@ -115,7 +116,7 @@ async function handle(update, env, origin) {
     return;
   }
   if (/^\/panel(@\w+)?(\s|$)/.test(text)) { // panel giriş bağlantısı: imzayı kapı atar, GitHub'a gitmez
-    await tg(env, "sendMessage", await girisMesaji(env, m.chat.id, origin));
+    await girisGonder(env, m.chat.id, origin);
     return;
   }
   const isReply = !!(m.reply_to_message && !text.startsWith("/"));

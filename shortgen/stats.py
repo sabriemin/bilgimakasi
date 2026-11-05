@@ -110,7 +110,7 @@ def instagram(videos: list[dict]) -> dict:
         if any(k in v for v in out["videos"].values()):
             out["account"][k] = sum(v.get(k, 0) for v in out["videos"].values())
     if missing:
-        print("Instagram içgörü hatası:", missing)
+        print("Instagram içgörü hatası:", P._redact(missing))
         out["note"] = "izlenme ve kaydetme için Instagram içgörü izni gerekli"
     return out
 
@@ -153,9 +153,9 @@ def collect() -> dict:
         except P.Skip:
             snap["platforms"][name] = {"error": "bağlı değil"}
         except PermissionError as e:
-            snap["platforms"][name] = {"error": str(e)}
-        except Exception as e:  # noqa: BLE001
-            snap["platforms"][name] = {"error": f"okunamadı ({str(e)[:120]})"}
+            snap["platforms"][name] = {"error": P._redact(e)}
+        except Exception as e:  # noqa: BLE001  # ağ hatası metni adresi (Instagram anahtarıyla) içerebilir
+            snap["platforms"][name] = {"error": f"okunamadı ({P._redact(e)[:120]})"}
     snap["titles"] = {x["tag"]: x.get("title", x["tag"]) for x in videos}
     return snap
 
@@ -228,7 +228,7 @@ def report(send: bool = True) -> str:
     return text
 
 
-def history_line(snap: dict, days: int = 30) -> dict:
+def history_line(snap: dict, days: int = 7) -> dict:
     """Bir ölçümün kısa özeti: platform hesap toplamları + son `days` günün videolarının [izlenme, beğeni] değerleri.
     Hata veren platform yazılmaz (grafikte boşluk olur, sıfır görünmez)."""
     since = (dt.datetime.now(TR) - dt.timedelta(days=days)).strftime("%Y%m%d")

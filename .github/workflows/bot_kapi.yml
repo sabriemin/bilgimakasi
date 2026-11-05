@@ -3,6 +3,9 @@ name: Telegram kapısını kur (Cloudflare)
 # Cloudflare Worker'ı yükler, gizli değerlerini koyar ve Telegram webhook'unu ona bağlar.
 # islem=kaldir: webhook'u siler, bot eski dinleme (getUpdates) yöntemine döner.
 # Aynı worker /panel adresinde yönetim panelini de sunar (giriş: Telegram'da /panel).
+# Kapı internete açık olduğu için ayrı, dar yetkili bir anahtar kullanır: KAPI_PAT (fine-grained, yalnız bilgimakasi;
+# Actions: Read and write, Contents: Read-only, Metadata: Read-only). GH_SECRETS_PAT'in Secrets yazma ve site deposu
+# (sabriemin.github.io) yazma izni kapıya verilmez; KAPI_PAT yoksa geçici olarak ona düşülür ve uyarı yazılır.
 on:
   workflow_dispatch:
     inputs:
@@ -22,7 +25,8 @@ jobs:
       CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      GH_PAT: ${{ secrets.GH_SECRETS_PAT }}
+      GH_PAT: ${{ secrets.KAPI_PAT || secrets.GH_SECRETS_PAT }}
+      PAT_ADI: ${{ secrets.KAPI_PAT != '' && 'KAPI_PAT' || 'GH_SECRETS_PAT' }}
       NAME: bilgimakasi-kapi
     steps:
       - uses: actions/checkout@v4
@@ -33,13 +37,16 @@ jobs:
       - name: GitHub anahtarının iş başlatma iznini dene
         if: inputs.islem != 'kaldir'
         run: |
+          if [ "$PAT_ADI" != "KAPI_PAT" ]; then
+            echo "::warning::KAPI_PAT tanımlı değil; kapı geçici olarak GH_SECRETS_PAT ile kuruluyor. O anahtarın Secrets ve site deposu yazma izni de var; internete açık kapıya verilmemeli. Yalnız bilgimakasi deposu için 'Actions: Read and write' + 'Contents: Read-only' izinli yeni bir fine-grained token oluşturup KAPI_PAT adıyla Secrets'a ekle ve bu işi yeniden çalıştır."
+          fi
           code=$(curl -s -o /tmp/r.txt -w '%{http_code}' -X POST \
             -H "Authorization: Bearer ${GH_PAT}" -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/isle.yml/dispatches" \
             -d '{"ref":"main","inputs":{"update":"{}"}}')
           echo "isle.yml dispatch: $code"; cat /tmp/r.txt; echo
           if [ "$code" != "204" ]; then
-            echo "::error::GH_SECRETS_PAT ile iş başlatılamıyor. Fine-grained token'a bilgimakasi deposu için 'Actions: Read and write' izni eklenmeli."
+            echo "::error::${PAT_ADI} ile iş başlatılamıyor. Fine-grained token'a (KAPI_PAT) bilgimakasi deposu için 'Actions: Read and write' izni eklenmeli."
             exit 1
           fi
       - name: GitHub anahtarının depo okuma iznini dene (panel)
@@ -52,7 +59,7 @@ jobs:
           echo "state/videos.json okuma: $code"
           if [ "$code" != "200" ]; then
             head -c 300 /tmp/c.txt 2>/dev/null || true; echo
-            echo "::error::Panel için GH_SECRETS_PAT depoyu okuyamıyor (HTTP $code). Fine-grained token'a bilgimakasi deposu için 'Contents: Read-only' izni eklenmeli. Bot düğmeleri yine çalışır; panel bu izin eklenene kadar veri gösteremez."
+            echo "::error::Panel için ${PAT_ADI} depoyu okuyamıyor (HTTP $code). Fine-grained token'a (KAPI_PAT) bilgimakasi deposu için 'Contents: Read-only' izni eklenmeli. Bot düğmeleri yine çalışır; panel bu izin eklenene kadar veri gösteremez."
           fi
       - name: Gizli kapı anahtarı üret
         if: inputs.islem != 'kaldir'
@@ -114,7 +121,7 @@ jobs:
             --data-urlencode 'allowed_updates=["message","callback_query"]' \
             --data-urlencode "max_connections=10" | head -c 300; echo
           curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo" | python3 -c "import json,sys;d=json.load(sys.stdin)['result'];print('webhook:', bool(d.get('url')), 'bekleyen:', d.get('pending_update_count'), 'son hata:', d.get('last_error_message'))"
-          MSG="✅ Bot artık 7/24 açık. Düğmelere anında cevap verir, işlemler 30-60 saniyede tamamlanır."$'\n\n'"🖥 Yönetim paneli için /panel yaz; gelen bağlantı 10 dakika geçerli, panel o tarayıcıda 30 gün açık kalır."
+          MSG="✅ Bot artık 7/24 açık. Düğmelere anında cevap verir, işlemler 30-60 saniyede tamamlanır."$'\n\n'"🖥 Yönetim paneli için /panel yaz; gelen bağlantı 10 dakika geçerli ve tek kullanımlık, panel o tarayıcıda 30 gün açık kalır. Bu kurulumla önceki panel oturumları kapandı."
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
             --data-urlencode "text=${MSG}" > /dev/null

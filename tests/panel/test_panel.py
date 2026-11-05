@@ -368,6 +368,78 @@ class PanelIslemleri(Ortak):
         self.panel(action="approve", tag=T, code="now")
         self.assertEqual(self._paylas(self.META), self.META)
 
+    def test_gorsel_atfi_her_zaman_korunur(self):
+        """Kullanıcı metninde Kaynaklar/Görseller/🎙/📷 paragrafı olsa da (eski kayıt) yayımlanan açıklamada atıf kalır."""
+        import shortgen.publish as P
+        for desc in ("Yeni bilgi.\n\nKaynaklar: X", "Yeni bilgi.\n\nGörseller: Wikimedia Commons",
+                     "Yeni bilgi.\n\n🎙 Seslendirme: yapay zekâ", "Yeni bilgi.\n\n📷 Ben", "Yeni bilgi.\n\n#yeni"):
+            m = self.tb._apply_edit(self.META, {"title": "T", "description": desc})
+            yt = P._clean_desc(m["description"])
+            self.assertIn("📷 John Doe (CC BY-SA 4.0)", yt, desc)
+            self.assertTrue(yt.startswith("Yeni bilgi."), desc)
+        # kendi # satırı yalnız etiket satırının yerine geçer
+        m = self.tb._apply_edit(self.META, {"title": "T", "description": "Yeni bilgi.\n\n#yeni"})
+        self.assertEqual(m["description"], "Yeni bilgi.\n\n#yeni\n\n📷 John Doe (CC BY-SA 4.0)")
+        # etiket ve atıf aynı paragraftaysa yalnız etiket satırı düşer
+        meta = {**self.META, "description": "Eski.\n\n#tarih\n📷 John Doe (CC BY-SA 4.0)"}
+        self.assertEqual(self.tb._apply_edit(meta, {"description": "Yeni.\n\n#yeni"})["description"],
+                         "Yeni.\n\n#yeni\n\n📷 John Doe (CC BY-SA 4.0)")
+        # tam açıklama aynen yapıştırılırsa ek paragraflar iki kez eklenmez
+        self.assertEqual(self.tb._apply_edit(self.META, {"description": self.META["description"]})["description"],
+                         self.META["description"])
+
+    def test_duzenleme_kaynak_ve_atif_satirini_reddeder(self):
+        for desc in ("Bilgi.\n\nKaynaklar: X", "Bilgi.\n\n📷 Ben", "Bilgi.\n\n#etiket\n🎙 ses", "😀" * 1001):
+            durum_sifirla(self.root)
+            self.req.cagrilar.clear()
+            c = self.panel(action="edit", tag=T, title="Başlık", description=desc)
+            self.assertNotIn("duzenleme", self.vid(T), desc[:20])
+            self.assertIn("⚠️ İşlem yapılamadı", self.mesajlar(c)[-1])
+        self.panel(action="edit", tag=T, title="Başlık", description="Bilgi.\n\n#etiket #iki\n#uc")
+        self.assertEqual(self.vid(T)["duzenleme"]["description"], "Bilgi.\n\n#etiket #iki\n#uc")
+        durum_sifirla(self.root)
+        self.panel(action="edit", tag=T, title="Başlık", description="ğ" * 2000)  # 4000 bayt: sınırda
+        self.assertIn("duzenleme", self.vid(T))
+
+    def test_youtube_aciklamasi_5000_bayti_gecmez(self):
+        import shortgen.publish as P
+        giden = {}
+
+        class R:
+            ok, status_code, text = True, 200, ""
+            headers = {"Location": "https://upload/x"}
+
+            def json(self):
+                return {"id": "v1", "status": {"privacyStatus": "public"}}
+
+        def post(url, **kw):
+            giden.update(json.loads(kw["data"]))
+            return R()
+        eski = (P._yt_token, P.requests)
+        P._yt_token = lambda: "ya29.test"
+        P.requests = types.SimpleNamespace(post=post, put=lambda *a, **k: R())
+        try:
+            video = self.root / "v.mp4"
+            video.write_bytes(b"x")
+            m = self.tb._apply_edit({"title": "t", "hashtags": [], "description": "Bilgi.\n\n#a\n\n📷 John Doe (CC BY-SA 4.0)"},
+                                    {"title": "t", "description": "😀" * 2000})
+            P.youtube(video, m)
+        finally:
+            P._yt_token, P.requests = eski
+        d = giden["snippet"]["description"]
+        self.assertLessEqual(len(d.encode("utf-8")), 4900)
+        self.assertTrue(d.startswith("😀"))
+        d.encode("utf-8").decode("utf-8")  # yarım karakter kalmadı
+
+    def test_video_mesaji_basligi_html_varligini_bolmez(self):
+        v = dict(self.vid(T), title="A&B " * 25, topic=("xyz&" * 220))
+        self.req.cagrilar.clear()
+        self.tb._edit_caption(v, CHAT)
+        cap = self.tg(self.req.cagrilar, "editMessageCaption")[0]["data"]["caption"]
+        self.assertLessEqual(len(cap), 1000)
+        self.assertFalse(re.search(r"&[a-z]*$", cap.split("\nŞablon")[0]), "kesik HTML varlığı")
+        self.assertTrue(cap.endswith("Şablon: " + (v.get("template") or "-")))
+
     def test_oneriden_uret(self):
         c = self.panel(action="produce_suggestion", index=1, topic=ONERILER[1]["topic"])
         gh = [x for x in c if "gh" in x]
@@ -423,6 +495,25 @@ class PanelIslemleri(Ortak):
         self.assertNotIn(" ", sonra[-1].replace("Bilgi", ""), "kısa (boşluksuz) JSON satırı")
         self.assertLess(len(sonra[-1]), 1000)
 
+    def test_konu_sirasi_taban_ile_birlestirilir(self):
+        """Sayfa sırayı yükledikten sonra üretim ilk konuyu aldıysa, eski sayfadan kaydetmek onu geri getirmez."""
+        f = self.root / "state" / "konu_sirasi.json"
+        f.write_text(json.dumps({"konular": ["b", "c"], "rid": "uretim-oncesi"}), encoding="utf-8")  # üretim "a"yı aldı
+        c = self.panel(action="queue_set", queue=["c", "b", "a", "d"], queue_base=["a", "b", "c"], rid="r-42")
+        d = json.loads(f.read_text(encoding="utf-8"))
+        self.assertEqual(d["konular"], ["c", "b", "d"])
+        self.assertEqual(d["rid"], "r-42")
+        self.assertEqual(self.mesajlar(c), ["🖥 Panelden: 📋 Konu sırası kaydedildi (3 konu).\nSıradaki: c"])
+        # taban yoksa (eski sayfa) liste aynen yazılır
+        self.panel(action="queue_set", queue=["x"], rid="r-43")
+        self.assertEqual(json.loads(f.read_text(encoding="utf-8")), {**json.loads(f.read_text(encoding="utf-8")),
+                                                                     "konular": ["x"], "rid": "r-43"})
+        # üretim konu çıkarınca son panel kaydının numarası korunur
+        import shortgen.konu_sirasi as ks
+        ks.FILE = f
+        self.assertTrue(ks.remove("x", f))
+        self.assertEqual(json.loads(f.read_text(encoding="utf-8"))["rid"], "r-43")
+
     def test_konu_sirasi(self):
         c = self.panel(action="queue_set", queue=["  bir   konu ", "iki", "iki", ""])
         d = json.loads((self.root / "state" / "konu_sirasi.json").read_text(encoding="utf-8"))
@@ -451,6 +542,156 @@ class PanelIslemleri(Ortak):
         with contextlib.redirect_stdout(io.StringIO()):
             self.tb.process_update(msg("/panel"), CHAT)
         self.assertIn("Panel bağlantısını 7/24 kapı verir", self.req.cagrilar[0]["data"]["text"])
+
+
+class Gizleme(Ortak):
+    """Hata metinlerindeki anahtarlar (Instagram access_token, bot anahtarı) videos.json'a, Telegram'a, günlüğe gitmez."""
+    IG = "IGAAJx8TEStoken0123456789abcdefABCDEF_uzun"
+    AG_HATASI = ("HTTPSConnectionPool(host='graph.instagram.com', port=443): Max retries exceeded with url: "
+                 "/v26.0/18012345678901234?fields=status_code%2Cstatus&access_token={tok} (Caused by "
+                 "NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x7f>: Failed to resolve\"))")
+
+    def test_redact_kaliplari(self):
+        from shortgen.publish import _redact, _remember_secret
+        self.assertEqual(_redact("u?access_token=abc&x=1 key=K code=C client_secret=S"),
+                         "u?access_token=***&x=1 key=*** code=*** client_secret=***")
+        self.assertEqual(_redact("/bot123456789:AAHk-abcdefghijklmnopqrstuvwxyz012/getMe"), "/bot***/getMe")
+        self.assertEqual(_redact("EAAGm0PX4ZCpsBAKexampleexample ya29.a0AfB_byC1234567890abc ghs_abcdefghijklmnop1234"),
+                         "*** *** ***")
+        self.assertEqual(_redact("{'access_token': 'act.123abc', 'refresh_token': 'rft.456def'}"),
+                         "{'access_token': '***', 'refresh_token': '***'}")
+        self.assertEqual(_redact("Authorization: OAuth IGQWRabcdefgh"), "Authorization: OAuth ***")
+        self.assertEqual(_redact("Media upload has failed with error code 2207026"), "Media upload has failed with error code 2207026")
+        os.environ["IG_ACCESS_TOKEN"] = "tamamen-farkli-bicim-123"
+        try:
+            self.assertEqual(_redact("x tamamen-farkli-bicim-123 y"), "x *** y")
+        finally:
+            del os.environ["IG_ACCESS_TOKEN"]
+        _remember_secret("yenilenmis-anahtar-999")
+        self.assertEqual(_redact("[yenilenmis-anahtar-999]"), "[***]")
+
+    def test_paylasim_hatasi_kayda_ve_gunluge_anahtarsiz_gecer(self):
+        import shortgen.publish as P
+        hata = self.AG_HATASI.format(tok=self.IG)
+
+        def patla(video, meta):
+            raise RuntimeError(hata)
+        eski = dict(P.PLATFORMS)
+        P.PLATFORMS.update(youtube=patla, instagram=patla, tiktok=patla)
+        try:
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                res = P.publish(Path("v.mp4"), {"title": "t", "description": ""}, ["instagram"])
+        finally:
+            P.PLATFORMS.clear()
+            P.PLATFORMS.update(eski)
+        self.assertNotIn(self.IG, json.dumps(res))
+        self.assertNotIn(self.IG[:20], out.getvalue())
+        self.assertIn("access_token=*** (Caused by NameResolutionError", res["instagram"]["error"])
+        self.assertNotIn("IGAA", res["instagram"]["error"][:220])
+
+    def test_indirme_hatasi_ve_telegram_mesaji_anahtarsiz(self):
+        import shortgen.publish as P
+        hata = self.AG_HATASI.format(tok=self.IG)
+
+        def fetch_release(tag, dest):
+            raise RuntimeError(hata)
+        eski = P.fetch_release
+        P.fetch_release = fetch_release
+        try:
+            self.panel(action="approve", tag=T, code="now")
+            self.req.cagrilar.clear()
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.tb.publish_due()
+        finally:
+            P.fetch_release = eski
+        kayit = json.dumps(self.vid(T))
+        self.assertNotIn(self.IG, kayit)
+        self.assertIn("access_token=***", kayit)
+        for m in self.mesajlar(self.req.cagrilar):
+            self.assertNotIn("IGAA", m)
+
+    def test_istatistik_hatasi_anahtarsiz(self):
+        import shortgen.stats as st
+        hata = self.AG_HATASI.format(tok=self.IG)
+
+        def patla(videos):
+            raise RuntimeError(hata)
+        eski = dict(st.FETCH)
+        st.FETCH.update(youtube=patla, instagram=patla, tiktok=patla)
+        try:
+            snap = st.collect()
+        finally:
+            st.FETCH.clear()
+            st.FETCH.update(eski)
+        self.assertNotIn("IGAA", json.dumps(snap))
+        self.assertTrue(snap["platforms"]["instagram"]["error"].startswith("okunamadı ("))
+
+    def _ag_hatasi(self):
+        import requests as gercek
+        return gercek.exceptions.ProxyError(
+            "HTTPSConnectionPool(host='api.telegram.org', port=443): Max retries exceeded with url: "
+            "/bot123:TEST/editMessageReplyMarkup (Caused by ProxyError('Unable to connect to proxy'))")
+
+    def test_panel_islemi_ag_hatasi_sohbete_anahtar_yazmaz(self):
+        hata, ilk = self._ag_hatasi(), {"n": 0}
+        asil = self.req.post
+
+        def post(url, **kw):
+            if "editMessageReplyMarkup" in url and not ilk["n"]:
+                ilk["n"] += 1
+                raise hata
+            return asil(url, **kw)
+        self.req.post = post
+        os.environ.update(GITHUB_RUN_ID="777", GITHUB_SERVER_URL="https://github.com")
+        try:
+            c = self.panel(action="approve", tag=T, code="now")
+        finally:
+            self.req.post = asil
+            del os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_SERVER_URL"]
+        son = self.mesajlar(c)[-1]
+        self.assertTrue(son.startswith("🖥 Panelden: ⚠️ İşlem yapılamadı: Telegram veya GitHub'a bağlanılamadı"), son)
+        self.assertIn("https://github.com/sabriemin/bilgimakasi/actions/runs/777", son)
+        for m in self.mesajlar(c):
+            self.assertNotIn("123:TEST", m)
+        self.assertNotIn("123:TEST", self.cikti)
+        self.assertIn("bot***", self.cikti)  # ayrıntı günlükte, maskelenmiş
+
+    def test_dugme_ve_rapor_hatasi_sohbete_anahtar_yazmaz(self):
+        hata = self._ag_hatasi()
+        asil = self.req.post
+
+        def post(url, **kw):
+            if "editMessageReplyMarkup" in url:
+                raise hata
+            return asil(url, **kw)
+        self.req.post = post
+        try:
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.tb.process_update(cq(f"ok:{T}"), CHAT)
+        finally:
+            self.req.post = asil
+        m = self.mesajlar(self.req.cagrilar)
+        self.assertTrue(m and m[-1].startswith("⚠️ Düğme işlenemedi: Telegram veya GitHub'a bağlanılamadı"), m)
+        self.assertNotIn("123:TEST", json.dumps(self.req.cagrilar) + out.getvalue())
+        import shortgen.stats as st
+        eski = st.report
+
+        def rapor():
+            raise RuntimeError(f"okunamadı: url /v26.0/me?access_token={self.IG}")
+        st.report = rapor
+        self.req.cagrilar.clear()
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.tb.process_update(msg("/rapor"), CHAT)
+        finally:
+            st.report = eski
+        self.assertEqual(self.mesajlar(self.req.cagrilar), ["Rapor hazırlanamadı: okunamadı: url /v26.0/me?access_token=***"])
+
+    def test_uzun_panel_mesaji_telegram_sinirina_sigar(self):
+        t = self.tb._cut16("🖥 Panelden: " + "😀" * 3000, 4000)
+        self.assertLessEqual(len(t.encode("utf-16-le")) // 2, 4000)
+        self.assertTrue(t.endswith("…"))
+        self.assertEqual(self.tb._cut16("kısa"), "kısa")
 
 
 class KonuSirasiUretim(Ortak):
@@ -563,6 +804,14 @@ class Birlestirme(unittest.TestCase):
         out = json.loads(self.ss._merge("state/videos.json", d(b), d({**b, "status": "x"}), d(l)))[0]
         self.assertEqual(out, l)
 
+    def test_birlestirme_panel_kayit_numarasini_korur(self):
+        d = lambda x, rid=None: json.dumps({"konular": x, **({"rid": rid} if rid else {})})  # noqa: E731
+        # panel kaydetti (uzak, rid=p1), bu çalışma (üretim) ilk konuyu çıkardı (yerel, eski rid)
+        out = json.loads(self.ss._merge("state/konu_sirasi.json", d(["a", "b"], "p0"), d(["b", "a", "c"], "p1"), d(["b"], "p0")))
+        self.assertEqual((out["konular"], out["rid"]), (["b", "c"], "p1"))
+        out = json.loads(self.ss._merge("state/konu_sirasi.json", d(["a", "b"], "p0"), d(["b"], "p0"), d(["b", "a", "c"], "p1")))
+        self.assertEqual((out["konular"], out["rid"]), (["b", "c"], "p1"))
+
     def test_bos_konu_sirayi_tikamaz(self):
         with tempfile.TemporaryDirectory() as t:
             f = Path(t) / "k.json"
@@ -605,8 +854,11 @@ class KapiIleTutarlilik(unittest.TestCase):
 
     def test_islem_durumlari_ve_korunan_satirlar(self):
         self.assertEqual({k: tuple(v) for k, v in self.js_nesne("VIDEO_ISLEM").items()}, self.tb.PANEL_VIDEO_ACTIONS)
-        bas = json.loads(re.search(r"KUYRUK_BASI = (\[.*?\]);", self.js).group(1))
+        ui = (REPO / "cloudflare" / "panel_ui.js").read_text(encoding="utf-8")
+        bas = json.loads(re.search(r"KUYRUK_BASI = (\[.*?\]);", ui).group(1))
         self.assertEqual(tuple(bas), self.tb._TAIL)
+        sinir = re.search(r"SINIR = \{ baslik: (\d+), aciklama: (\d+), aciklamaBayt: (\d+) \};", ui).groups()
+        self.assertEqual(tuple(map(int, sinir)), (100, 2000, 4000))  # _check_edit ile aynı sınırlar
         kod = json.loads(re.search(r"KODLAR = (\[.*?\]);", self.js).group(1))
         self.assertEqual(tuple(kod), self.tb.SLOT_CODES)
 

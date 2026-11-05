@@ -73,6 +73,21 @@ Başvuruda gizlilik politikası ve kullanım koşulları sayfası istenir. Bu sa
    - Permissions: **Secrets: Read and write**
 3. Çıkan anahtarı `GH_SECRETS_PAT` adıyla Secrets'a ekle.
 
+## 5. Telegram kapısı ve yönetim paneli: KAPI_PAT
+
+Telegram kapısı (Cloudflare Worker) internete açıktır; bu yüzden `GH_SECRETS_PAT` yerine ayrı ve dar yetkili bir anahtar kullanır.
+
+1. **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
+2. Ayarlar:
+   - Repository access: **Only select repositories → bilgimakasi** (site deposu seçilmez)
+   - Permissions: **Actions: Read and write**, **Contents: Read-only** (Metadata: Read-only kendiliğinden gelir)
+3. Çıkan anahtarı `KAPI_PAT` adıyla Secrets'a ekle.
+4. Actions'ta **Telegram kapısını kur** işini çalıştır. `KAPI_PAT` yoksa iş geçici olarak `GH_SECRETS_PAT` kullanır ve uyarı yazar.
+
+Panel: Telegram'da `/panel` yaz. Gelen bağlantı 10 dakika geçerli ve tek kullanımlıktır. Her girişte sohbete bildirim gelir.
+Oturum o tarayıcıda 30 gün açık kalır; paneldeki **Çıkış yap** yalnız o tarayıcıyı kapatır.
+**Telegram kapısını kur** işi her çalıştığında imza anahtarı yenilenir ve bütün panel oturumları kapanır.
+
 ## İsteğe bağlı ayarlar (Variables sekmesi)
 
 - `YT_PRIVACY`: `public` (varsayılan), `unlisted` veya `private`.
