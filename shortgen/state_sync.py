@@ -115,6 +115,13 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
     if path.endswith("konu_sirasi.json"):  # üretim ilk konuyu alırken panelden sıra değişmiş olabilir
         from .konu_sirasi import merge
         return merge(base, remote, local)
+    if path.endswith("claude_usage.json"):  # aynı anda çalışan işlerin Claude harcamaları toplanır, biri ötekini silmez
+        r, l = json.loads(remote), json.loads(local)
+        b = json.loads(base) if base else {}
+        out = dict(r)
+        for k, v in l.items():
+            out[k] = round(r.get(k, 0.0) + v - b.get(k, 0.0), 4)
+        return json.dumps(out, indent=2)
     if path.endswith("telegram_offset.json"):
         return local if json.loads(local).get("offset", 0) >= json.loads(remote).get("offset", 0) else remote
     if path.endswith(".jsonl"):

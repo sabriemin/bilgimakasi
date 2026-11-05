@@ -1,8 +1,9 @@
 """Konu seçimi ve senaryo üretimi.
 
-Claude'a Claude Code CLI üzerinden, kullanıcının claude.ai aboneliğiyle (CLAUDE_CODE_OAUTH_TOKEN) erişilir.
-Yapılandırılmış çıktı için --json-schema kullanılır. Doğrulama adımı web araması yapabilir.
-Aylık harcama tavanı: state/claude_usage.json içinde tutulan eşdeğer maliyet CLAUDE_MONTHLY_BUDGET_USD'yi aşarsa üretim durur.
+Claude'a Claude Code CLI üzerinden erişilir: önce ANTHROPIC_API_KEY (aboneliğin aylık API kredisi), yoksa
+CLAUDE_CODE_OAUTH_TOKEN (abonelik). Yapılandırılmış çıktı için --json-schema kullanılır. Doğrulama adımı web araması yapabilir.
+Harcama tavanı: state/claude_usage.json içinde dönem başına tutulan maliyet CLAUDE_MONTHLY_BUDGET_USD'yi (varsayılan 90 $)
+aşarsa üretim durur. Dönem, API kredisinin yenilendiği gün (CLAUDE_BUDGET_RESET_DAY, varsayılan 24) başlar.
 """
 from __future__ import annotations
 
@@ -317,17 +318,30 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
+def _period(today: dt.date | None = None) -> str:
+    """Kredi dönemi anahtarı: dönemin başladığı gün (ör. 24 Kasım-23 Aralık için '2026-11-24').
+    Gün 1 ise eski takvim ayı biçimi ('2026-11') kullanılır."""
+    today = today or dt.date.today()
+    day = min(max(int(os.environ.get("CLAUDE_BUDGET_RESET_DAY", "24") or 1), 1), 28)
+    if day == 1:
+        return today.strftime("%Y-%m")
+    start = today.replace(day=day)
+    if today.day < day:
+        start = (today.replace(day=1) - dt.timedelta(days=1)).replace(day=day)
+    return start.isoformat()
+
+
 def _month_usage() -> tuple[dict, str]:
     u = json.loads(USAGE.read_text(encoding="utf-8")) if USAGE.exists() else {}
-    return u, dt.date.today().strftime("%Y-%m")
+    return u, _period()
 
 
 def _check_budget() -> float:
-    limit = float(os.environ.get("CLAUDE_MONTHLY_BUDGET_USD", "100"))
+    limit = float(os.environ.get("CLAUDE_MONTHLY_BUDGET_USD", "90"))
     u, m = _month_usage()
     left = limit - u.get(m, 0.0)
     if left <= 0:
-        raise BudgetExceeded(f"Bu ayın Claude bütçesi ({limit:.0f} $) doldu, üretim durduruldu.")
+        raise BudgetExceeded(f"Bu dönemin Claude bütçesi ({limit:.0f} $, {m} başlangıçlı) doldu, üretim durduruldu.")
     return left
 
 
