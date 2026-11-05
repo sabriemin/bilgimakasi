@@ -575,7 +575,10 @@ class PanelIslemleri(Ortak):
         c = self.panel(action="report")
         msj = self.mesajlar(c)
         self.assertEqual(msj[0], "🖥 Panelden: 📊 Rapor istendi, hazırlanıyor.")
-        self.assertTrue(msj[1].startswith("📊 Bilgi Makası raporu"))
+        self.assertTrue(msj[1].startswith("📊 <b>Bilgi Makası raporu</b>"))
+        rapor = self.tg(c, "sendMessage")[1]["data"]
+        self.assertEqual(rapor["parse_mode"], "HTML")
+        self.assertIn("⚠️ TikTok: bağlı değil", rapor["text"])
         self.assertEqual(json.loads((self.root / "state" / "stats.json").read_text())["time"], "2026-11-05T00:45+03:00")
         sonra = hist.read_text(encoding="utf-8").splitlines()
         self.assertEqual(sonra[:-1], once)
@@ -702,6 +705,62 @@ class Gizleme(Ortak):
         self.assertIn("access_token=***", kayit)
         for m in self.mesajlar(self.req.cagrilar):
             self.assertNotIn("IGAA", m)
+
+    def test_rapor_tablosu(self):
+        import html as H
+        import shortgen.stats as st
+        snap = json.loads((FIX / "state" / "stats.json").read_text(encoding="utf-8"))
+        snap["time"] = "2026-11-05T07:19+03:00"
+        snap["titles"] = {t: "Uzun <b>başlık</b> & 🎬 emoji " * 3 for t in snap.get("titles", {})} or snap.get("titles")
+        prev = json.loads(json.dumps(snap))
+        prev["time"] = "2026-11-04T21:00+03:00"
+        for d in prev["platforms"].values():
+            for k, v in list((d.get("account") or {}).items()):
+                if k == "views" and isinstance(v, int):
+                    d["account"][k] = v - 10
+        txt = st.render(snap, prev)
+        self.assertTrue(txt.startswith("📊 <b>Bilgi Makası raporu</b> · 5 Kas 07:19"))
+        bloklar = re.findall(r"<pre>(.*?)</pre>", txt, re.S)
+        self.assertGreaterEqual(len(bloklar), 1)
+        for b in bloklar:  # telefonda kaymasın: her satır W karakteri geçmez, tablo içinde emoji yok
+            gorunen = H.unescape(b)
+            self.assertLessEqual(max(len(x) for x in gorunen.split("\n")), st.W, gorunen)
+            self.assertNotIn("🎬", gorunen)
+            self.assertNotIn("<b>", b)  # başlıktaki etiket kaçışlı
+        n = sum(1 for d in snap["platforms"].values() if isinstance((d.get("account") or {}).get("views"), int))
+        self.assertIn(f"beri:</b> +{10 * n} izlenme", txt)
+        # önceki ölçüm yoksa değişim satırı yok; hatalı platform tabloya girmez, notta görünür
+        snap["platforms"]["youtube"] = {"error": "bağlı değil"}
+        txt = st.render(snap, None)
+        self.assertNotIn("Son rapordan", txt)
+        self.assertIn("⚠️ YouTube: bağlı değil", txt)
+        self.assertNotIn("YouTube", re.findall(r"<pre>(.*?)</pre>", txt, re.S)[0])
+        # azalma eksi ile yazılır; düz yazı hâli etiketsiz
+        prev["platforms"]["instagram"]["account"]["followers"] = snap["platforms"]["instagram"]["account"]["followers"] + 2
+        self.assertIn("−2 takipçi", st.render(snap, prev))
+        self.assertNotIn("<", st.plain(st.render(snap, prev)).replace("Uzun <b>", ""))
+
+    def test_rapor_html_reddedilirse_duz_metin_gider(self):
+        import shortgen.stats as st
+        snap = json.loads((FIX / "state" / "stats.json").read_text(encoding="utf-8"))
+        st.collect = lambda: json.loads(json.dumps(snap))
+        giden = []
+
+        def api(method, data=None, **kw):
+            giden.append(data)
+            if data.get("parse_mode"):
+                raise RuntimeError("Telegram sendMessage hatası 400: can't parse entities")
+        eski = self.tb.api
+        self.tb.api = api
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                st.report()
+        finally:
+            self.tb.api = eski
+        self.assertEqual(len(giden), 2)
+        self.assertNotIn("parse_mode", giden[1])
+        self.assertNotIn("<pre>", giden[1]["text"])
+        self.assertTrue(giden[1]["text"].startswith("📊 Bilgi Makası raporu"))
 
     def test_istatistik_hatasi_anahtarsiz(self):
         import shortgen.stats as st

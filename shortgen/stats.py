@@ -164,51 +164,120 @@ def _n(x: int) -> str:
     return f"{x:,}".replace(",", ".")
 
 
-def _delta(cur: int, old) -> str:
-    if old is None or cur == old:
-        return ""
-    return f" ({'+' if cur > old else ''}{_n(cur - old)})"
+# Telegram'da tablo <pre> (eş genişlikli yazı) içinde gönderilir. Telefonda satır kaymasın diye bir satır en çok W
+# karakter olur (küçük ekranlı telefonda ~30 karakter sığar); uzun video adları kısaltılır. Tablo içinde emoji
+# kullanılmaz (genişliği yazı tipine göre değişir, sütunlar kayar).
+W = 30
+AY = ("Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara")
+ROWS = (("followers", "Takipçi"), ("views", "İzlenme"), ("likes", "Beğeni"), ("comments", "Yorum"),
+        ("saves", "Kaydetme"), ("shares", "Paylaşım"))
+COL = {"youtube": "YouTube", "instagram": "Insta", "tiktok": "TikTok"}
+WORD = {"followers": "takipçi", "views": "izlenme", "likes": "beğeni", "comments": "yorum", "saves": "kaydetme",
+        "shares": "paylaşım"}
+
+
+def _when(iso: str, ref: str | None = None) -> str:
+    """'2026-11-05T07:19+03:00' -> '5 Kas 07:19'; ref ile aynı günse yalnız saat."""
+    try:
+        t = dt.datetime.fromisoformat(iso)
+    except (TypeError, ValueError):
+        return str(iso or "")[:16].replace("T", " ")
+    if ref and str(ref)[:10] == str(iso)[:10]:
+        return f"{t:%H:%M}"
+    return f"{t.day} {AY[t.month - 1]} {t:%H:%M}"
+
+
+def _plain(title) -> str:
+    """Tablo hücresi için ad: emoji ve görünmez işaretler çıkar, boşluklar teke iner."""
+    t = "".join(c for c in str(title or "") if ord(c) < 0x2000 or 0x2010 <= ord(c) <= 0x2027)
+    return " ".join(t.split())
+
+
+def _cut(t: str, w: int) -> str:
+    return t if len(t) <= w else t[:max(1, w - 1)].rstrip() + "…"
+
+
+def _table(head: list[str], rows: list[list[str]], first: int | None = None) -> str:
+    """İlk sütun sola, diğerleri sağa yaslı eş genişlikli tablo. first verilirse ilk sütun o genişliğe kesilir/doldurulur."""
+    import html
+    ws = [max(len(c) for c in col) for col in zip(*([head] + rows))]
+    if first is not None:
+        ws[0] = first
+    out = [" ".join([_cut(r[0], ws[0]).ljust(ws[0])] + [c.rjust(w) for c, w in zip(r[1:], ws[1:])]).rstrip()
+           for r in [head] + rows]
+    return "<pre>" + html.escape("\n".join(out), quote=False) + "</pre>"
+
+
+def _title_width(head: list[str], rows: list[list[str]]) -> int:
+    """Video tablosunda ad sütununa kalan genişlik (en az 10)."""
+    rest = sum(max(len(c) for c in col) + 1 for col in list(zip(*([head] + rows)))[1:])
+    return max(10, W - rest)
 
 
 def render(snap: dict, prev: dict | None) -> str:
+    """Telegram raporu (HTML): platform tablosu (satırlar ölçü, sütunlar platform), toplam, son rapordan beri değişim,
+    en çok izlenen videolar tablosu ve TikTok tablosu."""
+    import html
     prev = prev or {"platforms": {}}
-    lines = [f"📊 Bilgi Makası raporu · {snap['time'][:16].replace('T', ' ')}"]
-    total = {k: 0 for k in ("followers",) + KEYS}
-    for name, d in snap["platforms"].items():
-        lines.append("")
-        if "error" in d:
-            lines.append(f"▪️ {NAMES[name]}: {d['error']}")
-            continue
-        a, pa = d["account"], prev["platforms"].get(name, {}).get("account", {})
-        parts = [f"👥 {_n(a.get('followers', 0))}{_delta(a.get('followers', 0), pa.get('followers'))}"]
-        for k in KEYS:
-            if k in a:
-                parts.append(f"{LABEL[k]} {_n(a[k])}{_delta(a[k], pa.get(k))}")
-                total[k] += a[k]
-        total["followers"] += a.get("followers", 0)
-        lines.append(f"▪️ {NAMES[name]}: " + "  ".join(parts))
-        if d.get("note"):
-            lines.append(f"   ({d['note']})")
-    lines += ["", "Σ Toplam: " + "  ".join(
-        [f"👥 {_n(total['followers'])}"] + [f"{LABEL[k]} {_n(total[k])}" for k in KEYS if total[k]])]
-    # video bazlı
+    plats = snap.get("platforms") or {}
+    lines = [f"📊 <b>Bilgi Makası raporu</b> · {_when(snap.get('time', ''))}"]
+    ok = [n for n in ("youtube", "instagram", "tiktok") if isinstance(plats.get(n), dict) and "error" not in plats[n]]
+    notes = [f"⚠️ {NAMES[n]}: {html.escape(str(plats[n]['error']))}" for n in ("youtube", "instagram", "tiktok")
+             if isinstance(plats.get(n), dict) and "error" in plats[n]]
+    notes += [f"ℹ️ {NAMES[n]}: {html.escape(str(plats[n]['note']))}" for n in ok if plats[n].get("note")]
+    acc = {n: plats[n].get("account") or {} for n in ok}
+    body = [[label] + [_n(acc[n][k]) if isinstance(acc[n].get(k), int) else "–" for n in ok]
+            for k, label in ROWS if any(isinstance(acc[n].get(k), int) for n in ok)]
+    if body:
+        lines += ["", _table([""] + [COL[n] for n in ok], body)]
+        if len(ok) > 1:
+            tot = [f"{_n(sum(acc[n].get(k, 0) for n in ok if isinstance(acc[n].get(k), int)))} {WORD[k]}"
+                   for k in ("followers", "views", "likes") if any(isinstance(acc[n].get(k), int) for n in ok)]
+            lines.append("<b>Toplam:</b> " + ", ".join(tot))
+    # son rapordan beri: yalnız iki ölçümde de okunabilen platformlar karşılaştırılır
+    if prev.get("platforms") and ok:
+        diff = {k: 0 for k, _ in ROWS}
+        for n in ok:
+            pd = prev["platforms"].get(n) or {}
+            pa = pd.get("account") or {} if "error" not in pd else {}
+            for k in diff:
+                if isinstance(acc[n].get(k), int) and isinstance(pa.get(k), int):
+                    diff[k] += acc[n][k] - pa[k]
+        parts = [f"{'+' if v > 0 else '−'}{_n(abs(v))} {WORD[k]}" for k, v in diff.items() if v]
+        since = _when(prev.get("time", ""), snap.get("time"))
+        lines.append(f"<b>Son rapordan ({since}) beri:</b> " + (", ".join(parts) if parts else "değişiklik yok"))
+    # video bazlı: YouTube ve Instagram aynı videoyu kayıttan eşleştirir; TikTok listesi ayrı (taslaktan elle paylaşıldı)
     rows = []
-    for tag, title in snap.get("titles", {}).items():
-        per = []
-        for name in ("youtube", "instagram"):
-            v = snap["platforms"].get(name, {}).get("videos", {}).get(tag)
-            if v:
-                per.append({"youtube": "▶️", "instagram": "📸"}[name] + " " + " ".join(f"{LABEL[k]}{_n(v[k])}" for k in KEYS if k in v))
-        if per:
-            rows.append((sum(snap["platforms"].get(n, {}).get("videos", {}).get(tag, {}).get("views", 0)
-                             for n in ("youtube", "instagram")), f"🎬 {title[:45]}\n   " + " | ".join(per)))
-    tt = snap["platforms"].get("tiktok", {}).get("list") or []
-    if rows or tt:
-        lines += ["", "Videolar (en çok izlenen üstte):"]
-        lines += [r for _, r in sorted(rows, reverse=True)[:10]]
-        for v in sorted(tt, key=lambda v: -v["views"])[:5]:
-            lines.append(f"🎵 TikTok · {v['title'][:40]}\n   " + " ".join(f"{LABEL[k]}{_n(v[k])}" for k in KEYS if k in v))
-    return "\n".join(lines)[:4000]
+    for tag, title in (snap.get("titles") or {}).items():
+        yt = ((plats.get("youtube") or {}).get("videos") or {}).get(tag)
+        ig = ((plats.get("instagram") or {}).get("videos") or {}).get(tag)
+        if not (yt or ig):
+            continue
+        views = _int((yt or {}).get("views")) + _int((ig or {}).get("views"))
+        likes = _int((yt or {}).get("likes")) + _int((ig or {}).get("likes"))
+        rows.append((views, [_plain(title) or tag, _n(_int(yt["views"])) if yt and "views" in yt else "–",
+                             _n(_int(ig["views"])) if ig and "views" in ig else "–", _n(likes)]))
+    if rows:
+        top = [r for _, r in sorted(rows, key=lambda x: -x[0])[:10]]
+        head = ["Video", "YT", "Insta", "Beğeni"]
+        lines += ["", "<b>Videolar</b> (izlenme; beğeni iki platformun toplamı)", _table(head, top, _title_width(head, top))]
+    tt = ((plats.get("tiktok") or {}).get("list") or []) if "tiktok" in ok else []
+    if tt:
+        top = [[_plain(v.get("title")) or "(adsız)", _n(_int(v.get("views"))), _n(_int(v.get("likes")))]
+               for v in sorted(tt, key=lambda v: -_int(v.get("views")))[:5]]
+        head = ["TikTok", "İzlenme", "Beğeni"]
+        lines += ["", _table(head, top, _title_width(head, top))]
+    if notes:
+        lines += [""] + notes
+    lines += ["", "Grafikler ve ayrıntı: /panel"]
+    return "\n".join(lines)
+
+
+def plain(text: str) -> str:
+    """HTML raporun düz yazı hâli (etiketler çıkar, &amp; gibi kaçışlar geri döner)."""
+    import html
+    import re
+    return html.unescape(re.sub(r"</?(b|pre)>", "", text))
 
 
 def report(send: bool = True) -> str:
@@ -220,7 +289,12 @@ def report(send: bool = True) -> str:
     text = render(snap, prev)
     if send:
         from .telegram_bot import api
-        api("sendMessage", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": text})
+        chat = os.environ["TELEGRAM_CHAT_ID"]
+        try:
+            api("sendMessage", data={"chat_id": chat, "text": text, "parse_mode": "HTML"})
+        except RuntimeError as e:  # biçim reddedilirse rapor kaybolmasın: aynı metin düz yazı olarak gider
+            print("Biçimli rapor gönderilemedi, düz metin deneniyor:", P._redact(e)[:200])
+            api("sendMessage", data={"chat_id": chat, "text": plain(text)})
         SNAP.parent.mkdir(exist_ok=True)
         SNAP.write_text(json.dumps(snap, ensure_ascii=False, indent=1))
         with HIST.open("a", encoding="utf-8") as f:  # panel grafikleri için kısa geçmiş (state_sync satır birleştirir)
@@ -246,4 +320,5 @@ def history_line(snap: dict, days: int = 7) -> dict:
 if __name__ == "__main__":
     from .pipeline import load_env
     load_env(ROOT / ".env")
-    print(report(send=sys.argv[1:2] == ["report"]))
+    out = report(send=sys.argv[1:2] == ["report"])
+    print(out if sys.argv[1:2] == ["report"] else plain(out))
