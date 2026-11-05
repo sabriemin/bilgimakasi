@@ -1358,8 +1358,8 @@ CARD_CLASSES = {"photo": PhotoCard, "drawing": DrawingCard, "counter": CounterCa
 
 def card_type(spec, idx: int, n: int) -> str:
     """Sahnenin kart türü. Açık seçim (card) veriyle destekleniyorsa geçerli; 'auto' için: son sahne cta,
-    'AMA ASIL…'/'ASIL…' başlık interstitial, card_value counter, card_myth+card_fact compare, alıntı quote,
-    sonra fotoğraf, çizim, yoksa yazı kartı."""
+    'AMA ASIL…'/'ASIL…' başlık interstitial, card_value counter, card_myth+card_fact compare, sonra fotoğraf,
+    çizim, yoksa yazı kartı. quote yalnız açıkça istenince (card_label sayaç etiketi de olabildiği için)."""
     c = spec.card or {}
     has_photo, has_drawing = spec.image is not None, spec.sprite is not None
     data = {"counter": bool((c.get("value") or "").strip()),
