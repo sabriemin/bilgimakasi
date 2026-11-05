@@ -1,0 +1,92 @@
+name: Örnek video (yayınlanmaz)
+
+# Yeni bir şablonu göstermek için sesli örnek video üretir. Telegram'a yalnız göz atmak için gider:
+# onay düğmesi yoktur, videos.json'a / geçmişe kaydedilmez, hiçbir platformda paylaşılmaz, depoya hiçbir şey yazılmaz.
+on:
+  workflow_dispatch:
+    inputs:
+      senaryo:
+        description: "Hazır senaryo dosyası (depodaki yol, ör. demo/kart/ornek_cin_seddi.json). Boşsa konu kullanılır."
+        required: false
+      konu:
+        description: "Senaryo yoksa Claude'un yazacağı konu"
+        required: false
+      sablon:
+        description: "Şablon"
+        required: false
+        default: "kart"
+      not:
+        description: "Telegram mesajına eklenecek kısa not"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  ornek:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Girdiler
+        env:
+          SENARYO: ${{ github.event.inputs.senaryo }}
+          KONU: ${{ github.event.inputs.konu }}
+        run: |
+          if [ -z "$SENARYO" ] && [ -z "$KONU" ]; then
+            echo "::error::Senaryo dosyası ya da konu verilmeli (konusuz üretim gündem/sıra/bekleyen senaryoya dokunurdu)."; exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: FFmpeg kur
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg libcairo2
+      - run: pip install -r requirements.txt "rembg[cpu]"
+      - uses: actions/setup-node@v4
+        if: github.event.inputs.senaryo == ''
+        with:
+          node-version: "22"
+      - name: Claude Code kur
+        if: github.event.inputs.senaryo == ''
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Arka plan silme modelini önbellekle
+        uses: actions/cache@v4
+        with:
+          path: ~/.u2net
+          key: u2net-v1
+      - name: Örnek videoyu üret
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '100' }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID || 'BPOQsosga3cXhsJivIRc' }}
+          MUSIC_FILE: ${{ vars.MUSIC_FILE }}
+          SENARYO: ${{ github.event.inputs.senaryo }}
+          KONU: ${{ github.event.inputs.konu }}
+          SABLON: ${{ github.event.inputs.sablon }}
+          SERIES: "0"  # örnek bir seri başlatmasın
+          AUTO_TREND: "0"
+        run: |
+          ARGS=(--out "$RUNNER_TEMP/ornek")
+          [ -n "$SABLON" ] && ARGS+=(--template "$SABLON")
+          if [ -n "$SENARYO" ]; then ARGS+=(--script "$SENARYO"); else ARGS+=(--topic "$KONU"); fi
+          python -m shortgen.pipeline "${ARGS[@]}"
+          echo "OUT_DIR=$(ls -td "$RUNNER_TEMP"/ornek/*/ | head -1)" >> "$GITHUB_ENV"
+      - name: Telegram'a gönder (onaysız, kayıtsız)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOT: ${{ github.event.inputs.not }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, gönderim atlandı."; exit 0; fi
+          python -m shortgen.telegram_bot preview "$OUT_DIR" "$NOT"
+      - name: Videoyu iş çıktısı olarak sakla
+        uses: actions/upload-artifact@v4
+        with:
+          name: ornek-video
+          path: |
+            ${{ env.OUT_DIR }}video.mp4
+            ${{ env.OUT_DIR }}metadata.json
+            ${{ env.OUT_DIR }}script.json
+          retention-days: 14

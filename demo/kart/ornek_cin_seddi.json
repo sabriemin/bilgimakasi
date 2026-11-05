@@ -1,0 +1,208 @@
+{
+  "topic": "Çin Seddi uzaydan görünür mü",
+  "category": "uzay",
+  "template": "",
+  "title": "Çin Seddi uzaydan görünür mü? Astronotların cevabı",
+  "description": "Çin Seddi uzaydan görünür mü? Çin'in ilk astronotu bile göremediğini söyledi. Sence uzaydan hangi yapılar görünüyor?",
+  "hashtags": [
+    "çinseddiuzaydangörünürmü",
+    "çinseddi",
+    "uzay",
+    "astronot",
+    "bilgimakasi"
+  ],
+  "scenes": [
+    {
+      "narration": "Çin Seddi uzaydan çıplak gözle görünmez.",
+      "kicker": "",
+      "headline": [
+        "ÇİN SEDDİ",
+        "UZAYDAN",
+        "GÖRÜNMEZ"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/kart/seddi_tepeler.png",
+      "motion": "none"
+    },
+    {
+      "narration": "Oysa yıllarca uzaydan görülebilen tek insan yapısı olarak anlatıldı.",
+      "kicker": "",
+      "headline": [
+        "TEK İNSAN",
+        "YAPISI MI?"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "compare",
+      "card_myth": "Uzaydan görünen tek insan yapısı",
+      "card_fact": "Çıplak gözle *seçilemiyor*",
+      "card_note": "kaynak: NASA Earth Observatory",
+      "mascot": "auto"
+    },
+    {
+      "narration": "Çin'in ilk astronotu Yang Liwei bile 2003'te onu göremediğini söyledi.",
+      "kicker": "",
+      "headline": [
+        "İLK ÇİNLİ",
+        "ASTRONOT",
+        "GÖREMEDİ"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "black",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "quote",
+      "card_label": "Manzara çok güzeldi ama Seddimizi göremedim.",
+      "card_note": "Yang Liwei · Shenzhou 5 · 2003"
+    },
+    {
+      "narration": "Sed aslında çok uzun: tam 21.196 kilometre.",
+      "kicker": "",
+      "headline": [
+        "21.196",
+        "KİLOMETRE"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "counter",
+      "card_value": "21.196",
+      "card_label": "KİLOMETRE UZUNLUK",
+      "card_note": "resmî ölçüm · 2012"
+    },
+    {
+      "narration": "Ama asıl mesele uzunluk değil, genişlik.",
+      "kicker": "",
+      "headline": [
+        "AMA ASIL",
+        "MESELE",
+        "GENİŞLİK"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "interstitial"
+    },
+    {
+      "narration": "Duvar çoğu yerde yalnızca birkaç metre genişliğinde,",
+      "kicker": "",
+      "headline": [
+        "BİRKAÇ",
+        "METRE"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/kart/duvar_kesit.png",
+      "motion": "none",
+      "card_note": "kesit · üstünde iki insan"
+    },
+    {
+      "narration": "üstelik rengi çevresindeki toprakla neredeyse aynı.",
+      "kicker": "",
+      "headline": [
+        "TOPRAKLA",
+        "AYNI RENK"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/kart/kamuflaj.png",
+      "motion": "none",
+      "card_note": "yerel taş ve sıkıştırılmış toprak"
+    },
+    {
+      "narration": "Yörüngeden ancak güçlü objektiflerle, o da zorlukla seçilebiliyor.",
+      "kicker": "",
+      "headline": [
+        "ANCAK",
+        "OBJEKTİFLE"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "black",
+      "image_mode": "framed",
+      "image_queries": [
+        "Great Wall of China from space",
+        "Great Wall of China International Space Station",
+        "Great Wall of China aerial view"
+      ],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card_note": ""
+    },
+    {
+      "narration": "Yani efsane, duvarın uzunluğundan doğan bir yanılgı.",
+      "kicker": "",
+      "headline": [
+        "UZUNLUKTAN",
+        "DOĞAN",
+        "YANILGI"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    },
+    {
+      "narration": "Sence uzaydan hangi yapılar görünüyor? Yorumlara yaz.",
+      "kicker": "",
+      "headline": [
+        "SENCE?"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    }
+  ],
+  "sources": [
+    "https://earthobservatory.nasa.gov/images/5866/great-wall-of-china",
+    "https://www.nasa.gov/vision/space/workinginspace/great_wall.html",
+    "http://news.bbc.co.uk/2/hi/asia-pacific/3187932.stm"
+  ],
+  "search_phrase": "Çin Seddi uzaydan görünür mü",
+  "structure": "efsane",
+  "series_part": 0,
+  "next_part_brief": ""
+}

@@ -103,6 +103,17 @@ def notify(out_dir: Path, tag: str) -> None:
     save(VIDEOS, videos)
 
 
+def preview(out_dir: Path, label: str = "") -> None:
+    """Yalnız göz atmak için örnek video (ornek.yml): onay düğmesi yok, kayda (videos.json) geçmez, paylaşılmaz."""
+    import html
+    meta = json.loads((out_dir / "metadata.json").read_text(encoding="utf-8"))
+    caption = (f"🧪 <b>Örnek video, paylaşılmayacak</b>\n{html.escape(label)}\n\n<b>{html.escape(meta['title'])}</b>\n"
+               f"Şablon: {html.escape(str(meta.get('template', '-')))}")
+    with (out_dir / "video.mp4").open("rb") as f:
+        api("sendVideo", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "caption": caption[:1024],
+                               "parse_mode": "HTML", "supports_streaming": "true"}, files={"video": f})
+
+
 def _find(videos: list, tag: str) -> dict | None:
     return next((v for v in videos if v["tag"] == tag), None)
 
@@ -1029,6 +1040,8 @@ if __name__ == "__main__":
         duzelt(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "", " ".join(sys.argv[4:]))
     elif sys.argv[1] == "notify":
         notify(Path(sys.argv[2]), sys.argv[3])
+    elif sys.argv[1] == "preview":  # ornek.yml: yalnız göz atmak için, onaysız ve kayıtsız
+        preview(Path(sys.argv[2]), " ".join(sys.argv[3:]))
     elif sys.argv[1] == "poll":
         poll()
     elif sys.argv[1] == "listen":

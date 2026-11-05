@@ -212,6 +212,8 @@ def main() -> None:
     open_part = seri.get("bekleyen")
     # 2. bölüm, 1. bölümden en az 12 saat sonra gelen ilk konusuz üretimde çekilir
     part2_due = bool(open_part) and dt.datetime.now() >= dt.datetime.fromisoformat(open_part["created"]) + dt.timedelta(hours=12)
+    # kart alanlarının yönergesi yalnız kart seçilebilecekse istenir (kapalıyken üretim yönergesi aynen kalır)
+    kart_on = (a.template or "").strip() == "kart" or bool((m.get("kart") or {}).get("acik"))
     if a.script:
         script = load_script(a.script)
     elif pending.exists() and not a.topic:
@@ -220,7 +222,7 @@ def main() -> None:
         script = load_script(pending)
     elif part2_due and not a.topic:
         print("Serinin 2. bölümü üretiliyor:", open_part["title"])
-        script = generate_script(history, None, None, series_prev=open_part)
+        script = generate_script(history, None, None, series_prev=open_part, kart=kart_on)
     else:
         from . import konu_sirasi
         queued = None if a.topic else konu_sirasi.peek()  # panelden sıraya konan konu gündemden önce gelir
@@ -237,7 +239,8 @@ def main() -> None:
                 print("Gündem önerisi alınamadı, serbest konu seçilecek:", e)
         allow = os.environ.get("SERIES", "1") != "0" and not open_part
         catalog = {k: v for k, v in template_catalog().items() if k != "kart"}  # kart Claude'a önerilmez
-        script = generate_script(history, topic, catalog if m.get("claude_secsin") else None, allow_series=allow)
+        script = generate_script(history, topic, catalog if m.get("claude_secsin") else None, allow_series=allow,
+                                 kart=kart_on)
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":

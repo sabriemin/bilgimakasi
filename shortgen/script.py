@@ -162,8 +162,11 @@ gösteren sahneler (en fazla 3 tane) saf tipografik olabilir.
   bir şey düşüyorsa drop_in, ortaya çıkış/keşif anında zoom_in, gezegen için spin veya orbit, kalp/beyin için pulse,
   patlama/deprem/yarılma için shake, balon/astronot/su altı için float. Hareketsiz çizimlerde motion none.
 headline kelimeleri narration içinde geçen en vurucu kelimeler olsun. Temaları çeşitlendir, art arda aynı temayı
-en fazla iki kez kullan. icon sadece gerçekten anlam katıyorsa.
-KART ALANLARI (yalnız "kart" şablonu kullanır, diğer şablonlar yok sayar; emin değilsen card "auto", diğerleri boş):
+en fazla iki kez kullan. icon sadece gerçekten anlam katıyorsa."""
+
+
+# Yalnız kart şablonu açıkken (ya da elle seçildiğinde) sisteme eklenir: kapalıyken üretim yönergesi değişmez.
+KART_RULES = """KART ALANLARI (yalnız "kart" şablonu kullanır, diğer şablonlar yok sayar; emin değilsen card "auto", diğerleri boş):
 - card "counter": tek büyük sayının sahnesi (card_value yalnız sayı, ör. "3.300"; card_label 1-3 kelimelik birim/etiket).
 - card "compare": efsane kalıbında inanışın çürütüldüğü sahne (card_myth inanış, card_fact doğrusu).
 - card "interstitial": videonun ortasındaki ikinci merak anı (headline o anın kendi vurucu kelimeleri; kalıp cümle değil).
@@ -279,7 +282,7 @@ def structure_ask(keys: list[str]) -> str:
 
 def generate_script(history_file: Path, topic_hint: str | None = None,
                     templates: dict[str, str] | None = None, series_prev: dict | None = None,
-                    allow_series: bool = False) -> ShortScript:
+                    allow_series: bool = False, kart: bool = False) -> ShortScript:
     used = _history(history_file)[-200:]
     if series_prev:
         ask = series_ask(series_prev)
@@ -298,7 +301,7 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
             f"- {k}: {v}" for k, v in templates.items())
     if used and not series_prev:
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
-    script = ask_claude(ask, ShortScript, SYSTEM)
+    script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else ""))
     part, brief = (2, "") if series_prev else (script.series_part if allow_series else 0, script.next_part_brief)
     phrase = script.search_phrase
     checked = verify_script(script)
