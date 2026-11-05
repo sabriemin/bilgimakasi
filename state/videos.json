@@ -519,10 +519,11 @@
     "category": "az bilinen insan hikâyeleri",
     "template": "kart",
     "created": "2026-11-05T21:36:43",
-    "status": "onay_bekliyor",
+    "status": "reddedildi",
     "telegram_message_id": 180,
     "aciklama_message_id": 181,
-    "platforms": {}
+    "platforms": {},
+    "decided": "2026-11-06T00:47:33+03:00"
   },
   {
     "tag": "short-20261105-213747",
