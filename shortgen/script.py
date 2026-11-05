@@ -114,6 +114,9 @@ KITAP_RENKLERI = ["kirmizi", "sari", "lacivert", "yesil", "siyah"]
 KITAP_BOLUMLERI = ("giris", "konu", "fikir", "bilgi", "soru")
 KITAP_SAYFA_KELIME = 22          # sayfa_metni en çok bu kadar kelime
 KITAP_KAPANIS = "Okudun mu? Yorumlara yaz."
+# Kitap kalıbında toplam dış ses (yavaş seslendirmede ~2,15 kelime/sn: 30-38 sn): hedef aralık ve üst sınır
+KITAP_KELIME = (65, 80)
+KITAP_KELIME_UST = 82
 
 
 def kamu_mali(yazar_olum: int | None, yil: int | None = None) -> bool:
@@ -252,6 +255,12 @@ class KitapBilgi(BaseModel):
         "Yalnız kamu malı kitapta (yazar bu yıldan en az 71 yıl önce ölmüşse): kitabın ilk cümlesinin özgün dilden "
         "KENDİ kısa çevirimiz (yayımlanmış çeviri değil; özgün dili Türkçeyse özgün cümle), tırnaksız, en fazla 22 "
         "kelime. Diğer kitaplarda boş."))
+    ozgun_baslik: str = Field(default="", description=(
+        "Kitabın özgün dildeki adı (ör. 'Die Verwandlung'); özgün dili Türkçeyse boş. Yalnız denetim içindir, "
+        "ekrana yazılmaz."))
+    kaynak_ilk_cumle: str = Field(default="", description=(
+        "Her kitapta doldurulur (kamu malı olsun olmasın): kitabın gerçek ilk cümlesi, özgün dilde ya da Türkçe "
+        "baskıdaki hâliyle. Yalnız alıntı denetimi içindir; hiçbir zaman ekrana yazılmaz, seslendirilmez."))
     amblem: Literal[tuple(KITAP_AMBLEMLER)] = Field(description=(  # type: ignore[valid-type]
         "Kapaktaki amblem: kitabın merkezindeki imgeye en yakın olanı."))
     kapak_rengi: Literal[tuple(KITAP_RENKLERI)] = Field(description="Kapak rengi.")  # type: ignore[valid-type]
@@ -477,17 +486,18 @@ _RENK_LISTESI = ", ".join(KITAP_RENKLERI)
 # değişmez.
 KITAP_RULES = f"""BİR KİTAP BİR DAKİKA DÜZENİ (yalnız 'kitap' kalıbı; video kodla çizilen bir kitapla kurulur: önce kapak, sonra
 sekmeli sayfalar; her sahne bu kitabın bir sayfa anıdır):
-- SÜRE: dış ses 30-38 saniye, toplam 75-90 kelime (genel kuraldaki 65-75 kelime ve 78 sınırı bu kalıpta geçerli değil).
+- SÜRE: dış ses 30-38 saniye, toplam {KITAP_KELIME[0]}-{KITAP_KELIME[1]} kelime, {KITAP_KELIME_UST}'yi GEÇMESİN (genel kuraldaki
+  78 sınırı yerine bu kalıpta {KITAP_KELIME_UST}; seslendirme yavaş olduğu için daha fazlası 38 saniyeyi aşar).
   Sahne sayısı 5-8 (genel kuraldaki 9-12 değil). Her sahnenin narration'ı tam cümle(ler)le başlayıp biter.
 - BÖLÜMLER: her sahnenin kitap_bolum alanı dolu; sıra giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne, sıra
   bozulmaz ve geri dönülmez. Ekrandaki sekmeler İLK CÜMLE (alıntı yoksa KÜNYE) / KONU / FİKİR / BİLGİ / SORU'dur.
-  1) giris (kanca, ~10-16 kelime): ilk cümle kitabın en çarpıcı öncülü ya da, yalnız kamu malı kitapta, ilk cümlesinin
+  1) giris (kanca, ~10-14 kelime): ilk cümle kitabın en çarpıcı öncülü ya da, yalnız kamu malı kitapta, ilk cümlesinin
      kendi çevirimiz (o zaman ilk cümle 16 kelimeye kadar olabilir; değilse genel kuraldaki gibi en fazla 10 kelime).
      Kitabın adı ve yazarı ilk iki cümlede geçer.
-  2) konu (~20-28 kelime): kahraman kim, nerede, hangi durumla karşı karşıya; yalnız öncül ve ilk perde.
-  3) fikir (~14-20 kelime): kitabın asıl derdi, ana fikri tek cümlede; Makas'ın yorumunun yerine geçer, ayrıca yorum
+  2) konu (~16-22 kelime): kahraman kim, nerede, hangi durumla karşı karşıya; yalnız öncül ve ilk perde.
+  3) fikir (~12-16 kelime): kitabın asıl derdi, ana fikri tek cümlede; Makas'ın yorumunun yerine geçer, ayrıca yorum
      cümlesi ekleme.
-  4) bilgi (~14-20 kelime): kitap ya da yazarı hakkında şaşırtıcı, doğrulanmış tek bir gerçek (yazılış hikâyesi, yasak,
+  4) bilgi (~12-18 kelime): kitap ya da yazarı hakkında şaşırtıcı, doğrulanmış tek bir gerçek (yazılış hikâyesi, yasak,
      ilk baskı, uyarlama, yazarın hayatı); videonun ikinci merak anı budur.
   5) soru (son sahne): kitabın fikrine bağlı en fazla 8 kelimelik kısa bir soru olabilir; son cümle tam olarak
      "{KITAP_KAPANIS}"
@@ -499,7 +509,9 @@ sekmeli sayfalar; her sahne bu kitabın bir sayfa anıdır):
   değil, sağ sayfada kitabı tanıtan kısa bir cümledir (ör. "1915'te yayımlanan bu uzun öykü, edebiyatın en ünlü
   açılışlarından biriyle başlar."); ilk_cumle'yi sayfa_metni'ne yazma. soru sayfası: kısa soru ya da "{KITAP_KAPANIS}"
 - KİTAP ALANI (kitap): baslik (Türkçe adı), yazar, yil (ilk yayım yılı), tur ("roman", "uzun öykü", "öykü kitabı",
-  "oyun"...), ozgun_dil, yazar_olum (ölüm yılı; yaşıyorsa ya da emin değilsen 0), amblem (kapakta çizilir; kitabın
+  "oyun"...), ozgun_dil, ozgun_baslik (özgün dildeki adı; Türkçe kitapta boş),
+  yazar_olum (ölüm yılı; yaşıyorsa ya da emin değilsen 0), kaynak_ilk_cumle (HER kitapta: kitabın gerçek ilk cümlesi, özgün dilde ya da Türkçe baskıdaki
+  hâliyle; yalnız alıntı denetimi içindir, ekrana yazılmaz ve seslendirilmez), amblem (kapakta çizilir; kitabın
   merkezindeki imgeye en yakın olanı: {_AMBLEM_LISTESI}), kapak_rengi ({_RENK_LISTESI}).
 - TELİF (kesin kural): yayınevi kapakları, yayınevi görselleri ve yayımlanmış çeviriler KULLANILMAZ; kapak kodla
   çizilir. Kitap ancak yazarı {YIL - KAMU_MALI_FARK} ya da daha önce ölmüşse kamu malıdır (Türkiye'de koruma, ölümü
@@ -507,7 +519,8 @@ sekmeli sayfalar; her sahne bu kitabın bir sayfa anıdır):
   çevirimizdir (yayımlanmış ya da sadeleştirilmiş bir Türkçe baskıdan alınmaz; özgün dili Türkçeyse özgün cümle,
   bugünkü harflerle); ilk cümle {KITAP_SAYFA_KELIME} kelimeden uzunsa ilk bölümünü çevir ve "…" ile bitir. Kamu malı
   olmayan kitapta ilk_cumle boştur ve dış seste, sayfa_metni'nde, başlıkta ve açıklamada kitaptan ya da yazardan HİÇBİR
-  alıntı yoktur: tırnak içinde cümle yazma, aktarmayı kendi sözlerinle, dolaylı yap.
+  alıntı yoktur: tırnak içinde (“…”, "…", '…') cümle yazma, aktarmayı kendi sözlerinle, dolaylı yap. Kitabın, filmin
+  ya da başka bir eserin adını tırnakla yazabilirsin (ör. “To Kill a Mockingbird” adlı roman).
 - SÜRPRİZ YOK: kitabın sonunu, katilini, büyük sürprizini ya da ilk perdeden sonraki dönüşleri anlatma; yalnız öncül,
   ilk perde ve ana fikir.
 - GÖRSELLER: kapak ve sayfalar kodla çizilir; genel kuraldaki "ilk sahnede fotoğraf ya da büyük çizim" ve "her sahnede
@@ -620,11 +633,23 @@ def _adim_basligi(sc: Scene, n: int, new: bool, kelime: str = "ADIM") -> None:
 
 
 # ---- Bir Kitap Bir Dakika: bölüm düzeni, telif koruması, sayfa metinleri
-# Tırnak içindeki metin (alıntı adayı): “...”, "...", «...», „...“, ‘...’. Düz kesme işareti (') Türkçede eki ayırır
-# ("Kafka'nın"): tırnak sayılmaz.
-_TIRNAK_RE = re.compile(r"“([^”\n]+)”|\"([^\"\n]+)\"|«([^»\n]+)»|„([^“”\n]+)[“”]|‘([^’\n]+)’")
-_ALINTI_KELIME = 4  # tırnak içinde bu kadar ya da daha çok kelime alıntı sayılır (kitabın adı sayılmaz)
-_KANCA_RE = re.compile(r"\bKANCA\b\s*[:：\-–—]?\s*", re.IGNORECASE)        # ekranda görünen yazılardan silinir
+# Tırnak içindeki metin (alıntı adayı): “...”, "...", «...», „...“, ‘...’ ve düz tek tırnak '...'. Düz kesme işareti
+# Türkçede eki de ayırır ("Kafka'nın"): tek tırnak yalnız metnin başında ya da boşluk, '(' veya ':' ardından açılır ve
+# ardından harf gelmeyen yerde kapanır (ek ayıran kesme işaretinin ardından her zaman harf gelir).
+_TIRNAK_RE = re.compile(r"“([^”\n]+)”|\"([^\"\n]+)\"|«([^»\n]+)»|„([^“”\n]+)[“”]|‘([^’\n]+)’"
+                        r"|(?<![^\s(:])'((?:[^'\n]|'(?=\w))+?)'(?!\w)")
+_ALINTI_KELIME = 4  # tırnak içinde bu kadar ya da daha çok kelime alıntı adayıdır (eser adları sayılmaz)
+# Eser adını haber veren sözcükler: “…” adlı / adıyla / romanı / filmi / kitabı ... (tırnaktan hemen sonra)
+_ESER_ISARETI = ("adlı", "adıyla", "adını", "adında", "adındaki", "isimli", "ismiyle", "başlıklı", "roman", "kitab",
+                 "kitap", "öykü", "hikâye", "hikaye", "film", "dizi", "oyun", "uyarlama", "şiir", "eser", "seri",
+                 "cilt", "albüm", "opera", "müzikal", "bale", "masal", "deneme")
+# Çekimli fiil sonu (tırnak içindeki parçanın cümle olup olmadığı): -dı/-tı (+kişi), -mış, -yor, -acak, -dır, -malı, -maz
+_FIIL_RE = re.compile(r"(?:[dt][ıiuü](?:m|n|k|n[ıiuü]z|l[ae]r)?|m[ıiuü]ş(?:[ıiuü]m|s[ıiuü]n|[ıiuü]z|l[ae]r)?"
+                      r"(?:[dt][ıiuü])?|yor(?:[ıiuü]m|s[ıiuü]n|[ıiuü]z|l[ae]r)?(?:[dt][ıiuü])?"
+                      r"|[ae]c[ae][kğ](?:[ıi]m|s[ıi]n|[ıi]z|l[ae]r)?(?:[dt][ıi])?|[dt][ıiuü]r|m[ae]l[ıi]|m[ae]z)$")
+# 'KANCA' iç etiketi ekranda görünmez: yalnız etiket biçimi (büyük harfle satır başında 'KANCA:' / 'KANCA -' ya da
+# yalnız 'KANCA' olan satır) silinir; cümle içindeki gerçek kelime ('Kaptan Kanca') kalır
+_KANCA_RE = re.compile(r"^\s*KANCA\s*[:：\-–—]\s*")
 _KANCA_BAS_RE = re.compile(r"^\s*KANCA\s*[:：\-–—]\s*", re.IGNORECASE)     # dış sesin başındaki 'Kanca:' etiketi
 # Kitap videosunda aranmayacak görseller: yayınevi kapakları, baskılar, film afişleri ve kareleri
 _GORSEL_YASAK_RE = re.compile(r"(?i)\b(cover|jacket|edition|poster|still|film|movie|screenshot|book|kapa[kğ]|bask[ıi]|"
@@ -636,28 +661,106 @@ def _tr_lower(s: str) -> str:
     return (s or "").replace("I", "ı").replace("İ", "i").lower()
 
 
+_SAPKASIZ = str.maketrans("âîûÂÎÛ", "aiuaiu")
+
+
 def _duz(s: str) -> str:
-    """Karşılaştırma için: Türkçe küçük harf, noktalamasız, tek boşluklu."""
-    return " ".join(re.sub(r"[^\w\s]", " ", _tr_lower(s)).split())
+    """Karşılaştırma için: Türkçe küçük harf, şapkasız (â/î/û), noktalamasız, tek boşluklu."""
+    return " ".join(re.sub(r"[^\w\s]", " ", _tr_lower(s).translate(_SAPKASIZ)).split())
 
 
 def _tirnaksiz(s: str) -> str:
     return " ".join((s or "").split()).strip("\"“”«»„‘’ ")
 
 
-def _alintilar(metin: str, baslik: str = "") -> list[str]:
-    """Metindeki alıntılar: tırnak içinde en az _ALINTI_KELIME kelimelik parçalar (tırnaklarıyla). Kitabın adı alıntı
-    sayılmaz."""
-    b, out = _duz(baslik), []
+def _cumle_mi(ic: str) -> bool:
+    """Tırnak içindeki parça bir cümle mi: cümle noktalamasıyla biter ya da içinde cümle biter, ya da çekimli bir fiil
+    içerir (-dı, -mış, -yor, -acak, -dır, -malı, -maz)."""
+    t = ic.strip().rstrip("\"“”«»'’ ")
+    if re.search(r"[.!?…]$", t) or re.search(r"[.!?…]\s+\S", t):
+        return True
+    return any(len(k) >= 5 and _FIIL_RE.search(k) for k in (_tr_lower(w) for w in re.findall(r"[^\W\d_]+", t)))
+
+
+def _eser_adi_mi(ic: str, sonra: str, basliklar) -> bool:
+    """Tırnak içindeki parça bir eser adı mı: kitabın Türkçe ya da özgün adı (şapka ve ek farkı gözetilmez; 'Ad: alt
+    başlık' da), ardından eser sözcüğü (adlı, adıyla, romanı, filmi...) ya da eki gelen nokta ile bitmeyen kısa parça,
+    ya da Türkçe harf taşımayan, kelimelerinin çoğu büyük harfle başlayan yabancı ad ("The Old Man and the Sea")."""
+    t = _duz(re.sub(r"['’]\w+$", "", ic.strip()))
+    for b in (_duz(x) for x in basliklar if x and x.strip()):
+        if t == b or (t.startswith(b + " ") and ":" in ic):
+            return True
+    if re.search(r"[.…]\s*$", ic.strip()) or len(ic.split()) > 10:
+        return False
+    if re.match(r"['’]?[^\W\d_]", sonra or ""):  # ek doğrudan tırnağa bitişik: “…”nın
+        return True
+    m = re.match(r"\s*([^\W\d_]+)", sonra or "")
+    if m and _tr_lower(m.group(1)).startswith(_ESER_ISARETI):
+        return True
+    kel = re.findall(r"[^\W\d_]+", ic)
+    return (not re.search(r"[çğıöşüÇĞİÖŞÜ]", ic) and bool(kel) and not re.search(r"[!?]\s*$", ic.strip())
+            and sum(1 for k in kel if k[0].isupper()) * 2 >= len(kel) and not _cumle_mi(ic))
+
+
+_AKTARMA_SONRA_RE = re.compile(r"\s*['’]?(?:diye|de(?:r|di|miş|yip|mişti)\b|söz|cümle|satır|ifade|yaz(?:ar|dı|mış)\b)",
+                               re.IGNORECASE)
+
+
+def _aktarma_mi(onceki: str, sonra: str) -> bool:
+    """Tırnaklı parçayı söz aktarımı olarak gösteren bağlam: önünde ':' ya da 'ki', ardında 'diye / der / dedi / sözü /
+    cümlesi / yazar' gibi bir sözcük."""
+    o = (onceki or "").rstrip()
+    return o.endswith((":", "：")) or bool(re.search(r"(?:^|\s)ki$", _tr_lower(o))) or bool(
+        _AKTARMA_SONRA_RE.match(sonra or ""))
+
+
+def _tirnaklar(metin: str, basliklar=()):
+    """Metindeki alıntı adayları: (eşleşme, iç metin, tür). Tür 'cumle' (tırnak içinde 4+ kelimelik cümle ya da söz
+    aktarımı: kamu malı olmayan kitapta üretimi durdurur), 'parca' (4+ kelime, cümle değil: tırnakları kaldırılır, doğrulayıcıya
+    bildirilir). Eser adları (_eser_adi_mi) ve 4 kelimeden kısa parçalar listelenmez."""
     for m in _TIRNAK_RE.finditer(metin or ""):
         ic = next(g for g in m.groups() if g is not None)
-        if len(ic.split()) >= _ALINTI_KELIME and _duz(ic) != b:
-            out.append(m.group(0))
-    return out
+        if len(ic.split()) < _ALINTI_KELIME or _eser_adi_mi(ic, (metin or "")[m.end():], basliklar):
+            continue
+        aktarma = _aktarma_mi((metin or "")[:m.start()], (metin or "")[m.end():])
+        yield m, ic, ("cumle" if aktarma or _cumle_mi(ic) else "parca")
+
+
+def _alintilar(metin: str, basliklar=(), hepsi: bool = False) -> list[str]:
+    """Metindeki alıntılar (tırnaklarıyla): tırnak içinde en az _ALINTI_KELIME kelimelik cümleler; hepsi=True ise
+    cümle olmayan parçalar da. Eser adları (kitabın Türkçe ve özgün adı, 'adlı / romanı / filmi' ile anılan adlar)
+    alıntı sayılmaz."""
+    if isinstance(basliklar, str):
+        basliklar = (basliklar,)
+    return [m.group(0) for m, _, tur in _tirnaklar(metin, basliklar) if hepsi or tur == "cumle"]
+
+
+def _tirnak_kaldir(metin: str, basliklar=()) -> str:
+    """Cümle olmayan 4+ kelimelik tırnaklı parçaların tırnaklarını kaldırır (alıntı görünümü kalmasın)."""
+    for m, ic, tur in list(_tirnaklar(metin, basliklar)):
+        if tur == "parca":
+            metin = metin.replace(m.group(0), ic, 1)
+    return metin
+
+
+def _cumleyi_sil(s: str, parca: str) -> str:
+    """parça'nın geçtiği cümleyi (tırnaktan önceki ve sonraki kısmıyla) metinden çıkarır; diğer cümleler kalır."""
+    i = s.find(parca)
+    if i < 0:
+        return s
+    j = i + len(parca)
+    bas = max((m.end() for m in re.finditer(r"[.!?…]\s+", s[:i])), default=0)
+    if re.search(r"[.!?…]\W*$", parca) and (not s[j:].strip() or s[j:].lstrip()[:1].isupper()):
+        son = j  # alıntı kendi cümlesini bitiriyor, ardından yeni cümle başlıyor
+    else:
+        m = re.search(r"[.!?…](?=\s|$)", s[j:])
+        son = j + m.end() if m else len(s)
+    return " ".join((s[:bas] + " " + s[son:]).split())
 
 
 def _kancasiz(s: str) -> str:
-    return " ".join(_KANCA_RE.sub(" ", s or "").split())
+    s = " ".join(_KANCA_RE.sub("", s or "").split())
+    return "" if s == "KANCA" else s
 
 
 def _bolum_plani(n: int) -> list[str]:
@@ -769,7 +872,8 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
     yil = year or dt.date.today().year
     kb = script.kitap
     pd = kb is not None and kamu_mali(kb.yazar_olum, yil)
-    baslik, eski_ilk = (kb.baslik if kb else ""), ""
+    basliklar = (kb.baslik, kb.ozgun_baslik) if kb else ()
+    eski_ilk = ""
     if kb is not None:
         kb.yazar_olum = max(0, int(kb.yazar_olum or 0))
         kb.ilk_cumle = _tirnaksiz(kb.ilk_cumle)
@@ -798,9 +902,11 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
             sc.sayfa_metni, sc.vurgu = "", ""
         elif not pd:  # telifli kitap: giris dahil sayfalarda alıntı yok (sol sayfa künyedir)
             s = sc.sayfa_metni
-            for a in _alintilar(s, baslik):
-                s = s.replace(a, " ")
-            if len(eski_ilk.split()) >= _ALINTI_KELIME and _duz(eski_ilk) in _duz(s):
+            for a in _alintilar(s, basliklar):  # alıntı cümlesi bütünüyle çıkar (yarım cümle sayfada kalmaz)
+                s = _cumleyi_sil(s, a)
+            s = _tirnak_kaldir(s, basliklar)
+            kaynak = kb.kaynak_ilk_cumle if kb else ""
+            if any(len(x.split()) >= _ALINTI_KELIME and _duz(x) in _duz(s) for x in (eski_ilk, kaynak)):
                 s = ""
             if s != sc.sayfa_metni:
                 s = " ".join(s.split())
@@ -808,7 +914,7 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
         sc.sayfa_metni = _sayfa_kirp(_kancasiz(sc.sayfa_metni))
         sc.vurgu = _vurgu_onar(sc.sayfa_metni, sc.vurgu)
         sc.kicker = _kancasiz(sc.kicker)
-        if any(_KANCA_RE.search(h or "") for h in sc.headline):
+        if any(_kancasiz(h) != " ".join((h or "").split()) for h in sc.headline):
             yeni, hl = [], -1
             for j, h in enumerate(sc.headline):
                 h = _kancasiz(h)
@@ -817,6 +923,8 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
                     yeni.append(h)
             sc.headline, sc.highlight_line = yeni, hl
         sc.narration = _KANCA_BAS_RE.sub("", sc.narration)
+        if not pd:  # cümle olmayan tırnaklı parçalar alıntı gibi görünmesin (cümleleri kitap_alintilari bildirir)
+            sc.narration = _tirnak_kaldir(sc.narration, basliklar)
         if sc.image_queries or sc.image_query:  # yayınevi kapağı, baskı ya da film afişi aranmaz
             sc.image_queries = [q for q in sc.image_queries if not _GORSEL_YASAK_RE.search(q)]
             if _GORSEL_YASAK_RE.search(sc.image_query or ""):
@@ -824,6 +932,9 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
             if not sc.image_queries and not sc.image_query:
                 sc.image_mode = "none"
     sahneler[-1].narration = _kapanis(sahneler[-1].narration)
+    if not pd:
+        script.title = _tirnak_kaldir(script.title, basliklar)
+        script.description = _tirnak_kaldir(script.description, basliklar)
     if "soru" in ilk_sahne and not sahneler[ilk_sahne["soru"]].sayfa_metni:
         sahneler[ilk_sahne["soru"]].sayfa_metni = KITAP_KAPANIS
     return script
@@ -832,20 +943,23 @@ def normalize_kitap(script: ShortScript, year: int | None = None) -> ShortScript
 _ILK_PARCA = 8  # kitabın ilk cümlesinin baştan bu kadar kelimesi aynen geçiyorsa da alıntıdır
 
 
-def kitap_alintilari(script, year: int | None = None, ilk_cumleler=()) -> list[str]:
+def kitap_alintilari(script, year: int | None = None, ilk_cumleler=(), hepsi: bool = False) -> list[str]:
     """Kamu malı olmayan kitabın senaryosunda kalan alıntılar: dış seste, sayfa metinlerinde, başlıkta ve açıklamada
-    tırnak içinde en az 4 kelime (kitabın adı hariç) ya da kitabın ilk cümlesi (tamamı ya da ilk 8 kelimesi). Kamu malı
-    kitapta ve diğer kalıplarda boş liste. ilk_cumleler: normalize_kitap'ın sildiği ilk cümleler (taslakta ya da hazır
-    senaryoda yazılmış olanlar; silindikten sonra da aranır). Üretim bu liste boş değilse durur (generate_script,
-    pipeline.build)."""
+    tırnak içinde (“…”, "…", '…' ...) en az 4 kelimelik bir cümle (eser adları hariç: _eser_adi_mi) ya da kitabın ilk
+    cümlesi (kitap.ilk_cumle, kitap.kaynak_ilk_cumle ya da ilk_cumleler; tamamı ya da ilk 8 kelimesi, tırnaksız da).
+    hepsi=True: cümle olmayan 4+ kelimelik tırnaklı parçalar da (doğrulayıcıya bildirilir, üretimi durdurmaz). Kamu
+    malı kitapta ve diğer kalıplarda boş liste. ilk_cumleler: normalize_kitap'ın sildiği ilk cümleler (taslakta ya da
+    hazır senaryoda yazılmış olanlar; silindikten sonra da aranır). Üretim bu liste boş değilse durur
+    (generate_script, pipeline.build: KitapTelifHatasi)."""
     if getattr(script, "structure", "") != "kitap":
         return []
     kb = getattr(script, "kitap", None)
     if kb is not None and kamu_mali(kb.yazar_olum, year):
         return []
-    baslik = kb.baslik if kb is not None else ""
+    basliklar = (kb.baslik, getattr(kb, "ozgun_baslik", "")) if kb is not None else ()
     ilkler = set()
-    for x in [kb.ilk_cumle if kb is not None else "", *ilk_cumleler]:
+    kendi = [kb.ilk_cumle, getattr(kb, "kaynak_ilk_cumle", "")] if kb is not None else []
+    for x in [*kendi, *ilk_cumleler]:
         kel = _duz(x).split()
         if len(kel) >= _ALINTI_KELIME:
             ilkler.add(" ".join(kel))
@@ -855,11 +969,21 @@ def kitap_alintilari(script, year: int | None = None, ilk_cumleler=()) -> list[s
               + [("başlık", script.title), ("açıklama", script.description)])
     out = []
     for yer, metin in yerler:
-        out += [f"{yer}: {a}" for a in _alintilar(metin, baslik)]
+        out += [f"{yer}: {a}" for a in _alintilar(metin, basliklar, hepsi)]
         duz = f" {_duz(metin)} "
         if any(f" {x} " in duz for x in ilkler):
             out.append(f"{yer}: kitabın ilk cümlesi")
     return out
+
+
+class KitapTelifHatasi(RuntimeError):
+    """Kamu malı olmayan kitabın senaryosunda alıntı kaldı: senaryo kullanılmaz (pipeline.main durumu Telegram'a
+    bildirilmek üzere output/telif_durdu.txt dosyasına yazar)."""
+
+    def __init__(self, alintilar: list[str], konu: str = "", ek: str = "senaryo kullanılmadı"):
+        self.alintilar, self.konu = list(alintilar), konu
+        super().__init__("Senaryo kamu malı olmayan bir kitaptan alıntı içeriyor (" + "; ".join(alintilar)
+                         + f"): {ek}.")
 
 
 def kitap_telif(script: ShortScript, year: int | None = None, ilk_cumleler=()) -> list[str]:
@@ -885,13 +1009,18 @@ def kitap_sorunlari(script, year: int | None = None) -> list[str]:
     elif kb.ilk_cumle.strip() and not kamu_mali(kb.yazar_olum, yil):
         out.append(f"kitap kamu malı değil (yazar_olum {kb.yazar_olum}; {yil} yılında yazarı {yil - KAMU_MALI_FARK} "
                    "ya da önce ölmüş olmalı): ilk_cumle boş olmalı")
-    out += ["kamu malı olmayan kitapta alıntı (çıkar, dolaylı anlat): " + a for a in kitap_alintilari(script, yil)]
+    if kb is not None and not kb.kaynak_ilk_cumle.strip():
+        out.append("kitap.kaynak_ilk_cumle boş: kitabın gerçek ilk cümlesini yaz (yalnız denetim içindir, ekrana "
+                   "yazılmaz)")
+    out += ["kamu malı olmayan kitapta alıntı (çıkar, dolaylı anlat): " + a
+            for a in kitap_alintilari(script, yil, hepsi=True)]
     n = len(script.scenes)
     if not 5 <= n <= 8:
         out.append(f"{n} sahne var (5-8 olmalı)")
     kelime = sum(len(sc.narration.split()) for sc in script.scenes)
-    if not 75 <= kelime <= 90:
-        out.append(f"toplam dış ses {kelime} kelime (75-90 olmalı)")
+    if not KITAP_KELIME[0] <= kelime <= KITAP_KELIME_UST:
+        out.append(f"toplam dış ses {kelime} kelime ({KITAP_KELIME[0]}-{KITAP_KELIME[1]} olmalı, en çok "
+                   f"{KITAP_KELIME_UST})")
     raw = [sc.kitap_bolum for sc in script.scenes]
     if raw != kitap_bolumleri(raw):
         out.append(f"kitap_bolum sırası bozuk ({', '.join(b or '-' for b in raw)}); giris → konu → fikir → bilgi → "
@@ -1120,11 +1249,10 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
             print("UYARI hesap fişi:", p)
     if structure == "kitap":
         # taslağın ilk cümlesi de aranır: kitap kamu malı değilse doğrulamada silinir ama dış seste okunmuş olabilir
-        taslak = [script.kitap.ilk_cumle] if script.kitap is not None and script.kitap.ilk_cumle else []
+        taslak = [x for x in ((script.kitap.ilk_cumle, script.kitap.kaynak_ilk_cumle) if script.kitap else ()) if x]
         alinti = kitap_telif(out, ilk_cumleler=taslak)
-        if alinti:  # telif kesin kural: kamu malı olmayan kitaptan alıntı yayına gitmez
-            raise RuntimeError("Senaryo kamu malı olmayan bir kitaptan alıntı içeriyor (" + "; ".join(alinti)
-                               + "): senaryo kullanılmadı.")
+        if alinti:  # telif kesin kural: kamu malı olmayan kitaptan alıntı (cümle ya da ilk cümle) yayına gitmez
+            raise KitapTelifHatasi(alinti, out.topic)
         for p in kitap_sorunlari(out):  # doğrulayıcı düzeltemediyse günlükte görünsün (onaydan önce bakılır)
             print("UYARI kitap:", p)
     return normalize_nasil(out)
@@ -1260,8 +1388,10 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
                   f"TELİF: yazar {YIL - KAMU_MALI_FARK} ya da daha önce ölmemişse (kamu malı değilse) ilk_cumle boş "
                   "olsun ve dış seste, sayfa_metni'nde, başlıkta ve açıklamada tırnak içinde alıntı kalmasın (aktarmayı "
                   "dolaylı anlatıma çevir); kamu malıysa ilk_cumle özgün ilk cümlenin kendi çevirimiz olsun, "
-                  "yayımlanmış bir çeviriden alınmasın. Bu kalıpta toplam dış ses 75-90 kelime olur (78 kelime sınırı "
-                  "geçerli değil); ilk cümle kamu malı kitabın kendi ilk cümlesiyse 16 kelimeye kadar olabilir. "
+                  "yayımlanmış bir çeviriden alınmasın. kaynak_ilk_cumle (kitabın gerçek ilk cümlesi; yalnız denetim "
+                  "içindir) her kitapta dolu olsun. Eser adları tırnakla yazılabilir; tırnak içinde cümle kalmasın. "
+                  f"Bu kalıpta toplam dış ses {KITAP_KELIME[0]}-{KITAP_KELIME[1]} kelime olur, {KITAP_KELIME_UST}'yi "
+                  "geçmez (78 kelime sınırı yerine); ilk cümle kamu malı kitabın kendi ilk cümlesiyse 16 kelimeye kadar olabilir. "
                   "kitap_bolum düzenini (giris → konu → fikir → bilgi → soru, her bölüm 1-2 sahne), sayfa_metni ve vurgu "
                   "alanlarını koru; dış sesi değiştirdiğin bölümün sayfa_metni'ni de uydur, vurgu sayfa_metni'nden harfi "
                   f"harfine alınsın. Son cümle '{KITAP_KAPANIS}' olsun. Şu alanlara giren açıyı çıkar: "
@@ -1309,6 +1439,10 @@ def _kitap_alanlarini_tamamla(once: ShortScript, sonra: ShortScript) -> None:
     sayısı değişmediyse)."""
     if sonra.kitap is None and once.kitap is not None:
         sonra.kitap = once.kitap.model_copy(deep=True)
+    elif sonra.kitap is not None and once.kitap is not None:
+        for f in ("kaynak_ilk_cumle", "ozgun_baslik"):  # denetim alanları doğrulayıcıda düşmesin
+            if not getattr(sonra.kitap, f).strip():
+                setattr(sonra.kitap, f, getattr(once.kitap, f))
     if (len(sonra.scenes) == len(once.scenes)
             and not any(sc.kitap_bolum or sc.sayfa_metni for sc in sonra.scenes)):
         for a, b in zip(once.scenes, sonra.scenes):
@@ -1361,7 +1495,7 @@ olarak kalsın."""
 # Yalnız kitap kalıbında editöre eklenir (Bir Kitap Bir Dakika).
 EDITOR_KITAP = f"""
 BİR KİTAP BİR DAKİKA: kitap, kitap_bolum, sayfa_metni ve vurgu alanlarına DOKUNMA (ekrandaki kitap sayfalarıdır; kod
-korur). Bu videoda toplam dış ses 75-90 kelime (65-75 aralığı ve 78 sınırı geçerli değil); ilk cümle kamu malı kitabın
+korur). Bu videoda toplam dış ses {KITAP_KELIME[0]}-{KITAP_KELIME[1]} kelime, {KITAP_KELIME_UST}'yi geçmesin (78 sınırı yerine); ilk cümle kamu malı kitabın
 kendi ilk cümlesiyse 16 kelimeye kadar olabilir. Kitabın sonunu ya da sürprizini ele veren bilgi ekleme. Tırnak içinde
 alıntı ekleme; aktarmalar dolaylı kalsın. Yılları ve sayıları değiştirme. Son cümle '{KITAP_KAPANIS}' olarak kalsın."""
 

@@ -19,12 +19,14 @@
     "ozgun_dil": "Almanca",
     "yazar_olum": 1924,
     "ilk_cumle": "Gregor Samsa bir sabah tedirgin rüyalardan uyandığında, yatağında korkunç bir haşereye dönüşmüş olduğunu gördü.",
+    "ozgun_baslik": "Die Verwandlung",
+    "kaynak_ilk_cumle": "Als Gregor Samsa eines Morgens aus unruhigen Träumen erwachte, fand er sich in seinem Bett zu einem ungeheueren Ungeziefer verwandelt.",
     "amblem": "kapi",
     "kapak_rengi": "kirmizi"
   },
   "scenes": [
     {
-      "narration": "Bir adam bir sabah uyanıyor ve artık insan değil. Kafka'nın Dönüşüm'ü tam olarak böyle başlar:",
+      "narration": "Bir adam bir sabah uyanıyor ve artık insan değil. Kafka'nın Dönüşüm'ü böyle başlar:",
       "kicker": "KİTAP #01",
       "headline": ["İLK CÜMLEDE", "HAŞERE OLUYOR"],
       "highlight_line": 1,
@@ -53,7 +55,7 @@
       "vurgu": ""
     },
     {
-      "narration": "Gregor, ailesini tek başına geçindiren bir pazarlamacı. Şimdi odasına kapanmış bir yük. Asıl soru şu: Ailesi ona nasıl bakacak?",
+      "narration": "Gregor, ailesini geçindiren bir pazarlamacı. Şimdi odasına kapanmış bir yük. Ailesi ona nasıl bakacak?",
       "kicker": "",
       "headline": ["NE ANLATIYOR?"],
       "highlight_line": -1,
@@ -63,12 +65,12 @@
       "image_queries": [],
       "icon": "none",
       "kitap_bolum": "konu",
-      "sayfa_metni": "Gregor ailesini tek başına geçindiren bir pazarlamacı. Şimdi odasına kapanmış bir yük. Asıl soru: Ailesi ona nasıl bakacak?",
+      "sayfa_metni": "Gregor ailesini tek başına geçindiren bir pazarlamacı. Şimdi odasına kapanmış bir yük. Ailesi ona nasıl bakacak?",
       "vurgu": "Ailesi ona nasıl bakacak?",
       "mascot": "thinking"
     },
     {
-      "narration": "Kafka burada sert bir soru soruyor: İnsan artık işe yaramadığında da sevilir mi?",
+      "narration": "Kafka sert bir soru soruyor: İnsan işe yaramadığında da sevilir mi?",
       "kicker": "",
       "headline": ["ANA FİKİR"],
       "highlight_line": -1,
@@ -82,7 +84,7 @@
       "vurgu": "işe yaramadığında da sevilir mi?"
     },
     {
-      "narration": "Şaşırtıcı bir ayrıntı: Kafka 25 Ekim 1915'te yayıncısına yazdı: Böceğin kendisi çizilemez, uzaktan bile gösterilemez.",
+      "narration": "Kafka 1915'te yayıncısına yazdı: Böceğin kendisi çizilemez, uzaktan bile gösterilemez.",
       "kicker": "",
       "headline": ["BİLİYOR MUYDUN?"],
       "highlight_line": -1,
@@ -97,7 +99,7 @@
       "mascot": "surprised"
     },
     {
-      "narration": "Sence ailesi ona haksızlık mı etti? Okudun mu? Yorumlara yaz.",
+      "narration": "Sence ailesi haksız mıydı? Okudun mu? Yorumlara yaz.",
       "kicker": "",
       "headline": ["OKUDUN MU?"],
       "highlight_line": -1,
@@ -107,7 +109,7 @@
       "image_queries": [],
       "icon": "none",
       "kitap_bolum": "soru",
-      "sayfa_metni": "Sence ailesi ona haksızlık mı etti?",
+      "sayfa_metni": "Sence ailesi haksız mıydı?",
       "vurgu": "",
       "mascot": "happy"
     }

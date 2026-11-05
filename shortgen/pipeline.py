@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from . import illustrate, images, render, voice
-from .script import STRUCTURES, ShortScript, generate_script, kitap_telif, load_script, para_var
+from .script import STRUCTURES, KitapTelifHatasi, ShortScript, generate_script, kitap_telif, load_script, para_var
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -73,6 +73,21 @@ def yapi_sablonu(structure: str | None) -> str:
         if sablon_renderer(k) == "kitap" and sablon_yapisi(k) == structure:
             return k
     return ""
+
+
+def kalip_sablonu(structure: str | None, template: str | None) -> str | None:
+    """Kendi şablonu olan kalıbın (kitap -> kitap.json) senaryosu yalnız o kurgu modülüyle çizilir: elle verilen
+    başka şablon (ör. ornek.yml'nin varsayılanı kart ya da yeniden çizmede --template) bu kalıpta kitabın kendi
+    şablonuyla değiştirilir (yoksa video kapaksız, sayfasız ve künyesiz çıkardı). Diğer durumlarda şablon aynen
+    döner."""
+    kendi = yapi_sablonu(structure)
+    if kendi and template and sablon_renderer(template) != sablon_renderer(kendi):
+        print(f"{structure} kalıbı yalnız kendi şablonuyla çizilir: {template} yerine {kendi} kullanılıyor.")
+        return kendi
+    return template
+
+
+TELIF_DURDU = ROOT / "output" / "telif_durdu.txt"  # uret.yml bu dosya varsa durumu Telegram'a yazar
 
 
 def kendi_secimli() -> set[str]:
@@ -142,8 +157,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         # başlıkta ya da açıklamada alıntı kalmışsa video hiç üretilmez.
         alinti = kitap_telif(script)
         if alinti:
-            raise RuntimeError("Senaryo kamu malı olmayan bir kitaptan alıntı içeriyor (" + "; ".join(alinti)
-                               + "): video üretilmedi.")
+            raise KitapTelifHatasi(alinti, script.topic, "video üretilmedi")
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "script.json").write_text(script.model_dump_json(indent=2), encoding="utf-8")
     cache = ROOT / "cache" / "images"
@@ -304,6 +318,8 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=ROOT / "output")
     a = ap.parse_args()
     load_env(ROOT / ".env")
+    if a.structure and a.template:
+        a.template = kalip_sablonu(a.structure, a.template.strip())
     yapi = sablon_yapisi((a.template or "").strip())
     if yapi:
         # Adım kartları şablonu (nasil, uretim) adım düzenli, kitap şablonu bölüm düzenli (kapak, ilk cümle, sayfalar)
@@ -381,7 +397,7 @@ def main() -> None:
         print("Format etiketi:", script.scenes[0].kicker)
     if script.series_part == 2 and open_part and open_part.get("template") and not a.template:
         a.template = open_part["template"]
-    template = pick_template(script, a.template)
+    template = kalip_sablonu(script.structure, pick_template(script, a.template))
     print(f"Şablon: {template}")
     yapi = sablon_yapisi(template)
     if yapi and script.structure != yapi:  # ör. hazır senaryo başka kalıpta
@@ -410,5 +426,21 @@ def main() -> None:
     print(f"Hazır: {video}")
 
 
+def _telif_durdu_yaz(e: KitapTelifHatasi) -> None:
+    """Telif nedeniyle duran üretimin kısa notu (uret.yml Telegram'a gönderir; senaryo saklanmaz, yeniden denenmez)."""
+    try:
+        TELIF_DURDU.parent.mkdir(parents=True, exist_ok=True)
+        TELIF_DURDU.write_text(("Bir Kitap Bir Dakika üretimi telif kuralı yüzünden durdu"
+                                + (f" ({e.konu})" if e.konu else "") + ": kamu malı olmayan kitabın senaryosunda "
+                                "alıntı kaldı.\n- " + "\n- ".join(e.alintilar[:5])
+                                + "\nVideo üretilmedi; konuyu yeniden Üret ile deneyebilirsin."), encoding="utf-8")
+    except OSError as hata:
+        print("Telif notu yazılamadı:", hata)
+
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KitapTelifHatasi as e:
+        _telif_durdu_yaz(e)
+        raise

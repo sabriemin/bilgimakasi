@@ -244,13 +244,13 @@ class SayfaMetni(unittest.TestCase):
         cls.specs, cls.words, cls.meta, cls.v = kur()
 
     def test_sutun_ve_boyut(self):
-        """Sütun 400 px'ten geniş; yazı 40-46 px; satırlar sığar, kısa tek kelimelik satır yok; her sayfada 3+ kelimelik
-        satır var, satır başına ortalama 2,4+ kelime (Türkçe uzun kelimelerle; Courier'de 1-2 idi)."""
-        self.assertGreaterEqual(KT.TX1 - KT.TX0, 400)
+        """Sütun 410 px'ten geniş; yazı 36-46 px; satırlar sığar, kısa tek kelimelik satır yok; demo sayfalarında her
+        satırda en az 3 kelime (Türkçe uzun kelimelerle; Courier'de 1-2 idi)."""
+        self.assertGreaterEqual(KT.TX1 - KT.TX0, 410)
         toplam_kelime = toplam_satir = 0
         for i, sm in self.v._metin.items():
             with self.subTest(bolum=self.v.bolumler[i].ad):
-                self.assertTrue(40 <= sm.size <= 46, sm.size)
+                self.assertTrue(36 <= sm.size <= 46, sm.size)
                 satirlar: dict = {}
                 for j in sm.jetonlar:
                     satirlar.setdefault((j.para, j.line), []).append(j)
@@ -259,17 +259,32 @@ class SayfaMetni(unittest.TestCase):
                     if len(js) == 1:
                         self.assertGreater(js[0].w, sm.width * 0.62, f"tek kelimelik satır: {js[0].text}")
                 self.assertGreaterEqual(max(len(js) for js in satirlar.values()), 3)
+                if len(sm.jetonlar) >= 3:
+                    self.assertEqual([len(js) for js in satirlar.values() if len(js) < 3], [],
+                                     " / ".join(" ".join(j.text for j in js) for js in satirlar.values()))
                 self.assertLessEqual(sm.n_lines * sm.lh, sm.height + 0.5)
                 toplam_kelime += len(sm.jetonlar)
                 toplam_satir += len(satirlar)
-        self.assertGreaterEqual(toplam_kelime / toplam_satir, 2.4)
+        self.assertGreaterEqual(toplam_kelime / toplam_satir, 3.0)
+
+    def test_az_kelimeli_satir_en_aza_iner(self):
+        """Boyut seçimi 3'ten az kelimeli satırı en büyük boyuttan önce gözetir (46 px'te 2'şer kelimelik satırlar
+        yerine biraz küçük boyutta 3-4 kelimelik satırlar)."""
+        for metin in ("25 Ekim 1915: Kafka yayıncısına yazdı. Böceğin kendisi çizilemez, uzaktan bile gösterilemez.",
+                      "Nakkaş Ustası Osman'ın atölyesinde bir minyatürcü kaybolur; padişahın gizli kitabı yüzünden "
+                      "herkes birbirinden şüphelenir."):
+            sm = KT.SayfaMetni([KT.Paragraf(metin, "", 0, 0, 0)], [], reveal=1.0)
+            satir = [len(L) for L in sm.lines[0]]
+            self.assertLessEqual(sum(1 for n in satir if n < 3), 1, satir)
+            self.assertGreaterEqual(sm.size, KT.SayfaMetni.SIZES[-1])
 
     def test_tasan_metin_gruplanir(self):
-        """Bölüm metni 40 px'te de sığmazsa sahne sahne gruplanır; yazı küçülmez, sayfadan taşmaz."""
+        """Bölüm metni en küçük boyutta da sığmazsa sahne sahne gruplanır; yazı küçülmez, sayfadan taşmaz."""
         uzun = "Bu cümle sayfaya sığmayacak kadar uzun bir bölüm metninin parçasıdır ve birkaç kez yinelenir."
         paras = [KT.Paragraf(uzun, "", k, 0, 0) for k in range(5)]
         sm = KT.SayfaMetni(paras, [], reveal=1.0)
-        self.assertEqual(sm.size, 40)
+        self.assertEqual(sm.size, KT.SayfaMetni.SIZES[-1])
+        self.assertGreaterEqual(sm.size, 36)
         self.assertGreater(len(sm.gruplar), 1)
         self.assertLessEqual(sm.n_lines * sm.lh, sm.height + 0.5)
         n, _, grup = sm.durum(1e9)
@@ -383,10 +398,10 @@ class Zaman(unittest.TestCase):
     def test_arka_kapak_sorusu(self):
         """Arka kapakta soru sayfasının metni durur; içerik kalıbı boş soru sayfasına yalnız 'Okudun mu? Yorumlara
         yaz.' yazdıysa soru dış sesten gelir (OKUDUN MU? ayrı katmandır, arka kapak yazısında tekrar edilmez)."""
-        self.assertEqual(self.v.blurb, "Sence ailesi ona haksızlık mı etti?")
+        self.assertEqual(self.v.blurb, "Sence ailesi haksız mıydı?")
         d = demo()
         d["scenes"][-1]["sayfa_metni"] = S.KITAP_KAPANIS
-        self.assertEqual(kur(d)[3].blurb, "Sence ailesi ona haksızlık mı etti?")
+        self.assertEqual(kur(d)[3].blurb, "Sence ailesi haksız mıydı?")
         d["scenes"][-1]["narration"] = S.KITAP_KAPANIS
         self.assertEqual(kur(d)[3].blurb, "")
 
@@ -580,6 +595,158 @@ class Hiz(unittest.TestCase):
 
 
 # ---------------------------------------------------------------- birleşim
+# ---------------------------------------------------------------- inceleme bulguları (metin, geçiş, yerleşim)
+def yazilanlar(fn):
+    """fn() sırasında K.Pen.text ile yazılan (metin, yazı yüzü, boyut) listesi."""
+    out, asil, asil_sp = [], KT.K.Pen.text, KT.K.Sprite.text
+
+    def kayit(self, x, y, text, font, size, *a, **k):
+        out.append((text, font, size))
+        return asil(self, x, y, text, font, size, *a, **k)
+
+    def kayit_sp(self, xy, text, font, size, *a, **k):
+        out.append((text, font, size))
+        return asil_sp(self, xy, text, font, size, *a, **k)
+    with mock.patch.object(KT.K.Pen, "text", kayit), mock.patch.object(KT.K.Sprite, "text", kayit_sp):
+        fn()
+    return out
+
+
+def fark(a, b) -> float:
+    """İki kare arasında 40 düzeyden çok değişen piksellerin oranı."""
+    x = np.asarray(a, dtype=np.int16)
+    y = np.asarray(b, dtype=np.int16)
+    return float((np.abs(x - y).max(axis=2) > 40).mean())
+
+
+KURK = dict(baslik="Kürk Mantolu Madonna", yazar="Sabahattin Ali", yil=1943, tur="roman", ozgun_dil="Türkçe",
+            yazar_olum=1948, amblem="kalp", kapak_rengi="lacivert",
+            ilk_cumle="Rastladığım insanlar arasında hiçbiri bende Raif efendi kadar derin bir tesir bırakmamıştır.")
+
+
+class Inceleme(unittest.TestCase):
+    def test_turkce_ozgun_kitapta_ceviri_notu_yok(self):
+        """Türkçe özgün kamu malı kitapta ilk cümlenin altında 'çeviri' notu ve konu sayfasında 'aslından' yazmaz;
+        künye satırı yazar ve başlık (yıl) olarak iki satırdır, kısalmaz."""
+        specs, words, meta, v = kur(kitap=KURK)
+        self.assertTrue(v.alinti)
+        giris = yazilanlar(lambda: v.sol_sayfa(0))
+        metin = " | ".join(x[0] for x in giris)
+        self.assertNotIn("çeviri", metin)
+        self.assertIn("— Sabahattin Ali", metin)
+        self.assertIn("Kürk Mantolu Madonna (1943)", metin)
+        self.assertNotIn("…", metin)
+        konu = next(i for i, b in enumerate(v.bolumler) if b.ad == "konu")
+        self.assertNotIn("aslından", " ".join(x[0] for x in yazilanlar(lambda: v.sol_sayfa(konu))))
+        # çeviri olan kitapta not ve 'aslından' durur
+        specs, words, meta, d = kur()
+        self.assertIn("çeviri: Bilgi Makası", [x[0] for x in yazilanlar(lambda: d.sol_sayfa(0))])
+        self.assertIn("Almanca aslından", [x[0] for x in yazilanlar(lambda: d.sol_sayfa(konu))])
+        # Osmanlı Türkçesi: çeviri değil, bugünkü harflerle
+        specs, words, meta, o = kur(kitap=dict(KURK, ozgun_dil="Osmanlı Türkçesi"))
+        self.assertIn("bugünkü harflerle", [x[0] for x in yazilanlar(lambda: o.sol_sayfa(0))])
+
+    def test_uzun_kunye_satiri_sayfaya_sigar(self):
+        uzun = dict(KURK, baslik="Suç ve Ceza", yazar="Fyodor Mihayloviç Dostoyevski", yil=1866, ozgun_dil="Rusça",
+                    yazar_olum=1881, ilk_cumle="Temmuz başında, çok sıcak bir akşamüstü, genç bir adam odasından çıktı.")
+        specs, words, meta, v = kur(kitap=uzun)
+        width = KT.PW - 40 - 36
+        for text, font, size in yazilanlar(lambda: v.sol_sayfa(0)):
+            if font == "courier":
+                self.assertLessEqual(KT.tw(text, font, size), width + 0.5, text)
+                self.assertNotIn("…", text)
+
+    def test_fikir_sayfasi_alinti_gibi_gorunmez(self):
+        """FİKİR sayfasındaki vurgu kendi notumuzdur: tırnak işareti ve ilk cümle yüzü (Playfair) yok; ANA FİKİR
+        etiketi ve fosforlu kalem bandı var. Kamu malı olmayan kitapta da aynı."""
+        for kb in (None, dict(demo()["kitap"], yazar_olum=0)):
+            specs, words, meta, v = kur(kitap=kb)
+            i = next(i for i, b in enumerate(v.bolumler) if b.ad == "fikir")
+            self.assertEqual(v._sol_tur(v.bolumler[i]), "vurgu")
+            yazi = yazilanlar(lambda: v.sol_sayfa(i))
+            self.assertFalse([x for x in yazi if x[1] == KT.ALINTI or "“" in x[0] or "”" in x[0]], yazi)
+            self.assertIn("ANA FİKİR", [x[0] for x in yazi])
+            self.assertIn("ana fikir notu", [ad for ad, _ in v.sol_sayfa(i).kutular])
+
+    def test_arka_kapak_basligi_kisalmaz(self):
+        for baslik, yazar in (("Kırmızı Pazartesi", "Gabriel García Márquez"),
+                              ("Saatleri Ayarlama Enstitüsü", "Ahmet Hamdi Tanpınar"),
+                              ("Yüzyıllık Yalnızlık", "Gabriel García Márquez"),
+                              ("Seksen Günde Devri Alem", "Jules Verne"),
+                              ("Suç ve Ceza", "Fyodor Mihayloviç Dostoyevski")):
+            kb = dict(demo()["kitap"], baslik=baslik, yazar=yazar)
+            KT._cache.clear()
+            yazi = [x[0] for x in yazilanlar(lambda: KT.kapak_arka(kb, "Sence ailesi haksız mıydı?"))]
+            self.assertIn(KT.up(baslik), " ".join(yazi), (baslik, yazi))
+            self.assertFalse([x for x in yazi if KT.up(baslik)[:6] in x and "…" in x], yazi)
+
+    def test_kanca_kartinda_ad_ve_yazar_kisalmaz(self):
+        for baslik, yazar in (("Saatleri Ayarlama Enstitüsü", "Ahmet Hamdi Tanpınar"),
+                              ("Genç Werther'in Acıları", "Johann Wolfgang von Goethe"),
+                              ("Suç ve Ceza", "Fyodor Mihayloviç Dostoyevski")):
+            specs, words, meta, v = kur(kitap=dict(demo()["kitap"], baslik=baslik, yazar=yazar))
+            yazi = [x[0] for x in yazilanlar(lambda: v.kutuphane_karti(KT.KART_KANCA[1] - KT.KART_KANCA[0]))]
+            self.assertFalse([x for x in yazi if "…" in x], yazi)
+            self.assertIn(baslik, " ".join(yazi))
+            self.assertIn(yazar, " ".join(yazi))
+
+    def test_spoiler_rozeti_gorunur(self):
+        specs, words, meta, v = kur()
+        i = next(i for i, b in enumerate(v.bolumler) if b.ad == "konu")
+        lay, boxes = v.manset(i)
+        rozet = [b for ad, b in boxes if ad == "rozet"]
+        self.assertEqual(len(rozet), 1, "şablonun kendi manşetiyle (NE ANLATIYOR?) rozet çizilir")
+        self.assertTrue(kutu_ici(rozet[0]), rozet)
+
+    def test_kanca_kesilirken_filigrana_cikmaz(self):
+        """Kanca makasla kesilirken parçalar y 240'ın üstüne (filigran) çıkmaz; seri etiketi de 240'ın altında."""
+        specs, words, meta, v = kur()
+        bos = np.asarray(Image_bos(v), dtype=np.int16)
+        for k in range(0, 12):
+            t = v.t_ac + k / KT.FPS
+            im = np.asarray(v.frame(t, grain=False), dtype=np.int16)
+            fark_ = np.abs(im - bos).max(axis=2)[170:236, :935] > 60
+            self.assertLess(fark_.mean(), 0.002, f"t={t:.3f}")
+        lay, boxes, _ = v.kanca_katmani()
+        for ad, b in boxes:
+            self.assertGreaterEqual(b[1], 240, ad)
+
+    def test_acilis_kayma_kapak_acilmadan_biter(self):
+        self.assertLessEqual(KT.ACILIS_GEC + KT.ACILIS_KAY, KT.ACILIS_ORT)
+        self.assertGreaterEqual(KT._ease((KT.ACILIS_ORT - KT.ACILIS_GEC) / KT.ACILIS_KAY), 0.999)
+        # kayma bittikten sonra kapalı kitaptan açık kitabın sağ yarısına geçiş sıçramasız (yer değişmez)
+        specs, words, meta, v = kur()
+        t0 = v.t_ac + max(KT.ACILIS_GEC + KT.ACILIS_KAY, KT.K.CUT_LEN)  # makasın kestiği parçalar uçtuktan sonra
+        kareler = [v.frame(t0 + k / KT.FPS, grain=False) for k in range(0, 4)]  # kapak açılmaya başlayana dek
+        farklar = [fark(a, b) for a, b in zip(kareler, kareler[1:])]
+        self.assertLess(max(farklar), 0.03, [round(f, 4) for f in farklar])
+
+    def test_acilis_ve_kapanis_sicramasiz(self):
+        """Açılışın sonunda ve kapanışın başında kurdele, cilt ve yığın bir karede birden çıkıp kaybolmaz: art arda
+        iki karenin farkı komşu karelerinkinden çok büyük değil."""
+        specs, words, meta, v = kur()
+        dt_ = 1 / KT.FPS
+        g = v.gecis[2]
+        for ad, t in (("açılış sonu", v.t_ac + KT.ACILIS_ORT + KT.ACILIS_DON), ("kapanış başı", v.t_kapan),
+                      ("çevirme başı", g), ("çevirme sonu", g + KT.CEVIR)):
+            kareler = [v.frame(t + k * dt_, grain=False) for k in (-2, -1, 0)]
+            once, gecis_ = fark(kareler[0], kareler[1]), fark(kareler[1], kareler[2])
+            with self.subTest(an=ad, once=round(once, 4), gecis=round(gecis_, 4)):
+                # geçiş karesindeki değişim önceki karenin hareketinden çok büyük değil (eskiden %2,8-3,9)
+                self.assertLessEqual(gecis_, max(once * 1.5, 0.015))
+
+    def test_kaynak_ilk_cumle_ciziciye_gecmez(self):
+        kb = KT.kitap_bilgisi({"kitap": dict(demo()["kitap"], kaynak_ilk_cumle="Gizli denetim cümlesi.")}, yil=2026)
+        self.assertNotIn("kaynak_ilk_cumle", kb)
+        self.assertNotIn("Gizli denetim cümlesi.", json.dumps(kb, ensure_ascii=False))
+
+
+def Image_bos(v):
+    """Kitap katmanları olmadan yalnız zemin ve filigran (kanca kesilirken karşılaştırma tabanı)."""
+    im = v.frame(v.t_ac + 3.0, grain=False)
+    return im
+
+
 def kitap_senaryosu():
     """Demo senaryo, içerik kalıbının gerçek modeliyle (script.ShortScript, KitapBilgi, Scene.kitap_* alanları)."""
     return S.load_script(DEMO)
@@ -606,6 +773,13 @@ class Birlesim(unittest.TestCase):
         self.assertEqual(P.pick_template(script, "kitap"), "kitap")
         diger = script.model_copy(update={"structure": "hikaye", "template": "kitap"})
         self.assertNotEqual(P.pick_template(diger), "kitap", "Claude önerse de kitap şablonu seçilmez")
+        # kitap senaryosu başka şablonla çizilmez (ornek.yml'nin varsayılanı kart, yeniden çizmede --template)
+        for elle in ("kart", "kolaj", "nasil"):
+            with mock.patch("sys.stdout"):
+                self.assertEqual(P.kalip_sablonu("kitap", P.pick_template(script, elle)), "kitap", elle)
+        self.assertEqual(P.kalip_sablonu("hikaye", "kart"), "kart")
+        self.assertEqual(P.kalip_sablonu("kitap", "kitap"), "kitap")
+        self.assertIsNone(P.kalip_sablonu("kitap", None))
 
     def test_build_kitap_cizicisine_gecirir(self):
         script = kitap_senaryosu()

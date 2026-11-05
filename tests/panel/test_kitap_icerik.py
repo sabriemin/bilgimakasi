@@ -36,6 +36,9 @@ def sahne(bolum, narration, sayfa="", vurgu="", **kw):
 
 
 ILK = "Gregor Samsa bir sabah huzursuz düşlerden uyandığında, kendini yatağında devasa bir böceğe dönüşmüş buldu."
+# kitabın gerçek ilk cümlesi (özgün dilde; yalnız denetim içindir, ekrana yazılmaz)
+KAYNAK = ("Als Gregor Samsa eines Morgens aus unruhigen Träumen erwachte, fand er sich in seinem Bett zu einem "
+          "ungeheueren Ungeziefer verwandelt.")
 # giris bölümünün sağ sayfası: kitabı tanıtan cümle (ilk cümle ya da künye sol sayfaya kendiliğinden basılır)
 GIRIS = "1915'te yayımlanan bu uzun öykü, edebiyatın en ünlü açılışlarından biriyle başlar."
 DONUSUM = {
@@ -46,7 +49,8 @@ DONUSUM = {
     "hashtags": ["dönüşümkafka", "kafka", "dönüşüm", "klasik", "bilgimakasi"],
     "sources": ["https://tr.wikipedia.org/wiki/Dönüşüm_(roman)"], "search_phrase": "Dönüşüm Kafka",
     "kitap": {"baslik": "Dönüşüm", "yazar": "Franz Kafka", "yil": 1915, "tur": "uzun öykü", "ozgun_dil": "Almanca",
-              "yazar_olum": 1924, "ilk_cumle": ILK, "amblem": "kapi", "kapak_rengi": "lacivert"},
+              "yazar_olum": 1924, "ilk_cumle": ILK, "amblem": "kapi", "kapak_rengi": "lacivert",
+              "ozgun_baslik": "Die Verwandlung", "kaynak_ilk_cumle": KAYNAK},
     "scenes": [
         sahne("giris", "Bir sabah uyanıyorsun ve dev bir böceğe dönüşmüşsün. Franz Kafka'nın Dönüşüm adlı kitabı tam "
                        "olarak böyle başlar.", GIRIS,
@@ -149,7 +153,7 @@ class KitapIcerik(unittest.TestCase):
                              "alıntısız tanıtım cümlesi kalır (sol sayfa künyedir)")
             self.assertNotIn("“", s.scenes[1].sayfa_metni)
             self.assertNotIn("Bu yorucu meslek", s.scenes[1].sayfa_metni)
-            self.assertEqual(s.scenes[1].sayfa_metni, "Gregor şöyle düşünür: ve yine de işe gitmek ister.")
+            self.assertEqual(s.scenes[1].sayfa_metni, "", "alıntı cümlesi bütünüyle çıkar (yarım cümle kalmaz)")
             self.assertEqual(s.scenes[3].sayfa_metni, "", "kitabın ilk cümlesini içeren sayfa boşalır")
             self.assertEqual(s.scenes[3].vurgu, "")
         # alıntının kaldığı tek parça (3 kelimeden az) sayfa boşalır
@@ -158,8 +162,11 @@ class KitapIcerik(unittest.TestCase):
         self.assertEqual(sc.normalize_kitap(s, year=2026).scenes[1].sayfa_metni, "")
         # giris sayfası da aynı kurala uyar: ilk cümle ya da tırnaklı alıntı sağ sayfaya yazılmaz
         for sayfa, beklenen in ((ILK, ""), ("Kitap şöyle başlar: " + ILK, ""),
-                                ("Kafka şöyle yazar: “Bu yorucu meslek beni bitirecek” ve öykü başlar.",
-                                 "Kafka şöyle yazar: ve öykü başlar.")):
+                                ("Kafka şöyle yazar: “Bu yorucu meslek beni bitirecek” ve öykü başlar.", ""),
+                                ("Bu öykü 1915'te çıktı. Kafka şöyle yazar: “Bu yorucu meslek beni bitirecek” ve öykü "
+                                 "başlar. Gregor bir pazarlamacıdır.", "Bu öykü 1915'te çıktı. Gregor bir pazarlamacıdır."),
+                                ("Kafka şöyle yazar: “Bu yorucu meslek beni bitirecek.” Gregor yine de işe gider.",
+                                 "Gregor yine de işe gider.")):
             s = self.senaryo(yazar_olum=0)
             s.scenes[0].sayfa_metni, s.scenes[0].vurgu = sayfa, ""
             s = sc.normalize_kitap(s, year=2026)
@@ -192,6 +199,106 @@ class KitapIcerik(unittest.TestCase):
         s.scenes[2].narration = 'Gregor "Bu yorucu meslek beni bitirecek" diye düşünür.'
         self.assertEqual(sc.kitap_alintilari(s, 2026), [], "kamu malı kitapta alıntı serbest")
         self.assertEqual(sc.kitap_alintilari(self.demo, 2026), [], "diğer kalıplar")
+
+    def test_eser_adlari_alinti_sayilmaz(self):
+        """Tırnaklı eser adları (özgün ad, film ya da başka eser, 'Ad: alt başlık', şapka ve ek farkı) üretimi durdurmaz;
+        tırnaklı cümle ya da söz aktarımı durdurur; cümle olmayan parçanın yalnız tırnağı kalkar."""
+        sc = self.sc
+        s = self.senaryo(yazar_olum=2016, baslik="Bülbülü Öldürmek", ozgun_baslik="To Kill a Mockingbird",
+                         ilk_cumle="", kaynak_ilk_cumle="When he was nearly thirteen, my brother Jem got his arm badly "
+                                                         "broken at the elbow.")
+        for metin in ("Romanın özgün adı “To Kill a Mockingbird” idi.",
+                      "Harper Lee'nin “Go Set a Watchman” adlı ikinci romanı 2015'te çıktı.",
+                      "Kitap “Bülbülü Öldürmek: Bir Amerikan Klasiği” adıyla yeniden basıldı.",
+                      "“Bülbülü Öldürmek”in filmi 1962'de çekildi.",
+                      "Hemingway'in “The Old Man and the Sea” adlı kitabı da o yıl ödül aldı.",
+                      "Film 'To Kill a Mockingbird' adıyla vizyona girdi."):
+            s.scenes[4].narration = metin
+            self.assertEqual(sc.kitap_alintilari(s, 2026), [], metin)
+        s.scenes[4].narration = "Kitap “Bulbulu Oldurmek” değil, “Bülbülü Öldürmek” diye yazılır."
+        self.assertEqual(sc._alintilar(s.scenes[4].narration, ("Bülbülü Öldürmek",)), [])
+        self.assertEqual(sc._alintilar("Roman “Saatleri Ayarlama Enstitüsü”dür.", ("Saatleri Âyarlama Enstitüsü",)), [])
+        # cümle ya da söz aktarımı durdurur
+        for metin, beklenen in (("Atticus der ki: “Birini anlamak için onun yerine geçmelisin”.", "“Birini"),
+                                ("Scout “Bu kasabada herkes birbirini tanır.” diye anlatır.", "“Bu kasabada")):
+            s.scenes[4].narration = metin
+            bulunan = sc.kitap_alintilari(s, 2026)
+            self.assertEqual(len(bulunan), 1, metin)
+            self.assertIn(beklenen, bulunan[0])
+        # cümle olmayan parça: tırnağı kalkar, doğrulayıcıya bildirilir, üretim durmaz
+        s.scenes[4].narration = "Kitap “küçük bir kasabanın sessiz önyargıları” üzerine kuruludur."
+        self.assertEqual(sc.kitap_alintilari(s, 2026), [])
+        self.assertIn("kamu malı olmayan kitapta alıntı (çıkar, dolaylı anlat): 5. sahnenin dış sesi: "
+                      "“küçük bir kasabanın sessiz önyargıları”", sc.kitap_sorunlari(s, 2026))
+        sc.normalize_kitap(s, 2026)
+        self.assertEqual(s.scenes[4].narration, "Kitap küçük bir kasabanın sessiz önyargıları üzerine kuruludur.")
+
+    def test_tek_tirnakli_alinti_ve_kaynak_ilk_cumle(self):
+        """Düz tek tırnaklı alıntı da yakalanır (ek ayıran kesme işareti tırnak sayılmaz); kamu malı olmayan kitapta
+        ilk_cumle boş olsa da kaynak_ilk_cumle (kitabın gerçek ilk cümlesi) dış seste, sayfada, başlıkta ve açıklamada
+        aranır."""
+        sc = self.sc
+        cumle = "Ben şimdi bir ölüyüm, bir kuyunun dibinde bir cesedim."
+        s = self.senaryo(yazar_olum=0, baslik="Benim Adım Kırmızı", ilk_cumle="", kaynak_ilk_cumle=cumle)
+        s.scenes[1].narration = f"Roman '{cumle}' cümlesiyle açılır."
+        s.scenes[1].sayfa_metni = f"Roman '{cumle}' cümlesiyle açılır. Bir nakkaş kaybolur."
+        s.title = f"'{cumle}'"
+        s.description = f"Pamuk'un romanı '{cumle}' diye başlar."
+        bulunan = sc.kitap_alintilari(s, 2026)
+        for yer in ("2. sahnenin dış sesi: '", "2. sahnenin sayfa metni: '", "başlık: '", "açıklama: '"):
+            self.assertTrue(any(b.startswith(yer) for b in bulunan), (yer, bulunan))
+        sc.normalize_kitap(s, 2026)
+        self.assertEqual(s.scenes[1].sayfa_metni, "Bir nakkaş kaybolur.", "alıntı cümlesi sayfadan bütünüyle çıkar")
+        # kesme işaretli ekler tırnak değildir
+        self.assertEqual(sc._alintilar("Kafka'nın 'böcek' sözü ve Brod'un Kafka'yı kurtarışı Dönüşüm'ü yaşattı."), [])
+        # tırnaksız kaynak ilk cümle (tamamı ya da ilk 8 kelimesi) da durdurur
+        for metin in (cumle, "Ben şimdi bir ölüyüm, bir kuyunun dibinde bir... diye başlar."):
+            t = self.senaryo(yazar_olum=0, baslik="Benim Adım Kırmızı", ilk_cumle="", kaynak_ilk_cumle=cumle)
+            t.scenes[0].narration = metin
+            self.assertIn("1. sahnenin dış sesi: kitabın ilk cümlesi", sc.kitap_alintilari(t, 2026), metin)
+        t = self.senaryo(yazar_olum=0, ilk_cumle="", kaynak_ilk_cumle=cumle)
+        t.scenes[0].sayfa_metni = cumle
+        self.assertEqual(sc.normalize_kitap(t, 2026).scenes[0].sayfa_metni, "")
+        self.assertEqual(sc.kitap_alintilari(self.senaryo(kaynak_ilk_cumle=cumle), 2026), [], "kamu malı kitap")
+
+    def test_telif_durunca_hata_turu_ve_not(self):
+        """Telif durdurması KitapTelifHatasi'dır (RuntimeError); pipeline.main kısa notu Telegram için yazar."""
+        sc, pl = self.sc, self.pl
+        s = self.senaryo(yazar_olum=0)
+        s.scenes[2].narration = 'Gregor "Bu yorucu meslek beni bitirecek" diye düşünür.'
+        with self.assertRaises(sc.KitapTelifHatasi) as hata:
+            self.uret(s, structure="kitap")
+        self.assertIsInstance(hata.exception, RuntimeError)
+        self.assertEqual(hata.exception.konu, s.topic)
+        self.yama(pl, "TELIF_DURDU", self.tmp / "out" / "telif_durdu.txt")
+        pl._telif_durdu_yaz(hata.exception)
+        not_ = (self.tmp / "out" / "telif_durdu.txt").read_text(encoding="utf-8")
+        self.assertIn("telif kuralı yüzünden durdu", not_)
+        self.assertIn("Bu yorucu meslek", not_)
+        y = (REPO / ".github" / "workflows" / "uret.yml").read_text(encoding="utf-8")
+        self.assertIn("python -m shortgen.telegram_bot durdu output/telif_durdu.txt", y)
+        self.assertLess(y.index("telegram_bot durdu"), y.index("Hata olursa senaryoyu"))
+        tg = (REPO / "shortgen" / "telegram_bot.py").read_text(encoding="utf-8")
+        self.assertIn('sys.argv[1] == "durdu"', tg)
+        # eser adı geçen senaryo üretimi durdurmaz
+        s = self.senaryo(yazar_olum=0, ozgun_baslik="Die Verwandlung")
+        s.scenes[4].narration = "Kitabın özgün adı “Die Verwandlung” idi; Kafka kapağa böcek çizilmesini istemedi."
+        out, _, _ = self.uret(s, structure="kitap")
+        self.assertIn("“Die Verwandlung”", out.scenes[4].narration)
+
+    def test_kaptan_kanca_silinmez(self):
+        """Yalnız 'KANCA' etiketi silinir; cümle içindeki gerçek kelime (Peter Pan'daki Kaptan Kanca) kalır."""
+        sc = self.sc
+        s = self.senaryo(baslik="Peter Pan", yazar="J. M. Barrie", yazar_olum=1937, ilk_cumle="")
+        sayfa = "Wendy ve kardeşleri, Kaptan Kanca'nın korsanlarıyla dolu bir adaya uçar."
+        s.scenes[1].sayfa_metni, s.scenes[1].vurgu = sayfa, "Kaptan Kanca'nın korsanlarıyla"
+        s.scenes[1].headline, s.scenes[1].kicker = ["KAPTAN KANCA", "VE KORSANLAR"], "KAPTAN KANCA"
+        s.scenes[0].headline, s.scenes[0].highlight_line = ["KANCA", "PETER PAN"], 1
+        s = sc.normalize_kitap(s, year=2026)
+        self.assertEqual((s.scenes[1].sayfa_metni, s.scenes[1].vurgu), (sayfa, "Kaptan Kanca'nın korsanlarıyla"))
+        self.assertEqual((s.scenes[1].headline, s.scenes[1].kicker), (["KAPTAN KANCA", "VE KORSANLAR"], "KAPTAN KANCA"))
+        self.assertEqual((s.scenes[0].headline, s.scenes[0].highlight_line), (["PETER PAN"], 0))
+        self.assertEqual(sc._kancasiz("KANCA - Peter Pan"), "Peter Pan")
 
     # ------------------------------------------------------------ bölüm düzeni
     def test_bolum_sirasi_onarilir(self):
@@ -270,7 +377,7 @@ class KitapIcerik(unittest.TestCase):
         s.scenes[0].headline, s.scenes[0].highlight_line = ["KANCA", "DÖNÜŞÜM", "KAFKA"], 2
         s.scenes[0].kicker = "KANCA"
         s.scenes[1].sayfa_metni = "KANCA: " + s.scenes[1].sayfa_metni
-        s.scenes[1].vurgu = "kanca işe geç kalmayı"
+        s.scenes[1].vurgu = "KANCA: işe geç kalmayı"
         s = self.sc.normalize_kitap(s, year=2026)
         self.assertEqual(s.scenes[0].narration, DONUSUM["scenes"][0]["narration"])
         self.assertEqual((s.scenes[0].headline, s.scenes[0].highlight_line), (["DÖNÜŞÜM", "KAFKA"], 1))
@@ -334,7 +441,13 @@ class KitapIcerik(unittest.TestCase):
         self.assertEqual(sc.kitap_sorunlari(sc.normalize_kitap(self.senaryo(), year=2026), 2026), [])
         kisa = self.senaryo()
         kisa.scenes[2].narration = "Kapı kapalıdır."
-        self.assertEqual(sc.kitap_sorunlari(kisa, 2026), ["toplam dış ses 70 kelime (75-90 olmalı)"])
+        kisa.scenes[4].narration = "Kafka kapakta böcek istemedi."
+        self.assertEqual(sc.kitap_sorunlari(kisa, 2026), ["toplam dış ses 60 kelime (65-80 olmalı, en çok 82)"])
+        uzun = self.senaryo()
+        uzun.scenes[2].narration += " Ama kapı kilitli, anahtar içeride ve Gregor'un küçük bacakları kilidi çevirmeye yetmiyor."
+        self.assertEqual(sc.kitap_sorunlari(uzun, 2026), ["toplam dış ses 91 kelime (65-80 olmalı, en çok 82)"],
+                         "30-38 saniyeyi aşan senaryo")
+        self.assertIn("kitap.kaynak_ilk_cumle boş", sc.kitap_sorunlari(self.senaryo(kaynak_ilk_cumle=""), 2026)[0])
         s = self.senaryo(yazar_olum=0)
         s.kitap = None
         s.scenes[3].kitap_bolum = "giris"
@@ -358,7 +471,8 @@ class KitapIcerik(unittest.TestCase):
         self.assertEqual(sc.kalip_kurallari("kitap", True), "\n" + sc.KITAP_RULES)
         k = sc.KITAP_RULES
         for parca in ("giris → konu → fikir → bilgi → soru", "her bölüm 1-2 sahne", "Sahne sayısı 5-8",
-                      "en fazla 22 kelime", "HARFİ HARFİNE", "75-90 kelime", "30-38 saniye", "SÜRPRİZ YOK",
+                      "en fazla 22 kelime", "HARFİ HARFİNE", "65-80 kelime, 82'yi GEÇMESİN", "30-38 saniye", "SÜRPRİZ YOK",
+                      "kaynak_ilk_cumle (HER kitapta", "ozgun_baslik",
                       "yayınevi kapakları, yayınevi görselleri ve yayımlanmış çeviriler KULLANILMAZ",
                       f"yazarı {sc.YIL - 71} ya da daha önce ölmüşse", "KENDİ kısa", "İLK CÜMLE (alıntı yoksa KÜNYE)",
                       "HİÇBİR\n  alıntı yoktur", "Okudun mu? Yorumlara yaz.", "kitap kapağı, baskı, film afişi",
@@ -416,7 +530,7 @@ class KitapIcerik(unittest.TestCase):
         self.assertIn("- kitap: " + sc.STRUCTURES["kitap"][1], cagri[0][2])
         self.assertIn("ANLATIM KALIBI (SABİT)", cagri[0][2])
         self.assertIn("yazarın ölüm yılı (kamu malı kararı buna bağlı)", cagri[0][2])
-        for parca in ("yazar_olum; yaşıyorsa 0", f"yazar {sc.YIL - 71} ya da daha önce ölmemişse", "75-90 kelime",
+        for parca in ("yazar_olum; yaşıyorsa 0", f"yazar {sc.YIL - 71} ya da daha önce ölmemişse", "65-80 kelime",
                       "ilk perdeden sonraki dönüşleri", sc.KITAP_YASAK, '"kitap_bolum": "giris"', '"sayfa_metni"'):
             self.assertIn(parca, cagri[1][2])
         self.assertNotIn("Kitap kurallarında bulunan sorunlar", cagri[1][2], "kurallara uyan senaryo")
@@ -429,11 +543,12 @@ class KitapIcerik(unittest.TestCase):
         # kural dışı senaryo: sorunlar doğrulayıcıya gider, düzelmezse günlükte görünür
         kisa = self.senaryo()
         kisa.scenes[2].narration = "Kapı kapalıdır."
+        kisa.scenes[4].narration = "Kafka kapakta böcek istemedi."
         kisa.scenes[2].kitap_bolum = "soru"
         _, cagri, gunluk = self.uret(kisa, structure="kitap")
-        self.assertIn("Kitap kurallarında bulunan sorunlar (düzelt): toplam dış ses 70 kelime (75-90 olmalı); "
+        self.assertIn("Kitap kurallarında bulunan sorunlar (düzelt): toplam dış ses 60 kelime (65-80 olmalı, en çok 82); "
                       "kitap_bolum sırası bozuk (giris, konu, soru, fikir, bilgi, soru)", cagri[1][2])
-        self.assertIn("UYARI kitap: toplam dış ses 70 kelime (75-90 olmalı)", gunluk)
+        self.assertIn("UYARI kitap: toplam dış ses 60 kelime (65-80 olmalı, en çok 82)", gunluk)
         self.assertNotIn("UYARI kitap: kitap_bolum", gunluk, "bölüm sırası kodda düzelir")
 
     def test_dogrulayici_ve_editor_kitap_alanlarini_korur(self):

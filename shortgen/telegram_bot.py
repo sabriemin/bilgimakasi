@@ -1336,6 +1336,9 @@ if __name__ == "__main__":
         duzelt(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "", " ".join(sys.argv[4:]))
     elif sys.argv[1] == "notify":
         notify(Path(sys.argv[2]), sys.argv[3])
+    elif sys.argv[1] == "durdu":  # uret.yml: üretim telif kuralı yüzünden durdu (pipeline'ın yazdığı kısa not)
+        _durdu = Path(sys.argv[2]).read_text(encoding="utf-8").strip()
+        api("sendMessage", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": _cut16("⛔ " + _durdu, 4096)})
     elif sys.argv[1] == "preview":  # ornek.yml: yalnız göz atmak için, onaysız ve kayıtsız
         preview(Path(sys.argv[2]), " ".join(sys.argv[3:]))
     elif sys.argv[1] == "poll":

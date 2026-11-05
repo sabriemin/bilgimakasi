@@ -17,8 +17,10 @@ Senaryo eşlemesi (veri sözleşmesi; alanlar getattr/dict ile okunur, demo JSON
   kalemle işaretlenen parçası, "mascot": Makas'ın ifadesi}. Art arda aynı bölümdeki sahneler aynı sayfa çiftinde kalır;
   bölüm geri gidemez (geri giden sahne o anki bölümde kalır); ilk sahne her zaman giriş, son sahne soru (kitap kapanır).
   Hiç bölüm yazılmamışsa aradakiler sırayla konu / fikir / bilgi olur. Sekmeler videodaki bölümlerdir.
-  Sağ sayfa metni dar yüzle (Oswald) 46-40 px, dengeli satırlarla yazılır (sütun 403 px: Türkçe uzun kelimelerle
-  satırda 2-4 kelime); ilk cümle Playfair Display ile en az 40 px; küçük etiketler Courier, yırtık etiketler Anton.
+  Sağ sayfa metni dar yüzle (Oswald) 46-36 px, dengeli satırlarla yazılır (sütun 411 px; satırda en az 3 kelime: 3'ten
+  az kelimeli satırı en az olan boyut seçilir); ilk cümle Playfair Display ile en az 40 px (yalnız kamu malı kitabın
+  gerçek ilk cümlesi tırnakla ve Playfair ile yazılır; FİKİR sayfasındaki vurgu kendi notumuzdur: tırnaksız, Oswald,
+  fosforlu kalem bandıyla); küçük etiketler Courier, yırtık etiketler Anton.
 
 Ekran düzeni (1080x1920). Yazı ve ana öğeler x <= 935 ve y 240-1540 içinde (y 120-228 filigranın yeri):
   kanca (kapak)  245-335 seri etiketi (BİR KİTAP + BİR DAKİKA, #04) · 360-650 kanca başlığı · altta kapalı kitabın ön
@@ -103,7 +105,7 @@ CUKUR = 12                                 # sırtta sayfaların çukurlaşması
 STACK = 4                                  # sayfa yığınında bir yaprağın kalınlığı
 BOT = TOP + PH
 REGION = (0, 380, 940, 1420)               # kitap katmanlarının tuvali
-TX0, TX1 = 26, PW - 18                     # sağ sayfa metin sütunu (sayfa koordinatı, 403 px)
+TX0, TX1 = 26, PW - 10                     # sağ sayfa metin sütunu (sayfa koordinatı, 411 px)
 TY0, TY1 = 112, PH - 66
 MASKOT = (792, 1366, 0.54)                 # Makas gövde merkezi ve ölçeği (bütün karelerde aynı yer)
 YIGIN_Y = MASKOT[1] + 132 * MASKOT[2]      # kitap yığınının üstü
@@ -116,12 +118,15 @@ KART_KANCA = (590, 930)                    # kütüphane kartının x aralığı
 SON_K = 1.12
 SON_CX = 452
 # süreler (sn)
-ACILIS_GEC, ACILIS_KAY = 0.12, 0.40        # makas kancayı kesmeye başladıktan sonra kitap yerine kayar
+ACILIS_GEC, ACILIS_KAY = 0.12, 0.26        # makas kancayı kesmeye başladıktan sonra kitap yerine kayar (kayma
+#                                            kapak açılmadan biter; aradaki kısa sürede kapalı kitap açık kitabın sağ
+#                                            yarısına yumuşakça geçer)
 ACILIS_ORT, ACILIS_DON = 0.44, 0.62        # kapak bu anda (açılışın başından) açılmaya başlar
 CEVIR = 0.78                               # sayfa çevirme
 KAPAN, SON_KAY = 0.78, 0.42                # kitap kapanır, ortaya kayar
 YAZ_HIZ = 0.045                            # dış ses önden gittiyse sayfa kelimeleri bu aralıkla yazılır
 KALEM = 0.38                               # fosforlu kalemin vurguyu çizmesi
+KANCA_KES = (0, 240, SAFE[2], SAFE[3])     # kanca kesilirken parçalar filigranın (y 120-228) üstüne çıkmaz
 
 
 def up(s: str) -> str:
@@ -130,6 +135,26 @@ def up(s: str) -> str:
 
 def low(s: str) -> str:
     return K.tr_lower((s or "").strip())
+
+
+def turkce_ozgun(dil: str) -> bool:
+    """Kitabın özgün dili Türkçe mi (Osmanlı Türkçesi dahil): o zaman çeviri notu ve "... aslından" satırı basılmaz."""
+    d = low(dil)
+    return d.startswith("türk") or d.startswith("turk") or d.startswith("osmanlı")
+
+
+def osmanlica(dil: str) -> bool:
+    d = low(dil)
+    return d.startswith("osmanlı") or "osmanlı" in d
+
+
+def dengeli_satirlar(text: str, font: str, size: float, width: float) -> list[str]:
+    """Metni dengeli satırlara böler (dengeli: tek kelimelik ve çok kısa son satır bırakmaz)."""
+    toks = (text or "").split()
+    if not toks:
+        return []
+    ws = [tw(x, font, size) for x in toks]
+    return [" ".join(toks[i:j]) for i, j in dengeli(ws, tw(" ", font, size), width)]
 
 
 def cap_h(font: str, size: float) -> float:
@@ -300,9 +325,10 @@ def _norm(w: str) -> str:
     return re.sub(r"[^\wçğıöşü]", "", low(w).replace("'", "").replace("’", ""))
 
 
-def dengeli(widths: list[float], sp: float, M: float) -> list[tuple[int, int]]:
+def dengeli(widths: list[float], sp: float, M: float, az: int = 0) -> list[tuple[int, int]]:
     """Satır sayısını artırmadan en dengeli sarma (tek kelimelik satır yok; gerekirse bir satır fazla). Satırlar
-    (i, j) kelime aralıkları."""
+    (i, j) kelime aralıkları. az > 0: az kelimeden kısa satır (tek kelime dışında da) cezalandırılır (sağ sayfada
+    satırda en az 3 kelime)."""
     n = len(widths)
     if not n:
         return []
@@ -336,6 +362,8 @@ def dengeli(widths: list[float], sp: float, M: float) -> list[tuple[int, int]]:
                     c = ((M - min(w, M)) / M) ** 2 * 100
                     if j - i == 1 and n >= 3 and not (w > M * 0.62):
                         c += 1000              # tek kelimelik satır (kelime tek başına uzun değilse)
+                    elif az and 1 < j - i < az and n >= az:
+                        c += 120               # az kelimeli satır
                     if dp[k - 1][i] + c < dp[k][j]:
                         dp[k][j], bk[k][j] = dp[k - 1][i] + c, i
         if dp[L][n] == INF:
@@ -368,7 +396,7 @@ class SayfaMetni:
     bırakmayan ilk boyut), dengeli satırlar, kelimelerin dış sese göre belirme anları ve vurgunun fosforlu kalem
     aralıkları. Paragraflar 40 px'te de sayfaya sığmazsa gruplara bölünür: yeni grubun ilk kelimesi yazılınca sayfa
     temizlenir ve grup baştan yazılır (yazı hiçbir zaman küçülmez ya da sayfadan taşmaz)."""
-    SIZES = (46, 44, 42, 40)
+    SIZES = (46, 44, 42, 40, 38, 36)
     LH = 1.2
 
     def __init__(self, paras: list[Paragraf], words: list[Word], reveal: float, width: float = TX1 - TX0,
@@ -385,7 +413,7 @@ class SayfaMetni:
     def _wrap(self, text: str, size: float) -> list[list[str]]:
         toks = text.split()
         ws = [tw(t, self.font, size) for t in toks]
-        return [toks[i:j] for i, j in dengeli(ws, tw(" ", self.font, size), self.width)]
+        return [toks[i:j] for i, j in dengeli(ws, tw(" ", self.font, size), self.width, az=3)]
 
     def _fit(self):
         adaylar = []
@@ -395,10 +423,12 @@ class SayfaMetni:
             h = nl * size * self.LH + max(0, len(lines) - 1) * size * 0.5
             tek = [L for p in lines for L in p if len(L) == 1 and len(p) > 1]
             kisa_tek = sum(1 for L in tek if tw(L[0], self.font, size) < self.width * 0.62)
+            # 3'ten az kelimeli satır (paragrafın tek satırı ya da kelimeleri 3'ten azsa sayılmaz)
+            az = sum(1 for p in lines for L in p if len(L) < 3 and sum(len(x) for x in p) >= 3 and len(p) > 1)
             wide = all(tw(" ".join(L), self.font, size) <= self.width + 0.5 for p in lines for L in p)
             if h <= self.height and wide:
-                adaylar.append(((kisa_tek, len(tek), -size), size, lines))
-        if adaylar:     # önce kısa tek kelimelik satır, sonra her tek kelimelik satır en az; eşitse en büyük boyut
+                adaylar.append(((kisa_tek, az, len(tek), -size), size, lines))
+        if adaylar:     # önce kısa tek kelimelik satır, sonra 3'ten az kelimeli satır en az; eşitse en büyük boyut
             _, size, lines = min(adaylar, key=lambda a: a[0])
             return size, lines, [list(range(len(self.paras)))]
         # sığmıyor: en küçük boyutta paragraflar sırayla gruplara; tek başına sığmayan paragrafın fazla satırı atılır
@@ -935,19 +965,36 @@ def kapak_arka(kb: dict, blurb: str, k: float = 1.0) -> Image.Image:
     pen.rr((m, m, PW - sirt - m + 6, PH - m), 6, outline=c["vurgu"], width=3)
     cx = (PW - sirt) / 2
     inner = PW - sirt - 2 * m - 34
-    ust = up(" · ".join(x for x in (kb["yazar"], kb["baslik"]) if x))
-    fs = _yazi_sigdir(ust, "courier", inner, 22, 15)
-    pen.text(cx, 78, K.fit(ust, "courier", fs, inner), "courier", fs, c["vurgu"], anchor="ms")
-    pen.rr((cx - 56, 94, cx + 56, 97), 1, fill=c["vurgu"])
-    if blurb:       # soru: y 118-340 arası (altında OKUDUN MU? etiketi durur), dengeli satırlar, en büyük boyut
+    # üstte yazar ve başlık ayrı satırlarda: başlık hiç kısalmaz (sığmazsa iki dengeli satır), yazar gerekirse kısalır
+    yazar, baslik = up(kb["yazar"]), up(kb["baslik"])
+    fb = _yazi_sigdir(baslik, "courier", inner, 22, 15)
+    bas_satir = [baslik] if tw(baslik, "courier", fb) <= inner else dengeli_satirlar(baslik, "courier", fb, inner)
+    if len(bas_satir) > 1:
+        fb = max(15, min(fb, 18))
+        bas_satir = dengeli_satirlar(baslik, "courier", fb, inner)
+    fy = min(fb, _yazi_sigdir(yazar, "courier", inner, 20, 15)) if yazar else 0
+    y = 52
+    if yazar and len(bas_satir) < 3:
+        y += cap_h("courier", fy)
+        pen.text(cx, y, K.fit(yazar, "courier", fy, inner), "courier", fy, blend(c["vurgu"], c["zemin"], 0.25),
+                 anchor="ms")
+        y += fy * 0.7
+    for L in bas_satir:
+        y += fb * 1.25
+        pen.text(cx, y, L, "courier", fb, c["vurgu"], anchor="ms")
+    y += 14
+    pen.rr((cx - 56, y, cx + 56, y + 3), 1, fill=c["vurgu"])
+    b_ust = y + 21
+    b_h = 340 - b_ust
+    if blurb:       # soru: başlığın altından y 340'a kadar (altında OKUDUN MU? etiketi durur), dengeli satırlar
         toks = blurb.split()
         for size in range(56, 29, -2):
             ws = [tw(x, GOVDE, size) for x in toks]
             rows = dengeli(ws, tw(" ", GOVDE, size), inner)
-            if len(rows) * size * 1.18 <= 222 and all(tw(" ".join(toks[i:j]), GOVDE, size) <= inner for i, j in rows):
+            if len(rows) * size * 1.18 <= b_h and all(tw(" ".join(toks[i:j]), GOVDE, size) <= inner for i, j in rows):
                 break
         lines = [" ".join(toks[i:j]) for i, j in rows][:5]
-        y = 118 + (222 - len(lines) * size * 1.18) / 2
+        y = b_ust + (b_h - len(lines) * size * 1.18) / 2
         for L in lines:
             pen.text(cx, y + cap_h(GOVDE, size), L, GOVDE, size, c["yazi"], anchor="ms")
             y += size * 1.18
@@ -1001,6 +1048,19 @@ def bukum(im: Image.Image, taraf: str) -> Image.Image:
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGBA")
 
 
+def sirt_golgesi(im: Image.Image, taraf: str, a: float) -> Image.Image:
+    """Düz sayfaya bukum'daki sırt gölgesini a oranında uygular (çevrilen yaprak sayfanın yerinden kalkarken ve yerine
+    inerken duran sayfayla aynı görünsün)."""
+    if a <= 0.003:
+        return im
+    arr = np.asarray(im.convert("RGBA"), dtype=np.float32).copy()
+    w = arr.shape[1]
+    d = (w - 1 - np.arange(w, dtype=np.float32)) if taraf == "sol" else np.arange(w, dtype=np.float32)
+    shade = 1 - 0.20 * min(1.0, a) * np.clip(1 - d / 70, 0, 1) ** 1.6
+    arr[..., :3] *= shade[None, :, None]
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
+
+
 def kenar_noktalari(taraf: str, top: float = TOP, x0: float = None) -> list[tuple[float, float]]:
     """Bükülmüş sayfanın dış çizgisi (üst kenar soldan sağa, alt kenar sağdan sola)."""
     x0 = (X_SOL if taraf == "sol" else GX) if x0 is None else x0
@@ -1015,10 +1075,12 @@ def kenar_noktalari(taraf: str, top: float = TOP, x0: float = None) -> list[tupl
 
 # ---------------------------------------------------------------- sayfa çevirme (sütun sütun perspektif)
 def cevir(lay: Image.Image, origin, on: Image.Image, arka: Image.Image, theta: float, top: float = TOP,
-          gx: float = GX, kivrim: float = 30.0, D: float = 4200.0, golge: bool = True) -> None:
+          gx: float = GX, kivrim: float = 30.0, D: float = 4200.0, golge: bool = True, bukum_k: float = 0.0) -> None:
     """Sırt (gx) etrafında dönen yaprağı lay (origin'de duran bölge katmanı) üstüne çizer. theta 0: sağda düz, 180:
     solda düz. Yaprağın üst kenarı sayfanın üst kenarında sabittir (perspektif yalnız aşağı büyütür): çevrilen sayfa
-    sekme sırasının üstüne hiç çıkmaz. Ön yüz cos(phi) > 0 iken, arka yüz (aynalanmış sırayla) sonra görünür."""
+    sekme sırasının üstüne hiç çıkmaz. Ön yüz cos(phi) > 0 iken, arka yüz (aynalanmış sırayla) sonra görünür.
+    bukum_k: yaprağın sırta yakın kenarının duran sayfadaki gibi aşağı bükülme oranı (0 düz, 1 bukum kadar): yaprak
+    yerinden kalkarken ve yerine inerken duran sayfayla aynı görünür."""
     ox, oy = origin
     on_a = np.asarray(on.convert("RGBA"))
     arka_a = np.asarray(arka.convert("RGBA"))
@@ -1028,6 +1090,7 @@ def cevir(lay: Image.Image, origin, on: Image.Image, arka: Image.Image, theta: f
     xs = np.concatenate([[0], np.cumsum(np.cos(phi[:-1]))])
     zs = np.concatenate([[0], np.cumsum(np.sin(phi[:-1]))])
     s = D / (D - zs)
+    boff = bukum_k * CUKUR * (1 - r / Wp) ** 3          # sırttan uzaklığa göre aşağı bükülme (her iki yüzde de)
     cx = W / 2
     X = cx + (gx + xs - cx) * s
     out = np.asarray(lay).copy()
@@ -1054,7 +1117,7 @@ def cevir(lay: Image.Image, origin, on: Image.Image, arka: Image.Image, theta: f
         front = cosp[i] > 0
         src = on_a[:, i] if front else arka_a[:, Wp - 1 - i]
         h = Hp * s[i]
-        y0 = top - oy
+        y0 = top - oy + boff[i]
         ys0, ys1 = max(0, int(y0)), min(LH_, int(math.ceil(y0 + h)))
         if ys1 <= ys0:
             continue
@@ -1068,8 +1131,9 @@ def cevir(lay: Image.Image, origin, on: Image.Image, arka: Image.Image, theta: f
         out[ys0:ys1, lo:hi] = dst.astype(np.uint8)
     res = Image.fromarray(out, "RGBA")
     d = ImageDraw.Draw(res)
-    tp = [(X[i] - ox, top - oy) for i in range(0, Wp + 1, 3)] + [(X[Wp] - ox, top - oy)]
-    bp = [(X[i] - ox, top + Hp * s[i] - oy) for i in range(0, Wp + 1, 3)] + [(X[Wp] - ox, top + Hp * s[Wp] - oy)]
+    tp = [(X[i] - ox, top - oy + boff[i]) for i in range(0, Wp + 1, 3)] + [(X[Wp] - ox, top - oy + boff[Wp])]
+    bp = ([(X[i] - ox, top + Hp * s[i] - oy + boff[i]) for i in range(0, Wp + 1, 3)]
+          + [(X[Wp] - ox, top + Hp * s[Wp] - oy + boff[Wp])])
     d.line(tp, fill=INK, width=5, joint="curve")
     d.line(bp, fill=INK, width=5, joint="curve")
     d.line([tp[-1], bp[-1]], fill=INK, width=5)
@@ -1224,9 +1288,9 @@ class KitapVideo:
         y0 = SAFE[1]
         lay = Image.new("RGBA", (SAFE[2], SAFE[3] - SAFE[1]), (0, 0, 0, 0))
         boxes = []
-        seri, sb = self.seri_katmani(70)
-        K._comp(lay, seri, 0, 292 - 100 - y0)
-        boxes += [(n, (b[0], b[1] + 192, b[2], b[3] + 192)) for n, b in sb]
+        seri, sb = self.seri_katmani(70)     # yırtık üst kenarı y 240'ın altında kalsın (filigran payı)
+        K._comp(lay, seri, 0, 302 - 100 - y0)
+        boxes += [(n, (b[0], b[1] + 202, b[2], b[3] + 202)) for n, b in sb]
         g = self.bolumler[0]
         lines = g.headline or [up(self.kb["baslik"])]
         lines = lines[:3]
@@ -1288,11 +1352,14 @@ class KitapVideo:
         cy = 330 - 230
         ortala(lay, im, 70 + lw / 2, cy)
         boxes = [(f"manşet {text}", (70, 330 - lh / 2, 70 + lw, 330 + lh / 2))]
-        if b.ad == "konu" and 70 + lw + 20 < 690:
+        if b.ad == "konu":  # 'spoiler yok' rozeti: manşetin sağına sığmazsa sağ üst köşesine çıkartma gibi yapışır
             r, rw, rh = etiket("spoiler yok", 30, INK, YELLOW, 61, -5, font="courier")
-            rx = min(905 - rw / 2, 70 + lw + 30 + rw / 2)
-            ortala(lay, r, rx, 274 - 230)
-            boxes.append(("rozet", (rx - rw / 2, 274 - rh / 2, rx + rw / 2, 274 + rh / 2)))
+            if 70 + lw + 24 + rw <= 905:
+                rx, ry = 70 + lw + 24 + rw / 2, 330 - lh / 2 + rh / 2 + 4
+            else:
+                rx, ry = min(905 - rw / 2, 70 + lw - rw * 0.3), max(244 + rh / 2, 330 - lh / 2 - rh * 0.15)
+            ortala(lay, r, rx, ry - 230)
+            boxes.append(("rozet", (rx - rw / 2, ry - rh / 2, rx + rw / 2, ry + rh / 2)))
         self._c[key] = (lay, boxes)
         return self._c[key]
 
@@ -1309,7 +1376,8 @@ class KitapVideo:
             rows.append(("Yıl", " · ".join(x for x in (str(kb["yil"]) if kb["yil"] else "", low(kb["tur"])) if x)))
         rows = [(a, b) for a, b in rows if b]
         pad, head, step = 22, 52, 48
-        lab_w = max(tw(a + ":", "courier", 24) for a, _ in rows) + 14 if rows else 0
+        lab_fs = 21 if cw < 400 else 24                 # dar kartta etiket sütunu daralır (değere yer kalsın)
+        lab_w = max(tw(a + ":", "courier", lab_fs) for a, _ in rows) + 10 if rows else 0
         room = cw - 2 * pad - lab_w
         satirlar = []                                   # (etiket, değer satırları, boyut)
         for a, bval in rows:
@@ -1318,11 +1386,14 @@ class KitapVideo:
                 fs -= 1
             if tw(bval, "courier", fs) <= room:
                 satirlar.append((a, [bval], fs))
-            else:                                       # iki satır (ikincisi sığmazsa kısalır)
-                fs = 22
+                continue
+            for fs in (22, 20, 18):                     # en çok üç satır; ad ve yazar kısalmaz
                 parca = [" ".join(x) for x in K.wrap(bval, "courier", fs, room)]
-                ikinci = " ".join(parca[1:])
-                satirlar.append((a, [K.fit(parca[0], "courier", fs, room), K.fit(ikinci, "courier", fs, room)], fs))
+                if len(parca) <= 3 and all(tw(x, "courier", fs) <= room for x in parca):
+                    break
+            if len(parca) > 3:                          # son çare: üçüncü satır kısalır
+                parca = parca[:2] + [K.fit(" ".join(parca[2:]), "courier", fs, room)]
+            satirlar.append((a, parca, fs))
         ch = head + 16 + sum(step + 28 * (len(v) - 1) for _, v, _ in satirlar) + (70 if damga else 6) + pad
         sp = K.Sprite(cw, ch, margin=40)
         sp.polygon([(0, 0), (cw, 0), (cw, ch), (0, ch)], OFF + (255,))
@@ -1532,7 +1603,8 @@ class KitapVideo:
         elif tur == "yil":
             boxes += self._sol_buyuk(pen, L, R, str(self.kb["yil"]), "İLK YAYIN",
                                      [x for x in (low(self.kb["tur"]), f"{self.kb['ozgun_dil']} aslından"
-                                                  if self.kb["ozgun_dil"] else "") if x])
+                                                  if self.kb["ozgun_dil"] and not turkce_ozgun(self.kb["ozgun_dil"])
+                                                  else "") if x])
         elif tur.startswith("sayi:"):
             ust, alt = tur[5:].split("|", 1)
             boxes += self._sol_buyuk(pen, L, R, ust, "NOT ET", [alt] if alt else [], ikinci=bool(alt))
@@ -1579,13 +1651,13 @@ class KitapVideo:
         area = (150, PH - 120)
         chosen = None
         for size in (52, 50, 48, 46, 44, 42, 40):
-            lines = [" ".join(x) for x in K.wrap("“" + q + "”", ALINTI, size, width)]
+            lines = dengeli_satirlar("“" + q + "”", ALINTI, size, width)
             if len(lines) * size * 1.2 <= area[1] - area[0] and all(tw(x, ALINTI, size) <= width for x in lines):
                 chosen = (size, lines)
                 break
         if chosen is None:          # çok uzun cümle: 40 px'te sayfaya sığan kadarı, sonu üç nokta
             size = 40
-            lines = [" ".join(x) for x in K.wrap("“" + q + "”", ALINTI, size, width)]
+            lines = dengeli_satirlar("“" + q + "”", ALINTI, size, width)
             maxl = int((area[1] - area[0]) / (size * 1.2))
             lines = lines[:maxl]
             lines[-1] = K.fit(lines[-1].rstrip("”") + "…”", ALINTI, size, width)
@@ -1597,13 +1669,25 @@ class KitapVideo:
         for Lx in lines:
             pen.text(L, y, Lx, ALINTI, size, INK)
             y += lh
-        kim = " · ".join(x for x in (self.kb["yazar"], self.kb["baslik"] + (f" ({self.kb['yil']})" if self.kb["yil"]
-                                                                              else "")) if x)
-        fs = _yazi_sigdir("— " + kim, "courier", width, 22, 15)
-        yy = min(PH - 82, y + 14)
-        pen.text(L, yy, "— " + kim, "courier", fs, DGREY)
-        pen.text(L, yy + 30, "çeviri: Bilgi Makası", "courier", 20, DGREY)
-        return [("ilk cümle", (L, area[0], R, y)), ("çeviri notu", (L, yy - 22, R, yy + 34))]
+        # künye satırı iki satırdır: "— Yazar" ve "Başlık (yıl)"; sığmazsa önce yıl düşer, başlık en son kısalır
+        kb = self.kb
+        satirlar = ["— " + kb["yazar"]] if kb["yazar"] else []
+        yil = f" ({kb['yil']})" if kb["yil"] else ""
+        fs = 22
+        while fs > 15 and any(tw(x, "courier", fs) > width for x in satirlar + [kb["baslik"] + yil]):
+            fs -= 1
+        bas = kb["baslik"] + yil if tw(kb["baslik"] + yil, "courier", fs) <= width else kb["baslik"]
+        satirlar = [K.fit(x, "courier", fs, width) for x in satirlar + [bas] if x.strip()]
+        dil = kb.get("ozgun_dil", "")
+        notu = ("bugünkü harflerle" if osmanlica(dil) else "") if turkce_ozgun(dil) else "çeviri: Bilgi Makası"
+        if notu:
+            satirlar.append(notu)
+        yy = min(PH - 66 - 28 * (len(satirlar) - 1), y + 14)
+        y_ilk = yy
+        for j, s in enumerate(satirlar):
+            pen.text(L, yy, s, "courier", 20 if s == notu else fs, DGREY)
+            yy += 28
+        return [("ilk cümle", (L, area[0], R, y)), ("künye satırı", (L, y_ilk - 22, R, yy - 22))]
 
     def _sol_kunye(self, pen: K.Pen, L: float, R: float) -> list:
         """Künye sayfası (alıntısız kitap): başlık, yazar ve satırlar."""
@@ -1669,24 +1753,37 @@ class KitapVideo:
         return [("büyük sayı", (L, 100, R, y + 10))]
 
     def _sol_vurgu(self, pen: K.Pen, L: float, R: float, b: Bolum) -> list:
-        """Öne çıkan alıntı: sayfa metninin vurgusu büyük yazıyla, kırmızı tırnak."""
+        """Anahtar ifade notu: sayfa metninin vurgusu (kendi özetimiz, kitaptan alıntı DEĞİL). Tırnak işareti ve
+        Playfair yok (onlar yalnız kamu malı kitabın gerçek ilk cümlesinde): üstte bölüm etiketi, altında fosforlu
+        kalem bandının üstünde dar yüzle (Oswald) dengeli satırlar, altta amblem."""
         v = next(p.vurgu for p in b.paragraflar if p.vurgu and low(p.vurgu) in low(p.metin))
-        pen.text(L - 4, 300, "“", ALINTI, 240, RED)
-        width = R - L
-        chosen = None
-        for size in (64, 60, 56, 52, 48, 44, 40):
-            lines = [" ".join(x) for x in K.wrap(v, ALINTI, size, width)]
-            if len(lines) * size * 1.18 <= 330 and all(tw(x, ALINTI, size) <= width for x in lines):
-                chosen = (size, lines)
-                break
-        size, lines = chosen or (40, [" ".join(x) for x in K.wrap(v, ALINTI, 40, width)][:7])
-        y = 300 + cap_h(ALINTI, size)
+        v = v.strip().strip("\"“”«»'’")
+        lab = up(self.var["basliklar"].get(b.ad, b.ad)) if b.ad != "fikir" else "ANA FİKİR"
+        pen.text(L, 118, lab, "courier", 26, RED)
+        pen.rr((L, 128, L + 64, 132), 1, fill=RED)
+        width = R - L - 16
+        adaylar = []    # sığan boyutlar: önce kısa tek kelimelik satırı en az olan, eşitse en büyük
+        for size in (76, 72, 68, 64, 60, 56, 52, 48, 44, 40):
+            lines = dengeli_satirlar(up(v), GOVDE, size, width)
+            if len(lines) * size * 1.32 <= 330 and all(tw(x, GOVDE, size) <= width for x in lines):
+                tek = sum(1 for x in lines if len(lines) > 1 and " " not in x and tw(x, GOVDE, size) < width * 0.62)
+                adaylar.append(((tek, -size), size, lines))
+        _, size, lines = min(adaylar, key=lambda a: a[0]) if adaylar else (
+            0, 44, dengeli_satirlar(up(v), GOVDE, 44, width)[:6])
+        lh = size * 1.32
+        y = 190 + (330 - len(lines) * lh) / 2
+        y_ilk = y
+        ch = cap_h(GOVDE, size)
         for Lx in lines:
-            pen.text(L, y, Lx, ALINTI, size, INK)
-            y += size * 1.18
-        lab = "— " + low(self.var["basliklar"].get(b.ad, b.ad))
-        pen.text(L, y + 26, lab, "courier", 24, DGREY)
-        return [("öne çıkan alıntı", (L, 160, R, y + 34))]
+            base = y + (lh + ch) / 2
+            pen.rr((L - 6, base - ch - size * 0.16, L + tw(Lx, GOVDE, size) + 10, base + size * 0.14), 4,
+                   fill=YELLOW)
+            pen.text(L + 2, base, Lx, GOVDE, size, INK)
+            y += lh
+        am = 110
+        if y + 40 + am < PH - 70:
+            pen.paste(amblem_img(self.kb["amblem"], am * SS, self.kb["baslik"]), R - am, PH - 70 - am)
+        return [("ana fikir notu", (L - 6, y_ilk, R, y))]
 
     def sag_bos(self, i: int) -> Image.Image:
         """Sağ sayfanın yazısız hâli (SS ölçeğinde Pen görüntüsü)."""
@@ -1715,9 +1812,11 @@ class KitapVideo:
 
     # ------------------------------------------------------------ katman birleştirme
     def _acik_kitap(self, lay: Image.Image, sol_i: int | None, sag_i: int | None, t: float, aktif: int,
-                    ilerleme: float, sekme: str | None = "tam", cilt: str = "tam") -> None:
+                    ilerleme: float, sekme: str | None = "tam", cilt: str = "tam", sag_yigin: bool = False,
+                    kurdele: float | None = None) -> None:
         """Açık kitabı REGION katmanına çizer: cilt, sekmeler, yığınlar, sayfalar, kenarlar ve kurdele.
-        sol_i / sag_i None: o yarı yok (kapak açılırken sol, kapanırken sağ)."""
+        sol_i / sag_i None: o yarı yok (kapak açılırken sol, kapanırken sağ). sag_yigin: sağ sayfa yokken de sağ yığın
+        çizilir (kapanan yaprağın altında). kurdele: kurdelenin saydamlığı (None: iki yarı da varsa tam)."""
         ox, oy = REGION[:2]
         lay.alpha_composite(self.cilt(cilt))
         if sekme == "tam":
@@ -1725,7 +1824,7 @@ class KitapVideo:
         elif sekme in ("sag", "sol"):
             lay.alpha_composite(self.sekmeler(aktif, sekme))
         nL, nR = self._ilerleme(ilerleme)
-        lay.alpha_composite(self.yigin(nL if sol_i is not None else 0, nR if sag_i is not None else 0))
+        lay.alpha_composite(self.yigin(nL if sol_i is not None else 0, nR if (sag_i is not None or sag_yigin) else 0))
         if sol_i is not None:
             K._comp(lay, self.sol_sayfa(sol_i), X_SOL - ox, TOP - oy)
         if sag_i is not None:
@@ -1738,8 +1837,10 @@ class KitapVideo:
                     xx, yy = GX + TX0 + x - ox, TOP + TY0 + base - oy
                     ImageDraw.Draw(lay).rectangle([xx, yy - size * 0.72, xx + size * 0.32, yy + 2], fill=RED)
         lay.alpha_composite(self.kenarlar(sol_i is not None, sag_i is not None))
-        if sol_i is not None and sag_i is not None:
-            lay.alpha_composite(self.kurdele())
+        if kurdele is None:
+            kurdele = 1.0 if (sol_i is not None and sag_i is not None) else 0.0
+        if kurdele > 0.003:
+            lay.alpha_composite(alfa(self.kurdele(), kurdele))
 
     def _reveal(self, i: int) -> float:
         return self.gecis[i] + (ACILIS_ORT + ACILIS_DON * 0.6 if i == 0 else CEVIR * 0.6)
@@ -1908,10 +2009,18 @@ class KitapVideo:
         p_kay = _ease((lt - ACILIS_GEC) / ACILIS_KAY)
         lay_kanca, _, hbox = self.kanca_katmani()
         ld = lt - ACILIS_ORT
-        if ld < 0:      # kayma: kitap açık kitabın sağ yarısına
+        kay_son = ACILIS_GEC + ACILIS_KAY            # kayma kapak açılmadan biter (ACILIS_ORT'tan önce)
+        if ld < 0:      # kayma: kitap açık kitabın sağ yarısına; sonra kapalı kitap açık kitabın sağ yarısına geçer
             ax, ay = K.lerp(ax0, GX, p_kay), K.lerp(ay0, TOP, p_kay)
             self._kitap_pozu("on", 0, K.lerp(k0, 1.0, p_kay), ax, ay, K.lerp(r0, 0.0, p_kay), img, kgoruntu=1.0)
             self.kayit("kapalı kitap", (ax, ay - 70, min(SAFE[2], ax + (PW + BOARD + 22)), ay + PH + 26))
+            gec = K.clamp((lt - kay_son) / max(1e-6, ACILIS_ORT - kay_son)) if lt >= kay_son else 0.0
+            if gec > 0:
+                ox, oy = REGION[:2]
+                lay = Image.new("RGBA", (REGION[2] - ox, REGION[3] - oy), (0, 0, 0, 0))
+                self._acik_kitap(lay, None, 0, t, 0, 0.0, sekme="sag", cilt="sag")
+                cevir(lay, (ox, oy), kapak_on(self.kb, self.seri, 1.0), self.sol_sayfa(0, duz=True), 0.0, kivrim=0.0)
+                img.alpha_composite(alfa(lay, _ease(gec)), (ox, oy))
         else:           # kapak açılır (ön yüz kapak, arka yüz giriş bölümünün sol sayfası)
             th = 180 * _ease(ld / ACILIS_DON)
             ox, oy = REGION[:2]
@@ -1921,7 +2030,11 @@ class KitapVideo:
             else:       # sol yarıya kapağın iç yüzü (sol sayfa) iner; sol cilt payı yaprak yatınca görünür
                 self._acik_kitap(lay, None, 0, t, 0, 0.0, sekme="tam", cilt="tam" if th > 165 else "sag")
                 self._sekme_kutulari(0)
-            cevir(lay, (ox, oy), kapak_on(self.kb, self.seri, 1.0), self.sol_sayfa(0, duz=True), th, kivrim=0.0)
+            inis = K.clamp((th - 150) / 30)    # yaprak sol sayfanın yerine inerken duran sayfa gibi bükülür
+            cevir(lay, (ox, oy), kapak_on(self.kb, self.seri, 1.0),
+                  sirt_golgesi(self.sol_sayfa(0, duz=True), "sol", inis), th, kivrim=0.0, bukum_k=inis)
+            if th > 120:  # kurdele kapak yatarken belirir (sayfa karesinde birden çıkmaz)
+                lay.alpha_composite(alfa(self.kurdele(), K.clamp((th - 120) / 60)))
             img.alpha_composite(lay, (ox, oy))
             if th >= 90:
                 pm = K.clamp((th - 90) / 60)
@@ -1929,7 +2042,7 @@ class KitapVideo:
         # kanca katmanı makasla kesilir (kart şablonunun kesmesi)
         if lt < K.CUT_LEN:
             K.card_cut(img, lay_kanca, lt, 1, origin=(0, SAFE[1]), card=hbox, x_end=SAFE[2] - 66,
-                       clip_top=CLIP, clips_bot=(CLIP,))
+                       clip_top=KANCA_KES, clips_bot=(CLIP,))
         self.maskot(img, t, self._mood(0))
 
     def _kare_sayfa(self, img: Image.Image, t: float, i: int, lt: float) -> None:
@@ -1949,9 +2062,13 @@ class KitapVideo:
         th = 180 * _ease(lt / CEVIR)
         cur = i if th >= 90 else i - 1
         lay = Image.new("RGBA", (REGION[2] - ox, REGION[3] - oy), (0, 0, 0, 0))
-        self._acik_kitap(lay, i - 1, i, t, cur, i - 0.5)
+        self._acik_kitap(lay, i - 1, i, t, cur, i - 0.5, kurdele=0.0)
         on = self.sag_sayfa(i - 1, self.gecis[i] - 0.001 if lt < CEVIR else t, duz=True)
-        cevir(lay, (ox, oy), on, self.sol_sayfa(i, duz=True), th)
+        # yaprak düz sayfanın yerinden kalkarken ve yerine inerken sırt gölgesi duran sayfadakiyle aynı
+        kalk, inis = 1 - K.clamp(th / 30), K.clamp((th - 150) / 30)
+        cevir(lay, (ox, oy), sirt_golgesi(on, "sag", kalk), sirt_golgesi(self.sol_sayfa(i, duz=True), "sol", inis), th,
+              bukum_k=max(kalk, inis))
+        lay.alpha_composite(self.kurdele())     # kurdele sırtta, çevrilen yaprağın da üstünde (sayfa karesindeki gibi)
         img.alpha_composite(lay, (ox, oy))
         if th >= 90:
             pm = K.clamp((th - 90) / 60)
@@ -1970,9 +2087,14 @@ class KitapVideo:
             th = 180 * _ease(lt / KAPAN)
             lay = Image.new("RGBA", (REGION[2] - ox, REGION[3] - oy), (0, 0, 0, 0))
             cur = i if th >= 90 else prev
-            self._acik_kitap(lay, prev, None, t, cur, prev, sekme="tam" if th < 90 else "sol", cilt="sol")
-            on = self.sag_sayfa(prev, self.gecis[i] - 0.001, duz=True)
-            cevir(lay, (ox, oy), on, kapak_arka(self.kb, self.blurb, 1.0), th, kivrim=0.0)
+            # yaprak dik konumu geçene kadar sağ cilt ve sağ yığın altında kalır; kurdele yaprak dik olurken söner
+            self._acik_kitap(lay, prev, None, t, cur, prev, sekme="tam" if th < 90 else "sol",
+                             cilt="tam" if th < 90 else "sol", sag_yigin=th < 90, kurdele=0.0)
+            kalk = 1 - K.clamp(th / 30)
+            on = sirt_golgesi(self.sag_sayfa(prev, self.gecis[i] - 0.001, duz=True), "sag", kalk)
+            cevir(lay, (ox, oy), on, kapak_arka(self.kb, self.blurb, 1.0), th, kivrim=0.0, bukum_k=kalk)
+            if th < 100:  # kurdele yaprak dik konumu geçerken söner (kapalı kitapta birden kaybolmaz)
+                lay.alpha_composite(alfa(self.kurdele(), 1 - K.clamp((th - 50) / 50)))
             img.alpha_composite(lay, (ox, oy))
             if th < 90:
                 self._manset_koy(img, prev, alpha=1.0 - K.clamp((th - 60) / 30))

@@ -136,6 +136,16 @@ jobs:
           # dinleme yalnız Actions dakikası harcar. Dinleme yalnız kapı kurulu değilse başlatılır.
           KAPI=$(python3 -c "import json,os,urllib.request as u; print(json.load(u.urlopen('https://api.telegram.org/bot' + os.environ['TELEGRAM_BOT_TOKEN'] + '/getWebhookInfo', timeout=20))['result'].get('url', ''))" 2>/dev/null || echo "?")
           if [ -z "$KAPI" ]; then gh workflow run onay.yml -f dakika=30 || true; else echo "Kapı kurulu (ya da denetlenemedi): dinleme başlatılmadı."; fi
+      - name: Telif kuralı yüzünden durduysa Telegram'a yaz
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # Bir Kitap Bir Dakika: kamu malı olmayan kitabın senaryosunda alıntı kaldıysa pipeline kısa bir not bırakır
+          [ -f output/telif_durdu.txt ] || exit 0
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, bildirim atlandı."; exit 0; fi
+          python -m shortgen.telegram_bot durdu output/telif_durdu.txt || echo "Telegram bildirimi gönderilemedi."
       - name: Hata olursa senaryoyu ve bütçe kaydını sakla
         if: failure()
         run: |
