@@ -56,6 +56,14 @@ jobs:
       - name: Durumu kaydet
         if: always()
         run: python -m shortgen.state_sync "Telegram olayı işlendi"
+      - name: Düğmeleri birleşmiş duruma göre tazele
+        if: success()
+        continue-on-error: true
+        env:
+          UPDATE: ${{ inputs.update }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m shortgen.telegram_bot refresh-kb
       - name: Şimdi paylaşılacak varsa paylaşım işini başlat
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

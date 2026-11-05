@@ -107,6 +107,20 @@ def _find(videos: list, tag: str) -> dict | None:
     return next((v for v in videos if v["tag"] == tag), None)
 
 
+def _origin_record(tag: str) -> dict | None:
+    """Videonun uzak depodaki (origin/main) en güncel kaydı; alınamazsa None. Yerel durumu değiştirmez."""
+    import subprocess
+    try:
+        subprocess.run(["git", "fetch", "-q", "origin", "main"], cwd=ROOT, check=True, timeout=60,
+                       capture_output=True)
+        remote = json.loads(subprocess.run(["git", "show", "origin/main:state/videos.json"], cwd=ROOT,
+                                           capture_output=True, text=True, check=True).stdout)
+    except Exception as e:  # noqa: BLE001
+        print("Uzak kayıt alınamadı:", _redact_safe(e))
+        return None
+    return _find(remote, tag)
+
+
 def _refresh_videos() -> None:
     """Dinleme işi başladıktan sonra üretilen videoları uzak depodan alır (yerel değişikliklere dokunmaz)."""
     import subprocess
@@ -387,6 +401,13 @@ def _handle_callback(cq: dict, chat: str) -> None:
         return
     mid = v["telegram_message_id"]
     note = ""
+    if action in ("ok", "at", "no") and v.get("status") != "onay_bekliyor":
+        # eski bir düğme (ör. iki işlem aynı anda yürüdü): karar verilmiş videoyu yeniden onaylatma/reddettirme
+        st = v.get("status", "?")
+        _restore_kb(tag, chat)
+        api("answerCallbackQuery", data={"callback_query_id": cq["id"],
+                                         "text": f"Bu video artık onay beklemiyor ({DURUM_ADI.get(st, st)})."[:190]})
+        return
     if action == "ok":  # onay: saat seçeneklerini göster
         sl = _slots()
         rows = [[(lbl, f"at:{tag}:{code}") for code, lbl, _ in sl[i:i + 2]] for i in range(0, len(sl), 2)]
@@ -402,7 +423,8 @@ def _handle_callback(cq: dict, chat: str) -> None:
     elif action == "cancel":
         note = _cancel(tag, chat, v)
         if note is None:
-            note = "Bu video zaten paylaşıldı veya paylaşılıyor."
+            note = ("Bu paylaşım zaten iptal edilmiş; video onay bekliyor." if v.get("status") == "onay_bekliyor"
+                    else "Bu video zaten paylaşıldı veya paylaşılıyor.")
             if os.environ.get("TG_WEBHOOK") == "1":
                 _restore_kb(tag, chat)
     elif action == "no":
@@ -449,17 +471,32 @@ def _kb_rows(tag: str, status: str) -> list:
             "kismen": [[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]]}.get(status, [])
 
 
-def _restore_kb(tag: str, chat: str) -> None:
+def _restore_kb(tag: str, chat: str, status: str | None = None) -> None:
     """Webhook modunda kapı düğmeyi '⏳ İşleniyor' yaptı; hata olursa videonun durumuna uygun düğmeleri geri koy."""
     v = _find(load(VIDEOS, []), tag)
     if not v or not v.get("telegram_message_id"):
         return
-    rows = _kb_rows(tag, v["status"])
+    rows = _kb_rows(tag, status or v["status"])
     try:
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"],
                                             "reply_markup": _kb(rows)})
     except Exception as e:  # noqa: BLE001
         print("Düğmeler geri konamadı:", _redact_safe(e))
+
+
+def refresh_kb(update: dict, chat: str) -> None:
+    """Durum kaydedildikten (state_sync) SONRA çağrılır. Aynı anda yürüyen başka bir işin kararı (ör. Telegram'dan
+    red, panelden düzenleme) birleşmiş olabilir: video mesajının düğmelerini birleşmiş duruma göre yeniden koyar.
+    Onay bekleyen videoda saat seçimi gibi geçici düğmelere dokunmaz (yalnız panel düzenlemesinden sonra koyar)."""
+    p = update.get("panel") if isinstance(update.get("panel"), dict) else {}
+    tag = str(p.get("tag") or "")
+    data = str((update.get("callback_query") or {}).get("data") or "")
+    if not tag and data.count(":") and not data.startswith(("cm:", "tp:")):
+        tag = data.split(":")[1]
+    v = _find(load(VIDEOS, []), tag) if tag else None
+    if not v or (v.get("status") == "onay_bekliyor" and p.get("action") != "edit"):
+        return
+    _restore_kb(tag, chat)
 
 
 _wh: list = []
@@ -578,7 +615,7 @@ def _split_tag_lines(desc: str) -> str:
     pars = re.split(r"\n\s*\n", desc.strip())
     lines = pars[-1].splitlines()
     k = len(lines)
-    while k > 0 and lines[k - 1].split() and all(w.startswith("#") for w in lines[k - 1].split()):
+    while k > 0 and lines[k - 1].split() and all(re.fullmatch(r"#\w*[^\W\d_]\w*", w) for w in lines[k - 1].split()):
         k -= 1
     if 0 < k < len(lines):
         pars[-1:] = ["\n".join(lines[:k]).rstrip(), "\n".join(ln.strip() for ln in lines[k:])]
@@ -690,10 +727,17 @@ def process_panel(p: dict, chat: str) -> None:
                 api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb([])})
                 say(f"🔁 {note}\n{v['title']}")
             elif action == "edit":
-                pa = v.get("publish_at")
-                if v.get("status") == "zamanlandi" and pa and dt.datetime.fromisoformat(pa) <= \
+                # bu işin kopyası birkaç saniye eski olabilir: karar ve saat için uzaktaki en güncel kayda bakılır
+                fresh = _origin_record(tag) or v
+                if fresh.get("status") not in PANEL_VIDEO_ACTIONS["edit"]:
+                    _restore_kb(tag, chat, fresh.get("status"))
+                    st = fresh.get("status", "?")
+                    say(f"ℹ️ İşlem yapılmadı: video şu an '{DURUM_ADI.get(st, st)}' durumunda.\n{v['title']}")
+                    return
+                pa = fresh.get("publish_at")
+                if fresh.get("status") == "zamanlandi" and pa and dt.datetime.fromisoformat(pa) <= \
                         dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=EDIT_GUARD_MIN):
-                    _restore_kb(tag, chat)
+                    _restore_kb(tag, chat, fresh.get("status"))
                     say("ℹ️ Düzenleme yapılmadı: bir paylaşım şu an sürüyor ya da 10 dakika içinde başlayacak. Paylaşılmayan "
                         f"platform kalırsa paylaşım bittikten sonra yeniden düzenleyebilirsin.\n{v['title']}")
                     return
@@ -701,8 +745,8 @@ def process_panel(p: dict, chat: str) -> None:
                 first = (v.get("duzenleme") or {}).get("ilk_baslik") or v["title"]  # seri bağı (seri.json) için
                 v = _update(tag, title=title, duzenleme={"title": title, "description": desc, "ilk_baslik": first,
                                                          "at": dt.datetime.now(TR).isoformat(timespec="seconds")})
-                _edit_caption(v, chat)
-                done = [PLATFORM_NAMES[x] for x in PLATFORM_NAMES if x in _done(v)]
+                _edit_caption({**v, "status": fresh.get("status", v.get("status"))}, chat)
+                done = [PLATFORM_NAMES[x] for x in PLATFORM_NAMES if x in _done(v) | _done(fresh)]
                 old_note = f"\n(Zaten paylaşılan {', '.join(done)} paylaşımında eski metin kalır.)" if done else ""
                 say(f"✏️ Başlık ve açıklama düzenlendi; paylaşımda bu metin kullanılacak.{old_note}\n\n{title}\n\n{desc}")
         elif action == "produce_suggestion":
@@ -970,6 +1014,11 @@ if __name__ == "__main__":
     if sys.argv[1] == "handle-update":  # Cloudflare kapısından gelen tek olay (UPDATE ortam değişkeninde)
         # Paylaşım burada yapılmaz (aynı anda iki iş aynı videoyu yüklemesin); bkz. dispatch-if-due.
         process_update(json.loads(os.environ["UPDATE"]), str(os.environ["TELEGRAM_CHAT_ID"]))
+    elif sys.argv[1] == "refresh-kb":  # işle.yml: durum kaydedildikten sonra düğmeleri birleşmiş duruma göre koy
+        try:
+            refresh_kb(json.loads(os.environ.get("UPDATE") or "{}"), str(os.environ["TELEGRAM_CHAT_ID"]))
+        except Exception as e:  # noqa: BLE001  (düğme tazeleme hatası işi düşürmesin)
+            print("Düğmeler tazelenemedi:", _redact_safe(e))
     elif sys.argv[1] == "dispatch-if-due":
         # Durum kaydedildikten SONRA çağrılır: şimdi paylaşılacak bir şey varsa tek sıra hâlinde çalışan
         # onay.yml'i (state grubu) başlatır.

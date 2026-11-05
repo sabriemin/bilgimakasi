@@ -104,7 +104,7 @@ def _fit_caption(head: str, tags: str, limit: int, measure=None) -> str:
     measure = measure or _u16
     pars = head.split("\n\n")
     k = len(pars)
-    while k > 1 and pars[k - 1].lstrip().startswith("📷"):
+    while k > 1 and all(ln.strip().startswith("📷") for ln in pars[k - 1].splitlines() if ln.strip()):
         k -= 1
     head, keep = "\n\n".join(pars[:k]), pars[k:]
     tail = "\n\n".join(keep + ([tags] if tags else []))
@@ -112,7 +112,10 @@ def _fit_caption(head: str, tags: str, limit: int, measure=None) -> str:
     while head and measure(head) > room:
         head = head[:-max(1, (measure(head) - room) // 2)]
     head = head.rstrip()
-    return "\n\n".join(x for x in (head, tail) if x)
+    out = "\n\n".join(x for x in (head, tail) if x)
+    while measure(out) > limit:  # korunan kuyruk tek başına sığmıyorsa (çok uzun atıf) sınır yine aşılmaz
+        out = out[:-max(1, (measure(out) - limit) // 2)]
+    return out
 
 
 def _hashtags(meta: dict, limit: int) -> list[str]:

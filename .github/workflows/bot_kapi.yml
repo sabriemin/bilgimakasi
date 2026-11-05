@@ -124,7 +124,7 @@ jobs:
           curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo" | python3 -c "import json,sys;d=json.load(sys.stdin)['result'];print('webhook:', bool(d.get('url')), 'bekleyen:', d.get('pending_update_count'), 'son hata:', d.get('last_error_message'))"
           MSG="✅ Bot artık 7/24 açık. Düğmelere anında cevap verir, işlemler 30-60 saniyede tamamlanır."$'\n\n'"🖥 Yönetim paneli için /panel yaz; gelen bağlantı 10 dakika geçerli ve tek kullanımlık, panel o tarayıcıda 30 gün açık kalır. Bu kurulumla önceki panel oturumları kapandı."
           if [ "${PANEL_OKUMA:-}" = "yok" ]; then
-            MSG="$MSG"$'\n\n'"⚠️ Panel henüz veri gösteremez: kapının GitHub anahtarının depoyu okuma izni yok. KAPI_PAT eklenip bu kurulum yeniden çalıştırılınca açılır."
+            MSG="$MSG"$'\n\n'"⚠️ Panel henüz veri gösteremez: kapının GitHub anahtarının (${PAT_ADI}) depoyu okuma izni yok. Bilgimakasi için 'Contents: Read-only' izinli KAPI_PAT eklenip bu kurulum yeniden çalıştırılınca açılır."
           fi
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \

@@ -571,8 +571,9 @@ function uygulama(AYAR) {
     refresh_suggestions: (D) => JSON.stringify(D && D.oneriler),
     report: (D) => JSON.stringify(D && D.stats && D.stats.time),
     queue_set: (D) => JSON.stringify(D && D.konu_sirasi),
-    produce_topic: (D) => String(((D && D.videos) || []).length),
-    produce_suggestion: (D) => String(((D && D.videos) || []).length),
+    // panel yalnız son videoları alır: yeni video sayımı toplamdan yapılır (liste kısalırken yanlış "geldi" demesin)
+    produce_topic: (D) => String((D && D.videos_toplam) ?? ((D && D.videos) || []).length),
+    produce_suggestion: (D) => String((D && D.videos_toplam) ?? ((D && D.videos) || []).length),
   };
   const BITTI = {
     refresh_suggestions: "✅ Yeni öneriler geldi.", report: "✅ İstatistikler güncellendi.",
@@ -765,7 +766,9 @@ function uygulama(AYAR) {
     for (const [id, ad, liste] of gruplar) {
       const sirali = id === "plan" ? liste.sort((a, b) => sonrakiZaman(a) - sonrakiZaman(b))
         : liste.sort((a, b) => (tagZamani(b.tag) || 0) - (tagZamani(a.tag) || 0));
-      const not = id === "onay" && liste.length ? "Onayla veya reddet" : id === "sorunlu" && liste.length ? "Tekrar denenebilir" : null;
+      const eksik = (S.D.videos_toplam || 0) > vs.length; // eski bitmiş videolar panele gelmez
+      const not = id === "onay" && liste.length ? "Onayla veya reddet" : id === "sorunlu" && liste.length ? "Tekrar denenebilir"
+        : id === "paylasilan" && eksik ? "Son 120 gün" : null;
       kap.append(bolumBasligi(id, ad, liste.length, not));
       if (!liste.length) {
         kap.append(h("div", { class: "bos" }, { onay: "Onay bekleyen video yok.", plan: "Zamanlanmış paylaşım yok.",
@@ -914,7 +917,7 @@ function uygulama(AYAR) {
     if (["hata", "kismen", "baglanti_yok"].includes(v.status)) {
       d.push(dugme("retry:" + t, "Hatalıları tekrar dene", "btn-ana", () => islem("retry:" + t, { action: "retry", tag: t }, v.title), kilit));
     }
-    const yakin = v.status === "zamanlandi" && v.publish_at && Date.parse(v.publish_at) <= Date.now() + 10 * 60e3;
+    const yakin = v.status === "zamanlandi" && v.publish_at && Date.parse(v.publish_at) <= simdi() + 10 * 60e3;
     if ((v.status === "onay_bekliyor" || v.status === "zamanlandi") && !yakin) { // paylaşıma 10 dk kala düzenlenmez
       d.push(dugme("edit:" + t, "Düzenle", "btn-cizgi", () => duzenleSayfasi(v), kilit));
     }

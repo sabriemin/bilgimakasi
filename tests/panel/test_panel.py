@@ -351,6 +351,10 @@ class PanelIslemleri(Ortak):
         # metnin içinde geçen # etiket sayılmaz
         m = self.tb._apply_edit(self.META, {"title": "T", "description": "#1 numaralı kural\nMetin."})
         self.assertEqual(m["hashtags"], self.META["hashtags"])
+        # yalnız rakamdan oluşan "#1 #2" satırı etiket satırı sayılmaz
+        m = self.tb._apply_edit(self.META, {"title": "T", "description": "Sıralama:\n#1 #2"})
+        self.assertEqual(m["hashtags"], self.META["hashtags"])
+        self.assertTrue(m["description"].startswith("Sıralama:\n#1 #2\n\n#tarih #boston"), m["description"])
 
     def test_uzun_duzenlemede_gorsel_atfi_kesilmez(self):
         import shortgen.publish as P
@@ -362,6 +366,56 @@ class PanelIslemleri(Ortak):
             self.assertLessEqual((ölç or P._u16)(cap), limit)
         # sığan metin aynen kalır (üretimdeki kısa açıklamalar değişmez)
         self.assertEqual(P._fit_caption("Kısa.\n\n" + cred, "#a", 2200), "Kısa.\n\n" + cred + "\n\n#a")
+        # 📷 ile başlamayan satır içeren paragraf korunmaz (kullanıcı metni atıf gibi davranamaz)
+        karisik = "Bilgi " * 600 + "\n\n📷 Sahte\nUzun metin " + "x" * 3000
+        cap = P._fit_caption(karisik, "#a", 2200)
+        self.assertLessEqual(P._u16(cap), 2200)
+        self.assertTrue(cap.endswith("#a"))
+        # atıf tek başına sınırı aşsa bile sonuç sınırı aşmaz
+        cap = P._fit_caption("Kısa.\n\n📷 " + "Ç" * 3000, "#a", 2152, len)
+        self.assertLessEqual(len(cap), 2152)
+
+    def dugme(self, data):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.tb.process_update(cq(data), CHAT)
+        return self.req.cagrilar[:]
+
+    def test_eski_onay_dugmesi_karar_verilmis_videoyu_degistirmez(self):
+        for durum in ("reddedildi", "zamanlandi", "yayinlandi"):
+            durum_sifirla(self.root)
+            self.req.cagrilar.clear()
+            self.video_degistir(T, status=durum)
+            once = self.vid(T)
+            for data in (f"ok:{T}", f"at:{T}:now", f"no:{T}"):
+                c = self.dugme(data)
+                self.assertEqual(self.vid(T), once, (durum, data))
+                cevap = self.mesajlar(c)[-1]  # webhook modunda baloncuk notu mesaj olarak gider
+                self.assertIn("artık onay beklemiyor", cevap)
+            kb = self.tg(c, "editMessageReplyMarkup")[-1]["data"]["reply_markup"]["inline_keyboard"]
+            self.assertEqual(kb, [[{"text": t, "callback_data": d} for t, d in r] for r in self.tb._kb_rows(T, durum)])
+
+    def test_kayit_sonrasi_dugmeler_birlesmis_duruma_gore_tazelenir(self):
+        def tazele(u):
+            self.req.cagrilar.clear()
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.tb.refresh_kb(u, CHAT)
+            return [c["data"]["reply_markup"]["inline_keyboard"] for c in self.tg(self.req.cagrilar, "editMessageReplyMarkup")]
+        # başka bir iş videoyu reddetti: panel düzenlemesinin koyduğu Onayla/Reddet kaldırılır
+        self.video_degistir(T, status="reddedildi")
+        self.assertEqual(tazele({"panel": {"action": "edit", "tag": T}}), [[]])
+        self.assertEqual(tazele(cq(f"no:{T}")), [[]])
+        # zamanlanmış: iptal düğmesi
+        self.video_degistir(T, status="zamanlandi")
+        self.assertEqual(tazele(cq(f"at:{T}:now"))[0][0][0]["callback_data"], f"cancel:{T}")
+        # onay bekleyen: saat seçimi düğmelerine dokunulmaz; panel düzenlemesinden sonra Onayla/Reddet konur
+        self.video_degistir(T, status="onay_bekliyor")
+        self.assertEqual(tazele(cq(f"ok:{T}")), [])
+        self.assertEqual(tazele({"panel": {"action": "edit", "tag": T}})[0][0][0]["callback_data"], f"ok:{T}")
+        # video dışı düğmeler ve bilinmeyen video
+        self.assertEqual(tazele(cq("cm:ok:abc")), [])
+        self.assertEqual(tazele(cq("tp:2")), [])
+        self.assertEqual(tazele({"panel": {"action": "report"}}), [])
+        self.assertEqual(tazele(cq("no:yok-boyle-video")), [])
 
     def _paylas(self, meta):
         """publish_due'yu sahte indirme/yükleme ile çalıştırır; platformlara giden meta'yı döndürür."""
@@ -856,6 +910,17 @@ class Birlestirme(unittest.TestCase):
                   {**b, "status": "kismen", "platforms": {"youtube": {"status": "ok"}, "instagram": {"status": "hata"}}}):
             out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
             self.assertEqual(out, {**r, "title": "Yeni", "duzenleme": l["duzenleme"]})
+
+    def test_uzaktaki_yalniz_baslik_degisikligi_korunur(self):
+        b = {"tag": "t", "title": "Eski", "status": "zamanlandi", "platforms": {}}
+        d = lambda v: json.dumps([v])  # noqa: E731
+        r = {**b, "title": "Yeni"}  # başka bir iş yalnız başlığı değiştirdi
+        l = {**b, "platforms": {"youtube": {"status": "ok"}}}  # bu çalışma paylaştı
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
+        self.assertEqual((out["title"], out["platforms"]), ("Yeni", {"youtube": {"status": "ok"}}))
+        # bu çalışma da başlığı değiştirdiyse kendi başlığı kalır
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d({**l, "title": "Benim"})))[0]
+        self.assertEqual(out["title"], "Benim")
 
     def test_birlestirme_panel_kayit_numarasini_korur(self):
         d = lambda x, rid=None: json.dumps({"konular": x, **({"rid": rid} if rid else {})})  # noqa: E731

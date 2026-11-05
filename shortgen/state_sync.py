@@ -57,11 +57,11 @@ def _keep_edit(local: dict, remote: dict, base: dict | None) -> dict:
     """Panelde yapılan başlık/açıklama düzenlemesi (duzenleme), bu çalışma onu değiştirmediyse kaybolmaz
     (ör. paylaşım işi düzenleme sürerken kaydını yeniden yazarsa kalan platformlar yine düzenlenmiş metni kullanır)."""
     base = base or {}
-    if remote.get("duzenleme") == base.get("duzenleme") or local.get("duzenleme") != base.get("duzenleme"):
-        return local
-    out = {**local, "duzenleme": remote.get("duzenleme")}
-    if local.get("title") == base.get("title") and "title" in remote:
-        out["title"] = remote["title"]
+    out = local
+    if remote.get("duzenleme") != base.get("duzenleme") and local.get("duzenleme") == base.get("duzenleme"):
+        out = {**out, "duzenleme": remote.get("duzenleme")}
+    if local.get("title") == base.get("title") and remote.get("title") != base.get("title") and "title" in remote:
+        out = {**out, "title": remote["title"]}  # uzakta (panelde ya da elle) değişen başlık da kaybolmaz
     return out
 
 
