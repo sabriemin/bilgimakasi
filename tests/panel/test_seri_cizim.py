@@ -5,6 +5,7 @@
   dış sesle basılması, güvenli alan; sayaç kartının Türkçe para ve oran değerleri,
 - Nasıl üretiliyor? (uretim kalıbı, templates/uretim.json ile nasil çizicisi): AŞAMA işaretleri, bölüm planı,
   başlık yazıları, kraft zemin, yürüyen bandın kırpılmadan güvenli alanda kalması,
+- birleşim: demo senaryolarının şablon yönlendirmesi ve pipeline.build'in çiziciye geçirdiği varyant ve fiş satırları,
 - mevcut nasil ve kart videolarının kareleri bu değişiklikten önceki commit'tekiyle piksel piksel aynı.
 
     python -B tests/panel/test_seri_cizim.py
@@ -470,6 +471,62 @@ class UretimVaryanti(unittest.TestCase):
             durumlar.add(tuple(s for s, _ in v.node_states(t)))
         self.assertIn(("done", "cur", "up", "up"), durumlar)
         self.assertIn(("done", "done", "done", "cur"), durumlar)
+
+
+# ---------------------------------------------------------------- birleşim (içerik + çizim)
+class Birlesim(unittest.TestCase):
+    """Demo senaryoları load_script ile açılır, şablon yönlendirmesi doğru çiziciyi seçer ve pipeline.build çiziciye
+    şablon varyantını (uretim: AŞAMA) ve hesap fişi satırlarını (olsaydin: receipt) geçirir; çizim yapılmaz."""
+
+    @classmethod
+    def setUpClass(cls):
+        from shortgen import pipeline
+        cls.P = pipeline
+
+    def kur(self, ad: str, override: str | None = None):
+        script = S.load_script(DEMO[ad])
+        template = self.P.pick_template(script, override)
+        cap = {}
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(N, "render_nasil", lambda sc, w, o, m, mu, meta: cap.update(specs=sc, meta=meta)), \
+                mock.patch.object(K, "render_kart", lambda sc, w, o, m, mu, meta: cap.update(specs=sc, meta=meta)):
+            self.P.build(script, Path(tmp) / "b", use_voice=False, music=None, template=template)
+            cap["metadata"] = json.loads((Path(tmp) / "b" / "metadata.json").read_text(encoding="utf-8"))
+        return script, template, cap
+
+    def test_uretim_asama_varyanti(self):
+        for override in ("uretim", None):  # --template uretim ya da eslesme.json yapi_sablon
+            script, template, cap = self.kur("uretim", override)
+            self.assertEqual((script.structure, template), ("uretim", "uretim"))
+            self.assertEqual(self.P.sablon_renderer(template), "nasil")
+            self.assertEqual(self.P.sablon_yapisi(template), "uretim")
+            var = N.varyant(cap["meta"])
+            self.assertEqual((var["adim_kelimesi"], var["zemin"], var["ilerleme"]), ("AŞAMA", "kraft", "bant"))
+            self.assertEqual([s.card["step"] for s in cap["specs"]], [0, 1, 2, 3, 4, 0])
+            self.assertEqual(cap["metadata"]["structure"], "uretim")
+            self.assertIn("NasılÜretiliyor", cap["metadata"]["hashtags"])
+
+    def test_olsaydin_hesap_fisi(self):
+        script, template, cap = self.kur("olsaydin")
+        self.assertEqual((script.structure, template), ("olsaydin", "kart"))
+        self.assertEqual(S.fis_sorunlari(script), [])
+        turler = [s.card["type"] for s in cap["specs"]]
+        self.assertIn("receipt", turler)
+        fis = cap["specs"][turler.index("receipt")].card
+        self.assertEqual(len(K.parse_receipt(fis["lines"])), 5)
+        self.assertEqual((fis["value"], fis["label"]), ("52 MİLYON ₺", "KALAN"))
+        self.assertEqual(cap["meta"]["structure"], "olsaydin")
+        aciklama = cap["metadata"]["description"]
+        uyari = ("Rakamlar 2026 Türkiye verilerine dayanan yaklaşık hesaplardır; kişiye ve şehre göre değişir. "
+                 "Yatırım tavsiyesi değildir.")
+        if cap["metadata"].get("created", "").startswith("2026"):
+            self.assertEqual(aciklama.count(uyari), 1)
+            self.assertLess(aciklama.index(uyari), aciklama.index("#"))
+
+    def test_gecici_seri_adi_tek_yerde(self):
+        """olsaydin serisinin ekrandaki adı kalıp listesinden gelir (kart sağ etiketi ve format etiketi aynı)."""
+        self.assertEqual(K.OLSAYDIN_ADI, S.STRUCTURES["olsaydin"][0])
+        self.assertEqual(K.STRUCT_RIGHT["olsaydin"], S.STRUCTURES["olsaydin"][0])
 
 
 # ---------------------------------------------------------------- piksel eşliği

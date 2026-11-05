@@ -27,6 +27,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 from . import render
+from .script import STRUCTURES
 from .voice import Word
 
 W, H, FPS = render.W, render.H, render.FPS
@@ -2453,8 +2454,9 @@ class Mascot:
 
 
 # ---------------------------------------------------------------- video
-# "olsaydin" serisinin adı geçici (sahibi seçiyor): ekrandaki adı yalnız bu sabitte durur
-OLSAYDIN_ADI = "YA SEN OLSAYDIN?"
+# "olsaydin" serisinin adı geçici (sahibi seçiyor): ekrandaki adı kalıp listesinden (script.STRUCTURES) gelir;
+# ilk sahnenin format etiketi (pipeline.series_label) de aynı yerden okur
+OLSAYDIN_ADI = STRUCTURES["olsaydin"][0]
 STRUCT_RIGHT = {"efsane": "EFSANE Mİ?", "neden": "NEDEN?", "nasil": "NASIL?", "uretim": "NASIL ÜRETİLİYOR?",
                 "olsaydin": OLSAYDIN_ADI}
 
