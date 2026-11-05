@@ -420,5 +420,17 @@
     },
     "publish_at": "2026-11-05T19:30:00+00:00",
     "decided": "2026-11-05T20:14:45+03:00"
+  },
+  {
+    "tag": "short-20261105-172956",
+    "title": "Jeremy Bentham: Panoptikon'u Tasarlayan Adam Hâlâ Cam Kutuda Oturuyor",
+    "topic": "Jeremy Bentham: Her şeyin görüldüğü hapishaneyi (Panoptikon) tasarlayan filozofun, bedeniyle bugün hâlâ UCL'de cam bir kutuda sergilenmesi ve 2013'te yönetim kurulu toplantısına 'mevcut, oy kullanmıyor' diye kaydedilmesi",
+    "category": "tarih",
+    "template": "kart",
+    "created": "2026-11-05T17:29:56",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 155,
+    "aciklama_message_id": 156,
+    "platforms": {}
   }
 ]
