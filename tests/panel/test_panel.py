@@ -255,10 +255,13 @@ class DugmeDavranisi(Ortak):
         type(self).tb, type(self).req = self.tb, self.req
         self.assertEqual(len(yeni), len(golden))
         for g, y in zip(golden, yeni):
-            if g["ad"] == "/start":  # bilinçli farklar: yardım metninde /panel satırı ve altı seriden 18 öneri
+            if g["ad"] == "/start":  # bilinçli farklar: yardım metninde /panel satırı, altı seriden 18 öneri ve
+                # yazılan konudan seri seçimi
                 self.assertEqual(y["cagrilar"][0]["data"]["text"], g["cagrilar"][0]["data"]["text"].replace(
                     "/yardim: bu liste", "/panel: yönetim paneline giriş bağlantısı\n/yardim: bu liste").replace(
-                    "/oneri: gündemden 5 konu önerisi", "/oneri: 6 seriden 18 konu önerisi"))
+                    "/oneri: gündemden 5 konu önerisi", "/oneri: 6 seriden 18 konu önerisi").replace(
+                    "(konu isteğe bağlı)", "(konu isteğe bağlı; 'Kuyumcu olsaydın', 'Çay nasıl demlenir?' gibi "
+                    "konularda seri kendiliğinden seçilir, başına 'genel:' yazarsan serbest kalır)"))
                 continue
             if g["ad"] in self.SAAT_METNI:
                 # bilinçli fark (panel takvimi): yalnız en iyi saatler (ek saat yok), ⭐ prime time işareti, uzun
@@ -657,6 +660,45 @@ class PanelIslemleri(Ortak):
         self.req.dispatch_durum = 403
         c = self.panel(action="produce_topic", topic="x")
         self.assertEqual(self.mesajlar(c), ["🖥 Panelden: ⚠️ Üretim başlatılamadı."])
+
+    def test_yazilan_konudan_seri_secilir(self):
+        # Sabri'nin örnekleri ("Kuyumcu olsaydın", "Piyango sana çıksaydı") panelden ve /uret'ten kendi serisiyle üretilir
+        c = self.panel(action="produce_topic", topic="Kuyumcu olsaydın ayda ne kazanırdın?")
+        self.assertEqual([x for x in c if "gh" in x][0]["json"]["inputs"],
+                         {"topic": "Kuyumcu olsaydın ayda ne kazanırdın?", "kalip": "olsaydin"})
+        self.assertIn("(Ya sen olsaydın? serisi; genel video için konunun başına 'genel:' yaz)", self.mesajlar(c)[0])
+        self.req.cagrilar.clear()
+        c = self.panel(action="produce_topic", topic="genel: Piyango sana çıksaydı")
+        self.assertEqual([x for x in c if "gh" in x][0]["json"]["inputs"], {"topic": "Piyango sana çıksaydı"})
+        self.assertNotIn("serisi", self.mesajlar(c)[0])
+        for metin, kalip, konu in (("/uret Çay nasıl demlenir?", "nasil", "Çay nasıl demlenir?"),
+                                   ("/uret@BilgiMakasiBot uretim: Cam şişe", "uretim", "Cam şişe"),
+                                   ("/uret kara delikler", None, "kara delikler")):
+            self.req.cagrilar.clear()
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.tb.process_update(msg(metin), CHAT)
+            gh = [x for x in self.req.cagrilar if "gh" in x]
+            beklenen = {"topic": konu, **({"kalip": kalip} if kalip else {})}
+            self.assertEqual(gh[0]["json"]["inputs"], beklenen, metin)
+            yanit = self.tg(self.req.cagrilar, "sendMessage")[-1]["data"]["text"]
+            self.assertEqual("serisi;" in yanit, bool(kalip), yanit)
+
+    def test_seri_tahmini(self):
+        from shortgen.trends import seri_tahmini
+        ornekler = {
+            "Piyango sana çıksaydı": "olsaydin", "Kuyumcu olsaydın": "olsaydin",
+            "İstanbul'da yaşasaydın kira ne olurdu": "olsaydin", "Titanik batmasaydı ne olurdu": "",
+            "Kurşun kalem nasıl üretiliyor?": "uretim", "Çikolata fabrikada nasıl yapılıyor": "uretim",
+            "Çay nasıl demlenir?": "nasil", "Lavabo tıkanıklığı nasıl giderilir": "nasil",
+            "Piramitler nasıl yapıldı?": "", "Mars'tan Dünya nasıl görünür?": "", "Kara delikler nasıl oluşur": "",
+            "Japonlar hiç hasta olmaz, doğru mu?": "efsane", "Saat 12:30'da ne oldu": "", "": "",
+            "Ya Sen Olsaydın: Osmanlı'da yaşamak": "olsaydin", "NASIL YAPILIR: Raf takmak": "nasil",
+            "genel: Çay nasıl demlenir?": "", "efsane:": "",
+        }
+        for konu, kalip in ornekler.items():
+            self.assertEqual(seri_tahmini(konu)[0], kalip, konu)
+        self.assertEqual(seri_tahmini("  Ya Sen Olsaydın:  Osmanlı'da   yaşamak "), ("olsaydin", "Osmanlı'da yaşamak"))
+        self.assertEqual(seri_tahmini("Saat 12:30'da ne oldu"), ("", "Saat 12:30'da ne oldu"))
 
     def test_zamanli_olcum_rapor_gondermez(self):
         # Sabri (2026-11-05): istatistik yalnız istediğinde gelsin. rapor.yml artık "kaydet" çalıştırır:
@@ -1769,6 +1811,18 @@ class KonuSirasiUretim(Ortak):
         self.assertEqual(self.kuyruk(), ilk[1:])
         self.assertIn("Konu sırasından alınan konu: " + ilk[0], out)
         self.assertIn("Konu sırasından çıkarıldı: " + ilk[0], out)
+
+    def test_siradaki_konunun_serisi_tahmin_edilir(self):
+        f = self.root / "state" / "konu_sirasi.json"
+        d = json.loads(f.read_text(encoding="utf-8"))
+        d["konular"] = ["Kuyumcu olsaydın", "genel: Piyango sana çıksaydı"]
+        f.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        cagri, out = self._main([])
+        self.assertEqual((cagri["topic"], cagri["structure"]), ("Kuyumcu olsaydın", "olsaydin"))
+        self.assertIn("Sabit anlatım kalıbı: olsaydin", out)
+        cagri, _ = self._main([])
+        self.assertEqual((cagri["topic"], cagri["structure"]), ("Piyango sana çıksaydı", None))
+        self.assertEqual(self.kuyruk(), [], "önekli konu da sıradan çıkar")
 
     def test_konu_verilirse_sira_degismez(self):
         ilk = self.kuyruk()

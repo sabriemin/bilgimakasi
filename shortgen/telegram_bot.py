@@ -602,10 +602,11 @@ def process_update(u: dict, chat: str) -> None:
                 lines += ["", f"Zamanlanan: {len(plan)}", plan_all()]
             api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
         elif text.startswith("/uret"):
-            topic = text[5:].strip()
-            ok = _dispatch(topic)
-            api("sendMessage", data={"chat_id": chat, "text": "Üretim başlatıldı, birkaç dakika içinde gelir." if ok
-                                     else "Üretim başlatılamadı."})
+            from .trends import seri_tahmini
+            kalip, topic = seri_tahmini(re.sub(r"^/uret(@\w+)?", "", text))
+            ok = _dispatch(topic, kalip=kalip)
+            api("sendMessage", data={"chat_id": chat, "text": ("Üretim başlatıldı" + _seri_notu(kalip)
+                                     + ", birkaç dakika içinde gelir.") if ok else "Üretim başlatılamadı."})
         elif text.startswith("/oneri"):
             ok = _dispatch("", "oneri.yml")
             api("sendMessage", data={"chat_id": chat, "text": "🔎 Gündem taranıyor, öneriler 2-3 dakikada gelir."
@@ -628,7 +629,9 @@ def process_update(u: dict, chat: str) -> None:
         elif text.startswith("/start") or text.startswith("/yardim"):
             api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
                                      "/oneri: 6 seriden 18 konu önerisi (butonla üret)\n"
-                                     "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n"
+                                     "/uret [konu]: hemen yeni video üret (konu isteğe bağlı; 'Kuyumcu olsaydın', "
+                                     "'Çay nasıl demlenir?' gibi konularda seri kendiliğinden seçilir, başına "
+                                     "'genel:' yazarsan serbest kalır)\n"
                                      "/durum: bekleyen ve zamanlanan videolar\n"
                                      "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n"
                                      "/saatler: platformların en iyi paylaşım saatleri\n"
@@ -954,8 +957,10 @@ def process_panel(p: dict, chat: str) -> None:
             topic = " ".join(str(p.get("topic") or "").split())
             if len(topic) > 300:
                 raise ValueError("konu en fazla 300 karakter olabilir")
-            ok = _dispatch(topic)
-            say(("🎬 Üretim başladı: " + (topic or "konu sıradan veya gündemden seçilecek")
+            from .trends import seri_tahmini
+            kalip, topic = seri_tahmini(topic)
+            ok = _dispatch(topic, kalip=kalip)
+            say(("🎬 Üretim başladı: " + (topic or "konu sıradan veya gündemden seçilecek") + _seri_notu(kalip)
                  + "\nYaklaşık 15 dakikada gelir.") if ok else "⚠️ Üretim başlatılamadı.")
         elif action == "refresh_suggestions":
             ok = _dispatch("", "oneri.yml")
@@ -1237,6 +1242,13 @@ def _redact_safe(text) -> str:
     """Günlüğe yazılan hata metni (ağ hataları adreste anahtar taşır)."""
     from .publish import _redact
     return _redact(text or "")
+
+
+def _seri_notu(kalip: str) -> str:
+    """Elle yazılan konudan seri tahmin edildiyse yanıta eklenen not (serbest kalıpta boş)."""
+    from .trends import seri_adi
+    ad = seri_adi(kalip)
+    return f" ({ad} serisi; genel video için konunun başına 'genel:' yaz)" if ad else ""
 
 
 def _dispatch(topic: str, workflow: str = "uret.yml", kalip: str = "", inputs: dict | None = None) -> bool:

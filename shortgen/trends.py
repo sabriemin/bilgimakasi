@@ -14,6 +14,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import List, Literal
@@ -120,6 +121,52 @@ def seri_of(it) -> str:
 def kalip_of(it) -> str:
     """Öneriden üretimde zorunlu anlatım kalıbı ('' = normal dönüşüm)."""
     return SERI_KALIP.get(seri_of(it), "")
+
+
+# Elle yazılan konunun serisi (Telegram /uret, panel "Şimdi üret", panel konu sırası). Başta "seri:" öneki varsa o
+# seri kullanılır (ör. "olsaydin: Piyango sana çıksaydı"; "genel:" serbest kalıp demektir). Önek yoksa yalnız açık
+# işaretlerden tahmin edilir; emin olunmayan konu serbest kalıpta kalır.
+_SERI_ONEK = {"genel": "", "serbest": "", "efsane": "efsane", "efsane mi gercek mi": "efsane", "nasil": "nasil",
+              "nasil yapilir": "nasil", "uretim": "uretim", "nasil uretiliyor": "uretim", "olsaydin": "olsaydin",
+              "ya sen olsaydin": "olsaydin"}
+_NASIL_FIIL = ("yapılır|hazırlanır|demlenir|pişirilir|temizlenir|yıkanır|ütülenir|katlanır|dikilir|takılır|sökülür|"
+               "değiştirilir|kullanılır|bağlanır|kurulur|saklanır|çıkarılır|onarılır|giderilir|ayıklanır|doğranır|"
+               "soyulur|haşlanır|kızartılır|kaynatılır|boyanır|asılır|sıkılır|ayarlanır|açılır|tamir edilir")
+_SERI_IZ = (
+    ("uretim", re.compile(r"\bnasıl (üretil|imal edil)|fabrikada nasıl|üretim (süreci|aşamaları)")),
+    ("olsaydin", re.compile(r"\w(saydın|seydin)\b")),
+    ("nasil", re.compile(rf"\bnasıl (\w+ )?({_NASIL_FIIL})\b")),
+    ("efsane", re.compile(r"\befsane mi\b|\b(gerçek|doğru) mu\s*\??\s*$")),
+)
+
+
+def _sade(s: str) -> str:
+    s = s.replace("I", "ı").replace("İ", "i").lower()
+    return s.translate(str.maketrans("ıçğöşü", "icgosu")).strip(" ?!.")
+
+
+def seri_tahmini(konu: str) -> tuple[str, str]:
+    """(kalıp, konu): elle yazılan konunun anlatım kalıbı ('' = serbest) ve öneki atılmış konu."""
+    konu = " ".join(str(konu or "").split())
+    if ":" in konu:
+        on, kalan = konu.split(":", 1)
+        if _sade(on) in _SERI_ONEK and kalan.strip():
+            return _SERI_ONEK[_sade(on)], kalan.strip()
+    k = konu.replace("I", "ı").replace("İ", "i").lower()
+    for kalip, iz in _SERI_IZ:
+        if kalip == "olsaydin":
+            # ikinci tekil şart ("kuyumcu olsaydın") ya da "sen/sana" ile şart ("piyango sana çıksaydı");
+            # "Titanik batmasaydı" gibi genel "ya olsaydı" konuları serbest kalır
+            if iz.search(k) or (re.search(r"\b(sen|sana|seni|senin)\b", k) and re.search(r"\w(saydı|seydi)\b", k)):
+                return kalip, konu
+        elif iz.search(k):
+            return kalip, konu
+    return "", konu
+
+
+def seri_adi(kalip: str) -> str:
+    """Kalıbın seri adı (ör. olsaydin -> 'Ya sen olsaydın?'); serbest kalıp için ''."""
+    return next((SERILER[s] for s, k in SERI_KALIP.items() if k == kalip), "")
 
 
 def uretim_konusu(it) -> str:

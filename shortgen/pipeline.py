@@ -300,6 +300,11 @@ def main() -> None:
         if queued:
             print("Konu sırasından alınan konu:", queued)
         topic = a.topic or queued
+        if queued and not a.structure and not a.template:
+            # panelde sıraya yazılan konunun serisi (ör. "Kuyumcu olsaydın" -> olsaydin; "genel:" öneki serbest)
+            from .trends import seri_tahmini
+            kalip, topic = seri_tahmini(queued)
+            a.structure = kalip or None
         if not topic and os.environ.get("AUTO_TREND", "1") != "0":
             try:  # konu verilmediyse önerilerin en yüksek puanlısını seç (nasil, uretim, olsaydin otomatik seçilmez)
                 from . import trends
