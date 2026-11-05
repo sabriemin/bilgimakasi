@@ -183,6 +183,10 @@ class Scene(BaseModel):
     callouts: List[str] = Field(default_factory=list, description=(
         "Yalnız nasil kalıbının adım sahneleri: çizimin üstüne konacak en fazla 2 küçük not etiketi, her biri en fazla "
         "3 kelime/18 karakter, BÜYÜK HARF (ör. 'TAŞMA SINIRI', '12-15 DK'). Çoğu sahnede boş."))
+    # --- dosya şablonu ---
+    delil: int = Field(default=0, ge=0, description=(
+        "Yalnız Dava Dosyası şablonu (efsane kalıbı): bu sahnenin delil numarası (1, 2, 3...); aynı delilin devam "
+        "sahnesi aynı numarayı alır. Kanca, iddia, ara ve hüküm sahnelerinde 0. Diğer şablonlarda 0."))
 
 
 class ShortScript(BaseModel):
@@ -213,6 +217,10 @@ class ShortScript(BaseModel):
     alkollu: bool = Field(default=False, description=(
         "Yalnız nasil kalıbı: tarif alkollü bir içecek içeriyorsa true (açıklamaya yaş uyarısı eklenir). Diğer "
         "durumlarda false."))
+    # --- dosya şablonu ---
+    hukum: Literal["", "EFSANE", "GERÇEK", "KISMEN DOĞRU"] = Field(default="", description=(
+        "Yalnız efsane kalıbı (Dava Dosyası şablonu): inanışın hükmü; inanış yanlışsa EFSANE, doğruysa GERÇEK, bir "
+        "kısmı doğruysa KISMEN DOĞRU. Diğer kalıplarda boş."))
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
@@ -832,6 +840,13 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         print("Doğrulama notları:", *review.problems, sep="\n - ")
     if keep_structure:
         review.fixed.structure = script.structure
+    # Dava Dosyası alanları: doğrulayıcı boş döndürürse (alanı atladıysa) yazarın değeri kalır; hükmü gerekçeyle
+    # değiştirebilir
+    if not review.fixed.hukum:
+        review.fixed.hukum = script.hukum
+    if len(review.fixed.scenes) == len(script.scenes) and not any(sc.delil for sc in review.fixed.scenes):
+        for a, b in zip(script.scenes, review.fixed.scenes):
+            b.delil = a.delil
     return normalize_nasil(review.fixed)
 
 
@@ -908,7 +923,7 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
         return script
     korunan = [f for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon",
                            "anim_query", "card", "card_value", "card_label", "card_myth", "card_fact", "card_note",
-                           "card_lines", "mascot", "step", "callouts") if f in Scene.model_fields]
+                           "card_lines", "mascot", "step", "callouts", "delil") if f in Scene.model_fields]
     for i, (a, b) in enumerate(zip(script.scenes, fixed.scenes)):  # görsel alanları kesin olarak koru
         for f in korunan:
             setattr(b, f, getattr(a, f))
@@ -920,6 +935,7 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
     fixed.sources, fixed.category = script.sources, script.category
     fixed.search_phrase, fixed.structure = script.search_phrase, script.structure
     fixed.alkollu = script.alkollu
+    fixed.hukum = script.hukum  # Dava Dosyası hükmü: dil editörü değiştiremez
     return fixed
 
 
