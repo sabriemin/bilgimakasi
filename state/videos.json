@@ -506,10 +506,11 @@
     "category": "bilim",
     "template": "kart",
     "created": "2026-11-05T21:31:28",
-    "status": "onay_bekliyor",
+    "status": "reddedildi",
     "telegram_message_id": 178,
     "aciklama_message_id": 179,
-    "platforms": {}
+    "platforms": {},
+    "decided": "2026-11-06T00:47:30+03:00"
   },
   {
     "tag": "short-20261105-213643",
