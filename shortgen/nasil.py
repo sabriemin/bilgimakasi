@@ -107,6 +107,7 @@ BELT_LEG = 440                             # ayakların alt ucu (PROG içinde; k
 BELT_RUN = 7                               # bandın mürekkep kalınlığı (üst kol: diş izleri, işlenen kısım kırmızı)
 BELT_COL = (198, 192, 181)                 # bandın içi (makaraların arkası)
 TREAD = 24                                 # diş izleri aralığı: fazda 4 px kayar, makara çizgisi 15 derece döner
+BELT_VMAX = 2 * TREAD / 6 * FPS            # bandın en yüksek hızı (px/sn): karede en çok 2 faz (desen 6 fazda döner)
 BOX = {"up": (68, 60), "cur": (82, 72), "done": (68, 60)}   # aşama kutusu (genişlik, yükseklik)
 BOX_POP = 0.5                              # kutunun durum değişimindeki büyümesi düğümünkinin yarısı (PROG'a sığar)
 Q_RE = re.compile(r"\byorumlara\s+yaz", re.I)
@@ -653,6 +654,7 @@ class NasilVideo:
         self._speech: dict = {}
         self._nodes: dict = {}
         self._q_breaks: dict = {}
+        self._belt_off: tuple[float, list[float]] | None = None
 
     # ------------------------------------------------------------ zaman
     def seg_at(self, t: float) -> int:
@@ -882,13 +884,33 @@ class NasilVideo:
             self._nodes[key] = pen.done()
         return self._nodes[key]
 
+    def belt_offset(self, t: float) -> float:
+        """Bandın kayması (px): Makas'ın pimini izler ama hızı BELT_VMAX ile sınırlıdır. Makas düğüme varırken ve
+        üstünden atlarken karede 15-29 px gider; desen 24 px'te (6 fazda) döndüğü için ham konum diş izlerini ve makara
+        çizgilerini geri, ileri ya da yerinde oynatırdı. Kayma videonun başından bir kez çizelgelenir (kare yalnız t'ye
+        bağlı kalır); Makas yokken (özet) bant durur."""
+        if self._belt_off is None:
+            dt = 1 / (FPS * 4)
+            end = max([self.segs[-1].end] + [w.end for w in self.words[-1:]]) + 2.0
+            prev = self.scissors_at(0.0)[0]
+            off, tab = prev if prev is not None else self.node_x[-1], []
+            for i in range(int(end / dt) + 2):
+                x = self.scissors_at(i * dt)[0]
+                if x is not None and prev is not None:
+                    off += K.clamp(x - prev, -BELT_VMAX * dt, BELT_VMAX * dt)
+                prev = x if x is not None else prev
+                tab.append(off)
+            self._belt_off = (dt, tab)
+        dt, tab = self._belt_off
+        return tab[min(len(tab) - 1, max(0, int(round(t / dt))))]
+
     def belt_progress(self, img: Image.Image, t: float) -> None:
         """Yürüyen bant: kutular düğümlerin yerinde bandın üstünde, Makas (ilerleme makası) bandın üstünde kutudan
-        kutuya ilerler; bant onunla birlikte kayar, işlenen kısmı (ilk kutudan Makas'a) kırmızıdır."""
+        kutuya ilerler; bant onunla birlikte, hızı sınırlı olarak kayar (belt_offset), işlenen kısmı (ilk kutudan
+        Makas'a) kırmızıdır."""
         x, dy, cutting, bar = self.scissors_at(t)
         nx = self.node_x
-        pin = x if x is not None else nx[-1]
-        phase = int(round(pin / (TREAD / 6))) % 6
+        phase = int(round(self.belt_offset(t) / (TREAD / 6))) % 6
         lay = self.belt_base(phase).copy()
         ox, oy = PROG[:2]
         bar = max(nx[0], bar)

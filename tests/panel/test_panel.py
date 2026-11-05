@@ -2166,6 +2166,10 @@ class OneriSerileri(Ortak):
         self.assertIn(sc.NASIL_GUVENLIK, sc.NASIL_RULES)
         self.assertIn("koruyucu gözlük", sc.NASIL_GUVENLIK)
         self.assertIn("kablo ve boru kontrolü", sc.NASIL_GUVENLIK)
+        # kart şablonu (nasil'in şimdiki yolu) callout çizmez: not dış seste söylenmeli
+        self.assertIn("bir adımın dış sesinde (narration) söylensin", sc.NASIL_GUVENLIK)
+        self.assertIn("yalnız callout'ta kalmasın", sc.NASIL_GUVENLIK)
+        self.assertNotIn("bir adımda ya da callout'ta", sc.NASIL_GUVENLIK)
         self.assertIn(sc.NASIL_YASAK, sc.STRUCTURES["nasil"][1], "senaryo yönergesi")
         self.assertIn(sc.NASIL_YASAK, self.tr.SYSTEM, "öneri yönergesi")
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
@@ -2184,6 +2188,7 @@ class OneriSerileri(Ortak):
                       + sc.NASIL_YASAK, istekler[0])
         self.assertNotIn("Güvenli olmayan", istekler[1], "diğer kalıpların doğrulama yönergesi değişmez")
         self.assertIn("güvenlik notu", istekler[0])
+        self.assertIn("dış sesinde (narration) yoksa ekle (yalnız callout'ta olması yetmez", istekler[0])
         # alanlar: öneri yönergesi altı alanı numaralı sayar, her öneri farklı alandan
         for alan in ("ev işleri ve temizlik", "matkapla dübel takma", "Türk mutfağı", "alkolsüz kokteyl", "yurt ya da küçük "
                      "oda düzeni", "ev hanımları için pratikler: çamaşır, ütü, leke çıkarma"):
@@ -3082,7 +3087,7 @@ class YeniSeriler(unittest.TestCase):
         self.assertIn(sc.EDITOR_URETIM, cagri[2][1])
         self.assertNotIn(sc.EDITOR_NASIL, cagri[2][1])
         # yönerge içeriği
-        for parca in ("AŞAMA n", "şimdiki zaman edilgen", "1.000°C", "72 SAAT", "image_mode none", "Yorumlara yaz.",
+        for parca in ("AŞAMA n", "geniş zaman edilgen", "1.000°C", "72 SAAT", "image_mode none", "Yorumlara yaz.",
                       "yılda kaç tane", "Türkiye'nin üretimi", "Kurşun kalemin içinde tek gram kurşun yok.",
                       "çay, fındık, lokum, cam, porselen, halı, bakır cezve, çini, nazar boncuğu, beyaz"):
             self.assertIn(parca, sc.URETIM_RULES)
@@ -3091,6 +3096,14 @@ class YeniSeriler(unittest.TestCase):
             self.assertIn(yasak, sc.URETIM_YASAK)
         for yer in (sc.STRUCTURES["uretim"][1], sc.URETIM_RULES, self.tr.SYSTEM):
             self.assertIn(sc.URETIM_YASAK, yer)
+        # anlatı zamanı her yerde aynı ad ve örnekle: geniş zaman ('pişirilir'); ekrandaki soru serinin adıyla aynı
+        for yer in (sc.STRUCTURES["uretim"][1], sc.URETIM_RULES, sc.EDITOR_URETIM):
+            self.assertIn("geniş\n" if yer is sc.EDITOR_URETIM else "geniş", yer)
+            self.assertIn("zaman edilgen", yer)
+            self.assertIn("pişirilir", yer)
+            self.assertNotIn("şimdiki", yer)
+        self.assertIn('"KURŞUN KALEM" / "NASIL" / "ÜRETİLİYOR?"', sc.URETIM_RULES)
+        self.assertNotIn("ÜRETİLİR?", sc.URETIM_RULES)
 
     def test_uretim_asama_duzeni(self):
         sc = self.sc
@@ -3220,6 +3233,11 @@ class YeniSeriler(unittest.TestCase):
                       "Piyango sana çıksaydı", "Yurt\n  dışına taşınsaydın", "Bir köyde yaşamaya başlasaydın",
                       "description alanına yazma"):
             self.assertIn(parca, sc.OLSAYDIN_RULES)
+        # sayaç kuralı KART_RULES'takiyle (yalnız sayı) çelişmesin: bu kalıpta açıkça onun yerine geçer
+        self.assertIn("yalnız sayı", sc.KART_RULES)
+        self.assertIn("genel counter kuralının yerine geçer: birim card_value'da kalır, card_label'a yazılmaz",
+                      " ".join(sc.OLSAYDIN_RULES.split()))
+        self.assertIn("olsaydin kalıbında birimiyle", sc.Scene.model_fields["card_value"].description)
         for yasak in ("yasa dışı ya da ruhsatsız", "kumar ve bahis", "alkol ya da tütün satışına", "kripto para, borsa, "
                       "forex", "yatırım ürünü", "saadet zinciri", "MLM", "kredi çekme tavsiyesi", "vergi kaçırma",
                       "gelirini ifşa", "garanti kazanç", "sağlık ve tıbbi", "siyasi kutuplaştırıcı"):

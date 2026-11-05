@@ -52,25 +52,33 @@ kalıptaki senaryoyla kullanılmaz (pipeline durur). Marka kapanışı kart şab
 
 `--template nasil` kalıp verilmemişse senaryoyu `nasil` kalıbıyla yazdırır. Nasıl yapılır? serisinin otomatik olarak
 bu şablona gitmesi için `templates/eslesme.json` → `yapi_sablon` içinde `"nasil": "kart"` değerini `"nasil"` yapın
-(onaydan önce `kart` kalır). Claude'un şablon önerisi `kart` ve `nasil`'i seçemez.
+(onaydan önce `kart` kalır). Claude'un şablon önerisi `kart`, `nasil` ve `uretim`'i seçemez (çizicisi `kart` ya da
+`nasil` olan şablonlar yalnız kendi kalıbıyla ya da `yapi_sablon` ile seçilir).
 
 ## Animasyonlar
 Claude, anlatılan şey doğal olarak hareket ediyorsa sahneye bir nesne animasyonu ekler (`shortgen/anim.py`):
 `fly_up` (roket, mekik), `fly_right` / `fly_left` (uçak, kuş, tren), `drop_in`, `zoom_in`, `float`, `spin`, `orbit`, `pulse`, `shake`.
 Nesne Wikimedia'da önce şeffaf PNG olarak aranır; bulunamazsa fotoğrafın arka planı `rembg` ile silinir. Uçan nesnelerin arkasında duman izi oluşur.
 `templates/eslesme.json` hangi kategorinin hangi şablonu kullanacağını belirler. `claude_secsin: true` yapılırsa Claude her konu için şablonu kendisi önerir.
-`yapi_sablon` anlatım kalıbına göre şablon seçer ve kategori eşleşmesinden önce gelir (şimdilik `nasil` → `kart`).
+`yapi_sablon` anlatım kalıbına göre şablon seçer ve kategori eşleşmesinden önce gelir (şimdilik `nasil` → `kart`,
+`uretim` → `uretim`, `olsaydin` → `kart`).
 Elle seçmek için: `python -m shortgen.pipeline --template gece`
 
 ## Konu önerileri
-`/oneri` (ya da paneldeki "Yeni öneriler iste") tek bir web aramalı Claude çağrısıyla dört seriden üçer öneri getirir:
-🔥 Popüler (bugünün gündemine bağlı şaşırtıcı açı), 📚 Konular (gündemden bağımsız şaşırtıcı konu),
-🧐 Efsane mi, gerçek mi? (Türkiye'de yaygın yanlış inanış) ve 🛠 Nasıl yapılır? (3-5 adımlık güvenli, pratik yöntem).
-Öneriden üretimde serinin kalıbı sabitlenir: efsane → `efsane`, nasıl yapılır → `nasil` (`--structure`).
+`/oneri` (ya da paneldeki "Yeni öneriler iste") tek bir web aramalı Claude çağrısıyla altı seriden üçer, toplam 18
+öneri getirir (Telegram'da üçer serilik iki mesaj): 🔥 Popüler (bugünün gündemine bağlı şaşırtıcı açı), 📚 Konular
+(gündemden bağımsız şaşırtıcı konu), 🧐 Efsane mi, gerçek mi? (Türkiye'de yaygın yanlış inanış), 🛠 Nasıl yapılır?
+(3-5 adımlık güvenli, pratik yöntem), 🏭 Nasıl üretiliyor? (gündelik bir ürünün hammaddeden bitmiş ürüne 3-5 aşamada
+üretimi) ve 💭 `olsaydin` serisi (izleyiciyi bir mesleğe, para olayına ya da hayat durumuna koyan, güncel Türkiye
+rakamlarıyla "olsaydın ne olurdu" hesabı; serinin adı geçicidir: ekran etiketi `script.STRUCTURES`, liste adı
+`trends.SERILER`, panel adı `cloudflare/panel_ui.js` `ONERI_SERILERI`, seri etiketi `publish.SERIES_TAGS` içindedir).
+Öneriden üretimde serinin kalıbı sabitlenir: efsane → `efsane`, nasıl yapılır → `nasil`, nasıl üretiliyor → `uretim`,
+`olsaydin` → `olsaydin` (`--structure`).
 Otomatik üretim yalnız ilk üç seriden seçer (son video efsane kalıbındaysa Efsane önerisini atlar), kendi önerilerini
-kaydetmez; `nasil` kalıbı otomatik dönüşüme girmez. Konu sırası yalnız metni tuttuğu için Efsane ve Nasıl yapılır?
-önerileri sıraya eklenmez, yalnız "Üret" ile üretilir. Telegram düğmeleri listenin damgasını taşır: liste yenilendikten
-sonra eski mesajdan basılan düğme başka bir konuyu üretmez.
+kaydetmez; `nasil`, `uretim` ve `olsaydin` kalıpları otomatik dönüşüme girmez. Konu sırası yalnız metni tuttuğu için
+Efsane, Nasıl yapılır?, Nasıl üretiliyor? ve `olsaydin` önerileri sıraya eklenmez, yalnız "Üret" ile üretilir.
+Telegram düğmeleri listenin damgasını taşır: liste yenilendikten sonra eski mesajdan basılan düğme başka bir konuyu
+üretmez.
 
 ## GitHub Actions ve Telegram
 - `uret.yml`: her gün 09:00 ve 18:00'de (Türkiye saati) video üretir, GitHub Releases'a koyar ve Telegram'a Onayla / Reddet düğmeleriyle gönderir.

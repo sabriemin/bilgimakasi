@@ -27,7 +27,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 from . import render
-from .script import STRUCTURES
+from .script import STRUCTURES, tutar
 from .voice import Word
 
 W, H, FPS = render.W, render.H, render.FPS
@@ -1264,7 +1264,9 @@ class CounterCard(Card):
 def parse_receipt(lines, limit: int = 5) -> list[tuple[str, str]]:
     """Hesap fişi satırları (Scene.card_lines): 'KALEM|TUTAR' -> (KALEM, TUTAR), Türkçe büyük harf, fazla boşluklar
     teke iner. Tutar yoksa '' ('KİRA', 'KİRA|'); birden çok '|' varsa kalem ilk parça, tutar son dolu parça; '|' hiç
-    yoksa 'KİRA: 135.000 ₺' gibi son iki noktadan ayrılır. Boş satırlar atlanır, ilk limit (5) satır kalır."""
+    yoksa 'KİRA: 135.000 ₺' gibi son iki noktadan ayrılır. Boş satırlar atlanır. limit'ten (5) fazla satır varsa ilk
+    limit - 1 satır kalır, kalanlar tutarlarının toplamıyla tek 'DİĞER' satırında birleşir: görünen satırlar yine
+    toplama (card_value) eşit kalır."""
     out = []
     for raw in lines or []:
         text = re.sub(r"\s+", " ", str(raw or "")).strip()
@@ -1277,9 +1279,26 @@ def parse_receipt(lines, limit: int = 5) -> list[tuple[str, str]]:
         if not label and not amount:
             continue
         out.append((tr_upper(label), tr_upper(amount)))
-        if len(out) >= limit:
-            break
+    if len(out) > limit:
+        out = out[:limit - 1] + [("DİĞER", receipt_sum([a for _, a in out[limit - 1:]]))]
     return out
+
+
+def receipt_sum(amounts: list[str]) -> str:
+    """Fiş tutarlarının toplamı, tutarların yazılışıyla: hepsi aynı büyüklük birimindeyse o birimle ('-20 MİLYON ₺' +
+    '-3 MİLYON ₺' -> '-23 MİLYON ₺'), değilse binlik ayraçlı tam sayı ('-270.000 ₺' + '1 ₺' -> '-269.999 ₺').
+    Tutarsız satır toplama girmez; okunamayan ya da yüzde tutar varsa (toplanamaz) ''."""
+    vals = [a for a in amounts if a]
+    parsed = [tutar(a) if "%" not in a else None for a in vals]
+    if not vals or any(p is None for p in parsed):
+        return ""
+    total = sum(p[0] for p in parsed)
+    units = {m.group(0) if (m := re.search(r"MİLYAR|MİLYON|BİN", a)) else "" for a in vals}
+    unit = units.pop() if len(units) == 1 else ""
+    n = abs(total) / {"BİN": 1e3, "MİLYON": 1e6, "MİLYAR": 1e9}.get(unit, 1.0)
+    dec = next((d for d in (0, 1, 2) if abs(n * 10 ** d - round(n * 10 ** d)) < 1e-6), 2)
+    cur = next((c for c in ("₺", "TL") if any(c in a for a in vals)), "")
+    return ("-" if total < 0 else "") + fmt_value(round(n, dec), dec, True) + "".join(f" {x}" for x in (unit, cur) if x)
 
 
 # hesap fişi satırını dış sese bağlarken sayılmayan kelimeler (bağlaç, edat, niteleyen)
@@ -1288,11 +1307,11 @@ RECEIPT_STOP = CLITICS | MODIFIERS | {"ve", "ya", "veya", "için", "+", "-", "&"
 
 class ReceiptCard(Card):
     """Hesap fişi (olsaydin kalıbı): kırık beyaz termal kâğıt, zikzak yırtık üst/alt kenar, hafif eğik, sert mürekkep
-    gölge, üstte sarı bant. Satırlar ('KALEM ........ TUTAR', mono ≥ 40 px, eksi tutarlar kırmızı) dış ses ilerledikçe
-    birer birer basılır: kâğıt aşağı doğru beslenir, alt yırtık kenar yeni satırın altına iner (satırın kalemi ya da
-    tutarı söylenince; söylenmiyorsa sahneye eşit yayılır). Son satırdan sonra çift çizginin altına toplam basılır,
-    tutar kırmızı yırtık etikette damga gibi iner ve Makas şaşırır; card_note fişin altında küçük. Kapak sahnesinde
-    fiş ilk karede tam basılı."""
+    gölge, üstte sarı bant. Satırlar ('KALEM ........ TUTAR', mono 44-32 px, uzun kalem iki satıra sarılır, eksi
+    tutarlar kırmızı) dış ses ilerledikçe birer birer basılır: kâğıt aşağı doğru beslenir, alt yırtık kenar yeni
+    satırın altına iner (satırın kalemi ya da tutarı söylenince; söylenmiyorsa sahneye eşit yayılır). Son satırdan
+    sonra çift çizginin altına toplam basılır, tutar kırmızı yırtık etikette damga gibi iner ve Makas şaşırır;
+    card_note fişin altında küçük. Kapak sahnesinde fiş ilk karede tam basılı."""
     still = False
     PW = 700                       # kâğıt genişliği
     PAD = 34                       # kâğıt iç kenar boşluğu (yan)
@@ -1316,12 +1335,8 @@ class ReceiptCard(Card):
         # diğer sahnelerde kayan başlığın (KIN) hemen altı
         top = y0 + 86 if self.hook else KIN[3] + 12
         avail = CARD_FLOOR - 4 - top
-        for fs, wrap_ok, lhk in ((44, True, 1.3), (42, True, 1.3), (40, True, 1.3), (40, False, 1.3),
-                                 (40, False, 1.18)):
-            self._layout(fs, wrap_ok, lhk)
-            if self.full_h() <= avail:
-                break
-        self.scale = min(1.0, avail / self.full_h())   # son çare: fiş bütünüyle küçülür
+        self._fit_rows(avail)
+        self.scale = min(1.0, avail / self.full_h())   # sığmayan fiş bütünüyle küçülür
         self._content = self._draw_content()
         self._paper: dict = {}
         vx0, vy0, vx1, vy1 = self.paper(self.L_full).getchannel("A").getbbox()
@@ -1337,6 +1352,30 @@ class ReceiptCard(Card):
         self.timing(max(0.6, ctx["dur"]))
 
     # ------------------------------------------------------------ yerleşim (kâğıdın yerel koordinatları, y aşağı)
+    # kalem satırlarının yerleşimleri (mono yazı boyu, satır aralığı katsayısı): sığmayan kalem iki satıra sarılır
+    WRAPPED = ((44, 1.3), (42, 1.3), (40, 1.3), (38, 1.15), (36, 1.12), (34, 1.12), (32, 1.12))
+    MIN_FS = 26                    # fiş küçülünce kalem yazısının ekrandaki en küçük boyu (fişin alt başlığı kadar)
+
+    def _fit_rows(self, avail: float) -> None:
+        """Kalem satırlarının yerleşimi: önce kalemler kısaltılmadan (gerekirse iki satıra sarılarak) 44'ten 36 px'e
+        küçülen yazıyla, fiş küçülmeden sığan ilk yerleşim; yoksa fişin bütünüyle küçüleceği sarılı yerleşimlerden
+        kalem yazısını ekranda en büyük gösteren (32 px'e kadar). O da MIN_FS'in altında kalırsa (çok satırlı uzun
+        kalemler kapakta) son çare kalemler tek satırda kelime sınırında kısaltılır."""
+        for fs, lhk in self.WRAPPED[:5]:
+            self._layout(fs, True, lhk)
+            if self.full_h() <= avail:
+                return
+        best = None
+        for fs, lhk in self.WRAPPED:
+            self._layout(fs, True, lhk)
+            shown = fs * min(1.0, avail / self.full_h())
+            if best is None or shown > best[0] + 1e-6:
+                best = (shown, fs, lhk)
+        if best[0] >= self.MIN_FS:
+            self._layout(best[1], True, best[2])
+        else:
+            self._layout(40, False, 1.18)
+
     def _layout(self, fs: int, wrap_ok: bool, lhk: float) -> None:
         self.fs, self.lh = fs, round(fs * lhk)
         iw = self.PW - 2 * self.PAD
@@ -1359,17 +1398,35 @@ class ReceiptCard(Card):
         self.feed = [self.rule_y + 10] + [g[3] + 12 for g in self.row_geo]
         y += 10
         self.rule2 = y if self.total else None
+        self.total_stacked = False
         if self.total:
             y += 30
-            lsz = 40
-            ts = 76
-            while ts > 44 and tw(self.total, "anton", ts) + 0.4 * ts > iw - tw(self.total_label, "archivo", lsz) - 36:
+            lsz, ts, label = 40, 76, self.total_label
+
+            def spare() -> float:                  # etiketle damga arasında 42 px'ten artan yer (< 0: sığmıyor)
+                return iw - tw(label, "archivo", lsz) - 36 - (tw(self.total, "anton", ts) + 0.4 * ts)
+            while ts > 44 and spare() < 0:          # önce damga küçülür,
                 ts -= 4
-            self.total_size = ts
+            while lsz > 30 and spare() < 0:         # en küçüğünde etiket de küçülür
+                lsz -= 2
+            self.total_stacked = spare() < 0
+            if self.total_stacked:                 # yine sığmıyorsa etiket kendi satırında, damga altında sağa yaslı
+                lsz, ts = 40, 76
+                while lsz > 30 and tw(label, "archivo", lsz) > iw:
+                    lsz -= 2
+                label = fit_words(label, "archivo", lsz, iw)
+                while ts > 44 and tw(self.total, "anton", ts) + 0.4 * ts > iw - 36:
+                    ts -= 4
+            self.total_size, self.total_label_size, self.total_label_text = ts, lsz, label
             lab = torn_label(self.total, ts, OFF, RED, 4500 + self.idx)
             self.total_h = lab.h
+            cap = -tbox("H", "archivo", lsz)[1]
+            if self.total_stacked:
+                self.total_base = y + cap
+                y = self.total_base + 24           # Ç, Ş çengelleri ve damganın yırtık kenarı birbirine değmez
+            else:
+                self.total_base = y + lab.h / 2 + cap / 2
             self.total_c = (self.PW - self.PAD - lab.w / 2 + 6, y + lab.h / 2)
-            self.total_base = y + lab.h / 2 - tbox("H", "archivo", lsz)[1] / 2
             y += lab.h + 26                        # etiketin eğimi ve gölgesi nota binmesin
         if self.note:
             self.note_base = y - tbox("H", "mono", 28)[1]
@@ -1448,7 +1505,7 @@ class ReceiptCard(Card):
         if self.rule2 is not None:
             for yy in (self.rule2, self.rule2 + 10):
                 sp.line([(x0, yy), (x1, yy)], INK, 3.5)
-            sp.text((x0, self.total_base), self.total_label, "archivo", 40, INK)
+            sp.text((x0, self.total_base), self.total_label_text, "archivo", self.total_label_size, INK)
         if self.note:
             sp.text((cx, self.note_base), fit(self.note, "mono", 28, iw), "mono", 28, DGREY, anchor="ms")
         return sp.im

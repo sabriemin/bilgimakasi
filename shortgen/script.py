@@ -71,9 +71,10 @@ def nasil_yasak(alkol: bool = ALKOLLU_ICECEK) -> str:
 
 NASIL_YASAK = nasil_yasak()
 # alet ve tarif adımlarının ortak kuralı (kalıp tanımı ve Adım kartları düzeni aynı cümleyi kullanır)
-NASIL_GUVENLIK = ("Alet kullanılan işte kısa bir güvenlik notu bir adımda ya da callout'ta geçsin (ör. koruyucu gözlük; "
-                  "duvarı delmeden önce kablo ve boru kontrolü). Tariflerde miktar, sıcaklık ve süreler kesin ve "
-                  "doğrulanmış olsun.")
+NASIL_GUVENLIK = ("Alet kullanılan işte kısa bir güvenlik notu bir adımın dış sesinde (narration) söylensin (ör. "
+                  "koruyucu gözlük; duvarı delmeden önce kablo ve boru kontrolü); Adım kartlarında ayrıca callout "
+                  "olarak da yazılabilir ama yalnız callout'ta kalmasın. Tariflerde miktar, sıcaklık ve süreler kesin "
+                  "ve doğrulanmış olsun.")
 # senaryonun 'alkollu' alanı: açıklamadaki yaş uyarısı bu alana bağlı (ALKOLLU_ICECEK kapalıyken alan hep false)
 NASIL_ALKOL = (" Tarif alkollü bir içecekse 'alkollu' alanını true yap; açıklamaya yaş uyarısı kendiliğinden eklenir."
                if ALKOLLU_ICECEK else "")
@@ -113,7 +114,7 @@ STRUCTURES = {
                "(belgesellerdeki 'nasıl yapılmış' tarzı). İlk sahne kanca: ilk cümlede ürünle ilgili şaşırtıcı bir gerçek "
                "ya da soru ('Kurşun kalemin içinde tek gram kurşun yok.') → 3-5 üretim aşaması, gerçek sırasıyla; her "
                "aşama TEK sahne olsun (step alanı 1, 2, 3...; headline'ın ilk satırı 'AŞAMA 1', 'AŞAMA 2' diye aşama "
-               "numarası, sonraki satır(lar) aşamanın kendisi, ör. 'AŞAMA 2' / 'GRAFİT PİŞİRİLİR'); aşamalar şimdiki "
+               "numarası, sonraki satır(lar) aşamanın kendisi, ör. 'AŞAMA 2' / 'GRAFİT PİŞİRİLİR'); aşamalar geniş "
                "zaman edilgen çatıyla anlatılır ('Grafit kille karıştırılıp fırında pişirilir.') → son sahne ölçek: "
                "ürünün yılda kaç tane üretildiği ya da Türkiye'nin üretimi, ardından kısa bir soru. Sıcaklık, süre ve "
                "miktarlar doğrulanmış olsun; süreç izleyicinin evde deneyeceği bir şey gibi anlatılmasın. Şu alanlara "
@@ -160,7 +161,8 @@ class Scene(BaseModel):
     # Yalnız "kart" şablonu kullanır; diğer şablonlar yok sayar. Eski senaryolar için hepsi isteğe bağlı.
     card: Literal["auto", "photo", "drawing", "counter", "compare", "quote", "interstitial", "cta", "receipt"] = Field(
         default="auto", description="Kart şablonunda bu sahnenin kartı; çoğu sahnede auto.")
-    card_value: str = Field(default="", description="counter kartı: sayılacak sayı, ör. '3.300' ya da '%90'.")
+    card_value: str = Field(default="", description=(
+        "counter kartı: sayılacak sayı, ör. '3.300' ya da '%90' (olsaydin kalıbında birimiyle, ör. '1,2 MİLYON ₺')."))
     card_label: str = Field(default="", description="counter: sayının etiketi (ör. 'YIL ÖNCE'); quote: alıntının kendisi.")
     card_myth: str = Field(default="", description="compare: yaygın inanış, en fazla 6 kelime.")
     card_fact: str = Field(default="", description="compare: doğrusu, en fazla 6 kelime.")
@@ -322,12 +324,12 @@ ekrandır, adımların yerinde ürünün üretim AŞAMALARI vardır):
   kendi cümlesini yazar). Sıra:
   1) KANCA (ilk sahne, step 0): narration'ın ilk cümlesi ürünle ilgili şaşırtıcı bir gerçek ya da soru (en fazla 10
      kelime, ör. "Kurşun kalemin içinde tek gram kurşun yok."). headline ekranda büyük yazılan SORUDUR (2-3 satır,
-     satır başı 1-3 kelime, ör. "KURŞUN KALEM" / "NASIL" / "ÜRETİLİR?"; bu başlığın kelimeleri dış seste geçmeyebilir;
+     satır başı 1-3 kelime, ör. "KURŞUN KALEM" / "NASIL" / "ÜRETİLİYOR?"; bu başlığın kelimeleri dış seste geçmeyebilir;
      aşama sayısını yazma, "4 AŞAMA" ekranda kendiliğinden çıkar), highlight_line en vurucu satır. illustration ürünün
      kendisini gösteren tek, net çizim.
   2) AŞAMALAR (3-5 sahne, her aşama TEK sahne, üretimdeki gerçek sırayla): step 1, 2, 3...; headline'ın ilk satırı
      'AŞAMA n', sonraki 1-2 satır aşamanın kendisi, 2-5 kelime (ör. "AŞAMA 2" / "GRAFİT PİŞİRİLİR"). narration 1-2 kısa
-     cümle (8-14 kelime), şimdiki zaman edilgen çatıyla ("Grafit kille karıştırılıp fırında pişirilir."); "Önce",
+     cümle (8-14 kelime), geniş zaman edilgen çatıyla ("Grafit kille karıştırılıp fırında pişirilir."); "Önce",
      "Ardından", "Son olarak" gibi bağlaçlarla akar. Bu metin Makas'ın konuşma balonunda kelime kelime yazılır: kısa ve
      sade olsun. illustration: aşamadaki makineyi ya da malzemeyi gösteren yalın, düz bir çizim (ör. "graphite and clay
      rods sliding into a glowing industrial kiln"); çizimde yazı olmaz. callouts: çizimin üstündeki en fazla 2 küçük
@@ -357,7 +359,8 @@ OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; vid
 - KANCA: ilk cümle izleyiciyi duruma koyar ve çarpıcı bir rakam verir (en fazla 10 kelime). İlk headline durumu ve
   rakamı söyler.
 - DURAKLAR: 3-4 durak, her biri somut bir rakama dayanır. Rakamın sahnesi card "counter" olur: card_value rakamın
-  kendisi birimiyle (ör. "1,2 MİLYON ₺", "%25", "18 AY"), card_label 1-3 kelimelik etiket (ör. "AYLIK KİRA").
+  kendisi birimiyle (ör. "1,2 MİLYON ₺", "%25", "18 AY"), card_label 1-3 kelimelik etiket (ör. "AYLIK KİRA"). Bu kalıpta
+  bu kural KART ALANLARI'ndaki genel counter kuralının yerine geçer: birim card_value'da kalır, card_label'a yazılmaz.
 - HESAP FİŞİ: en az bir sahne card "receipt" olur. card_lines 2-5 satır, her satır "KALEM|TUTAR" (ör. "KİRA +
   DEPOZİTO|135.000 ₺"; kalem BÜYÜK HARF, en fazla 22 karakter; düşülen tutar eksiyle, ör. "VERGİ|-200.000 ₺").
   Satırların toplamı card_value'ya tam eşit olur (ör. "420.000 ₺"); card_label "TOPLAM" ya da benzeri ("AYLIK GİDER",
@@ -725,8 +728,9 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
              f"alanını da buna göre güncelle ({ozel} kalıplarına geçme: bunlar yalnız kendi serilerinden gelir). ")
     if yapi == "nasil":  # doğrulanabilir ama güvensiz bir yöntem de elensin
         kalip += "Güvenli olmayan ya da şu alanlara giren adımı çıkar veya güvenli bir adımla değiştir: " + NASIL_YASAK + ". "
-        kalip += ("Alet kullanılan işte kısa güvenlik notu (koruyucu gözlük, delmeden önce kablo ve boru kontrolü) yoksa "
-                  "ekle; tarifin miktar, sıcaklık ve sürelerini doğrula. ")
+        kalip += ("Alet kullanılan işte kısa güvenlik notu (koruyucu gözlük, delmeden önce kablo ve boru kontrolü) bir "
+                  "adımın dış sesinde (narration) yoksa ekle (yalnız callout'ta olması yetmez: kart şablonu callout "
+                  "çizmez); tarifin miktar, sıcaklık ve sürelerini doğrula. ")
         if ALKOLLU_ICECEK:
             kalip += "Tarif alkollü bir içecekse 'alkollu' alanını true, değilse false yap. "
     elif yapi == "uretim":
@@ -798,7 +802,7 @@ sahnelerinin dış sesi Makas'ın konuşma balonunda yazıldığı için kısa k
 # Yalnız uretim kalıbında editöre eklenir (Adım kartlarıyla çiziliyorsa EDITOR_NASIL ile birlikte).
 EDITOR_URETIM = """
 NASIL ÜRETİLİYOR: aşamaların sayısını ve sırasını koru; headline'ların ilk satırındaki 'AŞAMA 1', 'AŞAMA 2'
-numaralarını, step/callouts alanlarını ve süreç sayılarını (sıcaklık, süre, miktar, ölçek) değiştirme. Aşamalar şimdiki
+numaralarını, step/callouts alanlarını ve süreç sayılarını (sıcaklık, süre, miktar, ölçek) değiştirme. Aşamalar geniş
 zaman edilgen çatıyla anlatılsın ('pişirilir', 'kesilir'). Adım kartları kuralındaki 'adım' bu videoda 'aşama'dır."""
 
 # Yalnız olsaydin kalıbında editöre eklenir.

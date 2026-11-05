@@ -175,7 +175,22 @@ class FisSatirlari(unittest.TestCase):
         self.assertEqual(K.parse_receipt(None), [])
         self.assertEqual(K.parse_receipt(["", "   ", "|", " | "]), [])
         uzun = [f"KALEM {i}|{i} ₺" for i in range(1, 8)]
-        self.assertEqual([k for k, _ in K.parse_receipt(uzun)], [f"KALEM {i}" for i in range(1, 6)])
+        self.assertEqual(K.parse_receipt(uzun), [(f"KALEM {i}", f"{i} ₺") for i in range(1, 5)] + [("DİĞER", "18 ₺")])
+        # 6. satır sessizce düşmez: görünen satırlar toplama eşit kalır
+        alti = K.parse_receipt([f"{c}|10 ₺" for c in "ABCDEF"])
+        self.assertEqual(alti, [("A", "10 ₺"), ("B", "10 ₺"), ("C", "10 ₺"), ("D", "10 ₺"), ("DİĞER", "20 ₺")])
+        self.assertEqual(sum(S.tutar(a)[0] for _, a in alti), 60)
+        self.assertEqual(len(K.parse_receipt(uzun[:5])), 5)
+
+    def test_diger_toplami(self):
+        self.assertEqual(K.receipt_sum(["-20 MİLYON ₺", "-3 MİLYON ₺"]), "-23 MİLYON ₺")
+        self.assertEqual(K.receipt_sum(["4,5 MİLYON ₺", "1,2 MİLYON ₺"]), "5,7 MİLYON ₺")
+        self.assertEqual(K.receipt_sum(["-270.000 ₺", "1 ₺"]), "-269.999 ₺")
+        self.assertEqual(K.receipt_sum(["1 MİLYON ₺", "-250.000 ₺"]), "750.000 ₺")
+        self.assertEqual(K.receipt_sum(["135.000 TL", ""]), "135.000 TL")      # tutarsız satır toplama girmez
+        self.assertEqual(K.receipt_sum(["900.000 ₺", "%4"]), "")              # yüzde toplanmaz
+        self.assertEqual(K.receipt_sum(["YOK", "10 ₺"]), "")
+        self.assertEqual(K.receipt_sum(["", ""]), "")
 
 
 # ---------------------------------------------------------------- kart türü
@@ -340,6 +355,61 @@ class FisKarti(unittest.TestCase):
             self.assertLessEqual(K.tw(lines[-1], "mono", c.fs), room + 1e-6, lines)
         self.assertEqual(self.zor.scene(2).card.total_label, "TOPLAM")
 
+    @staticmethod
+    def kart(lines, value="45.000 ₺", label="ELİNE KALAN", idx=2):
+        spec = types.SimpleNamespace(words=[], start=0.0, end=8.0, headline=["ELİNE NE", "KALIR?"], narration="",
+                                     image=None, sprite=None, card={"type": "receipt", "lines": lines, "value": value,
+                                                                    "label": label, "note": "Tahmini · Kasım 2026"})
+        return K.ReceiptCard({"spec": spec, "idx": idx, "dur": 8.0, "slug": "deneme", "handle": "@x",
+                              "box": K.CARD0 if idx == 0 else K.CARD})
+
+    KUYUMCU = ["AYLIK CİRO|1.200.000 ₺", "ALTIN ALIŞ MALİYETİ|-950.000 ₺", "DÜKKÂN KİRASI|-85.000 ₺",
+               "ÇALIŞAN MAAŞLARI|-90.000 ₺", "VERGİ VE SİGORTA|-30.000 ₺"]
+
+    def test_kalemler_kisaltilmaz(self):
+        """İstemin sınırındaki (en fazla 22 karakter) kalemler 3-5 satırlık fişte '…' ile kesilmez: önce iki satıra
+        sarılır ve yazı küçülür; ekrandaki yazı fişin alt başlığından (MIN_FS) küçük olmaz."""
+        durumlar = [self.KUYUMCU[:n] for n in (3, 4, 5)] + [["KİRA + DEPOZİTO|-135.000 ₺"] * n for n in (3, 4, 5)]
+        durumlar.append(["UÇAK BİLETİ (TEK YÖN)|-1.250.000 ₺", "VİZE VE RESMİ BELGELER|-385.000 ₺",
+                         "KİRA + DEPOZİTO (2 AY)|-540.000 ₺", "İLK AY MARKET|-120.500 ₺", "ŞEHİR İÇİ ULAŞIM|-49.178 ₺"])
+        for idx in (2, 0):
+            for lines in durumlar[:6] if idx == 0 else durumlar:
+                c = self.kart(lines, idx=idx)
+                yazilar = [L for _, ls, _, _ in c.row_geo for L in ls]
+                self.assertFalse([L for L in yazilar if L.endswith("…")], (idx, yazilar))
+                self.assertEqual(" ".join(yazilar).split(), " ".join(k for k, _ in c.rows).split())
+                self.assertGreaterEqual(c.fs * c.scale, c.MIN_FS - 1e-6, (idx, lines))
+        c = self.kart(self.KUYUMCU)
+        self.assertGreaterEqual(c.fs * c.scale, 36)                  # kart sahnesinde ölçek 0,97, ~37 px
+        self.assertIn(["ALTIN ALIŞ", "MALİYETİ"], [ls for _, ls, _, _ in c.row_geo])
+        # kısa kalemli fişin yerleşimi değişmez
+        c = self.kart(["KİRA|135.000 ₺", "TAŞINMA|20.000 ₺"])
+        self.assertEqual((c.fs, c.lh, c.scale), (44, 57, 1.0))
+
+    def test_toplam_etiketi_damgaya_binmez(self):
+        """Uzun toplam etiketi damganın altına girmez: damga 44 px'e kadar, sonra etiket 30 px'e kadar küçülür; yine
+        sığmazsa etiket kendi satırında, damga altında sağa yaslı durur."""
+        iw = K.ReceiptCard.PW - 2 * K.ReceiptCard.PAD
+        for label in ("TOPLAM", "ELİNE KALAN", "AYLIK NET KAZANÇ", "YILLIK NET KAZANÇ", "İLK AY TOPLAM GİDER",
+                      "BİR YILDA ELİNE KALAN NET PARA"):
+            for total in ("45.000 ₺", "1.250.000 ₺", "-2.344.678 ₺", "52 MİLYON ₺", "64.000.000 ₺"):
+                c = self.kart(["KİRA|-35.000 ₺", "MAAŞ|85.000 ₺"], value=total, label=label)
+                lab = K.torn_label(c.total, c.total_size, K.OFF, K.RED, 1)
+                stamp_l, stamp_t = c.total_c[0] - lab.w / 2, c.total_c[1] - lab.h / 2
+                right = c.PAD + K.tw(c.total_label_text, "archivo", c.total_label_size)
+                self.assertLessEqual(right, c.PAD + iw + 1e-6, (label, total))
+                if c.total_stacked:                                  # etiket damganın üstünde
+                    self.assertLess(c.total_base + 12, stamp_t, (label, total))
+                else:                                                # etiket damganın solunda, arada boşluk
+                    self.assertLess(right + 30, stamp_l, (label, total))
+                    self.assertGreaterEqual(c.total_label_size, 30)
+                self.assertEqual(c.total_label_text, label, "etiket kısaltılmaz")
+        c = self.kart(["KİRA|-35.000 ₺", "MAAŞ|85.000 ₺"], value="420.000 ₺", label="TOPLAM")
+        self.assertEqual((c.total_size, c.total_label_size, c.total_stacked), (76, 40, False))
+        c = self.kart(["KİRA|-35.000 ₺", "MAAŞ|85.000 ₺"], value="-2.344.678 ₺", label="İLK AY TOPLAM GİDER")
+        self.assertTrue(c.total_stacked)
+        self.assertEqual(c.total_size, 76, "kendi satırında damga yeniden büyür")
+
     def test_guvenli_alan(self):
         rx0, ry0 = K.CARD_REGION[:2]
         for v, spec, sc in self.fisler():
@@ -441,6 +511,33 @@ class UretimVaryanti(unittest.TestCase):
         x, y = 30, K.H - 120                                    # platform arayüzünün altında kalan boş zemin
         px = im.crop((x, y, x + 40, y + 40)).resize((1, 1), Image.BOX).getpixel((0, 0))
         self.assertTrue(all(abs(a - b) <= 20 for a, b in zip(px, N.KRAFT)), px)
+
+    def test_bant_makasla_ayni_yone_kayar(self):
+        """Bant deseni 6 fazda döner (24 px); Makas karede 15-29 px atlarken ham konum deseni geri, ileri ya da
+        yerinde oynatırdı. Kayma hızı sınırlı: 30 fps'de her karede Makas'ın yönünde, en çok 2 faz; Makas dururken
+        bant da durur. Kare yalnız t'ye bağlı (çizelge bir kez kurulur)."""
+        v = N.NasilVideo(self.specs, self.v.words, self.meta, BCFG)
+        ts = [i / N.FPS for i in range(int(v.segs[-1].end * N.FPS))]
+        geri = list(reversed(ts[::7]))
+        sonra = {t: v.belt_offset(t) for t in geri}                 # sırasız çağrı aynı sonucu verir
+        xs = [v.scissors_at(t)[0] for t in ts]
+        faz = [int(round(v.belt_offset(t) / (N.TREAD / 6))) % 6 for t in ts]
+        hizli = 0
+        for i in range(1, len(ts)):
+            if xs[i] is None or xs[i - 1] is None:
+                continue
+            dx, d = xs[i] - xs[i - 1], (faz[i] - faz[i - 1]) % 6
+            d = d - 6 if d > 3 else d
+            self.assertLessEqual(abs(d), 2, ts[i])
+            if abs(dx) >= 8:                                         # hızlı: desen Makas'ın yönünde 1-2 faz
+                hizli += 1
+                self.assertIn(d, (1, 2) if dx > 0 else (-1, -2), (ts[i], dx))
+            elif abs(dx) < 1e-9:
+                self.assertEqual(d, 0, ts[i])
+            else:
+                self.assertGreaterEqual(d * dx, 0, (ts[i], dx, d))
+        self.assertGreater(hizli, 10)
+        self.assertEqual({t: v.belt_offset(t) for t in geri}, sonra)
 
     def test_bant_kirpilmadan_guvenli_alanda(self):
         v = self.v
