@@ -175,9 +175,15 @@
         "id": "18089417126700972",
         "url": "https://www.instagram.com/reel/DfXhLCHinTE/",
         "at": "2026-11-05T20:01:21+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "6kyPHSVOkeI",
+        "url": "https://youtube.com/shorts/6kyPHSVOkeI",
+        "at": "2026-11-05T21:00:12+03:00"
       }
     },
-    "publish_at": "2026-11-05T18:00:00+00:00",
+    "publish_at": "2026-11-05T19:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-05T18:00:00+00:00",
       "instagram": "2026-11-05T17:00:00+00:00",
