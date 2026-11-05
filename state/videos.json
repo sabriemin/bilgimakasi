@@ -595,5 +595,18 @@
     "telegram_message_id": 200,
     "aciklama_message_id": 201,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261105-230425",
+    "title": "Elektrikçi olsaydın günün nasıl geçerdi? Arızayı bulmak 1 saat",
+    "topic": "Elektrikçi olsaydın günün nasıl geçerdi? Sabahki ilk arızadan akşam eve dönüşe bir elektrik ustasının iş günü: atan sigorta, avize montajı, bir saatte bulunup beş dakikada giderilen arıza, işlerin fiyatı ve 2026'da maaş",
+    "category": "ekonomi ve markalar",
+    "template": "ajanda",
+    "structure": "olsaydin",
+    "created": "2026-11-05T23:04:25",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 202,
+    "aciklama_message_id": 203,
+    "platforms": {}
   }
 ]
