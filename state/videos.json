@@ -416,7 +416,7 @@
     "category": "dil ve kültür",
     "template": "gazete",
     "created": "2026-11-05T15:16:59",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 129,
     "aciklama_message_id": 130,
     "platforms": {
@@ -432,6 +432,12 @@
         "id": "17915177085471158",
         "url": "https://www.instagram.com/reel/DfXycaHE699/",
         "at": "2026-11-05T22:31:58+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "IiIQvP3otQ0",
+        "url": "https://youtube.com/shorts/IiIQvP3otQ0",
+        "at": "2026-11-05T23:00:10+03:00"
       }
     },
     "schedule": {
@@ -440,7 +446,8 @@
       "tiktok": "2026-11-05T17:20:00+00:00"
     },
     "publish_at": "2026-11-05T20:00:00+00:00",
-    "decided": "2026-11-05T20:14:45+03:00"
+    "decided": "2026-11-05T20:14:45+03:00",
+    "published": "2026-11-05T23:00:10+03:00"
   },
   {
     "tag": "short-20261105-172956",
