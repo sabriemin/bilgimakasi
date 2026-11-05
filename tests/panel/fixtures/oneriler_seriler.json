@@ -108,6 +108,60 @@
       "category": "psikoloji",
       "score": 6,
       "seri": "nasil"
+    },
+    {
+      "topic": "Rize'de yaş çay yaprağının soldurma, kıvırma, oksidasyon ve kurutmayla siyah çaya dönüşmesi",
+      "hook": "Siyah çay ile yeşil çay aynı yapraktan çıkar.",
+      "trend": "Türkiye kişi başı çay tüketiminde dünyanın ilk sıralarında",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 9,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Kurşun kalem nasıl üretilir: içindeki 'kurşun' aslında kille pişirilmiş grafit",
+      "hook": "Kurşun kalemin içinde tek gram kurşun yok.",
+      "trend": "Herkesin elinde ama nasıl yapıldığını bilen yok",
+      "scope": "Global",
+      "category": "icatlar",
+      "score": 8,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Nazar boncuğunun Görece'de cam ustalarının fırınında yapılışı",
+      "hook": "Gerçek nazar boncuğu bir demir çubuğun ucunda doğar.",
+      "trend": "En çok alınan hediyelik, yapılışı az biliniyor",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 7,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Kuyumcu olsaydın: Kapalıçarşı'da bir kuyumcunun bir günü ve ayda kalan para",
+      "hook": "Kuyumcu olsaydın, vitrindeki altının çoğu senin olmazdı.",
+      "trend": "Altın fiyatları yükselirken kuyumcunun kazancı merak ediliyor",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 9,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Milli Piyango yılbaşı büyük ikramiyesi sana çıksaydı: vergiden sonra eline geçen para, neye yettiği ve kazanma olasılığı",
+      "hook": "Büyük ikramiye sana çıksa, ilk payı vergi dairesi alır.",
+      "trend": "Yılbaşı biletleri satışta, ikramiye her yıl konuşuluyor",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 8,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Yurt dışına taşınsaydın: Berlin'de ilk ay kaç lira harcardın",
+      "hook": "Berlin'e taşınsaydın ilk kira depozitoyla gelirdi.",
+      "trend": "Yurt dışına taşınmak gençlerin en çok konuştuğu konulardan",
+      "scope": "Global",
+      "category": "ekonomi ve markalar",
+      "score": 7,
+      "seri": "olsaydin"
     }
   ]
 }

@@ -27,12 +27,69 @@ CATEGORIES = [
 ]
 
 
-# Nasıl yapılır? serisinde önerilmeyecek ve senaryoda bulunmayacak alanlar (öneri, senaryo ve doğrulama aynı listeyi kullanır)
-NASIL_YASAK = ("tıbbi ya da sağlık tedavisi, ilaç, tehlikeli ya da yasa dışı işler, finansal/yatırım ya da hukuki tavsiye, "
-               "uzmanlık gerektiren işler, temizlik ürünlerini ya da kimyasalları karıştırma, gıda güvenliği iddiaları "
-               "(bozulmuş yiyeceği kurtarma, pişmiş yemeği saklama ya da yeniden ısıtma, son kullanma tarihi), elektrik, gaz, "
-               "pil, açık ateş ya da kızgın yağla ilgili püf noktaları (ocakta olağan pişirme ve su kaynatma hariç), çocuk "
-               "ya da evcil hayvan bakımı, başkasının konumunu, mesajlarını ya da hesabını izleme ve güvenlik önlemlerini aşma")
+# Rakamlı serilerin (Ya sen olsaydın?) güncel yılı: rakamlar bu yılın Türkiye verileriyle araştırılır.
+YIL = dt.date.today().year
+
+# Nasıl yapılır? içecek tarifleri. False: alkollü içecek tarifi önerilmez ve yazılmaz (kokteyller alkolsüz). True:
+# alkollü tarif yazılabilir; senaryo 'alkollu' alanını işaretler ve açıklamaya publish.ALKOL_UYARI satırı ("18 yaş altı
+# için uygun değildir; sorumlu tüketin.") kendiliğinden eklenir. Değer bu dosyada değiştirilir: öneri, senaryo ve
+# doğrulama yönergeleri modül yüklenirken buna göre kurulur.
+ALKOLLU_ICECEK = False
+
+
+def nasil_alanlari(alkol: bool = ALKOLLU_ICECEK) -> list[str]:
+    """Nasıl yapılır? serisinin konu alanları (öneri yönergesi: 3 önerinin her biri farklı bir alandan)."""
+    return [
+        "ev işleri ve temizlik",
+        "alet kullanımı: temel el aletleri ve ev tipi aletler (tornavida, matkapla dübel takma, su terazisi, metre, "
+        "silikon tabancası, pense)",
+        "yemek ve mutfak: kısa tarifler, mutfak teknikleri, Türk mutfağı",
+        ("kokteyl ve içecekler: alkolsüz kokteyl (mocktail), limonata, şerbet, ev yapımı soğuk kahve; alkollü kokteyl "
+         "de olabilir" if alkol else
+         "alkolsüz kokteyl ve içecekler: mocktail, limonata, şerbet, ev yapımı soğuk kahve"),
+        "öğrenciler için: ders çalışma, not tutma, yurt ya da küçük oda düzeni, az malzemeyle hızlı yemek",
+        "evi çekip çevirenler ve ev hanımları için pratikler: çamaşır, ütü, leke çıkarma, dolap ve mutfak düzeni",
+    ]
+
+
+def nasil_yasak(alkol: bool = ALKOLLU_ICECEK) -> str:
+    """Nasıl yapılır? serisinde önerilmeyecek ve senaryoda bulunmayacak alanlar (öneri, senaryo ve doğrulama aynı
+    listeyi kullanır). Olağan tarif adımları, tek başına kullanılan tek bir temizlik ürünü ya da mutfak malzemesi ve
+    temel el aletleri serbesttir; alkollü içecek tarifi yalnız ALKOLLU_ICECEK True iken."""
+    return ("tıbbi ya da sağlık tedavisi, ilaç, tehlikeli ya da yasa dışı işler, finansal/yatırım ya da hukuki tavsiye, "
+            "uzmanlık gerektiren işler; temizlik ürünlerini ya da kimyasalları (çamaşır suyu, tuz ruhu, kireç çözücü, "
+            "amonyak) birbiriyle ya da herhangi bir şeyle (sirke ve limon dahil) karıştırma (tek bir ürünü etiketindeki "
+            "talimatla tek başına kullanmak ya da sirke, karbonat, limon gibi mutfak malzemeleriyle temizlik serbest); "
+            "gıda güvenliği iddiaları (bozulmuş yiyeceği kurtarma, pişmiş yemeği saklama ya da yeniden ısıtma, son "
+            "kullanma tarihi); kızgın yağ, alev ya da açık ateşle ilgili püf noktaları (ocakta ya da fırında olağan "
+            "pişirme, olağan kızartma ve su kaynatma hariç); elektrik tesisatı (priz, sigorta, kablo bağlama), gaz "
+            "tesisatı ya da tüp, pil, yüksekte çalışma, ağır elektrikli aletler (taşlama, motorlu testere); çocuk ya da "
+            "evcil hayvan bakımı; başkasının konumunu, mesajlarını ya da hesabını izleme ve güvenlik önlemlerini aşma; "
+            + ("alkolü özendiren ya da aşırı tüketimi öven anlatım" if alkol else
+               "alkollü içecek tarifi (kokteyl ve içecekler alkolsüz)"))
+
+
+NASIL_YASAK = nasil_yasak()
+# alet ve tarif adımlarının ortak kuralı (kalıp tanımı ve Adım kartları düzeni aynı cümleyi kullanır)
+NASIL_GUVENLIK = ("Alet kullanılan işte kısa bir güvenlik notu bir adımda ya da callout'ta geçsin (ör. koruyucu gözlük; "
+                  "duvarı delmeden önce kablo ve boru kontrolü). Tariflerde miktar, sıcaklık ve süreler kesin ve "
+                  "doğrulanmış olsun.")
+# senaryonun 'alkollu' alanı: açıklamadaki yaş uyarısı bu alana bağlı (ALKOLLU_ICECEK kapalıyken alan hep false)
+NASIL_ALKOL = (" Tarif alkollü bir içecekse 'alkollu' alanını true yap; açıklamaya yaş uyarısı kendiliğinden eklenir."
+               if ALKOLLU_ICECEK else "")
+
+# Nasıl üretiliyor? serisinde önerilmeyecek ve senaryoda bulunmayacak alanlar (öneri, senaryo ve doğrulama aynı listeyi
+# kullanır)
+URETIM_YASAK = ("silah, mühimmat ve patlayıcılar, uyuşturucu, alkol ve tütün ürünleri, tehlikeli kimyasalların evde "
+                "yapımı, hayvan kesiminin ayrıntısı, izleyiciyi endüstriyel bir süreci evde denemeye teşvik etme, bir "
+                "markanın gizli tarifini ya da formülünü kesin bilgi gibi sunma")
+
+# Ya sen olsaydın? serisinde önerilmeyecek ve senaryoda bulunmayacak alanlar (öneri, senaryo ve doğrulama aynı listeyi
+# kullanır)
+OLSAYDIN_YASAK = ("yasa dışı ya da ruhsatsız işler, kumar ve bahis siteleri, alkol ya da tütün satışına dayanan işler, "
+                  "kripto para, borsa, forex ve her tür yatırım ürünü, saadet zinciri ve ağ pazarlaması (MLM), kredi "
+                  "çekme tavsiyesi, vergi kaçırma ya da kayıt dışı kazanç, gerçek bir kişinin ya da işletmenin gelirini "
+                  "ifşa etme, garanti kazanç iddiası, sağlık ve tıbbi senaryolar, siyasi kutuplaştırıcı açılar")
 
 # Anlatım kalıpları: aynı şablonun tekrarı "seri üretim" gibi görünmesin diye dönüşümlü kullanılır.
 # label: ilk sahnenin üstündeki seri etiketi (ör. "EFSANE Mİ, GERÇEK Mİ? #4"), izleyiciye tanıdık bir format verir.
@@ -50,11 +107,32 @@ STRUCTURES = {
               "('Muzları bir hafta taze tutmanın sırrı sapında.') → 3-5 numaralı, somut adım; her adım TEK sahne olsun "
               "(step alanı 1, 2, 3...; headline'ın ilk satırı 'ADIM 1', 'ADIM 2' diye adım numarası, sonraki satır(lar) "
               "adımın kendisi, ör. 'ADIM 1' / 'SAPI SAR') → son sahne özet: yöntemin neden işe yaradığını (şaşırtıcı ya da "
-              "bilimsel nedenini) tek cümlede söyle. Adımlar evde, güvenle ve özel beceri gerektirmeden yapılabilsin; şu "
-              "alanlara giren adım YOK: " + NASIL_YASAK + "."),
+              "bilimsel nedenini) tek cümlede söyle. Adımlar evde, güvenle ve özel beceri gerektirmeden yapılabilsin. "
+              + NASIL_GUVENLIK + NASIL_ALKOL + " Şu alanlara giren adım YOK: " + NASIL_YASAK + "."),
+    "uretim": ("NASIL ÜRETİLİYOR?", "NASIL ÜRETİLİYOR: tek bir gündelik ürünün hammaddeden bitmiş ürüne yolculuğu "
+               "(belgesellerdeki 'nasıl yapılmış' tarzı). İlk sahne kanca: ilk cümlede ürünle ilgili şaşırtıcı bir gerçek "
+               "ya da soru ('Kurşun kalemin içinde tek gram kurşun yok.') → 3-5 üretim aşaması, gerçek sırasıyla; her "
+               "aşama TEK sahne olsun (step alanı 1, 2, 3...; headline'ın ilk satırı 'AŞAMA 1', 'AŞAMA 2' diye aşama "
+               "numarası, sonraki satır(lar) aşamanın kendisi, ör. 'AŞAMA 2' / 'GRAFİT PİŞİRİLİR'); aşamalar şimdiki "
+               "zaman edilgen çatıyla anlatılır ('Grafit kille karıştırılıp fırında pişirilir.') → son sahne ölçek: "
+               "ürünün yılda kaç tane üretildiği ya da Türkiye'nin üretimi, ardından kısa bir soru. Sıcaklık, süre ve "
+               "miktarlar doğrulanmış olsun; süreç izleyicinin evde deneyeceği bir şey gibi anlatılmasın. Şu alanlara "
+               "giren konu ve ayrıntı YOK: " + URETIM_YASAK + "."),
+    "olsaydin": ("YA SEN OLSAYDIN?", "YA SEN OLSAYDIN: izleyiciyi ikinci tekil şahısla somut bir duruma koy: bir meslek "
+                 "ya da iş ('Kuyumcu olsaydın'), bir para ya da hayat olayı ('Piyango sana çıksaydı') ya da bir hayat "
+                 "durumu ('Yurt dışına taşınsaydın'). İlk cümle izleyiciyi duruma koyup çarpıcı bir rakam versin → 3-4 "
+                 f"durak, her biri {YIL} Türkiye'sine ait somut bir rakamla (işe nasıl girilir ya da ilk adım, bir gün ya "
+                 "da ilk ay, gelir ve giderler ya da paranın neye yettiği, olasılık) → içeriden bilinen ya da şaşırtıcı "
+                 "bir ayrıntı → son sahne 'Sen olsan ne yapardın? Yorumlara yaz.' ile bitsin. Rakamlar yuvarlanmış ve "
+                 "resmî ya da güvenilir kaynaktan olsun; tahminse 'yaklaşık' ya da 'tahmini' de. Şu alanlara giren konu ve "
+                 "açı YOK: " + OLSAYDIN_YASAK + "."),
 }
 # Yalnız açıkça istendiğinde (öneriden üretim: --structure) kullanılan kalıplar: otomatik dönüşüme girmez.
-FORCED_ONLY = {"nasil"}
+FORCED_ONLY = {"nasil", "uretim", "olsaydin"}
+# Senaryosu web aramasıyla araştırılarak yazılan kalıplar (süreç bilgileri ve güncel rakamlar)
+WEB_KALIPLARI = {"uretim", "olsaydin"}
+# Adım kartlarıyla (nasil kurgu modülü) çizilen kalıplar ve başlıktaki numaranın kelimesi ('ADIM 2' / 'AŞAMA 2')
+ADIM_KELIMESI = {"nasil": "ADIM", "uretim": "AŞAMA"}
 
 
 class Scene(BaseModel):
@@ -122,6 +200,9 @@ class ShortScript(BaseModel):
     next_part_brief: str = Field(default="", description=(
         "Yalnız series_part=1 ise: 2. bölümde anlatılacak, doğrulanmış ve 1. bölümde HİÇ söylenmemiş bilgiler "
         "(olaylar, sayılar, isimler, final/çözüm) ve 2. bölümün kancası. Diğer durumlarda boş."))
+    alkollu: bool = Field(default=False, description=(
+        "Yalnız nasil kalıbı: tarif alkollü bir içecek içeriyorsa true (açıklamaya yaş uyarısı eklenir). Diğer "
+        "durumlarda false."))
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
@@ -224,11 +305,88 @@ NASIL_RULES = """NASIL YAPILIR? DÜZENİ (yalnız 'nasil' kalıbı; video "Adım
      kısa adı (ör. "MUZ SAKLAMA"; "ADIM" ya da adım sayısı yazma). Adımların listesi ekranda kendiliğinden çıkar;
      illustration boş kalabilir.
 - Toplam dış ses genel kuraldaki gibi 65-75 kelime (78'i geçmesin): kanca ~10, her adım 8-14, özet 14-20 kelime.
-- Sayı, süre ve miktarlar doğrulanmış olsun; adımlar evde güvenle uygulanabilsin. Şu alanlara giren adım YOK: """ + NASIL_YASAK + "."
+- Sayı, süre ve miktarlar doğrulanmış olsun; adımlar evde güvenle uygulanabilsin. """ + NASIL_GUVENLIK + NASIL_ALKOL + \
+    " Şu alanlara giren adım YOK: " + NASIL_YASAK + "."
 
-# Başlıktaki adım işareti: 'ADIM 2', 'ADIM 2:', '2. ADIM'. Ters biçimde sıra noktası şart: '4 ADIM' adım sayısıdır
-# (kanca ya da özet başlığı), adım işareti değil.
-ADIM_RE = re.compile(r"^\s*(?:ADIM\s*(\d+)|(\d+)\s*\.\s*ADIM)\b[\s:.,\-–—]*")
+
+# Yalnız 'uretim' kalıbı Adım kartlarıyla çizilecekse sisteme eklenir (Nasıl üretiliyor? serisi; NASIL_RULES'un
+# aşamalı karşılığı). Diğer kalıpların yönergesi değişmez.
+URETIM_RULES = """NASIL ÜRETİLİYOR? DÜZENİ (yalnız 'uretim' kalıbı; video "Adım kartları" ekranlarıyla kurulur, her sahne bir
+ekrandır, adımların yerinde ürünün üretim AŞAMALARI vardır):
+- Sahne sayısı = aşama sayısı + 2 (5-7 sahne); genel kuraldaki 9-12 sahne bu kalıpta geçerli değil. Her sahnenin
+  narration'ı tam cümle(ler)le başlayıp biter; genel kuraldaki gibi bir cümleyi sahneler arasında BÖLME (her ekran
+  kendi cümlesini yazar). Sıra:
+  1) KANCA (ilk sahne, step 0): narration'ın ilk cümlesi ürünle ilgili şaşırtıcı bir gerçek ya da soru (en fazla 10
+     kelime, ör. "Kurşun kalemin içinde tek gram kurşun yok."). headline ekranda büyük yazılan SORUDUR (2-3 satır,
+     satır başı 1-3 kelime, ör. "KURŞUN KALEM" / "NASIL" / "ÜRETİLİR?"; bu başlığın kelimeleri dış seste geçmeyebilir;
+     aşama sayısını yazma, "4 AŞAMA" ekranda kendiliğinden çıkar), highlight_line en vurucu satır. illustration ürünün
+     kendisini gösteren tek, net çizim.
+  2) AŞAMALAR (3-5 sahne, her aşama TEK sahne, üretimdeki gerçek sırayla): step 1, 2, 3...; headline'ın ilk satırı
+     'AŞAMA n', sonraki 1-2 satır aşamanın kendisi, 2-5 kelime (ör. "AŞAMA 2" / "GRAFİT PİŞİRİLİR"). narration 1-2 kısa
+     cümle (8-14 kelime), şimdiki zaman edilgen çatıyla ("Grafit kille karıştırılıp fırında pişirilir."); "Önce",
+     "Ardından", "Son olarak" gibi bağlaçlarla akar. Bu metin Makas'ın konuşma balonunda kelime kelime yazılır: kısa ve
+     sade olsun. illustration: aşamadaki makineyi ya da malzemeyi gösteren yalın, düz bir çizim (ör. "graphite and clay
+     rods sliding into a glowing industrial kiln"); çizimde yazı olmaz. callouts: çizimin üstündeki en fazla 2 küçük
+     not (sıcaklık, süre, miktar; ör. "1.000°C", "72 SAAT"), gerekmiyorsa boş; başlıkta yazanı tekrarlamasın, her biri
+     en fazla 3 kelime. image_mode none, image_queries boş: bu şablon fotoğraf değil çizim kullanır. card auto.
+  3) ÖLÇEK (son sahne, step 0): narration önce ölçeği tek cümlede söyler (dünyada yılda kaç tane üretildiği ya da
+     Türkiye'nin üretimi), sonra kısa bir soru sorar ve "Yorumlara yaz." ile biter. Bu ölçek cümlesi Makas'ın yorumunun
+     yerine geçer; ayrıca yorum cümlesi ekleme. headline ürünün 1-3 kelimelik kısa adı (ör. "KURŞUN KALEM"; "AŞAMA" ya
+     da aşama sayısı yazma). Aşamaların listesi ekranda kendiliğinden çıkar; illustration boş kalabilir.
+- Toplam dış ses genel kuraldaki gibi 65-75 kelime (78'i geçmesin): kanca ~10, her aşama 8-14, ölçek 14-20 kelime.
+- Türkiye bağlantılı ürünler öncelikli (çay, fındık, lokum, cam, porselen, halı, bakır cezve, çini, nazar boncuğu, beyaz
+  eşya); gündelik küresel ürünler de olur.
+- Aşamaların sırası, süreç bilgileri (sıcaklık, süre, malzeme) ve ölçek sayıları üreticilerin ya da güvenilir
+  kaynakların anlatımıyla doğrulanmış olsun; bir markanın tarifi kesin bilgi gibi sunulmasın. Şu alanlara giren ayrıntı
+  YOK: """ + URETIM_YASAK + "."
+
+
+# Yalnız 'olsaydin' kalıbında sisteme eklenir (Ya sen olsaydın? serisi, kart şablonu: sayaç kartları ve hesap fişi).
+# Hesap fişi yönergesi yalnız burada: diğer kart videolarının yönergesi (KART_RULES) değişmez.
+OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; video kart şablonuyla kurulur):
+- Konu üç türden biridir: (a) bir meslek ya da iş ('Kuyumcu olsaydın': işe nasıl girilir, bir iş günü, aylık gelir ve
+  giderler, içeriden bir ayrıntı); (b) bir para ya da hayat olayı ('Piyango sana çıksaydı': vergiden sonra eline geçen
+  net tutar, o paranın neye yettiği, kazanma olasılığı, kazananların genelde ne yaptığı); (c) bir hayat durumu ('Yurt
+  dışına taşınsaydın ilk ay kaç lira harcardın', 'Bir köyde yaşamaya başlasaydın').
+- Dış ses izleyiciyle ikinci tekil şahısla ve şart kipiyle konuşur ('olsaydın', 'kazanırdın', 'öderdin'); belgesel
+  ağırbaşlılığı sürer, abartı ve vaaz yok.
+- KANCA: ilk cümle izleyiciyi duruma koyar ve çarpıcı bir rakam verir (en fazla 10 kelime). İlk headline durumu ve
+  rakamı söyler.
+- DURAKLAR: 3-4 durak, her biri somut bir rakama dayanır. Rakamın sahnesi card "counter" olur: card_value rakamın
+  kendisi birimiyle (ör. "1,2 MİLYON ₺", "%25", "18 AY"), card_label 1-3 kelimelik etiket (ör. "AYLIK KİRA").
+- HESAP FİŞİ: en az bir sahne card "receipt" olur. card_lines 2-5 satır, her satır "KALEM|TUTAR" (ör. "KİRA +
+  DEPOZİTO|135.000 ₺"; kalem BÜYÜK HARF, en fazla 22 karakter; düşülen tutar eksiyle, ör. "VERGİ|-200.000 ₺").
+  Satırların toplamı card_value'ya tam eşit olur (ör. "420.000 ₺"); card_label "TOPLAM" ya da benzeri ("AYLIK GİDER",
+  "ELİNE KALAN"); card_note kaynak ve tarih (ör. "Tahmini · Kasım {YIL}"). Fişin sahnesinde dış ses toplamı söyler.
+- Videonun ortasında içeriden bilinen ya da şaşırtıcı bir ayrıntı olur (ikinci merak anı; card "interstitial" olabilir).
+- KAPANIŞ: Makas'ın yorumu tek kısa cümle; son sahne "Sen olsan ne yapardın? Yorumlara yaz." ile biter (card "cta").
+- RAKAMLAR: hepsi {YIL} Türkiye'sine aittir ve web aramasıyla bulunur; yuvarlanır (ör. "yaklaşık 48 bin lira"), tahminse
+  "yaklaşık" ya da "tahmini" denir; şehre göre değişiyorsa şehir adı söylenir. Kaynaklar resmî ya da saygın olur:
+  Resmî Gazete, ÇSGB ve SGK (asgari ücret, işveren maliyeti), TÜİK, Milli Piyango'nun resmî ikramiye ve olasılık
+  tabloları, meslek odaları, ilan sitelerinin ortalamaları; hepsi sources alanına yazılır. Gelir anlatılıyorsa giderler
+  de anlatılır ve "eline kalan" gelir eksi gidere eşit olur; dış sesteki rakamlar kartlardakilerle aynıdır.
+- Şans oyunu konularında kazanma olasılığı açıkça söylenir; oynamaya özendiren ya da "sen de dene" diyen cümle yok.
+- Yatırım, kredi ya da vergi tavsiyesi verilmez. Açıklamaya rakamların yaklaşık olduğunu ve yatırım tavsiyesi
+  olmadığını söyleyen satır kendiliğinden eklenir: description alanına yazma.
+- Şu alanlara giren konu, açı ve ayrıntı YOK: """ + OLSAYDIN_YASAK + "."
+
+
+def kalip_kurallari(yapi: str | None, adim_kartlari: bool) -> str:
+    """Kalıba özel ek yönerge (sistem istemine eklenir): nasil ve uretim yalnız Adım kartlarıyla çizilecekse ekran
+    düzenini (NASIL_RULES / URETIM_RULES), olsaydin her zaman kendi düzenini (OLSAYDIN_RULES) ister. Diğer kalıplarda
+    boş: yönergeleri değişmez."""
+    if yapi == "olsaydin":
+        return "\n" + OLSAYDIN_RULES
+    if adim_kartlari and yapi == "nasil":
+        return "\n" + NASIL_RULES
+    if adim_kartlari and yapi == "uretim":
+        return "\n" + URETIM_RULES
+    return ""
+
+
+# Başlıktaki adım (uretim'de aşama) işareti: 'ADIM 2', 'ADIM 2:', '2. ADIM', 'AŞAMA 2', '2. AŞAMA'. Ters biçimde sıra
+# noktası şart: '4 ADIM' / '4 AŞAMA' adım sayısıdır (kanca ya da özet başlığı), adım işareti değil.
+ADIM_RE = re.compile(r"^\s*(?:(?:ADIM|AŞAMA)\s*(\d+)|(\d+)\s*\.\s*(?:ADIM|AŞAMA))\b[\s:.,\-–—]*")
 
 
 def _tr_upper(s: str) -> str:
@@ -237,8 +395,8 @@ def _tr_upper(s: str) -> str:
 
 def adim_isaretleri(steps: list[int], first_lines: list[str]) -> list[int]:
     """Sahnelerin ham adım işaretleri (0: adımsız). step alanı her sahnede geçerlidir; yoksa başlığın ilk satırındaki
-    'ADIM n' okunur, ama 3+ sahnelik senaryoda ilk (kanca) ve son (özet) sahnede okunmaz: kancanın ya da özetin başlığı
-    adımı sanılıp düzen kaymasın."""
+    'ADIM n' (uretim'de 'AŞAMA n') okunur, ama 3+ sahnelik senaryoda ilk (kanca) ve son (özet) sahnede okunmaz:
+    kancanın ya da özetin başlığı adımı sanılıp düzen kaymasın."""
     n = len(steps)
     out = []
     for i, (st, line) in enumerate(zip(steps, first_lines)):
@@ -271,12 +429,13 @@ def adim_gruplari(raw: list[int]) -> tuple[list[int], list[tuple[int, list[int]]
 
 
 def normalize_nasil(script: ShortScript) -> ShortScript:
-    """Nasıl yapılır? senaryosunun adım düzenini sağlamlaştırır (yerinde, kalıp nasil değilse dokunmaz): adım numarası
-    step alanından, yoksa başlığın ilk satırındaki 'ADIM n'den okunur (adim_isaretleri) ve 1'den sırayla yeniden
-    verilir; sahneler adim_gruplari ile kanca / adım / özet olarak ayrılır (adımsız ara sahneler adımın devamıdır).
-    Her adımın ilk sahnesinin başlığı 'ADIM n' satırıyla başlar (kart şablonu sağ üstte adım numarasını bu satırdan
-    okur)."""
-    if script.structure != "nasil":
+    """Adım kartlı kalıpların (nasil: Nasıl yapılır?, uretim: Nasıl üretiliyor?) adım düzenini sağlamlaştırır (yerinde;
+    başka kalıba dokunmaz): adım numarası step alanından, yoksa başlığın ilk satırındaki 'ADIM n' / 'AŞAMA n'den okunur
+    (adim_isaretleri) ve 1'den sırayla yeniden verilir; sahneler adim_gruplari ile kanca / adım / özet olarak ayrılır
+    (adımsız ara sahneler adımın devamıdır). Her adımın ilk sahnesinin başlığı kalıbın kelimesiyle ('ADIM n', uretim'de
+    'AŞAMA n') başlar (kart şablonu sağ üstte adım numarasını bu satırdan okur)."""
+    kelime = ADIM_KELIMESI.get(script.structure)
+    if not kelime:
         return script
     raw = adim_isaretleri([sc.step for sc in script.scenes], [(sc.headline or [""])[0] for sc in script.scenes])
     hook, groups, recap = adim_gruplari(raw)
@@ -284,24 +443,25 @@ def normalize_nasil(script: ShortScript) -> ShortScript:
         return script
     for n, idx in groups:
         for i in idx:
-            _adim_basligi(script.scenes[i], n, new=(i == idx[0]))
+            _adim_basligi(script.scenes[i], n, new=(i == idx[0]), kelime=kelime)
     for i in hook + recap:
         script.scenes[i].step = 0
     return script
 
 
-def _adim_basligi(sc: Scene, n: int, new: bool) -> None:
-    """Sahnenin adım numarasını ve başlığındaki 'ADIM n' satırını n'e çeker; adımın ilk sahnesi bu satırla başlar."""
+def _adim_basligi(sc: Scene, n: int, new: bool, kelime: str = "ADIM") -> None:
+    """Sahnenin adım numarasını ve başlığındaki 'ADIM n' (ya da 'AŞAMA n') satırını n'e çeker; adımın ilk sahnesi bu
+    satırla başlar. Başlıkta öteki kelime yazılmışsa ('ADIM 2' yerine 'AŞAMA 2') kalıbın kelimesine çevrilir."""
     sc.step = n
     head = list(sc.headline or [])
     m = ADIM_RE.match(_tr_upper(head[0].strip())) if head else None
     if m:
         rest = head[0].strip()[m.end():].strip()
-        head[0:1] = [f"ADIM {n}"] + ([_tr_upper(rest)] if rest else [])
+        head[0:1] = [f"{kelime} {n}"] + ([_tr_upper(rest)] if rest else [])
         if rest and sc.highlight_line >= 0:
             sc.highlight_line += 1
     elif new:
-        head.insert(0, f"ADIM {n}")
+        head.insert(0, f"{kelime} {n}")
         if sc.highlight_line >= 0:
             sc.highlight_line += 1
     sc.headline = head
@@ -424,8 +584,10 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
                     allow_series: bool = False, kart: bool = False, structure: str | None = None,
                     adim_kartlari: bool = False) -> ShortScript:
     """structure verilirse (öneriden üretim) kalıp sabittir: yalnız o sunulur, doğrulama ve dil düzeltmesi değiştiremez.
-    adim_kartlari: video "Adım kartları" (nasil şablonu) ile çizilecek; nasil kalıbında ekran düzeni (NASIL_RULES) yalnız
-    o zaman istenir. Kart şablonuna giden nasil senaryoları genel sahne kurallarıyla yazılır."""
+    adim_kartlari: video "Adım kartları" (renderer'ı nasil olan şablon: nasil, uretim) ile çizilecek; nasil ve uretim
+    kalıplarında ekran düzeni (NASIL_RULES / URETIM_RULES) yalnız o zaman istenir. Kart şablonuna giden nasil
+    senaryoları genel sahne kurallarıyla yazılır. olsaydin kalıbı her zaman kendi düzenini (OLSAYDIN_RULES) ister;
+    uretim ve olsaydin senaryoları yazılırken de web araması yapılır (WEB_KALIPLARI)."""
     if structure and structure not in STRUCTURES:
         raise ValueError(f"bilinmeyen anlatım kalıbı: {structure}")
     used = _history(history_file)[-200:]
@@ -446,13 +608,18 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
             f"- {k}: {v}" for k, v in templates.items())
     if used and not series_prev:
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
-    nasil = adim_kartlari and (series_prev or {}).get("structure", structure) == "nasil"
-    script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + ("\n" + NASIL_RULES if nasil else ""))
+    yapi = (series_prev or {}).get("structure", structure)
+    nasil = adim_kartlari and yapi in ADIM_KELIMESI  # Adım kartları düzeni (nasil: adımlar, uretim: aşamalar)
+    web = yapi in WEB_KALIPLARI
+    if web:
+        ask += arastirma_ask(yapi)
+    script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + kalip_kurallari(yapi, nasil),
+                        web=web)
     forced = None if series_prev else structure
-    serbest = not series_prev and not structure  # kalıp dönüşümden seçilir: FORCED_ONLY (nasil) seçilemez
+    serbest = not series_prev and not structure  # kalıp dönüşümden seçilir: FORCED_ONLY (nasil, uretim, olsaydin) seçilemez
     if forced:
         script.structure = forced
-    elif serbest and script.structure in FORCED_ONLY:  # şema nasil'e izin verir; sunulmadığı hâlde seçildiyse dönüşüme dön
+    elif serbest and script.structure in FORCED_ONLY:  # şema bunlara izin verir; sunulmadığı hâlde seçildiyse dönüşüme dön
         script.structure = allowed_structures(history_file)[0]
     part, brief = (2, "") if series_prev else (script.series_part if allow_series else 0, script.next_part_brief)
     phrase = script.search_phrase
@@ -460,14 +627,79 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     # doğrulayıcı kalıbı gerekçeyle değiştirebilir: etiket son metne uysun diye doğrulanmış hâlin kalıbı kullanılır
     # (sabit kalıpta değiştiremez: seri etiketi ve şablon kalıba bağlı)
     structure = series_prev.get("structure", checked.structure) if series_prev else (forced or checked.structure)
-    if serbest and structure in FORCED_ONLY:  # doğrulayıcı da serbest kalıpta nasil'e geçemez
+    if serbest and structure in FORCED_ONLY:  # doğrulayıcı da serbest kalıpta nasil'e (uretim, olsaydin) geçemez
         structure = script.structure  # (seri etiketi, kart şablonu ve #NasılYapılır bu kalıba bağlı)
     checked.structure = structure
     out = polish_script(checked, adim_kartlari=nasil)
     out.series_part, out.next_part_brief = part, (brief if part == 1 else "")
     out.structure, out.search_phrase = structure, out.search_phrase or phrase
     out.hashtags = [t for t in (re.sub(r"\W", "", h) for h in out.hashtags) if t]
+    # yaş uyarısı (publish.ALKOL_UYARI) bu alana bağlı: yalnız nasil kalıbında anlamlı; tarif kapalıyken yayına gitmez
+    out.alkollu = bool(out.alkollu) and structure == "nasil"
+    if out.alkollu and not ALKOLLU_ICECEK:
+        raise RuntimeError("Senaryo alkollü içecek tarifi içeriyor ama ALKOLLU_ICECEK kapalı: senaryo kullanılmadı.")
+    if structure == "olsaydin":
+        for p in fis_sorunlari(out):  # doğrulayıcı düzeltemediyse günlükte görünsün (onaydan önce bakılır)
+            print("UYARI hesap fişi:", p)
     return normalize_nasil(out)
+
+
+def arastirma_ask(yapi: str) -> str:
+    """Senaryosu web aramasıyla yazılan kalıpların (WEB_KALIPLARI) araştırma yönergesi."""
+    bugun = dt.date.today().strftime("%d.%m.%Y")
+    if yapi == "olsaydin":
+        return (f"\nBugünün tarihi: {bugun}. Yazmadan önce bütün rakamları ve prosedürleri web aramasıyla {YIL} Türkiye "
+                "verilerinden araştır (Resmî Gazete, ÇSGB ve SGK, TÜİK, Milli Piyango'nun resmî tabloları, meslek odaları, "
+                "ilan sitelerinin ortalamaları); kullandığın kaynakları 'sources' alanına URL olarak yaz.")
+    return (f"\nBugünün tarihi: {bugun}. Yazmadan önce ürünün üretim sürecini web aramasıyla araştır (üreticilerin "
+            "anlatımları, sektör kuruluşları, güvenilir belgeseller ve ansiklopediler): aşamaların sırası, sıcaklık, süre, "
+            "malzeme ve ölçek sayıları bu kaynaklara dayansın; kaynakları 'sources' alanına URL olarak yaz.")
+
+
+# Hesap fişi (card "receipt") tutarları: '135.000 ₺', '-200.000 ₺', '1,2 MİLYON ₺', '48 BİN ₺'
+_TUTAR_RE = re.compile(r"([-−–])?\s*(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?\s*(MİLYAR|MİLYON|BİN)?")
+
+
+def tutar(metin: str) -> tuple[float, float] | None:
+    """Fiş tutarını (değer, yuvarlama payı) olarak okur; '1,2 MİLYON ₺' -> (1200000, 50000). Okunamazsa None."""
+    m = _TUTAR_RE.search(_tr_upper(str(metin or "")))
+    if not m:
+        return None
+    kat = {"BİN": 1e3, "MİLYON": 1e6, "MİLYAR": 1e9}.get(m.group(4) or "", 1.0)
+    ondalik = m.group(3) or ""
+    deger = float(m.group(2).replace(".", "") + ("." + ondalik if ondalik else "")) * kat
+    return (-deger if m.group(1) else deger), kat * 10 ** -len(ondalik) / 2
+
+
+def fis_sorunlari(script) -> list[str]:
+    """Ya sen olsaydın? senaryosunun hesap fişi denetimi: en az bir card "receipt" sahnesi, 2-5 'KALEM|TUTAR' satırı ve
+    satırların toplamı card_value'ya eşit (card_value yuvarlanmış yazılmışsa yuvarlama payı kadar). Sorunların listesi."""
+    out, fis = [], 0
+    for i, sc in enumerate(script.scenes, 1):
+        if getattr(sc, "card", "") != "receipt":
+            continue
+        fis += 1
+        satirlar = list(getattr(sc, "card_lines", None) or [])
+        if not 2 <= len(satirlar) <= 5:
+            out.append(f"{i}. sahnenin fişinde {len(satirlar)} satır var (2-5 olmalı)")
+        tutarlar = []
+        for satir in satirlar:
+            kalem, ayrac, deger = str(satir).partition("|")
+            t = tutar(deger) if ayrac and kalem.strip() else None
+            if t is None:
+                out.append(f"{i}. sahnenin fiş satırı 'KALEM|TUTAR' biçiminde değil: {satir}")
+            else:
+                tutarlar.append(t[0])
+        toplam = tutar(getattr(sc, "card_value", ""))
+        if toplam is None:
+            out.append(f"{i}. sahnenin fişinde toplam (card_value) okunamadı: {getattr(sc, 'card_value', '')!r}")
+        elif tutarlar and len(tutarlar) == len(satirlar) and abs(sum(tutarlar) - toplam[0]) > toplam[1] + 1e-6:
+            yazili = f"{sum(tutarlar):,.0f}".replace(",", ".")  # binlik ayracı nokta: 405.000
+            out.append(f"{i}. sahnenin fişinde satırların toplamı {yazili} ama card_value "
+                       f"{getattr(sc, 'card_value', '')}")
+    if not fis:
+        out.append("hesap fişi (card \"receipt\") yok")
+    return out
 
 
 class Review(BaseModel):
@@ -478,16 +710,41 @@ class Review(BaseModel):
 
 def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartlari: bool = False) -> ShortScript:
     """İkinci geçiş: bilgileri web aramasıyla doğrular, hataları düzeltir veya çıkarır. keep_structure: kalıp seriden
-    geldiği için sabit (doğrulayıcı değiştiremez). adim_kartlari: nasil kalıbının Adım kartları düzeni korunur."""
-    duzen = adim_kartlari and script.structure == "nasil"
+    geldiği için sabit (doğrulayıcı değiştiremez). adim_kartlari: nasil / uretim kalıbının Adım kartları düzeni korunur.
+    Seri kalıplarında kalıba özel denetimler eklenir (nasil: güvenlik; uretim: aşama sırası ve süreç bilgileri;
+    olsaydin: rakamların güncelliği ve hesap fişinin toplamı)."""
+    yapi = script.structure
+    duzen = adim_kartlari and yapi in ADIM_KELIMESI
+    ozel = ", ".join(f"'{k}'" for k in STRUCTURES if k in FORCED_ONLY)
     kalip = ("Anlatım kalıbı (structure) bu video için SABİT; değiştirme, metni bu kalıba uydur. " if keep_structure else
              "Seçilen anlatım kalıbını (structure) koru; yalnız konu o kalıba gerçekten uymuyorsa değiştir ve structure "
-             "alanını da buna göre güncelle ('nasil' kalıbına geçme: o yalnız Nasıl yapılır? serisinden gelir). ")
-    if script.structure == "nasil":  # doğrulanabilir ama güvensiz bir yöntem de elensin
+             f"alanını da buna göre güncelle ({ozel} kalıplarına geçme: bunlar yalnız kendi serilerinden gelir). ")
+    if yapi == "nasil":  # doğrulanabilir ama güvensiz bir yöntem de elensin
         kalip += "Güvenli olmayan ya da şu alanlara giren adımı çıkar veya güvenli bir adımla değiştir: " + NASIL_YASAK + ". "
+        kalip += ("Alet kullanılan işte kısa güvenlik notu (koruyucu gözlük, delmeden önce kablo ve boru kontrolü) yoksa "
+                  "ekle; tarifin miktar, sıcaklık ve sürelerini doğrula. ")
+        if ALKOLLU_ICECEK:
+            kalip += "Tarif alkollü bir içecekse 'alkollu' alanını true, değilse false yap. "
+    elif yapi == "uretim":
+        kalip += ("Aşamaların sırasını ve her aşamadaki süreç bilgisini (sıcaklık, süre, malzeme, makine) üreticilerin ya "
+                  "da güvenilir kaynakların anlatımıyla karşılaştır; sıra yanlışsa düzelt, doğrulanamayan ayrıntıyı çıkar. "
+                  "Son sahnedeki ölçek bilgisini (yıllık üretim, Türkiye'nin üretimi) doğrula. Şu alanlara giren ayrıntıyı "
+                  "çıkar: " + URETIM_YASAK + ". ")
+    elif yapi == "olsaydin":
+        kalip += (f"Her rakamı {YIL} Türkiye'si için web aramasıyla yeniden kontrol et (asgari ücret ve işveren maliyeti, "
+                  "vergi ve kesinti oranları, kira ve fiyat ortalamaları, ikramiye ve olasılıklar); eskiyse güncelle, "
+                  "doğrulanamıyorsa 'yaklaşık' de ya da çıkar. Hesap fişinde (card 'receipt') card_lines satırlarının "
+                  "toplamı card_value'ya tam eşit olsun; gelir eksi gider anlatılıyorsa sonuç tutarlı olsun; dış sesteki "
+                  "rakamlar kartlardakilerle aynı olsun. Şans oyunu konusunda olasılık söylensin, oynamaya özendirilmesin. "
+                  "Şu alanlara giren açıyı çıkar: " + OLSAYDIN_YASAK + ". ")
+        sorun = fis_sorunlari(script)
+        if sorun:
+            kalip += "Hesap fişinde bulunan sorunlar (düzelt): " + "; ".join(sorun) + ". "
     if duzen:
-        kalip += ("Kanca, numaralı adım sahneleri (step 1, 2, 3...; başlığın ilk satırı 'ADIM n') ve son özet sahnesi "
-                  "düzenini koru; adım çıkarırsan kalanları yeniden numarala. ")
+        kalip += (("Kanca, numaralı adım sahneleri (step 1, 2, 3...; başlığın ilk satırı 'ADIM n') ve son özet sahnesi "
+                   "düzenini koru; adım çıkarırsan kalanları yeniden numarala. ") if yapi == "nasil" else
+                  ("Kanca, numaralı aşama sahneleri (step 1, 2, 3...; başlığın ilk satırı 'AŞAMA n') ve son ölçek "
+                   "sahnesi düzenini koru; aşama çıkarırsan kalanları yeniden numarala. "))
     review = ask_claude(
         "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
         "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
@@ -495,7 +752,7 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). " + kalip +
         "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
         "alanında döndür.\n\n" + script.model_dump_json(indent=1),
-        Review, SYSTEM + ("\n" + NASIL_RULES if duzen else "")
+        Review, SYSTEM + kalip_kurallari(yapi, duzen)
         + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
     if review.problems:
         print("Doğrulama notları:", *review.problems, sep="\n - ")
@@ -534,30 +791,61 @@ sahnenin başlığı işin kısa adıdır (bu senaryoda "headline satırları na
 sahnelerinin dış sesi Makas'ın konuşma balonunda yazıldığı için kısa kalsın (8-14 kelime)."""
 
 
+# Yalnız uretim kalıbında editöre eklenir (Adım kartlarıyla çiziliyorsa EDITOR_NASIL ile birlikte).
+EDITOR_URETIM = """
+NASIL ÜRETİLİYOR: aşamaların sayısını ve sırasını koru; headline'ların ilk satırındaki 'AŞAMA 1', 'AŞAMA 2'
+numaralarını, step/callouts alanlarını ve süreç sayılarını (sıcaklık, süre, miktar, ölçek) değiştirme. Aşamalar şimdiki
+zaman edilgen çatıyla anlatılsın ('pişirilir', 'kesilir'). Adım kartları kuralındaki 'adım' bu videoda 'aşama'dır."""
+
+# Yalnız olsaydin kalıbında editöre eklenir.
+EDITOR_OLSAYDIN = """
+YA SEN OLSAYDIN: dış ses izleyiciyle ikinci tekil şahısla ve şart kipiyle konuşsun ('olsaydın', 'kazanırdın'). Rakamlara,
+tutarlara, yüzdelere, şehir adlarına ve 'yaklaşık'/'tahmini' nitelemelerine DOKUNMA (yazılışlarını da değiştirme: '48 bin'
+'48.000' olmasın); dış sesteki rakamlar kartlardakilerle aynı kalsın. Son cümle 'Sen olsan ne yapardın? Yorumlara yaz.'
+olarak kalsın."""
+
+# Dil düzeltmesinde rakamları korunan kalıplar: editör bir sahnenin sayılarını değiştirirse o sahnenin metni geri alınır.
+SAYI_KORUNAN = {"uretim", "olsaydin"}
+
+
+def _sayilar(metin: str) -> list[str]:
+    return sorted(re.findall(r"\d+(?:[.,]\d+)*", metin or ""))
+
+
 class Polished(BaseModel):
     notes: List[str] = Field(description="Yapılan önemli dil düzeltmeleri, kısa")
     fixed: ShortScript
 
 
 def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScript:
-    """Üçüncü geçiş: belgesel dili ve akış için Türkçe editör (web araması yok). adim_kartlari: nasil kalıbının Adım
-    kartları düzeninde başlıklar (soru kancası, adım ve özet başlıkları) editörden önceki hâliyle kalır."""
-    duzen = adim_kartlari and script.structure == "nasil"
-    res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + script.model_dump_json(indent=1), Polished,
-                     EDITOR + (EDITOR_NASIL if duzen else ""))
+    """Üçüncü geçiş: belgesel dili ve akış için Türkçe editör (web araması yok). adim_kartlari: nasil / uretim
+    kalıbının Adım kartları düzeninde başlıklar (soru kancası, adım ve özet başlıkları) editörden önceki hâliyle kalır.
+    Kart ve adım alanları (hesap fişi satırları dahil) hiç değişmez; uretim ve olsaydin kalıplarında sayıları değişen
+    sahnenin metni editörden önceki hâline döner."""
+    yapi = script.structure
+    duzen = adim_kartlari and yapi in ADIM_KELIMESI
+    ek = ((EDITOR_NASIL if duzen else "") + (EDITOR_URETIM if yapi == "uretim" else "")
+          + (EDITOR_OLSAYDIN if yapi == "olsaydin" else ""))
+    res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + script.model_dump_json(indent=1), Polished, EDITOR + ek)
     if res.notes:
         print("Dil düzeltmeleri:", *res.notes[:12], sep="\n - ")
     fixed = res.fixed
     if len(fixed.scenes) != len(script.scenes):  # güvenlik: sahne yapısı bozulduysa yalnız metinleri al
         return script
-    for a, b in zip(script.scenes, fixed.scenes):  # görsel alanları kesin olarak koru
-        for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon", "anim_query",
-                  "card", "card_value", "card_label", "card_myth", "card_fact", "card_note", "mascot", "step", "callouts"):
+    korunan = [f for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon",
+                           "anim_query", "card", "card_value", "card_label", "card_myth", "card_fact", "card_note",
+                           "card_lines", "mascot", "step", "callouts") if f in Scene.model_fields]
+    for i, (a, b) in enumerate(zip(script.scenes, fixed.scenes)):  # görsel alanları kesin olarak koru
+        for f in korunan:
             setattr(b, f, getattr(a, f))
         if duzen:  # Adım kartlarında başlık ekran metnidir (dış sesin altyazısı değil): editör değiştiremez
             b.headline, b.highlight_line = list(a.headline), a.highlight_line
+        if yapi in SAYI_KORUNAN and _sayilar(b.narration) != _sayilar(a.narration):
+            print(f"Dil düzeltmesi {i + 1}. sahnenin sayılarını değiştirdi; sahnenin metni geri alındı.")
+            b.narration, b.headline, b.highlight_line = a.narration, list(a.headline), a.highlight_line
     fixed.sources, fixed.category = script.sources, script.category
     fixed.search_phrase, fixed.structure = script.search_phrase, script.structure
+    fixed.alkollu = script.alkollu
     return fixed
 
 

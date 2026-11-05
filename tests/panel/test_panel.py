@@ -156,6 +156,16 @@ def kur(root: Path):
     return tb, req
 
 
+def uretim_sablonu(kok: Path) -> None:
+    """Geçici kökün templates/ klasöründe uretim şablonu yoksa sözleşmedeki alanlarla yazar (renderer nasil, yapi
+    uretim). Depoda templates/uretim.json varsa (kopyalanmıştır) ona dokunmaz."""
+    yol = kok / "templates" / "uretim.json"
+    if not yol.exists():
+        t = json.loads((REPO / "templates" / "nasil.json").read_text(encoding="utf-8"))
+        t.update(name="Nasıl üretiliyor?", description="Aşama kartları (deneme)", renderer="nasil", yapi="uretim")
+        yol.write_text(json.dumps(t, ensure_ascii=False), encoding="utf-8")
+
+
 def videolar(tb) -> dict:
     return {v["tag"]: v for v in json.loads(tb.VIDEOS.read_text(encoding="utf-8"))}
 
@@ -245,10 +255,10 @@ class DugmeDavranisi(Ortak):
         type(self).tb, type(self).req = self.tb, self.req
         self.assertEqual(len(yeni), len(golden))
         for g, y in zip(golden, yeni):
-            if g["ad"] == "/start":  # bilinçli farklar: yardım metninde /panel satırı ve dört seriden 12 öneri
+            if g["ad"] == "/start":  # bilinçli farklar: yardım metninde /panel satırı ve altı seriden 18 öneri
                 self.assertEqual(y["cagrilar"][0]["data"]["text"], g["cagrilar"][0]["data"]["text"].replace(
                     "/yardim: bu liste", "/panel: yönetim paneline giriş bağlantısı\n/yardim: bu liste").replace(
-                    "/oneri: gündemden 5 konu önerisi", "/oneri: 4 seriden 12 konu önerisi"))
+                    "/oneri: gündemden 5 konu önerisi", "/oneri: 6 seriden 18 konu önerisi"))
                 continue
             if g["ad"] in self.SAAT_METNI:
                 # bilinçli fark (panel takvimi): yalnız en iyi saatler (ek saat yok), ⭐ prime time işareti, uzun
@@ -1855,38 +1865,58 @@ class OneriSerileri(Ortak):
     def uzunluk16(self, t):
         return len(t.encode("utf-16-le")) // 2
 
+    BASLIKLAR = (["🔥 Popüler", "📚 Konular", "🧐 Efsane mi, gerçek mi?"],
+                 ["🛠 Nasıl yapılır?", "🏭 Nasıl üretiliyor?", "💭 Ya sen olsaydın?"])
+
     def test_telegram_mesaji_seri_seri_ve_kesintisiz_numara(self):
-        metin, rows = self.tr.mesaj(self.SERILI)
-        basliklar = ["🔥 Popüler", "📚 Konular", "🧐 Efsane mi, gerçek mi?", "🛠 Nasıl yapılır?"]
-        konum = [metin.index("\n" + b + "\n") for b in basliklar]
-        self.assertEqual(konum, sorted(konum))
-        numaralar = [int(x) for x in re.findall(r"^(\d+)\. ", metin, re.M)]
-        self.assertEqual(numaralar, list(range(1, 13)))
-        # her numara kendi serisinin başlığı altında
-        self.assertLess(konum[2], metin.index("\n7. "))
-        self.assertLess(metin.index("\n9. "), konum[3])
+        msjlar = self.tr.mesajlar(self.SERILI)
+        self.assertEqual(len(msjlar), 2, "18 öneri: üçer serilik iki mesaj")
         d = self.tr.damga(self.SERILI)
         self.assertRegex(d, r"^[0-9a-f]{8}$")
-        self.assertEqual(rows, [[(f"🎬 {i}", f"tp:{d}:{i - 1}") for i in range(k, k + 3)] for k in (1, 4, 7, 10)])
-        self.assertLessEqual(max(len(c.encode()) for r in rows for _, c in r), 64, "Telegram callback_data sınırı")
-        self.assertIn("📈 Milli takımın", metin)  # Popüler'in gerekçesi gündem
-        self.assertIn("💡 Etilen gazını", metin)
-        self.assertLessEqual(self.uzunluk16(metin), 4096)
-        self.assertTrue(metin.endswith("Üretmek istediğin konunun numarasına bas."))
+        for k, ((metin, rows), basliklar) in enumerate(zip(msjlar, self.BASLIKLAR)):
+            self.assertTrue(metin.startswith(f"🗂 Bugünün konu önerileri ({k + 1}/2)\n\n" + basliklar[0] + "\n"))
+            konum = [metin.index("\n" + b + "\n") for b in basliklar]
+            self.assertEqual(konum, sorted(konum))
+            numaralar = [int(x) for x in re.findall(r"^(\d+)\. ", metin, re.M)]
+            self.assertEqual(numaralar, list(range(9 * k + 1, 9 * k + 10)), "numaralar mesajlar boyunca kesintisiz")
+            # her numara kendi serisinin başlığı altında
+            for j, b in enumerate(basliklar):
+                ilk = metin.index(f"\n{9 * k + 3 * j + 1}. ")
+                self.assertLess(konum[j], ilk, b)
+                if j + 1 < len(basliklar):
+                    self.assertLess(metin.index(f"\n{9 * k + 3 * j + 3}. "), konum[j + 1], b)
+            # düğmeler kayıttaki sırayı gösterir: tp:<damga>:<sıra>
+            self.assertEqual(rows, [[(f"🎬 {i}", f"tp:{d}:{i - 1}") for i in range(n, n + 3)]
+                                    for n in range(9 * k + 1, 9 * k + 10, 3)])
+            self.assertLessEqual(self.uzunluk16(metin), 4096)
+            self.assertTrue(metin.endswith("Üretmek istediğin konunun numarasına bas."))
+        self.assertLessEqual(max(len(c.encode()) for _, r in msjlar for row in r for _, c in row), 64,
+                             "Telegram callback_data sınırı")
+        for i, it in enumerate(self.SERILI):  # her düğme kendi önerisinin konusunu taşıyan satırda
+            metin = msjlar[i // 9][0]
+            self.assertIn(f"\n{i + 1}. ", metin)
+            self.assertIn(it["topic"][:40], metin.split(f"\n{i + 1}. ", 1)[1].split("\n", 1)[0])
+        self.assertIn("📈 Milli takımın", msjlar[0][0])  # Popüler'in gerekçesi gündem
+        self.assertIn("💡 Etilen gazını", msjlar[1][0])
+        self.assertIn("💡 Altın fiyatları", msjlar[1][0])
 
     def test_uzun_oneriler_sinira_zarifce_sigar(self):
         uzun = [{**it, "topic": it["topic"] + " ayrıntı" * 80, "hook": it["hook"] + " 😀" * 40,
                  "trend": it["trend"] + " gündem" * 40} for it in self.SERILI]
         for items in (uzun, [{**it, "topic": "çok " * 2000} for it in uzun]):
-            metin, rows = self.tr.mesaj(items)
-            self.assertLessEqual(self.uzunluk16(metin), 4096)
-            self.assertEqual([int(x) for x in re.findall(r"^(\d+)\. ", metin, re.M)], list(range(1, 13)))
-            self.assertTrue(metin.endswith("numarasına bas."), "kısaltma kelime ortasında kesmez, son satır kalır")
-            self.assertEqual(sum(len(r) for r in rows), 12)
-        self.assertIn("…", metin)
+            msjlar = self.tr.mesajlar(items)
+            for metin, _ in msjlar:
+                self.assertLessEqual(self.uzunluk16(metin), 4096)
+                self.assertTrue(metin.endswith("numarasına bas."), "kısaltma kelime ortasında kesmez, son satır kalır")
+            self.assertEqual([int(x) for m, _ in msjlar for x in re.findall(r"^(\d+)\. ", m, re.M)], list(range(1, 19)))
+            self.assertEqual(sum(len(r) for _, rows in msjlar for r in rows), 18)
+        self.assertIn("…", msjlar[0][0])
 
     def test_eski_oneriler_populer_sayilir(self):
-        metin, rows = self.tr.mesaj(ONERILER)
+        msjlar = self.tr.mesajlar(ONERILER)
+        self.assertEqual(len(msjlar), 1, "tek gruplu liste tek mesaj")
+        metin, rows = msjlar[0]
+        self.assertTrue(metin.startswith("🗂 Bugünün konu önerileri\n"), "tek mesajda (1/1) yazılmaz")
         self.assertIn("\n🔥 Popüler\n", metin)
         self.assertNotIn("Konular", metin)
         d = self.tr.damga(ONERILER)
@@ -1895,12 +1925,17 @@ class OneriSerileri(Ortak):
         self.assertEqual(self.tr.seri_of({"seri": "bilinmeyen"}), "populer")
         self.assertEqual({self.tr.kalip_of(x) for x in ONERILER}, {""})
         # sıralama: seri sırası, seri içinde puan; eski öğeler Popüler'e katılır
-        karisik = [self.SERILI[9], self.SERILI[3], ONERILER[2], self.SERILI[0], self.SERILI[6]]
+        karisik = [self.SERILI[16], self.SERILI[9], self.SERILI[3], ONERILER[2], self.SERILI[0], self.SERILI[13],
+                   self.SERILI[6]]
         self.assertEqual([self.tr.seri_of(x) for x in self.tr.sirala(karisik)],
-                         ["populer", "populer", "konu", "efsane", "nasil"])
+                         ["populer", "populer", "konu", "efsane", "nasil", "uretim", "olsaydin"])
         self.assertEqual(self.tr.sirala(karisik)[0]["score"], 9)
+        # eski 12 önerilik liste (dört seri): Nasıl yapılır? ikinci mesajda, numarası 10'dan sürer
+        eski = self.tr.mesajlar(self.SERILI[:12])
+        self.assertEqual([len(r) for _, r in eski], [3, 1])
+        self.assertTrue(eski[1][0].startswith("🗂 Bugünün konu önerileri (2/2)\n\n🛠 Nasıl yapılır?\n10. "))
 
-    def test_notify_tek_mesaj_ve_klavye(self):
+    def test_notify_seri_mesajlari_ve_klavye(self):
         oneriler = [self.tr.Suggestion(**x) for x in reversed(self.SERILI)]
         eski, self.tr.suggest = self.tr.suggest, lambda: self.tr.sirala(oneriler)
         try:
@@ -1909,12 +1944,16 @@ class OneriSerileri(Ortak):
         finally:
             self.tr.suggest = eski
         g = self.tg(self.req.cagrilar, "sendMessage")
-        self.assertEqual(len(g), 1)
-        kb = g[0]["data"]["reply_markup"]["inline_keyboard"]
+        self.assertEqual(len(g), 2, "üçer serilik iki mesaj")
         d = self.tr.damga([x.model_dump() for x in self.tr.sirala(oneriler)])  # damga kayıttaki sıradan
-        self.assertEqual([[b["callback_data"] for b in r] for r in kb],
-                         [[f"tp:{d}:{i}" for i in range(k, k + 3)] for k in (0, 3, 6, 9)])
-        self.assertTrue(g[0]["data"]["text"].startswith("🗂 Bugünün konu önerileri\n\n🔥 Popüler\n1. 🇹🇷 1954"))
+        for k, m in enumerate(g):
+            kb = m["data"]["reply_markup"]["inline_keyboard"]
+            self.assertEqual([[b["callback_data"] for b in r] for r in kb],
+                             [[f"tp:{d}:{i}" for i in range(n, n + 3)] for n in range(9 * k, 9 * k + 9, 3)])
+            self.assertLessEqual(self.uzunluk16(m["data"]["text"]), 4096)
+        self.assertTrue(g[0]["data"]["text"].startswith("🗂 Bugünün konu önerileri (1/2)\n\n🔥 Popüler\n1. 🇹🇷 1954"))
+        self.assertTrue(g[1]["data"]["text"].startswith("🗂 Bugünün konu önerileri (2/2)\n\n🛠 Nasıl yapılır?\n10. "))
+        self.assertIn("\n💭 Ya sen olsaydın?\n16. 🇹🇷 Kuyumcu olsaydın", g[1]["data"]["text"])
 
     def test_otomatik_oneri_kaydedilmez_ve_nasil_istenmez(self):
         tr = self.tr
@@ -1931,9 +1970,22 @@ class OneriSerileri(Ortak):
             self.assertEqual(tr.STATE.read_text(encoding="utf-8"), once, "otomatik üretim listeyi değiştirmez")
             self.assertEqual([tr.seri_of(x) for x in items], ["populer", "konu", "efsane"])
             self.assertIn("(toplam 9): populer, konu, efsane.", istekler[0])
-            tr.suggest()  # /oneri: dört seri istenir ve liste kaydedilir
-            self.assertIn("(toplam 12): populer, konu, efsane, nasil.", istekler[1])
-            self.assertEqual(len(json.loads(tr.STATE.read_text(encoding="utf-8"))["items"]), 4)
+            tr.suggest()  # /oneri: altı seri istenir ve liste kaydedilir
+            self.assertIn("(toplam 18): populer, konu, efsane, nasil, uretim, olsaydin.", istekler[1])
+            self.assertEqual(len(json.loads(tr.STATE.read_text(encoding="utf-8"))["items"]), 6)
+            # otomatik üretim (best) yalnız OTOMATIK_SERILER'i ister; nasil, uretim, olsaydin hiç seçilmez
+            self.assertEqual(tr.OTOMATIK_SERILER, ("populer", "konu", "efsane"))
+            istekler.clear()
+
+            def ask_hepsi(prompt, schema, system, web=False):  # yanıt istenmeyen serilerde çok yüksek puan taşısa da
+                istekler.append(prompt)
+                return tr.Suggestions(items=[tr.Suggestion(topic=f"{s} konusu", score=10 if s in ("nasil", "uretim",
+                                             "olsaydin") else 5, seri=s, **ortak) for s in tr.SERILER])
+            tr.ask_claude = ask_hepsi
+            secilen = tr.best()
+            self.assertIn(tr.seri_of(secilen), tr.OTOMATIK_SERILER)
+            self.assertNotIn("uretim", istekler[0])
+            self.assertNotIn("olsaydin", istekler[0])
         finally:
             tr.ask_claude = eski
 
@@ -1958,7 +2010,7 @@ class OneriSerileri(Ortak):
         self.assertEqual(len([x for x in self.req.cagrilar if "gh" in x]), 1)
 
     def test_seriden_uretim_kalibi_sabitler(self):
-        beklenen = {0: None, 3: None, 6: "efsane", 9: "nasil"}
+        beklenen = {0: None, 3: None, 6: "efsane", 9: "nasil", 12: "uretim", 15: "olsaydin", 17: "olsaydin"}
         for i, kalip in beklenen.items():
             self.req.cagrilar.clear()
             with contextlib.redirect_stdout(io.StringIO()):
@@ -1988,17 +2040,26 @@ class OneriSerileri(Ortak):
         self.assertIn("KALIP: ${{ github.event.inputs.kalip }}", y)
         self.assertEqual(y.count("inputs.kalip"), 1, "kalıp betiğin içine doğrudan yazılmaz")
         self.assertIn('[ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")', y)
+        aciklama = re.search(r"\n      kalip:\n        description: (.+)\n", y).group(1)
+        for k in ("efsane", "nasil", "uretim", "olsaydin"):
+            self.assertIn(k, aciklama)
+        self.assertIn("uretim", re.search(r"\n      template:\n        description: (.+)\n", y).group(1))
 
     def test_nasil_dusumde_yok_ve_sabit_kalip_korunur(self):
         import shortgen.script as sc
         h = self.root / "history.jsonl"
-        for son in ([], ["hikaye", "hikaye", "efsane"], ["nasil"], ["efsane", "neden", "sayac"]):
+        self.assertEqual(sc.FORCED_ONLY, {"nasil", "uretim", "olsaydin"})
+        for son in ([], ["hikaye", "hikaye", "efsane"], ["nasil"], ["efsane", "neden", "sayac"], ["uretim"],
+                    ["olsaydin", "uretim", "nasil"]):
             h.write_text("".join(json.dumps({"topic": f"t{i}", "structure": k}) + "\n" for i, k in enumerate(son)),
                          encoding="utf-8")
-            self.assertNotIn("nasil", sc.allowed_structures(h), son)
+            for k in sc.FORCED_ONLY:
+                self.assertNotIn(k, sc.allowed_structures(h), son)
             self.assertTrue(sc.allowed_structures(h), son)
         h.write_text("", encoding="utf-8")
         self.assertEqual(sc.STRUCTURES["nasil"][0], "NASIL YAPILIR?")
+        self.assertEqual(sc.STRUCTURES["uretim"][0], "NASIL ÜRETİLİYOR?")
+        self.assertEqual(list(sc.STRUCTURES)[-2:], ["uretim", "olsaydin"])
         self.assertLessEqual(set(self.tr.SERI_KALIP.values()), set(sc.STRUCTURES), "seri kalıpları geçerli kalıp")
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
         istekler = []
@@ -2025,7 +2086,8 @@ class OneriSerileri(Ortak):
         self.assertNotIn("- hikaye:", istekler[0])
         self.assertIn("SABİT", istekler[1])
         self.assertEqual(serbest.structure, "neden", "serbest kalıpta doğrulayıcının kalıbı geçerli")
-        self.assertNotIn("- nasil:", istekler[3])
+        for k in sc.FORCED_ONLY:  # dönüşümden (serbest kalıp) yazılan senaryoya seri kalıpları sunulmaz
+            self.assertNotIn(f"- {k}:", istekler[3])
         self.assertIn("- hikaye:", istekler[3])
 
     def test_serbest_kalipta_nasil_secilemez(self):
@@ -2055,14 +2117,55 @@ class OneriSerileri(Ortak):
         self.assertEqual(ikisi.structure, sc.allowed_structures(h)[0], "dönüşümdeki ilk kalıba döner")
         self.assertNotEqual(ikisi.structure, "nasil")
         self.assertIn(f'"structure": "{ikisi.structure}"', istekler[1], "doğrulayıcıya nasil gitmez")
-        self.assertIn("'nasil' kalıbına geçme", istekler[1])
+        self.assertIn("'nasil', 'uretim', 'olsaydin' kalıplarına geçme", istekler[1])
         self.assertEqual(yalniz_dogrulayici.structure, "neden", "doğrulayıcı nasil'e geçemez: üreticinin kalıbı kalır")
+
+    def test_serbest_kalipta_uretim_ve_olsaydin_secilemez(self):
+        """Otomatik üretim (serbest kalıp): üretici ve doğrulayıcı uretim ya da olsaydin seçse de dönüşümdeki kalıp
+        kullanılır; bu kalıpların yönergesi ve web araması istenmez."""
+        import shortgen.script as sc
+        h = self.root / "history.jsonl"
+        h.write_text(json.dumps({"topic": "t", "structure": "hikaye"}) + "\n", encoding="utf-8")
+        demo = sc.load_script(self.root / "demo" / "demo_script.json")
+        for k in ("uretim", "olsaydin"):
+            cagri = []
+
+            def ask(prompt, schema, system, web=False, k=k):
+                cagri.append((schema.__name__, system, web))
+                s = demo.model_copy(update={"structure": k}, deep=True)
+                if schema is sc.ShortScript:
+                    return s
+                if schema is sc.Review:
+                    return sc.Review(ok=True, problems=[], fixed=s)
+                return sc.Polished(notes=[], fixed=s)
+            eski, sc.ask_claude = sc.ask_claude, ask
+            try:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    out = sc.generate_script(h, "Muzlar neden kararır", kart=True, adim_kartlari=True)
+            finally:
+                sc.ask_claude = eski
+            self.assertEqual(out.structure, sc.allowed_structures(h)[0], k)
+            self.assertEqual([(c[0], c[2]) for c in cagri], [("ShortScript", False), ("Review", True), ("Polished", False)])
+            for _, system, _ in cagri:
+                for kural in (sc.URETIM_RULES, sc.OLSAYDIN_RULES, sc.EDITOR_URETIM, sc.EDITOR_OLSAYDIN):
+                    self.assertNotIn(kural, system, k)
 
     def test_nasil_guvenlik_sinirlari(self):
         import shortgen.script as sc
-        for alan in ("kimyasalları karıştırma", "gıda güvenliği", "kızgın yağ", "evcil hayvan", "konumunu, mesajlarını",
-                     "güvenlik önlemlerini aşma", "ilaç"):
+        for alan in ("ya da kimyasalları (çamaşır suyu, tuz ruhu, kireç çözücü, amonyak) birbiriyle ya da herhangi bir "
+                     "şeyle (sirke ve limon dahil) karıştırma", "gıda güvenliği", "kızgın yağ", "evcil hayvan",
+                     "konumunu, mesajlarını", "güvenlik önlemlerini aşma", "ilaç", "elektrik tesisatı (priz, sigorta, "
+                     "kablo bağlama)", "gaz tesisatı", "yüksekte çalışma", "ağır elektrikli aletler (taşlama, motorlu "
+                     "testere)", "son kullanma tarihi", "alkollü içecek tarifi"):
             self.assertIn(alan, sc.NASIL_YASAK)
+        # izin verilenler: tek başına tek ürün ya da mutfak malzemesi, olağan pişirme ve kızartma
+        for serbest in ("tek bir ürünü etiketindeki talimatla tek başına kullanmak ya da sirke, karbonat, limon gibi "
+                        "mutfak malzemeleriyle temizlik serbest", "olağan pişirme, olağan kızartma ve su kaynatma hariç"):
+            self.assertIn(serbest, sc.NASIL_YASAK)
+        self.assertIn(sc.NASIL_GUVENLIK, sc.STRUCTURES["nasil"][1], "alet işinde güvenlik notu")
+        self.assertIn(sc.NASIL_GUVENLIK, sc.NASIL_RULES)
+        self.assertIn("koruyucu gözlük", sc.NASIL_GUVENLIK)
+        self.assertIn("kablo ve boru kontrolü", sc.NASIL_GUVENLIK)
         self.assertIn(sc.NASIL_YASAK, sc.STRUCTURES["nasil"][1], "senaryo yönergesi")
         self.assertIn(sc.NASIL_YASAK, self.tr.SYSTEM, "öneri yönergesi")
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
@@ -2080,12 +2183,20 @@ class OneriSerileri(Ortak):
         self.assertIn("Güvenli olmayan ya da şu alanlara giren adımı çıkar veya güvenli bir adımla değiştir: "
                       + sc.NASIL_YASAK, istekler[0])
         self.assertNotIn("Güvenli olmayan", istekler[1], "diğer kalıpların doğrulama yönergesi değişmez")
+        self.assertIn("güvenlik notu", istekler[0])
+        # alanlar: öneri yönergesi altı alanı numaralı sayar, her öneri farklı alandan
+        for alan in ("ev işleri ve temizlik", "matkapla dübel takma", "Türk mutfağı", "alkolsüz kokteyl", "yurt ya da küçük "
+                     "oda düzeni", "ev hanımları için pratikler: çamaşır, ütü, leke çıkarma"):
+            self.assertIn(alan, self.tr.SYSTEM)
+        self.assertIn("3 önerinin her biri farklı bir alandan", self.tr.SYSTEM)
+        self.assertIn("(6) evi çekip çevirenler", self.tr.SYSTEM)
 
     def test_yapi_sablon_ve_seri_etiketi(self):
         import shortgen.pipeline as pl
         import shortgen.script as sc
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
         self.assertEqual(m["yapi_sablon"]["nasil"], "kart")
+        self.assertEqual((m["yapi_sablon"]["uretim"], m["yapi_sablon"]["olsaydin"]), ("uretim", "kart"))
         self.assertTrue(m["yapi_sablon"]["_aciklama"])
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
         nasil = demo.model_copy(update={"structure": "nasil", "category": "uzay"})
@@ -2093,6 +2204,12 @@ class OneriSerileri(Ortak):
         self.assertEqual(pl.pick_template(nasil, "kolaj"), "kolaj", "elle seçilen şablon kazanır")
         self.assertEqual(pl.pick_template(demo.model_copy(update={"structure": "hikaye", "category": "uzay"})), "gece")
         self.assertEqual(pl.series_label(nasil, self.root / "history.jsonl"), "NASIL YAPILIR? #1")
+        olsaydin = demo.model_copy(update={"structure": "olsaydin", "category": "uzay"})
+        self.assertEqual(pl.pick_template(olsaydin), "kart", "olsaydin kart şablonunda (sayaç ve hesap fişi)")
+        self.assertEqual(pl.series_label(olsaydin, self.root / "history.jsonl"),
+                         sc.STRUCTURES["olsaydin"][0] + " #1")
+        uretim = demo.model_copy(update={"structure": "uretim", "category": "uzay"})
+        self.assertEqual(pl.series_label(uretim, self.root / "history.jsonl"), "NASIL ÜRETİLİYOR? #1")
 
     def test_nasil_yapilir_etiketi(self):
         import shortgen.publish as P
@@ -2372,6 +2489,8 @@ class NasilSablonu(unittest.TestCase):
         self.assertEqual(json.loads((REPO / "templates" / "kart.json").read_text(encoding="utf-8"))["renderer"], "kart")
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
         self.assertEqual(m["yapi_sablon"]["nasil"], "kart", "onaydan önce nasil kalıbı kart şablonunda kalır")
+        self.assertEqual({k: v for k, v in m["yapi_sablon"].items() if not k.startswith("_")},
+                         {"nasil": "kart", "uretim": "uretim", "olsaydin": "kart"})
         s = self.cay
         self.assertEqual(pl.pick_template(s, "nasil"), "nasil")
         self.assertEqual(pl.pick_template(s), "kart")
@@ -2385,7 +2504,19 @@ class NasilSablonu(unittest.TestCase):
         baska = s.model_copy(update={"structure": "hikaye", "template": "nasil", "category": "uzay"})
         self.assertNotEqual(pl.pick_template(baska), "nasil")
         self.assertEqual(pl.pick_template(s.model_copy(update={"template": "kolaj", "structure": "hikaye"})), "kolaj")
-        self.assertIn("nasil", pl.KENDI_SECIMLI, "Claude'un şablon listesine girmez")
+        self.assertIn("nasil", pl.kendi_secimli(), "Claude'un şablon listesine girmez")
+        self.assertIn("kart", pl.kendi_secimli())
+        # kart/nasil kurgu modüllü her şablon (ör. uretim) adından bağımsız olarak kendi kuralıyla seçilir
+        uretim_sablonu(kok)
+        (kok / "templates" / "deneme.json").write_text(json.dumps({"description": "d", "renderer": "nasil"}),
+                                                       encoding="utf-8")
+        self.assertEqual(pl.kendi_secimli(), {"kart", "nasil", "uretim", "deneme"})
+        self.assertEqual((pl.sablon_yapisi("deneme"), pl.sablon_yapisi("nasil"), pl.sablon_yapisi("uretim"),
+                          pl.sablon_yapisi("kart"), pl.sablon_yapisi("kolaj"), pl.sablon_yapisi("yok")),
+                         ("nasil", "nasil", "uretim", "", "", ""), "yapi yoksa nasil")
+        for oneri in ("uretim", "deneme", "kart"):
+            self.assertNotEqual(pl.pick_template(s.model_copy(update={"template": oneri, "structure": "hikaye"})),
+                                oneri, oneri)
 
     def test_template_nasil_kalibi_sabitler(self):
         pl = self.pl
@@ -2493,7 +2624,7 @@ class NasilSablonu(unittest.TestCase):
             self.assertIn(parca, sc.NASIL_RULES)
         # ocakta olağan pişirme yasak değil (çay demleme adımı), açık ateş püf noktaları yasak
         self.assertIn("açık ateş", sc.NASIL_YASAK)
-        self.assertIn("ocakta olağan pişirme ve su kaynatma hariç", sc.NASIL_YASAK)
+        self.assertIn("ocakta ya da fırında olağan pişirme, olağan kızartma ve su kaynatma hariç", sc.NASIL_YASAK)
         self.assertIn("NASIL YAPILIR:", sc.STRUCTURES["nasil"][1])
         self.assertIn(sc.NASIL_YASAK, sc.STRUCTURES["nasil"][1])
         self.assertIn(sc.NASIL_YASAK, sc.NASIL_RULES)
@@ -2567,7 +2698,9 @@ class NasilSablonu(unittest.TestCase):
         s.scenes[-1].headline = ["ADIM 4", "TAM KIVAM ÇAY"]
         self.assertEqual([x.step for x in sc.normalize_nasil(s).scenes], [0, 1, 2, 3, 4, 0])
         for satir, beklenen in (("ADIM 1", 1), ("1. ADIM", 1), ("1.ADIM: ÇAYI KOY", 1), ("ADIM 2: SUYU KAYNAT", 2),
-                                ("adım 3", 3), ("4 ADIM", 0), ("3 ADIM:", 0), ("4 ADIMDA ÇAY", 0), ("ADIM ADIM", 0)):
+                                ("adım 3", 3), ("4 ADIM", 0), ("3 ADIM:", 0), ("4 ADIMDA ÇAY", 0), ("ADIM ADIM", 0),
+                                ("AŞAMA 1", 1), ("2. AŞAMA", 2), ("aşama 3: grafit pişirilir", 3), ("2.AŞAMA", 2),
+                                ("4 AŞAMA", 0), ("4 AŞAMADA KALEM", 0), ("AŞAMA AŞAMA", 0), ("AŞAMALAR", 0)):
             self.assertEqual(sc.adim_isaretleri([0, 0, 0], ["", satir, ""])[1], beklenen, satir)
 
     def test_son_adimin_devami_ozete_kaymaz(self):
@@ -2821,6 +2954,9 @@ class NasilSablonu(unittest.TestCase):
         self.assertEqual(y.count("KALIP: ${{ github.event.inputs.kalip }}"), 2)
         self.assertIn('[ -z "$SENARYO" ] && [ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")', y)
         self.assertIn("nasil", re.search(r"\n      sablon:\n        description: (.+)\n", y).group(1))
+        self.assertIn("uretim", re.search(r"\n      sablon:\n        description: (.+)\n", y).group(1))
+        for k in ("uretim", "olsaydin"):
+            self.assertIn(k, re.search(r"\n      kalip:\n        description: (.+)\n", y).group(1))
         try:
             import yaml
         except ImportError:
@@ -2828,13 +2964,545 @@ class NasilSablonu(unittest.TestCase):
         adimlar = yaml.safe_load(y)["jobs"]["ornek"]["steps"]
         girdi = next(a for a in adimlar if a.get("name") == "Girdiler")
         sonuc = {}
-        for kalip in ("", "nasil", "efsane", "Nasil", "nasil; id", "$(id)", "a" * 21):
+        for kalip in ("", "nasil", "efsane", "uretim", "olsaydin", "Nasil", "nasil; id", "$(id)", "a" * 21):
             env = dict(os.environ, SENARYO="", KONU="çay", KALIP=kalip)
             r = __import__("subprocess").run(["bash", "-c", girdi["run"]], env=env, capture_output=True, text=True)
             sonuc[kalip] = r.returncode
-        self.assertEqual(sonuc, {"": 0, "nasil": 0, "efsane": 0, "Nasil": 1, "nasil; id": 1, "$(id)": 1, "a" * 21: 1})
+        self.assertEqual(sonuc, {"": 0, "nasil": 0, "efsane": 0, "uretim": 0, "olsaydin": 0, "Nasil": 1, "nasil; id": 1,
+                                 "$(id)": 1, "a" * 21: 1})
         uret = next(a for a in adimlar if a.get("name") == "Örnek videoyu üret")
         self.assertNotIn("inputs.", uret["run"], "girdiler betiğe doğrudan yazılmaz")
+
+
+class YeniSeriler(unittest.TestCase):
+    """Nasıl üretiliyor? (uretim) ve Ya sen olsaydın? (olsaydin) serileri: istemler, aşama düzeni, şablon yönlendirme,
+    hesap fişi denetimi, açıklamadaki uyarı satırı ve alkollü içecek anahtarı. Mevcut kalıpların istemleri değişmez."""
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(REPO))
+        for ad in [m for m in sys.modules if m == "shortgen" or m.startswith("shortgen.")]:
+            del sys.modules[ad]
+        import shortgen.pipeline as pl
+        import shortgen.publish as P
+        import shortgen.script as sc
+        import shortgen.trends as tr
+        cls.pl, cls.P, cls.sc, cls.tr = pl, P, sc, tr
+        cls.cay = sc.load_script(REPO / "demo" / "nasil" / "ornek_cay.json")
+        cls.demo = sc.load_script(REPO / "demo" / "demo_script.json")
+
+    @classmethod
+    def tearDownClass(cls):
+        sys.path.remove(str(REPO))
+        for ad in [m for m in sys.modules if m == "shortgen" or m.startswith("shortgen.")]:
+            del sys.modules[ad]
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="seri_test_"))
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.h = self.tmp / "history.jsonl"
+        self.h.write_text("", encoding="utf-8")
+
+    def yama(self, nesne, ad, deger):
+        eski = getattr(nesne, ad)
+        setattr(nesne, ad, deger)
+        self.addCleanup(setattr, nesne, ad, eski)
+
+    def uret(self, donen, **kw):
+        """generate_script'i sahte Claude ile çalıştırır; (çıktı, [(şema, sistem, istem, web)], günlük) döndürür.
+        donen: her geçişin döndüreceği senaryo (kopyası)."""
+        sc = self.sc
+        cagri = []
+
+        def ask(prompt, schema, system, web=False):
+            cagri.append((schema.__name__, system, prompt, web))
+            s = donen.model_copy(deep=True)
+            if schema is sc.ShortScript:
+                return s
+            if schema is sc.Review:
+                return sc.Review(ok=True, problems=[], fixed=s)
+            return sc.Polished(notes=[], fixed=s)
+        self.yama(sc, "ask_claude", ask)
+        with contextlib.redirect_stdout(io.StringIO()) as gunluk:
+            out = sc.generate_script(self.h, kw.pop("konu", "konu"), **kw)
+        return out, cagri, gunluk.getvalue()
+
+    # ------------------------------------------------------------ mevcut kalıplar
+    def test_mevcut_kaliplarin_istemleri_degismez(self):
+        """hikaye/efsane/sayac/neden (ve serbest dönüşüm) istemleri origin/main'dekiyle (fixtures/istem_golden.json)
+        harfi harfine aynı: sistem istemleri (üretici, doğrulayıcı, editör) ve üreticinin istemi."""
+        golden = json.loads((FIX / "istem_golden.json").read_text(encoding="utf-8"))
+        metin = golden["metinler"]
+        for d in golden["durumlar"]:
+            _, cagri, _ = self.uret(self.demo.model_copy(update={"structure": d["kalip"] or "hikaye"}),
+                                    konu="muz", structure=d["kalip"], kart=d["kart"], adim_kartlari=d["adim_kartlari"])
+            ad = (d["kalip"], d["kart"], d["adim_kartlari"])
+            self.assertEqual([c[0] for c in cagri], [g["sema"] for g in d["cagrilar"]], ad)
+            for c, g in zip(cagri, d["cagrilar"]):
+                self.assertEqual(c[1], metin[g["system"]], (ad, g["sema"]))
+                self.assertEqual(c[3], g["web"], (ad, g["sema"]))
+                if "prompt" in g:
+                    self.assertEqual(c[2], metin[g["prompt"]], ad)
+        for k in ("hikaye", "efsane", "sayac", "neden"):  # yeni yönergeler bu kalıplara eklenmez
+            self.assertEqual(self.sc.kalip_kurallari(k, True), "")
+        self.assertNotIn("receipt", self.sc.KART_RULES, "hesap fişi yönergesi yalnız OLSAYDIN_RULES'ta")
+
+    # ------------------------------------------------------------ Nasıl üretiliyor?
+    def uretim_senaryosu(self):
+        s = self.cay.model_copy(update={"structure": "uretim", "template": "uretim"}, deep=True)
+        for x in s.scenes:
+            x.headline = ["AŞAMA" + h[4:] if h.startswith("ADIM") else h for h in x.headline]
+        return s
+
+    def test_uretim_istemleri(self):
+        sc = self.sc
+        out, cagri, _ = self.uret(self.cay.model_copy(update={"structure": "uretim"}), konu="kurşun kalem",
+                                  structure="uretim", adim_kartlari=True)
+        self.assertEqual([(c[0], c[3]) for c in cagri], [("ShortScript", True), ("Review", True), ("Polished", False)],
+                         "senaryo web aramasıyla araştırılarak yazılır")
+        self.assertIn(sc.URETIM_RULES, cagri[0][1])
+        self.assertIn(sc.URETIM_RULES, cagri[1][1])
+        self.assertNotIn(sc.NASIL_RULES, cagri[0][1])
+        self.assertNotIn(sc.OLSAYDIN_RULES, cagri[0][1])
+        self.assertIn("- uretim: NASIL ÜRETİLİYOR:", cagri[0][2])
+        self.assertIn("üretim sürecini web aramasıyla araştır", cagri[0][2])
+        self.assertIn("ANLATIM KALIBI (SABİT)", cagri[0][2])
+        for parca in ("numaralı aşama sahneleri", "'AŞAMA n'", "Aşamaların sırasını", "ölçek bilgisini", sc.URETIM_YASAK):
+            self.assertIn(parca, cagri[1][2])
+        self.assertIn(sc.EDITOR_URETIM, cagri[2][1])
+        self.assertIn(sc.EDITOR_NASIL, cagri[2][1], "Adım kartlarında başlıklar editörden korunur")
+        # çıktı: aşama numaraları 'AŞAMA n' (yazar 'ADIM n' yazsa da)
+        self.assertEqual(out.structure, "uretim")
+        self.assertEqual([x.step for x in out.scenes], [0, 1, 2, 3, 4, 0])
+        self.assertEqual([x.headline[0] for x in out.scenes[1:5]], [f"AŞAMA {n}" for n in range(1, 5)])
+        # Adım kartları dışında (ör. --template kart): ekran düzeni istenmez, araştırma ve editör kuralı kalır
+        _, cagri, _ = self.uret(self.cay.model_copy(update={"structure": "uretim"}), structure="uretim", kart=True)
+        self.assertNotIn(sc.URETIM_RULES, cagri[0][1])
+        self.assertTrue(cagri[0][3])
+        self.assertIn(sc.EDITOR_URETIM, cagri[2][1])
+        self.assertNotIn(sc.EDITOR_NASIL, cagri[2][1])
+        # yönerge içeriği
+        for parca in ("AŞAMA n", "şimdiki zaman edilgen", "1.000°C", "72 SAAT", "image_mode none", "Yorumlara yaz.",
+                      "yılda kaç tane", "Türkiye'nin üretimi", "Kurşun kalemin içinde tek gram kurşun yok.",
+                      "çay, fındık, lokum, cam, porselen, halı, bakır cezve, çini, nazar boncuğu, beyaz"):
+            self.assertIn(parca, sc.URETIM_RULES)
+        for yasak in ("silah", "mühimmat", "patlayıcı", "uyuşturucu", "alkol ve tütün ürünleri", "tehlikeli kimyasalların",
+                      "hayvan kesiminin", "evde denemeye teşvik", "gizli tarifini"):
+            self.assertIn(yasak, sc.URETIM_YASAK)
+        for yer in (sc.STRUCTURES["uretim"][1], sc.URETIM_RULES, self.tr.SYSTEM):
+            self.assertIn(sc.URETIM_YASAK, yer)
+
+    def test_uretim_asama_duzeni(self):
+        sc = self.sc
+        s = self.uretim_senaryosu()
+        for x in s.scenes:
+            x.step = 0
+        s.scenes[1].headline, s.scenes[1].highlight_line = ["aşama 2: grafit öğütülür"], 0
+        s.scenes[2].headline = ["3. AŞAMA", "KİLLE KARIŞTIRILIR"]
+        s.scenes[3].headline = ["ADIM 4", "FIRINDA PİŞİRİLİR"]   # yazar adım yazmış: aşamaya çevrilir
+        s.scenes[4].headline = ["KURUTULUR"]                       # iki aşama arası işaretsiz: önceki aşamanın devamı
+        s.scenes[-1].headline = ["4 AŞAMA", "KURŞUN KALEM"]
+        out = sc.normalize_nasil(s)
+        self.assertEqual([x.step for x in out.scenes], [0, 1, 2, 3, 3, 0])
+        self.assertEqual(out.scenes[1].headline, ["AŞAMA 1", "GRAFİT ÖĞÜTÜLÜR"])
+        self.assertEqual(out.scenes[1].highlight_line, 1)
+        self.assertEqual(out.scenes[2].headline, ["AŞAMA 2", "KİLLE KARIŞTIRILIR"])
+        self.assertEqual(out.scenes[3].headline, ["AŞAMA 3", "FIRINDA PİŞİRİLİR"])
+        self.assertEqual(out.scenes[4].headline, ["KURUTULUR"], "devam sahnesine numara eklenmez")
+        self.assertEqual(out.scenes[-1].headline, ["4 AŞAMA", "KURŞUN KALEM"], "özet başlığı aşama sayılmaz")
+        # yalnız step alanı: başlığa kalıbın kelimesi eklenir
+        s = self.uretim_senaryosu()
+        s.scenes[1].headline = ["GRAFİT ÖĞÜTÜLÜR"]
+        self.assertEqual(sc.normalize_nasil(s).scenes[1].headline, ["AŞAMA 1", "GRAFİT ÖĞÜTÜLÜR"])
+        # nasil 'ADIM' kelimesinde kalır ('AŞAMA' yazılsa da), diğer kalıplara dokunulmaz
+        n = self.cay.model_copy(deep=True)
+        n.scenes[1].headline = ["AŞAMA 1", "SUYU KAYNAT"]
+        self.assertEqual(sc.normalize_nasil(n).scenes[1].headline, ["ADIM 1", "SUYU KAYNAT"])
+        for k in ("olsaydin", "efsane"):
+            e = self.uretim_senaryosu().model_copy(update={"structure": k}, deep=True)
+            for x in e.scenes:
+                x.step = 0
+            once = e.model_dump()
+            self.assertEqual(sc.normalize_nasil(e).model_dump(), once, k)
+        self.assertEqual(sc.ADIM_KELIMESI, {"nasil": "ADIM", "uretim": "AŞAMA"})
+
+    def test_uretim_sablonu_kalibi_sabitler(self):
+        pl = self.pl
+        kok = self.tmp / "kok"
+        shutil.copytree(REPO / "templates", kok / "templates")
+        uretim_sablonu(kok)
+        (kok / "state").mkdir()
+        self.yama(pl, "ROOT", kok)
+        cagri = {}
+
+        def generate_script(history, topic=None, templates=None, series_prev=None, allow_series=False, kart=False,
+                            structure=None, adim_kartlari=False):
+            cagri.update(structure=structure, kart=kart, templates=templates, adim_kartlari=adim_kartlari)
+            return self.cay.model_copy(update={"structure": structure or "hikaye"}, deep=True)
+        self.yama(pl, "generate_script", generate_script)
+        self.yama(pl, "build", lambda script, out, **k: cagri.update(sablon=k["template"]) or out / "video.mp4")
+        eski_etiket = os.environ.get("SERIES_LABEL")
+        os.environ["SERIES_LABEL"] = "0"
+        self.addCleanup(lambda: os.environ.__setitem__("SERIES_LABEL", eski_etiket) if eski_etiket is not None
+                        else os.environ.pop("SERIES_LABEL", None))
+
+        def calistir(*argv):
+            eski = sys.argv
+            sys.argv = ["pipeline", *argv, "--out", str(self.tmp / "out")]
+            try:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    pl.main()
+            finally:
+                sys.argv = eski
+        acik = bool((json.loads((kok / "templates" / "eslesme.json").read_text(encoding="utf-8")).get("kart") or {})
+                    .get("acik"))
+        for argv, beklenen in ((["--topic", "kalem", "--template", "uretim"], ("uretim", "uretim", True, acik)),
+                               (["--topic", "kalem", "--structure", "uretim"], ("uretim", "uretim", True, acik)),
+                               (["--topic", "kalem", "--template", "uretim", "--structure", "uretim"],
+                                ("uretim", "uretim", True, acik)),
+                               (["--topic", "kuyumcu", "--structure", "olsaydin"], ("olsaydin", "kart", False, True)),
+                               (["--topic", "çay", "--structure", "nasil"], ("nasil", "kart", False, True))):
+            cagri.clear()
+            calistir(*argv)
+            self.assertEqual((cagri["structure"], cagri["sablon"], cagri["adim_kartlari"], cagri["kart"]), beklenen, argv)
+        # şablonun kalıbıyla çelişen kalıp: Claude'a gitmeden durur
+        for argv, mesaj in ((["--topic", "x", "--template", "uretim", "--structure", "nasil"], "uretim kalıbıyla"),
+                            (["--topic", "x", "--template", "nasil", "--structure", "uretim"], "nasil kalıbıyla"),
+                            (["--topic", "x", "--template", "uretim", "--structure", "olsaydin"], "uretim kalıbıyla")):
+            cagri.clear()
+            with self.assertRaises(SystemExit) as hata:
+                calistir(*argv)
+            self.assertIn(mesaj, str(hata.exception), argv)
+            self.assertEqual(cagri, {}, argv)
+        # hazır senaryo başka kalıpta: kurguya geçmez
+        nasil = self.tmp / "nasil.json"
+        nasil.write_text(self.cay.model_dump_json(), encoding="utf-8")
+        with self.assertRaises(SystemExit) as hata:
+            calistir("--script", str(nasil), "--template", "uretim", "--no-voice")
+        self.assertIn("uretim kalıbındaki senaryoyla", str(hata.exception))
+        self.assertNotIn("sablon", cagri)
+        # Claude'un şablon listesine kart/nasil kurgu modüllü şablonlar girmez
+        m = json.loads((kok / "templates" / "eslesme.json").read_text(encoding="utf-8"))
+        (kok / "templates" / "eslesme.json").write_text(json.dumps(dict(m, claude_secsin=True), ensure_ascii=False),
+                                                        encoding="utf-8")
+        cagri.clear()
+        calistir("--topic", "kalem")
+        self.assertTrue(cagri["templates"])
+        self.assertFalse({"kart", "nasil", "uretim"} & set(cagri["templates"]))
+
+    # ------------------------------------------------------------ Ya sen olsaydın?
+    def test_olsaydin_istemleri(self):
+        sc = self.sc
+        out, cagri, gunluk = self.uret(self.demo.model_copy(update={"structure": "olsaydin"}), konu="kuyumcu",
+                                       structure="olsaydin", kart=True)
+        self.assertEqual([(c[0], c[3]) for c in cagri], [("ShortScript", True), ("Review", True), ("Polished", False)])
+        self.assertIn(sc.OLSAYDIN_RULES, cagri[0][1])
+        self.assertIn(sc.KART_RULES, cagri[0][1])
+        self.assertIn(sc.OLSAYDIN_RULES, cagri[1][1])
+        self.assertIn(f"{sc.YIL} Türkiye", cagri[0][2])
+        self.assertIn("- olsaydin: " + sc.STRUCTURES["olsaydin"][1], cagri[0][2])
+        for parca in (f"Her rakamı {sc.YIL} Türkiye'si için", "card_lines satırlarının toplamı card_value'ya tam eşit",
+                      "gelir eksi gider", sc.OLSAYDIN_YASAK, 'hesap fişi (card "receipt") yok'):
+            self.assertIn(parca, cagri[1][2])
+        self.assertIn(sc.EDITOR_OLSAYDIN, cagri[2][1])
+        self.assertIn('UYARI hesap fişi: hesap fişi (card "receipt") yok', gunluk)
+        self.assertEqual(out.structure, "olsaydin")
+        # kart yönergesi kapalıyken de olsaydin düzeni istenir
+        _, cagri, _ = self.uret(self.demo.model_copy(update={"structure": "olsaydin"}), structure="olsaydin")
+        self.assertIn(sc.OLSAYDIN_RULES, cagri[0][1])
+        self.assertNotIn(sc.KART_RULES, cagri[0][1])
+        # yönerge içeriği
+        for parca in ('card "counter"', '"1,2 MİLYON ₺", "%25", "18 AY"', 'card "receipt"', '"KALEM|TUTAR"',
+                      '"KİRA +\n  DEPOZİTO|135.000 ₺"', "2-5 satır", "card_value'ya tam eşit", '"TOPLAM"',
+                      f'"Tahmini · Kasım {sc.YIL}"', "Sen olsan ne yapardın? Yorumlara yaz.", "Resmî Gazete",
+                      "ÇSGB ve SGK", "TÜİK", "Milli Piyango'nun resmî", "meslek odaları", "ilan sitelerinin",
+                      "yaklaşık", "şehir adı", "kazanma olasılığı açıkça söylenir", "Kuyumcu olsaydın",
+                      "Piyango sana çıksaydı", "Yurt\n  dışına taşınsaydın", "Bir köyde yaşamaya başlasaydın",
+                      "description alanına yazma"):
+            self.assertIn(parca, sc.OLSAYDIN_RULES)
+        for yasak in ("yasa dışı ya da ruhsatsız", "kumar ve bahis", "alkol ya da tütün satışına", "kripto para, borsa, "
+                      "forex", "yatırım ürünü", "saadet zinciri", "MLM", "kredi çekme tavsiyesi", "vergi kaçırma",
+                      "gelirini ifşa", "garanti kazanç", "sağlık ve tıbbi", "siyasi kutuplaştırıcı"):
+            self.assertIn(yasak, sc.OLSAYDIN_YASAK)
+        for yer in (sc.STRUCTURES["olsaydin"][1], sc.OLSAYDIN_RULES, self.tr.SYSTEM):
+            self.assertIn(sc.OLSAYDIN_YASAK, yer)
+        # öneri yönergesi: üç tür karışık, somut durum adıyla
+        for parca in ("ALTI SERİDE", "Kapalıçarşı'da bir kuyumcunun bir günü ve ayda kalan para",
+                      "Piyango sana\n  çıksaydı", "Yurt\n  dışına taşınsaydın ilk ay kaç lira harcardın",
+                      "Bir köyde yaşamaya başlasaydın", "türlere karışık", "somut durumu adıyla"):
+            self.assertIn(parca, self.tr.SYSTEM)
+        self.assertNotIn("DÖRT SERİDE", self.tr.SYSTEM)
+        self.assertEqual(list(self.tr.SERILER), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin"])
+        self.assertEqual((self.tr.SERI_IKON["uretim"], self.tr.SERI_IKON["olsaydin"]), ("🏭", "💭"))
+        self.assertEqual(self.tr.SERILER["uretim"], "Nasıl üretiliyor?")
+        self.assertEqual(self.tr.Suggestion.model_json_schema()["properties"]["seri"]["enum"], list(self.tr.SERILER))
+        self.assertLessEqual(set(self.tr.SERI_KALIP.values()), set(sc.STRUCTURES))
+
+    def test_fis_denetimi(self):
+        sc = self.sc
+        S = types.SimpleNamespace
+        fis = lambda deger, *satir: S(card="receipt", card_value=deger, card_lines=list(satir))  # noqa: E731
+        sayac = S(card="counter", card_value="1,2 MİLYON ₺")
+
+        def sorun(*sahneler):
+            return sc.fis_sorunlari(S(scenes=list(sahneler)))
+        self.assertEqual(sorun(sayac, fis("420.000 ₺", "KİRA + DEPOZİTO|135.000 ₺", "UÇAK BİLETİ|15.000 ₺",
+                                          "EŞYA|270.000 ₺")), [])
+        self.assertEqual(sorun(fis("800.000 ₺", "BRÜT İKRAMİYE|1.000.000 ₺", "VERGİ|-200.000 ₺")), [], "eksi kalem")
+        self.assertEqual(sorun(fis("1,2 MİLYON ₺", "A|700.000 ₺", "B|480.000 ₺")), [], "yuvarlanmış toplam (±50 bin)")
+        self.assertEqual(sorun(fis("48 BİN ₺", "A|30.000 ₺", "B|18.200 ₺")), [], "48 bin: ±500")
+        self.assertEqual(sorun(fis("420.000 ₺", "A|135.000 ₺", "B|270.000 ₺")),
+                         ["1. sahnenin fişinde satırların toplamı 405.000 ama card_value 420.000 ₺"])
+        self.assertEqual(sorun(fis("1,2 MİLYON ₺", "A|700.000 ₺", "B|400.000 ₺")),
+                         ["1. sahnenin fişinde satırların toplamı 1.100.000 ama card_value 1,2 MİLYON ₺"])
+        self.assertEqual(sorun(sayac), ['hesap fişi (card "receipt") yok'])
+        self.assertEqual(sorun(sayac, fis("100 ₺", "A|100 ₺")), ["2. sahnenin fişinde 1 satır var (2-5 olmalı)"])
+        self.assertEqual(sorun(fis("100 ₺", "A 50 ₺", "B|50 ₺")),
+                         ["1. sahnenin fiş satırı 'KALEM|TUTAR' biçiminde değil: A 50 ₺"])
+        self.assertEqual(sorun(fis("TOPLAM", "A|50 ₺", "B|50 ₺")),
+                         ["1. sahnenin fişinde toplam (card_value) okunamadı: 'TOPLAM'"])
+        self.assertEqual(sc.tutar("1,2 milyon ₺"), (1_200_000.0, 50_000.0))
+        self.assertEqual(sc.tutar("-200.000 ₺"), (-200_000.0, 0.5))
+        self.assertIsNone(sc.tutar("yok"))
+
+    def test_dil_duzeltmesi_sayilari_ve_kartlari_korur(self):
+        sc = self.sc
+        s = self.demo.model_copy(update={"structure": "olsaydin"}, deep=True)
+        s.scenes[1].narration = "Kirası ayda yaklaşık 48 bin lira tutardı."
+        s.scenes[1].card, s.scenes[1].card_value, s.scenes[1].card_label = "counter", "48 BİN ₺", "AYLIK KİRA"
+        alanlar = "card_lines" in sc.Scene.model_fields
+        if alanlar:
+            s.scenes[2].card_lines = ["KİRA|48.000 ₺", "AİDAT|2.000 ₺"]
+        duz = s.model_copy(deep=True)
+        duz.scenes[1].narration = "Kirası ayda yaklaşık 48.000 lira tutardı."   # sayının yazılışı değişti
+        duz.scenes[1].headline = ["48.000 LİRA"]
+        duz.scenes[1].card_value = "50 BİN ₺"
+        duz.scenes[3].narration = "On üç kadın, astronotlarla aynı zorlu sınavlardan geçiyor."  # sayısız düzeltme
+        if alanlar:
+            duz.scenes[2].card_lines = ["KİRA|50.000 ₺"]
+        sistem = []
+        self.yama(sc, "ask_claude", lambda prompt, schema, system, web=False: (
+            sistem.append(system), sc.Polished(notes=[], fixed=duz.model_copy(deep=True)))[1])
+        with contextlib.redirect_stdout(io.StringIO()) as gunluk:
+            out = sc.polish_script(s)
+        self.assertIn(sc.EDITOR_OLSAYDIN, sistem[-1])
+        self.assertEqual(out.scenes[1].narration, "Kirası ayda yaklaşık 48 bin lira tutardı.", "sayılar korunur")
+        self.assertEqual(out.scenes[1].headline, s.scenes[1].headline)
+        self.assertEqual((out.scenes[1].card_value, out.scenes[1].card_label), ("48 BİN ₺", "AYLIK KİRA"))
+        self.assertEqual(out.scenes[3].narration, duz.scenes[3].narration, "sayısız dil düzeltmesi geçer")
+        self.assertIn("2. sahnenin sayılarını değiştirdi", gunluk.getvalue())
+        if alanlar:
+            self.assertEqual(out.scenes[2].card_lines, ["KİRA|48.000 ₺", "AİDAT|2.000 ₺"], "fiş satırları korunur")
+        # diğer kalıplarda sayı koruması yok (önceki davranış)
+        out = sc.polish_script(s.model_copy(update={"structure": "hikaye"}, deep=True))
+        self.assertEqual(out.scenes[1].narration, "Kirası ayda yaklaşık 48.000 lira tutardı.")
+        self.assertNotIn(sc.EDITOR_OLSAYDIN, sistem[-1])
+
+    # ------------------------------------------------------------ açıklama: uyarı satırı ve seri etiketleri
+    def olsaydin_meta(self, **kw):
+        s = self.demo.model_copy(update={"structure": "olsaydin", "description": "Kuyumcu olsaydın ayda ne kalırdı? "
+                                         "Sence değer mi?", "hashtags": ["kuyumcuolsaydın", "altın", "kapalıçarşı",
+                                                                         "meslek", "bilgimakasi"], **kw})
+        kredi = self.pl.images.ImageCredit(file="f", title="t", author="John Doe", license="CC BY-SA 4.0", page="p")
+        return self.pl.yayin_paketi(s, "kart", [kredi], True)
+
+    def test_olsaydin_uyarisi_her_metinde_bir_kez(self):
+        P = self.P
+        uyari = P.OLSAYDIN_UYARI.format(yil=_dt.date.today().year)
+        if _dt.date.today().year == 2026:
+            self.assertEqual(uyari, "Rakamlar 2026 Türkiye verilerine dayanan yaklaşık hesaplardır; kişiye ve şehre "
+                                    "göre değişir. Yatırım tavsiyesi değildir.")
+        m = self.olsaydin_meta()
+        self.assertEqual(m["description"], "Kuyumcu olsaydın ayda ne kalırdı? Sence değer mi?\n\n" + uyari +
+                         "\n\n#kuyumcuolsaydın #altın #kapalıçarşı #YaSenOlsaydın #bilgimakasi\n\n📷 John Doe (CC BY-SA 4.0)")
+        self.assertEqual(m["hashtags"][-2:], ["YaSenOlsaydın", "bilgimakasi"])
+        self.assertEqual(P.apply_disclaimer(m), m, "iki kez eklenmez")
+        yt, ig, tt = P.youtube_description(m), P.instagram_caption(m), P.tiktok_caption(m)
+        for ad, metin in (("youtube", yt), ("instagram", ig), ("tiktok", tt)):
+            self.assertEqual(metin.count(uyari), 1, ad)
+            self.assertLess(metin.index("Sence değer mi?"), metin.index(uyari), ad)      # bilgi metninden sonra
+            self.assertLess(metin.index(uyari), metin.index("#kuyumcuolsaydın"), ad)     # etiketlerden önce
+        # eski paket (uyarısız açıklama, üretim tarihi yok): paylaşımda eklenir, yılı bu yıl
+        eski = {**m, "description": "Bilgi.\n\n#a #b\n\n📷 John Doe (CC BY-SA 4.0)"}
+        eski.pop("created")
+        self.assertEqual(P.apply_disclaimer(eski)["description"], f"Bilgi.\n\n{uyari}\n\n#a #b\n\n📷 John Doe (CC BY-SA 4.0)")
+        for metin in (P.youtube_description(eski), P.instagram_caption(eski), P.tiktok_caption(eski)):
+            self.assertEqual(metin.count(uyari), 1)
+        # videonun yılı: 2025'te üretilmiş paket kendi yılını taşır, ikinci uyarı eklenmez
+        y25 = {**eski, "created": "2025-12-30T10:00:00"}
+        self.assertIn("Rakamlar 2025 Türkiye", P.apply_disclaimer(y25)["description"])
+        self.assertEqual(P.apply_disclaimer(P.apply_disclaimer(y25)), P.apply_disclaimer(y25))
+        # uzun bilgi metni kısalırken uyarı, atıf ve etiketler kalır
+        uzun = {**m, "description": m["description"].replace("Sence değer mi?", "Uzun cümle 😀. " * 400)}
+        for metin, sinir, olc in ((P.tiktok_caption(uzun), 2200, P._u16), (P.instagram_caption(uzun), 2152, len)):
+            self.assertLessEqual(olc(metin), sinir)
+            self.assertEqual(metin.count(uyari), 1)
+            self.assertIn("📷 John Doe (CC BY-SA 4.0)", metin)
+            self.assertTrue(metin.endswith("#bilgimakasi"))
+        # başka kalıplarda uyarı yok
+        for k in ("hikaye", "efsane", "nasil", "uretim"):
+            d = {**m, "structure": k, "description": "Bilgi.\n\n#a"}
+            self.assertEqual(P.apply_disclaimer(d), d, k)
+            self.assertNotIn("Yatırım tavsiyesi", P.tiktok_caption(d), k)
+
+    def test_uretim_ve_olsaydin_seri_etiketleri(self):
+        P = self.P
+        self.assertEqual(P.SERIES_TAGS, {"efsane": "EfsaneMiGerçekMi", "nasil": "NasılYapılır",
+                                         "uretim": "NasılÜretiliyor", "olsaydin": "YaSenOlsaydın"})
+        self.assertEqual(set(P.SERIES_TAGS), set(self.tr.SERI_KALIP.values()))
+        meta = {"structure": "uretim", "hashtags": ["kurşunkalem", "grafit", "fabrika", "kalem", "bilgimakasi"],
+                "description": "Bilgi.\n\n#kurşunkalem #grafit #fabrika #kalem #bilgimakasi"}
+        m = P.apply_series_tag(meta)
+        self.assertEqual(m["hashtags"], ["kurşunkalem", "grafit", "fabrika", "NasılÜretiliyor", "bilgimakasi"])
+        self.assertEqual(m["description"], "Bilgi.\n\n#kurşunkalem #grafit #fabrika #NasılÜretiliyor #bilgimakasi")
+        self.assertEqual(P.apply_disclaimer(m), m, "uretim videosunda uyarı yok")
+
+    # ------------------------------------------------------------ alkollü içecek anahtarı
+    def test_alkol_anahtari_kapali(self):
+        sc, P = self.sc, self.P
+        self.assertFalse(sc.ALKOLLU_ICECEK)
+        self.assertIn("alkollü içecek tarifi (kokteyl ve içecekler alkolsüz)", sc.NASIL_YASAK)
+        self.assertIn("alkolsüz kokteyl ve içecekler: mocktail, limonata, şerbet, ev yapımı soğuk kahve",
+                      sc.nasil_alanlari())
+        self.assertNotIn("alkollu", sc.STRUCTURES["nasil"][1], "kapalıyken alan istenmez")
+        # Claude alkollü tarif yazsa da yayına gitmez
+        with self.assertRaises(RuntimeError) as hata:
+            self.uret(self.cay.model_copy(update={"alkollu": True}), structure="nasil")
+        self.assertIn("ALKOLLU_ICECEK kapalı", str(hata.exception))
+        out, _, _ = self.uret(self.cay, structure="nasil")
+        self.assertFalse(out.alkollu)
+        # nasil dışındaki kalıplarda alan hep false
+        out, _, _ = self.uret(self.demo.model_copy(update={"structure": "efsane", "alkollu": True}), structure="efsane")
+        self.assertFalse(out.alkollu)
+        # açıklama: alkolsüz tarifte yaş uyarısı yok
+        m = self.pl.yayin_paketi(self.cay, "kart", [], True)
+        self.assertNotIn("alkollu", m)
+        self.assertNotIn(P.ALKOL_UYARI, m["description"])
+        self.assertNotIn(P.ALKOL_UYARI, P.tiktok_caption(m))
+
+    def test_alkol_anahtari_acik(self):
+        sc, P = self.sc, self.P
+        self.assertNotIn("alkollü içecek tarifi", sc.nasil_yasak(True))
+        self.assertIn("alkolü özendiren ya da aşırı tüketimi öven anlatım", sc.nasil_yasak(True))
+        self.assertIn("alkollü kokteyl de olabilir", "; ".join(sc.nasil_alanlari(True)))
+        self.yama(sc, "ALKOLLU_ICECEK", True)
+        out, cagri, _ = self.uret(self.cay.model_copy(update={"alkollu": True}), structure="nasil")
+        self.assertTrue(out.alkollu)
+        self.assertIn("'alkollu' alanını true", cagri[1][2], "doğrulayıcı alanı denetler")
+        m = self.pl.yayin_paketi(out, "kart", [], True)
+        self.assertTrue(m["alkollu"])
+        self.assertEqual(m["description"].count(P.ALKOL_UYARI), 1)
+        self.assertLess(m["description"].index(P.ALKOL_UYARI), m["description"].index("#"))
+        for metin in (P.youtube_description(m), P.instagram_caption(m), P.tiktok_caption(m)):
+            self.assertEqual(metin.count("18 yaş altı için uygun değildir; sorumlu tüketin."), 1)
+        self.assertEqual(P.apply_disclaimer(m), m)
+        # anahtar dosyada açılınca bütün yönergeler (modül yüklenirken kurulur) alkollü tarife izin verir
+        kok = self.tmp / "alkol"
+        shutil.copytree(REPO / "shortgen", kok / "shortgen", ignore=shutil.ignore_patterns("__pycache__"))
+        yol = kok / "shortgen" / "script.py"
+        kaynak = yol.read_text(encoding="utf-8")
+        self.assertEqual(kaynak.count("\nALKOLLU_ICECEK = False\n"), 1)
+        yol.write_text(kaynak.replace("\nALKOLLU_ICECEK = False\n", "\nALKOLLU_ICECEK = True\n"), encoding="utf-8")
+        eski = {ad: mod for ad, mod in sys.modules.items() if ad == "shortgen" or ad.startswith("shortgen.")}
+
+        def geri():
+            for ad in [x for x in sys.modules if x == "shortgen" or x.startswith("shortgen.")]:
+                del sys.modules[ad]
+            sys.modules.update(eski)
+            sys.path.remove(str(kok))
+        for ad in eski:
+            del sys.modules[ad]
+        sys.path.insert(0, str(kok))
+        self.addCleanup(geri)
+        import shortgen.script as sc2
+        import shortgen.trends as tr2
+        self.assertTrue(sc2.ALKOLLU_ICECEK)
+        self.assertNotIn("alkollü içecek tarifi", sc2.NASIL_YASAK)
+        self.assertIn("'alkollu' alanını true", sc2.STRUCTURES["nasil"][1])
+        self.assertIn("'alkollu' alanını true", sc2.NASIL_RULES)
+        self.assertIn("alkollü kokteyl de olabilir", tr2.SYSTEM)
+        self.assertNotIn("alkollü içecek tarifi", tr2.SYSTEM)
+
+
+class YeniSeriMesajlari(Ortak):
+    """Ya sen olsaydın? uyarı satırı Telegram açıklama mesajında, panel düzenlemesinden sonra ve paylaşımda bir kez."""
+    TAG = "short-20261105-180000"
+    BILGI = "Kuyumcu olsaydın, vitrindeki altının çoğu senin olmazdı. Sence değer mi?"
+    META = {"title": "Kuyumcu olsaydın ayda ne kalırdı?", "topic": "Kuyumcu olsaydın", "category": "ekonomi ve markalar",
+            "template": "kart", "created": "2026-11-05T18:00:00", "structure": "olsaydin",
+            "hashtags": ["kuyumcuolsaydın", "altın", "kapalıçarşı", "YaSenOlsaydın", "bilgimakasi"],
+            "description": BILGI + "\n\n#kuyumcuolsaydın #altın #kapalıçarşı #YaSenOlsaydın #bilgimakasi"
+                                   "\n\n📷 John Doe (CC BY-SA 4.0)"}
+
+    def setUp(self):
+        super().setUp()
+        import shortgen.publish as P
+        self.P = P
+        self.uyari = P.OLSAYDIN_UYARI.format(yil=2026)
+
+    def bildir(self, meta):
+        d = Path(tempfile.mkdtemp(prefix="bildir_", dir=self.root))
+        (d / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+        (d / "video.mp4").write_bytes(b"x")
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.tb.notify(d, self.TAG)
+        return self.req.cagrilar[:]
+
+    def test_aciklama_mesajinda_uyari_bir_kez(self):
+        uyarili = self.P.apply_disclaimer(self.META)
+        self.assertIn("\n\n" + self.uyari + "\n\n#kuyumcuolsaydın", uyarili["description"])
+        for meta in (self.META, uyarili):  # eski paket (uyarısız) ve yeni paket
+            self.req.cagrilar.clear()
+            c = self.bildir(meta)
+            metin = self.tg(c, "sendMessage")[0]["data"]["text"]
+            self.assertEqual(metin, f"{self.META['title']}\n\n{self.BILGI}\n\n{self.uyari}\n\n📷 John Doe (CC BY-SA 4.0)\n\n"
+                                    "#kuyumcuolsaydın #altın #kapalıçarşı #YaSenOlsaydın #bilgimakasi")
+
+    def test_panel_duzenlemesi_uyariyi_dusurmez_ve_cogaltmaz(self):
+        uyarili = self.P.apply_disclaimer(self.META)
+        self.req.surumler[T] = uyarili
+        # panel bilgi metnini (uyarı dahil) gösterir; kullanıcı uyarıyı silse de, olduğu gibi bıraksa da bir kez kalır
+        for aciklama in ("Yeni bilgi.", f"Yeni bilgi.\n\n{self.uyari}", f"Yeni bilgi. {self.uyari}",
+                         f"Yeni bilgi.\n\n{self.uyari}\n\n#benim #etiketim"):
+            durum_sifirla(self.root)
+            self.video_degistir(T, aciklama_message_id=55)
+            self.req.cagrilar.clear()
+            c = self.panel(action="edit", tag=T, title="Yeni başlık", description=aciklama)
+            self.assertIn("duzenleme", self.vid(T), aciklama)
+            metin = self.tg(c, "editMessageText")[0]["data"]["text"]
+            self.assertEqual(metin.count(self.uyari), 1, aciklama)
+            self.assertLess(metin.index("Yeni bilgi."), metin.index(self.uyari))
+            self.assertLess(metin.index(self.uyari), metin.index("📷 John Doe"))
+            # paylaşım: platformlara giden açıklamalarda da bir kez
+            giden = self.paylas(uyarili)
+            for ad, yazi in giden.items():
+                self.assertEqual(yazi.count(self.uyari), 1, (aciklama, ad))
+                self.assertIn("Yeni bilgi.", yazi, ad)
+
+    def paylas(self, meta):
+        """publish_due -> gerçek publish(): platform işlevleri yerine metinleri toplayan sahteler."""
+        P = self.P
+        self.panel(action="approve", tag=T, code="now")
+        giden = {}
+
+        def fetch_release(tag, dest):
+            (dest / "video.mp4").write_bytes(b"x")
+            return dest / "video.mp4", json.loads(json.dumps(meta))
+        sahte = {"youtube": lambda v, m: giden.update(youtube=P.youtube_description(m)) or {"url": "y"},
+                 "instagram": lambda v, m: giden.update(instagram=P.instagram_caption(m)) or {"url": "i"},
+                 "tiktok": lambda v, m: giden.update(tiktok=P.tiktok_caption(m)) or {"url": "t"}}
+        eski = (P.fetch_release, dict(P.PLATFORMS))
+        P.fetch_release = fetch_release
+        P.PLATFORMS.update(sahte)
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.tb.publish_due()
+        finally:
+            P.fetch_release = eski[0]
+            P.PLATFORMS.clear()
+            P.PLATFORMS.update(eski[1])
+        self.assertEqual(set(giden), {"youtube", "instagram", "tiktok"})
+        return giden
 
 
 if __name__ == "__main__":
