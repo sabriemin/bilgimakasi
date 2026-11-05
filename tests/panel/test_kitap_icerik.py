@@ -639,6 +639,7 @@ class KitapIcerik(unittest.TestCase):
             for x in beklenen["scenes"]:
                 for alan in ("kitap_bolum", "sayfa_metni", "vurgu"):
                     x.pop(alan)
+                x.pop("cizgi")  # Çizgi Roman tarifi yalnız dolu olduğunda yazılır
             self.assertEqual(json.loads(metin), beklenen, k)
             _, cagri, _ = self.uret(d, konu="muz", structure=k)
             for c in cagri:
