@@ -107,10 +107,11 @@ def preview(out_dir: Path, label: str = "") -> None:
     """Yalnız göz atmak için örnek video (ornek.yml): onay düğmesi yok, kayda (videos.json) geçmez, paylaşılmaz."""
     import html
     meta = json.loads((out_dir / "metadata.json").read_text(encoding="utf-8"))
-    caption = (f"🧪 <b>Örnek video, paylaşılmayacak</b>\n{html.escape(label)}\n\n<b>{html.escape(meta['title'])}</b>\n"
-               f"Şablon: {html.escape(str(meta.get('template', '-')))}")
+    # kesme kaçıştan ÖNCE: kaçışlı metni kesmek &amp; varlığını ya da </b> etiketini bölebilir (1024 sınırı içinde kalır)
+    caption = (f"🧪 <b>Örnek video, paylaşılmayacak</b>\n{html.escape(label[:300])}\n\n"
+               f"<b>{html.escape(str(meta['title'])[:200])}</b>\nŞablon: {html.escape(str(meta.get('template', '-'))[:40])}")
     with (out_dir / "video.mp4").open("rb") as f:
-        api("sendVideo", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "caption": caption[:1024],
+        api("sendVideo", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "caption": caption,
                                "parse_mode": "HTML", "supports_streaming": "true"}, files={"video": f})
 
 

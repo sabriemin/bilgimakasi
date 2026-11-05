@@ -946,6 +946,8 @@ def cover(im: Image.Image, w: int, h: int, focus=(0.5, 0.38)) -> Image.Image:
 
 
 _UNKNOWN_AUTHORS = {"bilinmiyor", "unknown", "unknown author", "anonymous", "anonim", "untitled", "n/a", "-"}
+# Wikimedia'nın yer tutucu yazar adları (ör. "Unknown photographer", "Self-photographed", "Own work"): kaynak adı yazılır
+_UNKNOWN_AUTHOR_RE = re.compile(r"^(unknown|anonymous|anonim|bilinmeyen|self[- ]?photographed|own work|kendi eseri)\b", re.I)
 _OPENVERSE_SOURCES = {"flickr": "Flickr", "wikimedia": "Wikimedia"}
 
 
@@ -968,8 +970,10 @@ def credit_chip(cr: dict, max_len: int = 32) -> str:
         src = "Wikimedia"
     author = re.sub(r"\s+", " ", str(cr.get("author") or "")).strip()
     names = []
-    if author and author.lower() not in _UNKNOWN_AUTHORS:
-        names += [author, re.split(r"\s*[,;/|(]\s*|\s+-\s+", author)[0].strip()]
+    if author and author.lower() not in _UNKNOWN_AUTHORS and not _UNKNOWN_AUTHOR_RE.match(author):
+        first = re.split(r"\s*[,;/|(]\s*|\s+-\s+", author)[0].strip()
+        # "John Smith (talk)", "A, B": ilk ad; düz addaysa önce tam ad denenir
+        names += [first] if re.search(r"[(,;]", author) else [author, first]
     names.append(src)
     for who in names:
         if not who:
@@ -1574,14 +1578,19 @@ class CtaCard(Card):
     def question(cls, label: str, narration: str, headline: list[str]) -> str:
         """Kartın soru satırı: card_label, yoksa dış sesteki ilk soru cümlesi, yoksa başlık. Düğmedeki 'YORUMLARA YAZ'
         sözünü içeren aday atlanır (aynı söz iki kez yazılmasın); hiçbiri kalmazsa genel bir soru."""
-        button = tr_upper(cls.BUTTON)
+        phrase = re.compile(r"\byorumlara\s+yaz(ın|in)?\b[\s:,;.!—–-]*", re.I)
 
-        def repeats(s: str) -> bool:
-            return button in " ".join(re.sub(r"[^\w]+", " ", tr_upper(s)).split())
+        def clean(s: str) -> str:
+            s = (s or "").strip()
+            t = phrase.sub("", s).strip(" :,;.!—–-")
+            if t == s:
+                return s
+            # "Yorumlara yaz: sence hangisi doğru?" -> "Sence hangisi doğru?"; soru kalmadıysa aday düşer
+            return tr_upper(t[:1]) + t[1:] if t.endswith("?") and len(t) > 3 else ""
 
         sents = re.split(r"(?<=[.?!])\s+", (narration or "").strip())
-        cands = [label.strip()] + [s for s in sents if s.endswith("?")] + [" ".join(headline).strip()]
-        return next((c for c in cands if c and not repeats(c)), cls.GENERIC_Q)
+        cands = [label] + [s for s in sents if s.endswith("?")] + [" ".join(headline)]
+        return next((c for c in map(clean, cands) if c), cls.GENERIC_Q)
 
     def __init__(self, ctx):
         super().__init__(ctx)
@@ -1695,6 +1704,12 @@ CARD_CLASSES = {"photo": PhotoCard, "drawing": DrawingCard, "counter": CounterCa
                 "quote": QuoteCard, "interstitial": InterstitialCard, "cta": CtaCard, "text": TextCard}
 
 
+def series_cliff(narration: str) -> bool:
+    """Serinin 1. bölümünün son sahnesi ("Devamı ikinci bölümde."): bu bölümde yorum çağrısı yoktur (script.py
+    SERİ KURALI), son sahne yorum kartı olmaz."""
+    return bool(re.search(r"\bdevamı\s+(ikinci|2\.)\s+bölüm", tr_lower(narration or "")))
+
+
 def card_type(spec, idx: int, n: int) -> str:
     """Sahnenin kart türü. Açık seçim (card) veriyle destekleniyorsa geçerli; 'auto' için: son sahne cta,
     'AMA ASIL…'/'ASIL…' başlık interstitial, card_value counter, card_myth+card_fact compare, sonra fotoğraf,
@@ -1710,7 +1725,7 @@ def card_type(spec, idx: int, n: int) -> str:
         return want
     head = tr_upper(" ".join(spec.headline)).strip()
     if want == "auto":
-        if idx == n - 1 and n > 1:
+        if idx == n - 1 and n > 1 and not series_cliff(spec.narration):
             return "cta"
         if head.startswith("AMA ASIL") or head.startswith("ASIL "):
             return "interstitial"

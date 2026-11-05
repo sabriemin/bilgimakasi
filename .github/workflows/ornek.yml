@@ -70,18 +70,11 @@ jobs:
         run: |
           ARGS=(--out "$RUNNER_TEMP/ornek")
           [ -n "$SABLON" ] && ARGS+=(--template "$SABLON")
-          if [ -n "$SENARYO" ]; then ARGS+=(--script "$SENARYO"); else ARGS+=(--topic "$KONU"); fi
+          if [ -n "$SENARYO" ]; then ARGS+=(--script "$SENARYO"); else ARGS+=("--topic=$KONU"); fi
           python -m shortgen.pipeline "${ARGS[@]}"
           echo "OUT_DIR=$(ls -td "$RUNNER_TEMP"/ornek/*/ | head -1)" >> "$GITHUB_ENV"
-      - name: Telegram'a gönder (onaysız, kayıtsız)
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          NOT: ${{ github.event.inputs.not }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, gönderim atlandı."; exit 0; fi
-          python -m shortgen.telegram_bot preview "$OUT_DIR" "$NOT"
       - name: Videoyu iş çıktısı olarak sakla
+        if: always() && env.OUT_DIR != ''
         uses: actions/upload-artifact@v4
         with:
           name: ornek-video
@@ -90,3 +83,11 @@ jobs:
             ${{ env.OUT_DIR }}metadata.json
             ${{ env.OUT_DIR }}script.json
           retention-days: 14
+      - name: Telegram'a gönder (onaysız, kayıtsız)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOT: ${{ github.event.inputs.not }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, gönderim atlandı."; exit 0; fi
+          python -m shortgen.telegram_bot preview "$OUT_DIR" "$NOT"
