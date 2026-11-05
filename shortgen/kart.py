@@ -61,6 +61,9 @@ CLIP_FLOOR = CARD_FLOOR                    # kart katmanlarının kırpıldığ�
 TERM = (60, 1296, 600, 1516)
 MASCOT_XY, MASCOT_SCALE = (774, 1370), 0.86
 WIPE = 0.42                                # ara kanca kırmızı silme süresi (sn)
+CUT_EVERY = 3                              # makas kesme geçişi her kaç sahnede bir
+CUT_SLICE, CUT_SPLIT, CUT_FADE = 0.2, 0.15, 2 / FPS   # kesme: makas geçer, parçalar ayrılır, ≤ 2 karede söner
+CUT_LEN = CUT_SLICE + CUT_SPLIT + CUT_FADE
 
 FONTS = {"anton": "Anton-Regular.ttf", "archivo": "ArchivoBlack-Regular.ttf", "mono": "DMMono-Medium.ttf",
          "oswald": "Oswald-Bold.ttf", "courier": "CourierPrime-Bold.ttf"}
@@ -491,21 +494,18 @@ def finish(img: Image.Image) -> Image.Image:
     return ImageChops.subtract(ImageChops.add(img.convert("RGB"), pos), neg)
 
 
+HEADER_SIZE = 32
+HEADER_ICON = 44
+
+
 def header_layer(no: int, name: str, right: str, kind: str, dark: bool) -> Image.Image:
-    """'// 03 — konu' solda; sağda yapıya uygun ilerleme etiketi ya da (ilk sahnede) seri etiketi rozeti."""
+    """'// 03 — konu' solda; sağda makas simgesi + yapıya uygun ilerleme etiketi. Seri etiketi ilk sahnede kartın
+    üstünde büyük bir yırtık etikettir (cover_layer)."""
     pen = Pen(*HEADER_REGION)
     ink, acc = (OFF, YELLOW) if dark else (INK, RED)
-    size, y, x1 = 28, HEADER_Y, 920
+    size, y, x1 = HEADER_SIZE, HEADER_Y, 920
     # sağ taraf
-    if kind == "pill":
-        ps = 26
-        lab = fit(right, "mono", ps, 520)
-        pw = pill_width(right)
-        pen.rr((x1 - pw + 4, y - 27 + 4, x1 + 4, y + 11 + 4), 19, fill=INK)
-        pen.rr((x1 - pw, y - 27, x1, y + 11), 19, fill=YELLOW, outline=INK, width=3)
-        pen.text(x1 - pw / 2, y, lab, "mono", ps, INK, anchor="ms")
-        rx = x1 - pw
-    elif kind == "count":                     # "BİLGİ 2/3"
+    if kind == "count":                       # "BİLGİ 2/3"
         a, b = right.rsplit(" ", 1)
         wb = tw(b, "mono", size)
         pen.text(x1, y, b, "mono", size, acc, anchor="rs")
@@ -515,9 +515,9 @@ def header_layer(no: int, name: str, right: str, kind: str, dark: bool) -> Image
         lab = fit(right, "mono", size, 440)
         pen.text(x1, y, lab, "mono", size, ink, anchor="rs")
         rx = x1 - tw(lab, "mono", size)
-    iw = 40
+    iw = HEADER_ICON
     pen.svg(scissors_svg(28, ring=YELLOW if dark else RED, blade=ink, pivot=RED if dark else YELLOW,
-                         outline=None if dark else INK), SCISSORS_VB, rx - iw - 12, y - 24, iw)
+                         outline=None if dark else INK), SCISSORS_VB, rx - iw - 12, y - 27, iw)
     # sol taraf
     x = 72
     pen.text(x, y, "//", "mono", size, acc)
@@ -547,8 +547,101 @@ def _clean_word(s: str) -> str:
     return tr_upper(s)
 
 
+# Kendinden önceki kelimeye yaslanan ekler/edatlar: parça bunlardan hemen önce bitmez ("UZUNLUK | DEĞİL" olmaz).
+CLITICS = {"değil", "değildi", "değildir", "değiller", "mi", "mı", "mu", "mü", "midir", "mıdır", "mudur", "müdür",
+           "miydi", "mıydı", "muydu", "müydü", "misin", "mısın", "musun", "müsün", "gibi", "kadar", "ile", "da", "de",
+           "bile", "ki"}
+# Sonrakini niteleyen kelimeler: parça bunlarla bitmesin ("ÇIPLAK | GÖZLE" gibi kopukluklar için hafif ceza).
+MODIFIERS = {"bir", "bu", "şu", "o", "tek", "çok", "en", "daha", "her", "hiç", "ilk", "son", "tam", "yalnızca",
+             "sadece", "birkaç", "bazı", "hangi", "asıl", "çıplak", "kaç", "hem", "ne"}
+_PUNCT_END = ".?!,;:…"
+
+
+def _bare(s: str) -> str:
+    return tr_lower(s.strip().strip('"“”«»()[]').rstrip(".,;:!?…—-"))
+
+
+def _split_clause(toks: list[str]) -> list[int]:
+    """Bir yan cümleyi (noktalama içermeyen kelime dizisi) dengeli parçalara böler; parça boyları döner.
+    Parça sayısı ceil(n/4) (uzun kelimelerde biraz fazla); boylar dengeli (6 -> 3+3, 5 -> 3+2), parça bir edattan
+    hemen önce ya da niteleyen bir kelimeyle bitmez, tek kelimelik parça (yan cümle tek kelime değilse) olmaz."""
+    n = len(toks)
+    bare = [_bare(t) for t in toks]
+    chars = sum(len(t) for t in bare) + n - 1
+    k = min(n, max(math.ceil(n / 4), math.ceil(chars / 28)))
+    if k <= 1:
+        return [n]
+    mean = n / k
+
+    def part_cost(pos, sz):
+        end = pos + sz
+        cost = (sz - mean) ** 2 + (8 if sz == 1 else 0)
+        cost += max(0, sum(len(t) for t in bare[pos:end]) + sz - 1 - 24) * 0.3
+        if end < n:
+            if bare[end] in CLITICS:
+                cost += 100
+            if bare[end - 1] in MODIFIERS or bare[end - 1].isdigit():
+                cost += 3
+            if len(bare[end]) > 3 and bare[end].endswith(("sı", "si", "su", "sü", "ları", "leri")):
+                cost += 4     # tamlamanın ikinci kelimesi ("insan | yapısı") başa düşmesin
+        return cost
+
+    memo: dict = {}
+
+    def best(pos, parts):     # (maliyet, boylar): words[pos:] tam 'parts' parçaya; eşitlikte büyük ilk parça (3+2)
+        if (pos, parts) in memo:
+            return memo[(pos, parts)]
+        left = n - pos
+        if parts == 1:
+            r = (part_cost(pos, left), [left]) if 1 <= left <= 4 else (float("inf"), [])
+        else:
+            r = (float("inf"), [])
+            for sz in range(min(4, left - parts + 1), 0, -1):
+                c, rest = best(pos + sz, parts - 1)
+                c += part_cost(pos, sz)
+                if c < r[0] - 1e-9:
+                    r = (c, [sz] + rest)
+        memo[(pos, parts)] = r
+        return r
+
+    cost, sizes = best(0, k)
+    return sizes if sizes else [n]
+
+
+def kart_phrases(words: list[Word], whole_first: int = 0) -> list[list[int]]:
+    """Kart şablonunun kinetik parçaları (sahne içi kelime indeksleri). Önce noktalamada bölünür, sonra her yan
+    cümle _split_clause ile. whole_first > 0 ise ilk cümle en fazla bu kadar kelimeyse tek parça kalır (kapak)."""
+    out: list[list[int]] = []
+    clauses, cur = [], []
+    for i, w in enumerate(words):
+        cur.append(i)
+        if w.text.rstrip('"“”»)')[-1:] in _PUNCT_END:
+            clauses.append(cur)
+            cur = []
+    if cur:
+        clauses.append(cur)
+    start = 0
+    if whole_first:
+        sent = []
+        for i, w in enumerate(words):
+            sent.append(i)
+            if w.text.rstrip('"“”»)')[-1:] in ".?!…":
+                break
+        if len(sent) <= whole_first:
+            out.append(sent)
+            start = len(sent)
+            clauses = [[i for i in c if i >= start] for c in clauses]
+            clauses = [c for c in clauses if c]
+    for c in clauses:
+        pos = 0
+        for sz in _split_clause([words[i].text for i in c]):
+            out.append(c[pos:pos + sz])
+            pos += sz
+    return out
+
+
 class Kinetic:
-    """Dış ses, sahne sınırını aşmayan 1-4 kelimelik parçalar hâlinde; her kelime yırtık bir kâğıtta."""
+    """Dış ses, sahne sınırını aşmayan 1-4 kelimelik (kapakta en çok 6) parçalar hâlinde; her kelime yırtık kâğıtta."""
     X0, Y0, X1, Y1 = KIN
     MAXW = 800
     TILT = math.sin(math.radians(3.0))
@@ -558,8 +651,8 @@ class Kinetic:
         self.words = words
         self.text = [_clean_word(w.text) for w in words]
         self.chunks: list[list[int]] = []
-        for a, b in ranges:
-            for ch in render.chunk_words(words[a:b], max_words=4, max_chars=20):
+        for si, (a, b) in enumerate(ranges):
+            for ch in kart_phrases(words[a:b], whole_first=6 if si == 0 else 0):
                 self.chunks.append([a + i for i in ch])
         self.chunk_of = {i: ci for ci, ch in enumerate(self.chunks) for i in ch}
         self._lay: dict = {}
@@ -584,15 +677,15 @@ class Kinetic:
                 ws.append(fS.getlength(w) / SS + 2 * padx)
                 tops.append(max(cap, -t / SS) + pady)
                 bots.append(max(0, b / SS) + pady)
-            lines, cur, cw = [], [], 0.0
-            for i, w in enumerate(ws):
-                if cur and cw + gap + w > self.MAXW:
-                    lines.append(cur)
-                    cur, cw = [], 0.0
-                cw = cw + (gap if cur else 0) + w
-                cur.append(i)
-            lines.append(cur)
-            if len(lines) > 2 or any(sum(ws[i] for i in ln) + gap * (len(ln) - 1) > self.MAXW for ln in lines):
+            def lw(ln):
+                return sum(ws[i] for i in ln) + gap * (len(ln) - 1)
+            lines = [list(range(len(words)))]
+            if lw(lines[0]) > self.MAXW:   # iki satır: en geniş satırı en dar yapan bölme (dengeli satırlar)
+                if len(words) < 2:
+                    continue
+                lines = min(([list(range(j)), list(range(j, len(words)))] for j in range(1, len(words))),
+                            key=lambda L: (max(lw(x) for x in L), lw(L[1]) - lw(L[0])))
+            if any(lw(ln) > self.MAXW for ln in lines):
                 continue
             heights = [max(tops[i] for i in ln) + max(bots[i] for i in ln) for ln in lines]
             overlap = size * 0.08
@@ -881,7 +974,8 @@ def fmt_value(v: float, dec: int, grouped: bool) -> str:
 
 
 class CounterCard(Card):
-    """0'dan değere ~0,8 sn'de sayan büyük sayı + etiket + değere bağlı kesik çizgi zaman çizelgesi."""
+    """0'dan değere ~0,8 sn'de sayan büyük sayı + etiket + değere bağlı kesik çizgi zaman çizelgesi. Sayı, dış seste
+    söylendiği anda oturur (land); o ana kadar 0 ve boş çizelge görünür, sayma land'den 0,8 sn önce başlar."""
     still = False
     COUNT = 0.8
 
@@ -890,6 +984,14 @@ class CounterCard(Card):
         raw = (self.c.get("value") or "").strip()
         self.parsed = parse_value(raw)
         self.raw = raw
+        self.land, self.count_start = self.COUNT, 0.0
+        digits = re.sub(r"\D", "", raw)
+        for w in (self.spec.words if digits else []):
+            if digits in re.sub(r"\D", "", w.text):
+                self.land = max(0.25, w.start - self.spec.start + 0.05)
+                self.count_start = max(0.0, self.land - self.COUNT)
+                break
+        self._zero = None
         self.label = tr_upper((self.c.get("label") or "").strip())
         self.note = (self.c.get("note") or "").strip()
         pen = self.pen()
@@ -927,7 +1029,9 @@ class CounterCard(Card):
         self._fin = None
 
     def progress(self, lt: float) -> float:
-        return 1.0 if (self.hook or self.parsed is None) else ease_out_cubic(lt / self.COUNT)
+        if self.hook or self.parsed is None:
+            return 1.0
+        return ease_out_cubic((lt - self.count_start) / max(0.05, self.land - self.count_start))
 
     def text_at(self, e: float) -> str:
         if self.parsed is None:
@@ -958,7 +1062,7 @@ class CounterCard(Card):
         ix0, iy0, ix1, iy1 = self.inner
         cx = (ix0 + ix1) / 2
         pen = Pen(ix0, iy0, ix1, iy1)
-        land = clamp((lt - self.COUNT) / 0.2) if not self.hook else 1.0
+        land = clamp((lt - self.land) / 0.2) if not self.hook else 1.0
         pop = 1 + 0.06 * math.sin(math.pi * land) if 0 < land < 1 else 1.0
         s = self.text_at(e)
         self._number(pen, s, cx, self.base_y, self.size * pop)
@@ -980,14 +1084,18 @@ class CounterCard(Card):
         return img
 
     def layer(self, lt, dur):
-        if self.progress(lt) >= 1 and (self.hook or lt >= self.COUNT + 0.2):
+        if self.progress(lt) >= 1 and (self.hook or lt >= self.land + 0.2):
             if self._fin is None:
-                self._fin = self.draw_dynamic(10.0)
+                self._fin = self.draw_dynamic(self.land + 10.0)
             return self._fin
+        if lt <= self.count_start:
+            if self._zero is None:
+                self._zero = self.draw_dynamic(self.count_start)
+            return self._zero
         return self.draw_dynamic(lt)
 
     def mood(self, lt, dur):
-        return "surprised" if (self.hook or lt >= self.COUNT) else "normal"
+        return "surprised" if (self.hook or lt >= self.land) else "normal"
 
 
 def _rich(text: str) -> list[tuple[str, bool]]:
@@ -1011,7 +1119,8 @@ class CompareCard(Card):
         self.fact = (self.c.get("fact") or "").strip()
         self.note = (self.c.get("note") or "").strip()
         dur = max(0.6, ctx["dur"])
-        self.t_strike = min(0.65, 0.22 * dur)
+        # çizik, inanışı anlatan cümle bitmek üzereyken gelir (inanış söylenirken okunur kalır); gerçek 0,5 sn sonra
+        self.t_strike = max(0.4, min(max(1.4, self._myth_end() - 0.2), dur - 1.0))
         self.t_reveal = self.t_strike + 0.5
         ix0, iy0, ix1, iy1 = self.inner = inner_of(CARD)
         pad, gap = 22, 34
@@ -1021,26 +1130,71 @@ class CompareCard(Card):
                      (ix0 + pad + cw + gap, iy0 + pad, ix1 - pad, iy1 - pad - foot)]
         self.text_box = [(bx0 + 24, by0 + 98, bx1 - 22, by1 - 22) for bx0, by0, bx1, by1 in self.cols]
         tb = self.text_box[0]
-        both = self.myth + " " + self.fact
-        # iki sütun aynı yazı boyutunu kullanır (en az 48 px, kalın dar yüz)
-        font, size, _ = fit_block(both, ("oswald", "anton"), tb[2] - tb[0], 10_000, 80, 48)
-        for txt in (self.myth, self.fact):
-            f2, s2, _ = fit_block(txt, (font, "anton"), tb[2] - tb[0], tb[3] - tb[1], size, 44, lh=1.12)
-            if s2 < size or f2 != font:
-                font, size = f2, s2
+        bw, bh = tb[2] - tb[0], tb[3] - tb[1]
+        # her sütun kendi kutusuna ayrı sığdırılır; ikisi de küçüğünü ve aynı yüzü kullanır (en az 48 px, kalın dar yüz)
+        font, size = "anton", 44
+        for f in ("oswald", "anton"):
+            sm, sf = self._fit_col(self.myth, f, bw, bh), self._fit_col(self.fact, f, bw, bh)
+            if sm and sf and min(sm, sf) >= 48:
+                font, size = f, min(sm, sf)
+                break
+        else:
+            sm, sf = self._fit_col(self.myth, "anton", bw, bh, 44), self._fit_col(self.fact, "anton", bw, bh, 44)
+            size = min(sm or 44, sf or 44)
         self.font, self.fsize = font, size
-        self.lines = [wrap(t, font, size, tb[2] - tb[0]) for t in (self.myth, self.fact)]
+        self.lines = [wrap(t, font, size, bw) for t in (self.myth, self.fact)]
         self.pre = self._render(revealed=False)
         self.post = self._render(revealed=True)
         self.strike = self._strike_layer()
         self._fin = None
 
+    LH = 1.12
+
+    def _myth_end(self) -> float:
+        """İnanışı anlatan cümlenin son kelimesinin bitişi (sahne başına göre). Cümle, card_myth ile en çok kelime kökü
+        paylaşan cümledir; hiçbiri paylaşmıyorsa ilk cümle."""
+        ws = self.spec.words or []
+        if not ws:
+            return 0.65
+        sents, cur = [], []
+        for w in ws:
+            cur.append(w)
+            if w.text.rstrip('"“”»)')[-1:] in ".?!…":
+                sents.append(cur)
+                cur = []
+        if cur:
+            sents.append(cur)
+        stems = {_bare(x)[:4] for x in self.myth.replace("*", "").split() if len(_bare(x)) >= 3}
+        score = [sum(_bare(w.text)[:4] in stems for w in sn) for sn in sents]
+        best = sents[score.index(max(score))] if max(score) > 0 else sents[0]
+        return best[-1].end - self.spec.start
+
+    @staticmethod
+    def _block_h(lines, font, size, lh):
+        if not lines:
+            return 0.0, 0.0
+        f = fnt(font, size * SS)
+        top = -f.getbbox(" ".join(w.strip("*") for w in lines[0]), anchor="ls")[1] / SS
+        bot = max(0.0, f.getbbox(" ".join(w.strip("*") for w in lines[-1]), anchor="ls")[3] / SS)
+        return top, (len(lines) - 1) * size * lh + top + bot
+
+    def _fit_col(self, text, font, w, h, min_size=48, max_size=84, max_lines=4):
+        """Metnin sütun kutusuna gerçek mürekkep yüksekliğiyle sığdığı en büyük boyut (yoksa None)."""
+        for size in range(max_size, min_size - 1, -2):
+            lines = wrap(text, font, size, w)
+            if len(lines) > max_lines or any(tw(" ".join(x.strip("*") for x in L), font, size) > w for L in lines):
+                continue
+            if self._block_h(lines, font, size, self.LH)[1] <= h:
+                return size
+        return None
+
     def _col_text(self, pen: Pen, ci: int):
         font, size = self.font, self.fsize
         tx0, ty0, tx1, ty1 = self.text_box[ci]
-        lh = size * 1.12
+        lh = size * self.LH
         lines = self.lines[ci]
-        yb = ty0 + (ty1 - ty0 - len(lines) * lh) / 2 + size * 0.86
+        top, bh = self._block_h(lines, font, size, self.LH)
+        yb = ty0 + (ty1 - ty0 - bh) / 2 + top
         out = []
         for L in lines:
             x = tx0
@@ -1199,29 +1353,43 @@ class QuoteCard(Card):
 
 
 class InterstitialCard(Card):
-    """Ara kanca: tam kırmızı ekran, görünür bantta yarım ton silme, bantlı yırtık mürekkep kart (sahne başlığı)."""
+    """Ara kanca: tam kırmızı ekran, görünür bantta yarım ton silme, bantlı yırtık kırık beyaz kart (Göz kartlarındaki
+    gibi mürekkep yazı, vurgulu satır kırmızı yırtık etikette) ve "// DUR BİR SANİYE" sekmesi (sahne başlığı)."""
     still = False
 
     def __init__(self, ctx):
         super().__init__(ctx)
         lines = [tr_upper(x) for x in self.spec.headline if x.strip()] or ["AMA ASIL", "ŞAŞIRTICI", "OLAN"]
         hl = self.spec.highlight_line if 0 <= self.spec.highlight_line < len(lines) else len(lines) - 1
-        sizes = [150 if i == hl else 118 for i in range(len(lines))]
-        maxw = 640
+        sizes = [140 if i == hl else 118 for i in range(len(lines))]
+        maxw = 620
         for i, ln in enumerate(lines):
-            while tw(ln, "anton", sizes[i]) > maxw and sizes[i] > 50:
+            while tw(ln, "anton", sizes[i]) * (1.4 if i == hl else 1.0) > maxw and sizes[i] > 50:
                 sizes[i] -= 4
-        while sum(-tbox("H", "anton", s)[1] + 30 for s in sizes) > 470:
+        while sum(-tbox("H", "anton", s)[1] + 34 for s in sizes) > 470:
             sizes = [s - 4 for s in sizes]
-        w = int(max(tw(ln, "anton", s) for ln, s in zip(lines, sizes)) + 130)
-        h = int(sum(-tbox("H", "anton", s)[1] for s in sizes) + 32 * (len(lines) - 1) + 150)
-        sp = Sprite(w, h, 60)
-        torn_paper(sp, 0, 0, w, h, INK, 81 + self.idx, jitter=4, rim=OFF, rim_w=3)
-        y = 84
+        pad_x, pad_top, pad_bot, gap = 62, 78, 62, 30
+        rows = []                                           # (tür, nesne, genişlik, yükseklik, üst)
         for i, (ln, sz) in enumerate(zip(lines, sizes)):
-            y += -tbox("H", "anton", sz)[1]
-            sp.text((62, y), ln, "anton", sz, YELLOW if i == hl else OFF)
-            y += 32
+            if i == hl:
+                lab = torn_label(ln, sz, OFF, RED, 85 + self.idx, rim=OFF)
+                rows.append(("lab", lab, lab.w, lab.h, 0.0))
+            else:
+                l, t, r, b = tbox(ln, "anton", sz)
+                rows.append(("txt", (ln, sz), tw(ln, "anton", sz), -t + max(0.0, b), -t))
+        w = int(max(r[2] for r in rows) + 2 * pad_x)
+        h = int(pad_top + sum(r[3] for r in rows) + gap * (len(rows) - 1) + pad_bot)
+        sp = Sprite(w, h, 60)
+        torn_paper(sp, 0, 0, w, h, OFF, 81 + self.idx, jitter=4, rim=WHITE, rim_w=3)
+        y = pad_top
+        for kind, obj, rw, rh, top in rows:
+            if kind == "txt":
+                sp.text((pad_x, y + top), obj[0], "anton", obj[1], INK)
+            else:
+                im = obj.render_ss(2.0, shadow=(4, 6, 0, 0.9))
+                cx, cy = sp.p(pad_x - 8 + rw / 2, y + rh / 2)
+                _comp(sp.im, im, cx - im.width / 2, cy - im.height / 2)
+            y += rh + gap
         tp = Sprite(w, h, 60)
         tape(tp, 64, -4, 150, 44, -22, 82 + self.idx, alpha=225)
         tape(tp, w - 58, h - 2, 150, 44, -16, 83 + self.idx, alpha=225)
@@ -1230,8 +1398,8 @@ class InterstitialCard(Card):
         tp.d.rounded_rectangle([*tp.p(w - tabw - 40, -24), *tp.p(w - 40, 24)], radius=14 * SS, fill=YELLOW,
                                outline=INK, width=4 * SS)
         tp.text((w - 40 - tabw / 2, 9), tab, "mono", 26, INK, anchor="ms")
-        sp.im.alpha_composite(tp.im)
-        im = sp.render(-3.0, shadow=(10, 16, 12, 0.38))
+        im = sp.render(-3.0, shadow=(12, 16, 0, 0.95))     # sert mürekkep gölge (Göz kartları)
+        im.alpha_composite(tp.render(-3.0))
         im = im.crop(im.getchannel("A").point(lambda v: 255 if v > 4 else 0).getbbox())
         rx0, ry0, rx1, ry1 = CARD_REGION
         bx0, by0, bx1, by1 = CARD[0] - 24, CARD[1] - 16, SAFE_X - 6, CARD_FLOOR - 4  # gölge ve bantlar dahil
@@ -1304,7 +1472,9 @@ class CtaCard(Card):
             pen.rr((x, ly - 2, min(x + 16, ix1 - 40), ly + 2), 2, fill=GREY)
             x += 26
         pen.svg(scissors_svg(30), SCISSORS_VB, ix0 + 30, ly - 25, 72)
-        pen.text(cx, ly + 70, self.ctx.get("handle", "@bilgimakasi"), "archivo", 44, INK, anchor="ms")
+        handle = self.ctx.get("handle") or ""   # marka kapalıysa kanal adı yazılmaz
+        if handle:
+            pen.text(cx, ly + 70, handle, "archivo", 44, INK, anchor="ms")
         self.base = pen.done()
 
     def layer(self, lt, dur):
@@ -1322,7 +1492,18 @@ class CtaCard(Card):
 
 
 class TextCard(Card):
-    """Yedek kart (fotoğraf/çizim/veri yoksa): başlık satırları kartın içinde yırtık etiketlerde."""
+    """Yedek kart (fotoğraf/çizim/veri yoksa): başlık satırları kartın içinde yırtık etiketlerde. Boyut, gerçek etiket
+    ölçüleriyle (Türkçe şapka/çengel, iç boşluk, eğim, gölge) seçilir; etiketler başlık çubuğuna, çerçeveye ve nota
+    taşmaz. label_box: etiket katmanının kart üzerindeki gerçek kutusu (denetim için)."""
+    GAP, ROT = 14, 1.6
+    SHADOW = (4, 7, 4, 0.25)
+
+    def _labels(self, lines, size, hl):
+        labs = []
+        for i, ln in enumerate(lines):
+            fg, bg = (INK, YELLOW) if i == hl else ((OFF, INK) if i % 2 == 0 else (INK, PAPER))
+            labs.append(torn_label(ln, size, fg, bg, 300 + self.idx * 11 + i))
+        return labs
 
     def static(self):
         pen = self.pen()
@@ -1330,26 +1511,39 @@ class TextCard(Card):
         lines = [tr_upper(x) for x in self.spec.headline if x.strip()] or [tr_upper(self.spec.narration[:30])]
         hl = self.spec.highlight_line
         note = (self.c.get("note") or "").strip()
-        avail_h = iy1 - iy0 - (110 if note else 60)
+        top, bottom = iy0 + 24, iy1 - (96 if note else 24)     # etiketlerin (gölge dahil) sığacağı bant
+        avail_h, maxw = bottom - top, ix1 - ix0 - 48
+        sn = math.sin(math.radians(self.ROT))
+        dx = (18, -10)                                         # tek/çift satırların yatay kaydırması
         size = 150
-        while size > 50 and (any(tw(ln, "anton", size) + size * 0.4 > ix1 - ix0 - 90 for ln in lines)
-                             or len(lines) * size * 1.25 > avail_h):
+        while True:
+            labs = self._labels(lines, size, hl)
+            # eğik etiketin dikey payı (w·sinθ: yarısı üstte, yarısı altta) + yırtık kenar/lif şeridi + gölge
+            total = sum(lb.h for lb in labs) + self.GAP * (len(labs) - 1)
+            ext = (labs[0].w * sn / 2 + 6) + (labs[-1].w * sn / 2 + 6 + self.SHADOW[1] + self.SHADOW[2])
+            widest = max(lb.w + lb.h * sn + 2 * abs(dx[i % 2]) + 12 for i, lb in enumerate(labs))
+            if (total + ext <= avail_h and widest <= maxw) or size <= 44:
+                break
             size -= 4
-        labs = []
-        for i, ln in enumerate(lines):
-            fg, bg = (INK, YELLOW) if i == hl else ((OFF, INK) if i % 2 == 0 else (INK, PAPER))
-            labs.append(torn_label(ln, size, fg, bg, 300 + self.idx * 11 + i))
-        total = sum(lb.h for lb in labs) + 14 * (len(labs) - 1)
-        y = iy0 + 30 + (avail_h - total) / 2
+        y = max(top + labs[0].w * sn / 2 + 6, top + labs[0].w * sn / 2 + 6 + (avail_h - total - ext) / 2)
+        y = min(y, bottom - total - (ext - labs[0].w * sn / 2 - 6))   # son etiketin altı (gölge dahil) bandı aşmasın
         cx = (ix0 + ix1) / 2
+        lay = Pen(*CARD_REGION)
         for i, lb in enumerate(labs):
-            im = lb.render_ss((-1.6 if i % 2 else 1.4), shadow=(4, 7, 4, 0.25))
+            im = lb.render_ss((-self.ROT if i % 2 else self.ROT * 0.9), shadow=self.SHADOW)
             iw, ih = im.width / SS, im.height / SS
-            pen.paste(im, cx - iw / 2 + (18 if i % 2 else -10), y + lb.h / 2 - ih / 2)
-            y += lb.h + 14
+            lay.paste(im, cx - iw / 2 + dx[i % 2], y + lb.h / 2 - ih / 2)
+            y += lb.h + self.GAP
+        lab_im = lay.done()
+        bb = lab_im.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox()
+        rx0, ry0 = CARD_REGION[:2]
+        self.label_box = (bb[0] + rx0, bb[1] + ry0, bb[2] + rx0, bb[3] + ry0) if bb else None
+        self.label_limits = (ix0, iy0, ix1, bottom)
         if note:
             pen.text(cx, iy1 - 40, fit(note, "mono", 28, ix1 - ix0 - 70), "mono", 28, DGREY, anchor="ms")
-        return pen.done()
+        img = pen.done()
+        img.alpha_composite(lab_im)
+        return img
 
 
 CARD_CLASSES = {"photo": PhotoCard, "drawing": DrawingCard, "counter": CounterCard, "compare": CompareCard,
@@ -1388,16 +1582,18 @@ def card_type(spec, idx: int, n: int) -> str:
 
 # ---------------------------------------------------------------- terminal
 class Terminal:
-    """Koyu terminal: makas@bilgimakasi:~/konu, son iki kayıt satırı, sahne/sahne sayısı kadar kesilmiş çizgi."""
+    """Koyu terminal: makas@bilgimakasi:~/konu, son iki kayıt satırı (32 px), sahne/sahne sayısı kadar kesilmiş çizgi."""
     REGION = (52, 1288, 620, 1536)
+    FS, TITLE_FS = 32, 28            # telefonda (390 px) ~11,5 px: okunur; başlık sığsın diye 28
+    LY1, LY2 = 108, 152              # kayıt satırlarının taban çizgileri (TERM üstüne göre)
 
     def __init__(self, handle: str, topic_slug: str, logs: list[str], n: int):
         self.handle, self.logs, self.n = handle, logs, n
         x0, y0, x1, y1 = TERM
-        self.fs = 26
-        head = "makas" + handle
-        rest = fit(f":~/{topic_slug}", "mono", self.fs, x1 - x0 - 48 - tw(head, "mono", self.fs))
+        head = "makas" + handle          # kullanıcı adı yoksa "makas:~/konu"
+        rest = fit(f":~/{topic_slug}", "mono", self.TITLE_FS, x1 - x0 - 48 - tw(head, "mono", self.TITLE_FS))
         self.title = (head, rest)
+        self.prompt_w = tw("$ ", "mono", self.FS)
         self._static: dict = {}
         self._dyn: dict = {}
 
@@ -1408,17 +1604,19 @@ class Terminal:
             pen = Pen(*self.REGION)
             pen.rr((x0 + 10, y0 + 10, x1 + 10, y1 + 10), 20, fill=YELLOW if dark else RED)
             pen.rr(TERM, 20, fill=INK, outline=INK, width=4)
-            fs = self.fs
+            fs, tf = self.FS, self.TITLE_FS
             a, b = self.title
-            pen.text(x0 + 24, y0 + 42, "makas", "mono", fs, OFF)
-            pen.text(x0 + 24 + tw("makas", "mono", fs), y0 + 42, self.handle, "mono", fs, YELLOW)
-            pen.text(x0 + 24 + tw(a, "mono", fs), y0 + 42, b, "mono", fs, TERM_TXT)
+            pen.text(x0 + 24, y0 + 42, "makas", "mono", tf, OFF)
+            if self.handle:
+                pen.text(x0 + 24 + tw("makas", "mono", tf), y0 + 42, self.handle, "mono", tf, YELLOW)
+            pen.text(x0 + 24 + tw(a, "mono", tf), y0 + 42, b, "mono", tf, TERM_TXT)
             pen.rr((x0 + 4, y0 + 60, x1 - 4, y0 + 62), 0, fill=(52, 50, 49))
             if i > 0:
-                ly = y0 + 100
-                pen.svg(check_svg(YELLOW, 17), ICON_VB, x0 + 20, ly - 25, 30)
-                pen.text(x0 + 24 + 32, ly, fit(self.logs[i - 1], "mono", fs, x1 - x0 - 80), "mono", fs, OFF)
-            by = y1 - 38
+                ly = y0 + self.LY1
+                pen.svg(check_svg(YELLOW, 17), ICON_VB, x0 + 18, ly - 29, 34)
+                pen.text(x0 + 24 + self.prompt_w, ly, fit(self.logs[i - 1], "mono", fs, x1 - x0 - 48 - self.prompt_w),
+                         "mono", fs, OFF)
+            by = y1 - 30
             bx0, bx1 = x0 + 28, x1 - 142
             x = bx0
             while x < bx1:
@@ -1428,32 +1626,32 @@ class Terminal:
         return self._static[key]
 
     def layer(self, i: int, lt: float, dark: bool, hook: bool) -> Image.Image:
-        line = self.logs[i]
+        x0, y0, x1, y1 = TERM
+        fs = self.FS
+        line = fit(self.logs[i], "mono", fs, x1 - x0 - 48 - self.prompt_w - 22)
         n_ch = len(line) if hook else int(clamp((lt - 0.08) / 0.022, 0, len(line)))
         cur_on = n_ch < len(line) or int(lt * 2.2) % 2 == 0
         a, b = i / self.n, (i + 1) / self.n
         frac = b if hook else lerp(a, b, ease_out_cubic(lt / 0.45))
-        x0, y0, x1, y1 = TERM
         bx0, bx1 = x0 + 28, x1 - 142
         hx = round(lerp(bx0, bx1, frac))
-        key = (i, n_ch, cur_on, hx, dark)
+        full = frac >= 0.999
+        key = (i, n_ch, cur_on, hx, full, dark)   # full anahtarda: sarı/kırmızı çubuk önbellekte karışmasın
         if key in self._dyn:
             return self._dyn[key]
         img = self.static(i, dark).copy()
         pen = Pen(*self.REGION)
-        fs = self.fs
-        ly = y0 + (138 if i > 0 else 100)
+        ly = y0 + (self.LY2 if i > 0 else self.LY1)
         pen.text(x0 + 24, ly, "$", "mono", fs, RED)
-        shown = fit(line, "mono", fs, x1 - x0 - 90)[:n_ch]
-        pen.text(x0 + 24 + 32, ly, shown, "mono", fs, OFF)
+        shown = line[:n_ch]
+        pen.text(x0 + 24 + self.prompt_w, ly, shown, "mono", fs, OFF)
         if cur_on:
-            cx = x0 + 24 + 32 + tw(shown, "mono", fs) + (6 if shown else 0)
-            pen.rr((cx, ly - 22, cx + 13, ly + 4), 2, fill=YELLOW)
-        by = y1 - 38
-        full = frac >= 0.999
+            cx = x0 + 24 + self.prompt_w + tw(shown, "mono", fs) + (6 if shown else 0)
+            pen.rr((cx, ly - 25, cx + 15, ly + 5), 2, fill=YELLOW)
+        by = y1 - 30
         if hx > bx0 + 1:
             pen.rr((bx0, by - 5, hx, by + 5), 5, fill=YELLOW if full else RED)
-        pen.text(x1 - 24, by + 9, f"{i + 1:02d}/{self.n:02d}", "mono", fs, YELLOW if full else OFF, anchor="rs")
+        pen.text(x1 - 24, by + 10, f"{i + 1:02d}/{self.n:02d}", "mono", 28, YELLOW if full else OFF, anchor="rs")
         img.alpha_composite(pen.done())
         sc = scissors_icon(50, 26, blade=OFF, outline=None)
         _comp(img, sc, hx - 50 * 58 / 124 - self.REGION[0], by - sc.height / 2 - self.REGION[1])
@@ -1472,8 +1670,10 @@ MOODS = {
                   fx="sparkle"),
     "thinking": dict(blades=(4, 28), L=1.00, look=(0.55, -0.62), pupil=15, mouth="hmm", fx="dots"),
 }
-_HEAD = dict(x=-98, y=-30, w=196, h=188, r=64, teeth=7, tooth_h=12)
-_EYES = [(-60, 30, 1.0), (59, 25, 0.88)]   # bilerek simetrik değil: sağ göz biraz küçük ve yukarıda
+_HEAD = dict(x=-98, y=-30, w=196, h=188, r=16, teeth=7, tooth_h=12)   # köşeli kâğıt parçası, üst kenar yırtık
+_EYES = [(-60, 30, 1.0), (60, 19, 0.80)]   # bilerek simetrik değil: sağ göz belirgin küçük ve 11 px yukarıda
+_RING_TIP = 1.36                           # halkalar pime bakan damla biçimli makas sapları (sivri uç sapa bağlanır)
+_TILT = -6
 _PIVOT = (0, -70)
 _BLADE_L = 164
 _OUT, _DIECUT, _SHADOW = 6, 9, (5, 5)
@@ -1511,12 +1711,31 @@ def _head_d():
     x1, y1 = x0 + _HEAD["w"], y0 + _HEAD["h"]
     r, n, th = _HEAD["r"], _HEAD["teeth"], _HEAD["tooth_h"]
     yb = y1 - th
-    d = f"M{P(x0, y0 + r)} A{r} {r} 0 0 1 {P(x0 + r, y0)} L{P(x1 - r, y0)} A{r} {r} 0 0 1 {P(x1, y0 + r)} L{P(x1, yb)} "
+    rng = random.Random(23)                 # yırtık üst kenar: sabit tohum, her karede aynı
+    d = f"M{P(x0, y0 + r)} A{r} {r} 0 0 1 {P(x0 + r, y0)} "
+    x = x0 + r + 9
+    while x < x1 - r - 4:
+        d += f"L{P(x, y0 + rng.uniform(-3.8, 3.2))} "
+        x += rng.uniform(7, 12)
+    d += f"L{P(x1 - r, y0)} A{r} {r} 0 0 1 {P(x1, y0 + r)} L{P(x1, yb)} "
     w_ = (x1 - x0) / n
     for i in range(n):
         xa = x1 - i * w_
         d += f"L{P(xa - w_ / 2, y1)} L{P(xa - w_, yb)} "
     return d + "Z"
+
+
+def _ring_d(ex, ey, R) -> str:
+    """Damla biçimli makas sapı: (ex, ey) merkezli R yarıçaplı halka, sivri ucu pime bakar."""
+    ux, uy = _PIVOT[0] - ex, _PIVOT[1] - ey
+    n = math.hypot(ux, uy)
+    ux, uy = ux / n, uy / n
+    tip = (ex + ux * R * _RING_TIP, ey + uy * R * _RING_TIP)
+    phi = math.acos(1 / _RING_TIP)
+    base = math.atan2(uy, ux)
+    p1 = (ex + R * math.cos(base + phi), ey + R * math.sin(base + phi))
+    p2 = (ex + R * math.cos(base - phi), ey + R * math.sin(base - phi))
+    return f"M{P(*p1)} A{R:.2f} {R:.2f} 0 1 1 {P(*p2)} L{P(*tip)} Z"
 
 
 def mascot_svg(mood: str = "normal", mouth: str = "rest", blink: bool = False) -> str:
@@ -1550,15 +1769,15 @@ def mascot_svg(mood: str = "normal", mouth: str = "rest", blink: bool = False) -
             g += f'<path d="{arm[0]}" {st}/><path d="{arm[1]}" {st}/>'
         g += f'<path d="{curl}" fill="none" stroke="{col}" stroke-width="{5 + extra}" stroke-linecap="round"/>'
         for ex, ey, rs in _EYES:
-            g += f'<circle cx="{ex}" cy="{ey}" r="{58 * rs * es}" {st}/>'
+            g += f'<path d="{_ring_d(ex, ey, 58 * rs * es)}" {st}/>'
         g += f'<circle cx="{_PIVOT[0]}" cy="{_PIVOT[1]}" r="13" {st}/>'
         return g
 
-    out = '<g transform="rotate(-4 0 60)">'
+    out = f'<g transform="rotate({_TILT} 0 60)">'
     out += f'<g transform="translate({_SHADOW[0]} {_SHADOW[1]})">{silhouette(ink, 2 * _DIECUT)}</g>'
     out += silhouette(white, 2 * _DIECUT)
     out += f'{head} fill="{yel}" stroke="{ink}" stroke-width="{_OUT}" stroke-linejoin="round"/>'
-    if E.get("blush") or mouth == "open":
+    if E.get("blush"):                     # yanak yalnız ifadeye bağlı (hece hece yanıp sönmesin)
         for sx in (-1, 1):
             out += f'<ellipse cx="{sx * 68}" cy="110" rx="15" ry="8" fill="{red}" opacity="0.45"/>'
     st = f'fill="{ink}" stroke="{ink}" stroke-width="{_OUT - 1}" stroke-linejoin="round"'
@@ -1574,14 +1793,14 @@ def mascot_svg(mood: str = "normal", mouth: str = "rest", blink: bool = False) -
     for i, (ex, ey, rs) in enumerate(_EYES):
         R, Sr = 58 * rs, 43 * rs
         g = f'<g transform="translate({ex} {ey}) scale({es}) translate({-ex} {-ey})">'
-        g += f'<circle cx="{ex}" cy="{ey}" r="{R}" fill="{red}" stroke="{ink}" stroke-width="{_OUT}"/>'
+        g += f'<path d="{_ring_d(ex, ey, R)}" fill="{red}" stroke="{ink}" stroke-width="{_OUT}" stroke-linejoin="round"/>'
         a0, a1 = math.radians(200), math.radians(245)
         rm = (R + Sr) / 2
         g += (f'<path d="M{P(ex + rm * math.cos(a0), ey + rm * math.sin(a0))} A{rm} {rm} 0 0 1 '
               f'{P(ex + rm * math.cos(a1), ey + rm * math.sin(a1))}" stroke="{white}" stroke-width="5" '
               'stroke-linecap="round" fill="none" opacity="0.7"/>')
         g += f'<circle cx="{ex}" cy="{ey}" r="{Sr}" fill="{white}" stroke="{ink}" stroke-width="{_OUT}"/>'
-        pr = E["pupil"] * (0.92 if i else 1.0)
+        pr = E["pupil"] * (0.88 if i else 1.0)
         travel = Sr - pr - 7
         pxx, pyy = ex + lx * travel, ey + ly * travel
         inner = f'<circle cx="{pxx:.2f}" cy="{pyy:.2f}" r="{pr}" fill="{ink}"/>'
@@ -1601,7 +1820,11 @@ def mascot_svg(mood: str = "normal", mouth: str = "rest", blink: bool = False) -
     out += f'<circle cx="{_PIVOT[0]}" cy="{_PIVOT[1]}" r="12" fill="{yel}" stroke="{ink}" stroke-width="5"/>'
     out += f'<circle cx="{_PIVOT[0] - 4}" cy="{_PIVOT[1] - 4}" r="3.2" fill="{white}"/>'
     mx, my = 4, 113
-    m = {"open": "open", "closed": "closed"}.get(mouth, E["mouth"])
+    if mouth in ("open", "closed"):         # konuşurken ağız ifadeyi korur (şaşkın 'o', düşünceli 'hmm')
+        m = {"surprised": {"open": "o_big", "closed": "o_small"},
+             "thinking": {"open": "oval", "closed": "hmm"}}.get(mood, {}).get(mouth, mouth)
+    else:
+        m = E["mouth"]
     ms = f'stroke="{ink}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"'
     if m == "smile":
         out += f'<path d="M{P(mx - 23, my - 7)} Q{P(mx + 2, my + 14)} {P(mx + 23, my - 9)}" {ms} fill="none"/>'
@@ -1614,8 +1837,12 @@ def mascot_svg(mood: str = "normal", mouth: str = "rest", blink: bool = False) -
         out += (f'<defs><clipPath id="mclip"><path d="{d}"/></clipPath></defs><path d="{d}" fill="{ink}" {ms}/>'
                 f'<g clip-path="url(#mclip)"><ellipse cx="{mx}" cy="{my - 10 + hg}" rx="{w2 * 0.62:.1f}" '
                 f'ry="{hg * 0.42:.1f}" fill="{red}"/></g>')
-    elif m == "o":
-        out += f'<ellipse cx="{mx}" cy="{my + 2}" rx="14" ry="17" fill="{ink}" {ms}/>'
+    elif m in ("o", "o_big", "o_small"):
+        rx, ry = {"o": (14, 17), "o_big": (17, 22), "o_small": (10, 12)}[m]
+        out += f'<ellipse cx="{mx}" cy="{my + 2}" rx="{rx}" ry="{ry}" fill="{ink}" {ms}/>'
+    elif m == "oval":
+        out += (f'<ellipse cx="{mx + 9}" cy="{my + 1}" rx="10" ry="13" fill="{ink}" {ms} '
+                f'transform="rotate(14 {mx + 9} {my + 1})"/>')
     elif m == "hmm":
         out += f'<path d="M{P(mx - 6, my + 2)} q9 -9 16 0 t16 -2" {ms} fill="none"/>'
     fx = E.get("fx")
@@ -1666,14 +1893,37 @@ def short_name(topic: str, max_w: float) -> str:
     out = ""
     for w in words:
         nxt = (out + " " + w).strip()
-        if tw(nxt, "mono", 28) > max_w and out:
+        if tw(nxt, "mono", HEADER_SIZE) > max_w and out:
             break
         out = nxt
-    return fit(out, "mono", 28, max_w) if out else "bilgi"
+    return fit(out, "mono", HEADER_SIZE, max_w) if out else "bilgi"
 
 
-def pill_width(text: str) -> float:
-    return tw(fit(text, "mono", 26, 520), "mono", 26) + 34
+def cover_layer(kicker: str, stamp: str, note: bool = False) -> Image.Image | None:
+    """Kapak (sahne 0) kartının üstü: seri etiketi kartın üst kenarına yapışmış büyük sarı yırtık etiket (Anton, en az
+    44 px) ve fotoğraflı/çizimli kartta başlığın vurgulu satırı kırmızı yırtık damga. Kapak karesi tek başına okunur."""
+    if not kicker and not stamp:
+        return None
+    rx0, ry0, rx1, ry1 = CARD_REGION
+    lay = Image.new("RGBA", (rx1 - rx0, ry1 - ry0), (0, 0, 0, 0))
+    if stamp:
+        size = 128
+        while tw(stamp, "anton", size) + size * 0.4 > 660 and size > 64:
+            size -= 4
+        lab = torn_label(stamp, size, OFF, RED, 4242, rim=OFF)
+        im = lab.render(4.0, shadow=(7, 10, 0, 0.92))
+        cx, cy = (CARD[0] + CARD[2]) / 2 + 24, CARD[3] - (240 if note else 150)   # not çipinin üstünde
+        _comp(lay, im, cx - im.width / 2 - rx0, cy - im.height / 2 - ry0)
+    if kicker:
+        size = 52
+        while tw(kicker, "anton", size) + size * 0.4 > 620 and size > 44:
+            size -= 2
+        lab = torn_label(kicker, size, INK, YELLOW, 4343, rim=OFF)
+        im = lab.render(2.5, shadow=(5, 7, 0, 0.92))
+        cx, cy = CARD[0] + 14 + lab.w / 2, CARD[1] + 34   # üst kenar ≈ 457: kinetik yazının, vuruşunun ve açılış
+        # zıplamasının (ilk 0,5 sn, en çok 7 px yukarı) altında
+        _comp(lay, im, cx - im.width / 2 - rx0, cy - im.height / 2 - ry0)
+    return lay
 
 
 class KartScene:
@@ -1687,12 +1937,15 @@ class KartScene:
         self.dark = self.type == "interstitial"
         ctx = {"spec": s, "idx": i, "dur": self.dur, "slug": v.slug, "handle": v.handle}
         self.card = CARD_CLASSES[self.type](ctx)
-        if i == 0:
-            kind, right = "pill", (s.kicker.strip() or v.right_label(i))
-        elif v.structure == "sayac":
-            kind, right = "count", v.right_label(i)
-        else:
-            kind, right = "text", v.right_label(i)
+        self.cover = None
+        if i == 0 and not self.dark:
+            lines = [tr_upper(x.strip()) for x in s.headline if x.strip()]
+            hl = s.highlight_line if 0 <= s.highlight_line < len(lines) else len(lines) - 1
+            stamp = lines[hl] if (lines and self.type in ("photo", "drawing")) else ""
+            self.cover = cover_layer(tr_upper((s.kicker or "").strip()), stamp, bool((s.card or {}).get("note")))
+        self._cov_src = self._cov = None
+        kind = "count" if v.structure == "sayac" else "text"
+        right = v.right_label(i)
         self.header = header_layer(i + 1, v.short, tr_upper(right) if kind != "count" else right, kind, self.dark)
         bg = red_bg() if self.dark else paper_bg()
         self.base = bg.copy()
@@ -1706,6 +1959,17 @@ class KartScene:
             return self.mascot_override
         return self.card.mood(lt, self.dur)
 
+    def card_layer(self, lt: float) -> Image.Image | None:
+        """Kartın o anki katmanı; kapakta seri etiketi ve damga üstünde (aynı kart görüntüsü için önbellekli)."""
+        lay = self.card.layer(lt, self.dur)
+        if self.cover is None or lay is None:
+            return lay
+        if lay is not self._cov_src:
+            self._cov_src = lay
+            self._cov = lay.copy()
+            self._cov.alpha_composite(self.cover)
+        return self._cov
+
 
 class KartVideo:
     def __init__(self, scenes, words: list[Word], meta: dict, bcfg: dict):
@@ -1713,14 +1977,12 @@ class KartVideo:
         self.n = n = len(scenes)
         on = bcfg.get("enabled", False)
         self.intro = bool(on and bcfg.get("intro_cut", True))
-        every = int(bcfg.get("cut_transition_every", 4) or 0) if on else 0
-        self.cut_at = {i for i in range(1, n) if every and i % every == 0}
-        self.handle = bcfg.get("handle") or "@bilgimakasi"
+        # kullanıcı adı render.render'daki gibi brand.json'a uyar (marka kapalıysa ya da subtitle_handle false ise yok)
+        self.handle = (bcfg.get("handle") or "") if on and bcfg.get("subtitle_handle", True) else ""
         self.structure = self.meta.get("structure", "")
-        # kısa konu adı ilk sahnenin başlığına (seri etiketi rozetinin yanına) sığmalı
-        kicker = (scenes[0].kicker or "").strip() if scenes else ""
-        right_w = pill_width(tr_upper(kicker)) if kicker else 300
-        name_w = 920 - right_w - 40 - 12 - 24 - (72 + tw("// 01 — ", "mono", 28))
+        # kısa konu adı her sahnenin başlığına (sağdaki etiketin yanına) sığmalı
+        right_w = max(tw(tr_upper(self.right_label(i)), "mono", HEADER_SIZE) for i in range(n)) if n else 200
+        name_w = 920 - min(440, right_w) - HEADER_ICON - 12 - 40 - (72 + tw("// 01 — ", "mono", HEADER_SIZE))
         self.short = short_name(self.meta.get("short") or self.meta.get("topic") or "", name_w)
         self.slug = ""
         for part in slug(self.short, 60).split("-"):
@@ -1729,6 +1991,18 @@ class KartVideo:
             self.slug = (self.slug + "-" + part).strip("-")
         self.slug = self.slug or "bilgi"
         self.types = [card_type(s, i, n) for i, s in enumerate(scenes)]
+        # makas kesme geçişi: brand.json cut_transition_every > 0 iken her 3. sahnede (kart sahneleri kısa olduğundan
+        # 4 yerine 3). Ara kanca ya da ara kancadan hemen sonraki sahneye düşerse bir sonraki uygun sahneye kayar.
+        self.cut_at: set[int] = set()
+        if on and int(bcfg.get("cut_transition_every", 4) or 0) > 0:
+            ok = [i > 0 and "interstitial" not in (self.types[i], self.types[i - 1]) for i in range(n)]
+            i = CUT_EVERY
+            while i < n:
+                while i < n and not ok[i]:
+                    i += 1
+                if i < n:
+                    self.cut_at.add(i)
+                i += CUT_EVERY
         # kelime aralıkları (sahne sınırları korunur)
         ranges, a = [], 0
         for i, s in enumerate(scenes):
@@ -1750,7 +2024,8 @@ class KartVideo:
             return f"{tr_upper('bilgi')} {k}/3"
         if self.structure in STRUCT_RIGHT:
             return STRUCT_RIGHT[self.structure]
-        return (self.scenes[0].kicker or "").strip() or "BİLGİ MAKASI"
+        kicker = (self.scenes[0].kicker or "").strip()
+        return kicker if (kicker and i > 0) else "BİLGİ MAKASI"  # ilk sahnede seri etiketi kartın üstünde
 
     def _log(self, i: int) -> str:
         s = self.scenes[i]
@@ -1856,27 +2131,43 @@ class KartVideo:
                        (0, int(e) - sp // 2))
         return mask
 
-    def _cut(self, img: Image.Image, old: Image.Image, local: float, seed: int, length: float = 0.4) -> None:
-        """Eski kart makasla ikiye kesilir, parçalar ayrılıp kaybolur; altta yeni kart durur."""
-        p = clamp(local / length)
+    def _cut(self, img: Image.Image, old: Image.Image, local: float, seed: int) -> None:
+        """Eski kart makasla ikiye kesilir (CUT_SLICE), parçalar tam opak ayrılır (CUT_SPLIT: üst parça sola-yukarı
+        ~70 px kayıp 3° döner, alt parça menteşeli gibi düşer: sol ucu ~35 px, maskotun üstündeki sağ ucu ≤ 6 px, böylece
+        bıçak uçlarına inmez), sonra en çok 2 karede söner; altta yeni kart durur. Ayrılmadan sönen parçalar çift pozlama
+        gibi okunuyordu."""
         rx0, ry0 = CARD_REGION[:2]
         lw, lh = old.size
         ang = math.radians(6 if seed % 2 else -6)
         cy = (CARD[1] + CARD[3]) / 2 - ry0
         yl, yr = cy - math.tan(ang) * lw / 2, cy + math.tan(ang) * lw / 2
-        sx = lerp(CARD[0] - rx0 - 40, SAFE_X - 66 - rx0, ease_in_out(p / 0.5))
-        d = 90 * clamp((p - 0.4) / 0.6) ** 1.5
-        a = 1 - ease_in_out((p - 0.5) / 0.28)  # hayalet üst üste binme ≤ 3 kare
+        p_cut = clamp(local / CUT_SLICE)
+        sx = lerp(CARD[0] - rx0 - 40, SAFE_X - 66 - rx0, ease_in_out(p_cut))
+        e = ease_out_cubic((local - CUT_SLICE) / CUT_SPLIT) + 0.25 * clamp((local - CUT_SLICE - CUT_SPLIT) / CUT_FADE)
+        a = 1 - clamp((local - CUT_SLICE - CUT_SPLIT) / CUT_FADE)
+        if a <= 0:
+            return
         mask = Image.new("L", old.size, 0)
         ImageDraw.Draw(mask).polygon([(0, 0), (lw, 0), (lw, yr), (0, yl)], fill=255)
         top = Image.new("RGBA", old.size, (0, 0, 0, 0))
         top.paste(old, (0, 0), mask)
         bot = Image.new("RGBA", old.size, (0, 0, 0, 0))
         bot.paste(old, (0, 0), ImageChops.invert(mask))
-        # üst parça sola kayar (yukarı kalkması kinetik yazının altına girerdi), alt parça yerinde birkaç px düşer
-        put(img, bot, rx0, ry0 + min(d, 5), alpha=a, clip=(0, SAFE[1], SAFE[2], CLIP_FLOOR))
-        put(img, top, rx0 - d * 1.4, ry0 - min(d * 0.15, 12), alpha=a, clip=(0, SAFE[1], SAFE[2], CLIP_FLOOR))
-        if p < 0.6:
+        clip = (0, SAFE[1], SAFE[2], CLIP_FLOOR)
+        bx, by = rx0, ry0 + 20 * e
+        tx, ty = rx0 - 60 * e, ry0 - 36 * e
+        if e > 0.01:
+            r = bot.rotate(2.3 * e, resample=Image.BICUBIC, expand=True)    # sağ uç yukarıda kalır
+            bx, by = bx - (r.width - lw) / 2, by - (r.height - lh) / 2
+            bot = r
+            r = top.rotate(-3.0 * e, resample=Image.BICUBIC, expand=True)   # sol uç kalkar
+            tx, ty = tx - (r.width - lw) / 2, ty - (r.height - lh) / 2
+            top = r
+        # düşen sol uç terminalin üstüne kadar inebilir; maskot bandında (x ≥ 600) bıçak uçlarının (y ≥ 1154) üstünde kalır
+        put(img, bot, bx, by, alpha=a, clip=(0, SAFE[1], 600, TERM[1] - 16))
+        put(img, bot, bx, by, alpha=a, clip=(600, SAFE[1], SAFE[2], CLIP_FLOOR + 14))
+        put(img, top, tx, ty, alpha=a, clip=clip)
+        if p_cut < 1:
             dd = ImageDraw.Draw(img)
             x = CARD[0] - 30
             while x < sx + rx0:
@@ -1913,7 +2204,7 @@ class KartVideo:
             img = paper_bg().copy()  # kırmızı, önceki kartın üstünden aşağı doğru iner
             prev = self.scene(si - 1)
             if not prev.dark:
-                put(img, prev.card.layer(prev.dur, prev.dur), *CARD_REGION[:2], clip=(0, SAFE[1], SAFE[2], CLIP_FLOOR))
+                put(img, prev.card_layer(prev.dur), *CARD_REGION[:2], clip=(0, SAFE[1], SAFE[2], CLIP_FLOOR))
             img.paste(red_bg(), (0, 0), self._wipe_mask(lt))
             img.alpha_composite(sc.header, HEADER_REGION[:2])
             img.alpha_composite(rule_layer(True), (0, RULE_Y - 6))
@@ -1922,7 +2213,7 @@ class KartVideo:
         if si == 0 and self.intro:
             self._intro(img, t, sc.dark)
         # kart
-        layer = sc.card.layer(lt, sc.dur)
+        layer = sc.card_layer(lt)
         rx0, ry0 = CARD_REGION[:2]
         clip = (0, SAFE[1], SAFE[2], CLIP_FLOOR)
         if isinstance(sc.card, InterstitialCard):
@@ -1933,10 +2224,10 @@ class KartVideo:
         elif si == 0:  # kanca: kart ilk karede tam; ilk yarım saniyede küçük bir zıplama
             k = 1 + 0.022 * math.sin(math.pi * clamp(lt / 0.5)) if lt < 0.5 else 1.0
             put(img, layer, rx0, ry0, k=k, clip=clip)
-        elif si in self.cut_at and lt < 0.4 and self.types[si - 1] != "interstitial":
+        elif si in self.cut_at and lt < CUT_LEN and self.types[si - 1] != "interstitial":
             put(img, layer, rx0, ry0, clip=clip)
             prev = self.scene(si - 1)
-            self._cut(img, prev.card.layer(prev.dur, prev.dur), lt, si)
+            self._cut(img, prev.card_layer(prev.dur), lt, si)
         else:
             x = lt / 0.22  # yeni kart küçükten oturur (büyütmek gölgeyi x > 935'e taşırdı)
             k = 1.0 if x >= 1 else 0.94 + 0.06 * ease_out_back(x, 1.4)

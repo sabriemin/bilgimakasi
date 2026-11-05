@@ -55,8 +55,8 @@ def pick_template(script: ShortScript, override: str | None = None) -> str:
     kart = m.get("kart") or {}
     if "kart" in cat and kart_uygun(script, kart):
         return "kart"
-    if m.get("claude_secsin") and script.template in cat and (script.template != "kart" or kart.get("acik")):
-        return script.template
+    if m.get("claude_secsin") and script.template in cat and script.template != "kart":
+        return script.template  # kart yalnız kart_uygun ile seçilir (yapı/kategori kuralları)
     t = m.get("kategoriler", {}).get(script.category.strip().lower(), m.get("varsayilan", "kolaj"))
     return t if t in cat else "kolaj"
 
@@ -119,7 +119,9 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
             path = (ROOT / desc[6:]).resolve() if desc.startswith("local:") else None
             if path and path.is_relative_to(ROOT.resolve()) and path.is_file():
                 local[i] = path  # deneme senaryoları: depodaki hazır çizim dosyası (Claude çağrısı yok)
-            elif not path:
+            elif path:
+                print(f"Sahne {i}: yerel çizim kullanılamadı (depo dışında ya da yok): {desc}")
+            else:
                 want[i] = desc
     drawings = illustrate.draw_scenes(want, script.topic, out_dir / "cizimler") if use_drawings else {}
     drawings.update(local)
@@ -234,8 +236,8 @@ def main() -> None:
             except Exception as e:  # noqa: BLE001
                 print("Gündem önerisi alınamadı, serbest konu seçilecek:", e)
         allow = os.environ.get("SERIES", "1") != "0" and not open_part
-        script = generate_script(history, topic, template_catalog() if m.get("claude_secsin") else None,
-                                 allow_series=allow)
+        catalog = {k: v for k, v in template_catalog().items() if k != "kart"}  # kart Claude'a önerilmez
+        script = generate_script(history, topic, catalog if m.get("claude_secsin") else None, allow_series=allow)
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":

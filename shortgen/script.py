@@ -161,15 +161,16 @@ gösteren sahneler (en fazla 3 tane) saf tipografik olabilir.
   uçak/kuş/tren geçiyorsa fly_right veya fly_left, sel/dalga/akıntı ilerliyorsa fly_right veya rise (trail false),
   bir şey düşüyorsa drop_in, ortaya çıkış/keşif anında zoom_in, gezegen için spin veya orbit, kalp/beyin için pulse,
   patlama/deprem/yarılma için shake, balon/astronot/su altı için float. Hareketsiz çizimlerde motion none.
+headline kelimeleri narration içinde geçen en vurucu kelimeler olsun. Temaları çeşitlendir, art arda aynı temayı
+en fazla iki kez kullan. icon sadece gerçekten anlam katıyorsa.
 KART ALANLARI (yalnız "kart" şablonu kullanır, diğer şablonlar yok sayar; emin değilsen card "auto", diğerleri boş):
 - card "counter": tek büyük sayının sahnesi (card_value yalnız sayı, ör. "3.300"; card_label 1-3 kelimelik birim/etiket).
 - card "compare": efsane kalıbında inanışın çürütüldüğü sahne (card_myth inanış, card_fact doğrusu).
-- card "interstitial": videonun ortasındaki ikinci merak anı; headline "AMA ASIL ..." diye başlasın.
+- card "interstitial": videonun ortasındaki ikinci merak anı (headline o anın kendi vurucu kelimeleri; kalıp cümle değil).
 - card "quote": doğrulanmış kısa bir alıntı (card_label alıntı, card_note kim · yıl). card "cta": son soru sahnesi.
-- Fotoğraflı/çizimli sahnelerde auto bırak; card_note kartın küçük notu ya da kaynağıdır. mascot çoğunlukla auto.
-Kartlardaki sayı, inanış ve alıntılar da doğrulanmış bilgi olmalı.
-headline kelimeleri narration içinde geçen en vurucu kelimeler olsun. Temaları çeşitlendir, art arda aynı temayı
-en fazla iki kez kullan. icon sadece gerçekten anlam katıyorsa."""
+- card_note kartın küçük notu ya da kaynağıdır. mascot çoğunlukla auto.
+Kart alanları görsel alanların yerine geçmez; her sahnede fotoğraf/çizim kuralı aynen geçerli.
+Kartlardaki sayı, inanış ve alıntılar da doğrulanmış bilgi olmalı."""
 
 
 def _history(path: Path) -> list[str]:
