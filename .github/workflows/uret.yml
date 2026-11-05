@@ -15,6 +15,9 @@ on:
       kalip:
         description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil, uretim, olsaydin)"
         required: false
+      yeniden:
+        description: "Var olan bir videonun etiketi (ör. short-20261105-213747): senaryosu yeniden yazılmadan, verilen şablonla yeniden çizilir"
+        required: false
 
 permissions:
   contents: write
@@ -68,12 +71,23 @@ jobs:
           TOPIC: ${{ github.event.inputs.topic }}
           TEMPLATE: ${{ github.event.inputs.template }}
           KALIP: ${{ github.event.inputs.kalip }}
+          YENIDEN: ${{ github.event.inputs.yeniden }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           ARGS=()
-          [ -n "$TOPIC" ] && ARGS+=(--topic "$TOPIC")
           [ -n "$TEMPLATE" ] && ARGS+=(--template "$TEMPLATE")
-          # kalıp yalnız ortam değişkeniyle geçer; geçerliliğini pipeline (--structure seçenekleri) denetler
-          [ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")
+          if [ -n "$YENIDEN" ]; then
+            # var olan videonun senaryosu (Release'teki script.json) Claude'a yeniden yazdırılmadan yeni şablonla çizilir
+            if ! [[ "$YENIDEN" =~ ^short-[0-9]{8}-[0-9]{6}$ ]]; then
+              echo "::error::Etiket short-YYYYMMDD-HHMMSS biçiminde olmalı."; exit 1
+            fi
+            gh release download "$YENIDEN" -p script.json -D "$RUNNER_TEMP/yeniden" --clobber
+            ARGS+=(--script "$RUNNER_TEMP/yeniden/script.json")
+          else
+            [ -n "$TOPIC" ] && ARGS+=(--topic "$TOPIC")
+            # kalıp yalnız ortam değişkeniyle geçer; geçerliliğini pipeline (--structure seçenekleri) denetler
+            [ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")
+          fi
           python -m shortgen.pipeline "${ARGS[@]}"
           echo "OUT_DIR=$(ls -td output/*/ | head -1)" >> "$GITHUB_ENV"
           echo "TAG=short-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_ENV"
