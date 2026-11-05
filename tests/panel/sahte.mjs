@@ -80,7 +80,8 @@ let sonMesaj = 1000;
 
 /**
  * Sahte fetch kurar. ayar: { kok, dosyaHata: {ad: status}, dispatchDurum, tgDurum, tgAgHatasi, imzaliAdres, konum,
- * surum(json) (release yanıtını değiştirir) }. Dönen nesnede cagrilar listesi tüm giden istekleri tutar.
+ * surum(json) (release yanıtını değiştirir), isler (onay.yml iş listesi), islerDurum, onayDurum (onay.yml dispatch),
+ * ghAgHatasi (GitHub'a ulaşılamaz) }. Dönen nesnede cagrilar listesi tüm giden istekleri tutar.
  */
 export function fetchKur(ayar = {}) {
   const kok = ayar.kok || FIKSTUR;
@@ -122,7 +123,15 @@ export function fetchKur(ayar = {}) {
       return json(200, { ok: true, result: { message_id: 999 } });
     }
     if (url.startsWith(`https://api.github.com/repos/${repo}/`)) {
+      if (ayar.ghAgHatasi) throw new TypeError("fetch failed");
       const yol = url.slice(`https://api.github.com/repos/${repo}/`.length);
+      if (yol === "actions/workflows/onay.yml/runs?per_page=20" && req.method === "GET") {
+        if (ayar.islerDurum) return json(ayar.islerDurum, { message: "x" });
+        return json(200, { total_count: (ayar.isler || []).length, workflow_runs: ayar.isler || [] });
+      }
+      if (yol === "actions/workflows/onay.yml/dispatches" && req.method === "POST") {
+        return new Response(null, { status: ayar.onayDurum || 204 });
+      }
       if ((m = /^contents\/state\/([\w.]+)\?ref=main$/.exec(yol))) {
         const s = (ayar.dosyaHata || {})[m[1]];
         if (s) return new Response("{\"message\":\"x\"}", { status: s });

@@ -94,6 +94,14 @@ jobs:
             -F "panel_ui.js=@cloudflare/panel_ui.js;type=application/javascript+module")
           echo "$r" | python3 -c "import json,sys;d=json.load(sys.stdin);print('yükleme:', d['success'], d.get('errors'))"
           echo "$r" | python3 -c "import json,sys;sys.exit(0 if json.load(sys.stdin)['success'] else 1)"
+          # zamanlayıcı: dakikada bir saati yaklaşan paylaşıma bakar ve onay.yml'i tam o saate başlatır (worker.js scheduled).
+          # Kurulamazsa yalnız uyarı yazılır (ağ hatası ya da zaman aşımı da kurulumu ve webhook bağlamayı durdurmaz).
+          c=$(curl -s -m 20 -X PUT "${API}/workers/scripts/${NAME}/schedules" -H "Authorization: Bearer ${CF_TOKEN}" \
+            -H "Content-Type: application/json" -d '[{"cron":"* * * * *"}]' || true)
+          echo "$c" | python3 -c "import json,sys;d=json.load(sys.stdin);print('zamanlayıcı:', d.get('success'), d.get('errors') or [s.get('cron') for s in (d.get('result') or {}).get('schedules', [])])" \
+            || echo "::warning::Zamanlayıcı yanıtı okunamadı: ${c:0:200}"
+          echo "$c" | python3 -c "import json,sys;sys.exit(0 if json.load(sys.stdin).get('success') else 1)" \
+            || echo "::warning::Zamanlayıcı (cron) kurulamadı; paylaşımlar yalnız onay.yml'in kendi saatlerinde ve onaydan hemen sonra başlar. API anahtarına 'Workers Scripts: Edit' izni gerekir."
           # workers.dev alt alan adı (yoksa oluştur) ve bu worker için aç
           sub=$(curl -s "${API}/workers/subdomain" -H "Authorization: Bearer ${CF_TOKEN}" | python3 -c "import json,sys;print((json.load(sys.stdin).get('result') or {}).get('subdomain') or '')")
           if [ -z "$sub" ]; then

@@ -3,11 +3,13 @@
 // Kapı anında "⏳ Alındı" der; işin kendisini GitHub'daki isle.yml'e iletir.
 // Yalnız arayüz olan adımları (Onayla -> saat seçenekleri, Geri) kendisi anında yapar.
 // /panel altındaki adresler yönetim panelidir (cloudflare/panel.js); /panel komutuna giriş bağlantısını kapı verir.
+// Zamanlayıcı (Cloudflare cron, dakikada bir; bot_kapi.yml kurar): saati 3 dakika içinde gelecek bir paylaşım varsa
+// onay.yml'i o anı hedefleyerek başlatır ki takvimde seçilen her saat (yalnız seyrek GitHub cron saatleri değil) tutsun.
 //
 // Gizli değerler (bot_kapi.yml yükler): TELEGRAM_BOT_TOKEN, CHAT_ID, GH_PAT (KAPI_PAT: yalnız bilgimakasi için
 // Actions okuma/yazma + Contents okuma), WEBHOOK_SECRET, PANEL_SECRET, REPO; isteğe bağlı PANEL_EPOCH
 
-import { panel, girisGonder } from "./panel.js";
+import { panel, girisGonder, dosya, jsonCoz, ghBasliklari, paylasimAnlari } from "./panel.js";
 
 const TR_OFFSET = 3 * 3600 * 1000; // Türkiye UTC+3, yaz saati yok
 
@@ -80,7 +82,10 @@ async function handle(update, env, origin) {
       const rows = [];
       for (let i = 0; i < s.length; i += 2) rows.push(s.slice(i, i + 2).map(([c, l]) => [l, `at:${tag}:${c}`]));
       rows.push([["↩️ Geri", `back:${tag}`]]);
-      await tg(env, "editMessageReplyMarkup", { chat_id: chat, message_id: mid, reply_markup: kb(rows) });
+      const markup = kb(rows);
+      // her platform için saati elle seçmek: panel Takvim sekmesinde bu videonun saat sayfasıyla açılır
+      markup.inline_keyboard.splice(-1, 0, [{ text: "🗓 Takvimde seç", url: `${origin}/panel#takvim/${encodeURIComponent(tag)}` }]);
+      await tg(env, "editMessageReplyMarkup", { chat_id: chat, message_id: mid, reply_markup: markup });
       await tg(env, "answerCallbackQuery", { callback_query_id: cq.id, text: "Ne zaman paylaşılsın?" });
       return;
     }
@@ -125,7 +130,79 @@ async function handle(update, env, origin) {
   await dispatch(env, update);
 }
 
+// ---------------------------------------------------------------- zamanlayıcı
+// bu kadar içinde gelecek paylaşım için iş başlatılır (cron dakikada bir; iş ~1 dk'da kurulur, Actions dakikası beklemeye
+// harcanmasın); telegram_bot.DUE_WINDOW ile aynı
+const ONCE_MS = 3 * 60e3;
+const ESKI_MS = 3 * 3600e3; // bundan eski bekleyen saat için başlatılmaz (takılı bir kayıt döngü yapmasın)
+const TEKRAR_MS = 30 * 60e3; // aynı hedefle son 30 dk'da başlatılmış iş varsa yenisi başlatılmaz
+const BASLAMAMIS = ["queued", "pending", "waiting", "requested"]; // state grubunda sırasını bekleyen iş
+
+// onay.yml "hedef" girdisi ve iş adındaki an: UTC, dakika (ör. 2026-11-05T15:00Z); telegram_bot._due_inputs ile aynı
+export const hedefAdi = (ms) => new Date(ms).toISOString().slice(0, 16) + "Z";
+
+function gh(env, yol, init = {}) {
+  return fetch(`https://api.github.com/repos/${env.REPO}/${yol}`, {
+    ...init, headers: { ...ghBasliklari(env, "application/vnd.github+json"), ...(init.headers || {}) },
+  });
+}
+
+// onay.yml'in son 20 işi (iş adı hedefi içerir); öğrenilemezse null
+async function isListesi(env) {
+  const r = await gh(env, "actions/workflows/onay.yml/runs?per_page=20");
+  if (!r.ok) return null;
+  const j = await r.json().catch(() => ({}));
+  return Array.isArray(j.workflow_runs) ? j.workflow_runs : null;
+}
+
+// Bu paylaşım anını üstlenmiş iş var mı (telegram_bot._due_covered): aynı hedefle kuyrukta/çalışan ya da son 30 dk'da
+// başlatılmış, iptal edilmemiş iş ("state" grubunda yenisi gelince bekleyen eski iş hiç çalışmadan iptal olur).
+// Saati gelmiş paylaşımı henüz başlamamış herhangi bir iş de üstlenir: başlayınca saati gelenlerin hepsini paylaşır;
+// yenisi başlatılırsa o işi iptal eder ve iki hedef birbirini iptal edip durur.
+function isVar(isler, an, simdi) {
+  const hedef = hedefAdi(an);
+  return isler.some((x) => (an <= simdi && BASLAMAMIS.includes(x.status))
+    || (`${x.display_title || ""} ${x.name || ""}`.includes(hedef)
+      && (x.status !== "completed" || (x.conclusion !== "cancelled" && Date.parse(x.created_at) >= simdi - TEKRAR_MS))));
+}
+
+// Saati yaklaşan paylaşım varsa onay.yml'i başlatır. Kısa bir durum metni döndürür (günlük için).
+// Anlara sırayla bakılır: üstlenen işi olan atlanır, ilk üstlenilmemiş an için iş başlatılır (saati geçmiş bir kaydın
+// işi, ör. hata almış ya da hâlâ yükleyen iş, sonraki videonun paylaşımını bekletmesin).
+export async function zamanliPaylasim(env, simdi = Date.now()) {
+  if (!env.GH_PAT || !env.REPO) return "ayar yok";
+  const f = await dosya(env, "state/videos.json");
+  if (f.metin == null) return `durum okunamadı (${f.hata || "dosya yok"})`;
+  const vs = jsonCoz(f.metin, []);
+  // 3 saatten eski takılı bir kayıt sayılmaz (diğer videoların paylaşımını engellemesin, döngü yapmasın)
+  const tumu = paylasimAnlari(Array.isArray(vs) ? vs : [], simdi - ESKI_MS);
+  if (!tumu.length) return "bekleyen paylaşım yok";
+  const anlar = tumu.filter((an) => an <= simdi + ONCE_MS);
+  if (!anlar.length) return "erken";
+  const isler = await isListesi(env);
+  for (const an of anlar) {
+    // iş listesi alınamadıysa saati geçmiş paylaşım için her dakika körlemesine iş başlatılmaz
+    if (isler ? isVar(isler, an, simdi) : an < simdi) continue;
+    const hedef = hedefAdi(an);
+    const dakika = Math.min(15, Math.max(0, Math.ceil((an - simdi) / 60e3)) + 2);
+    const r = await gh(env, "actions/workflows/onay.yml/dispatches", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ref: "main", inputs: { dakika: String(dakika), hedef } }),
+    });
+    return r.status === 204 ? `başlatıldı (${hedef}, ${dakika} dk)` : `başlatılamadı (${r.status})`;
+  }
+  return isler ? `iş zaten var (${anlar.map(hedefAdi).join(", ")})` : "iş listesi alınamadı";
+}
+
 export default {
+  // Cloudflare cron ("* * * * *"): hata fırlatmaz, yalnız kısa günlük yazar
+  async scheduled(event, env, ctx) {
+    try {
+      console.log("zamanlayıcı:", await zamanliPaylasim(env, Date.now()));
+    } catch (e) {
+      console.log("zamanlayıcı hatası:", String((e && e.message) || e).slice(0, 200));
+    }
+  },
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (url.pathname === "/panel" || url.pathname.startsWith("/panel/")) return panel(req, env, ctx);

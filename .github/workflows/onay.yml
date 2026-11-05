@@ -1,8 +1,13 @@
 name: Telegram onaylarını işle
+# Kapının zamanlayıcısı (worker.js) ve işle.yml paylaşım saatine göre başlatınca iş adı hedefi içerir: aynı saat için
+# ikinci iş başlatılmaz (iş listesindeki ada bakılır).
+run-name: ${{ inputs.hedef && format('Paylaşım {0}', inputs.hedef) || github.workflow }}
 
 on:
   # Yalnız paylaşım saatlerinde çalışır (UTC; Türkiye = UTC+3), Actions dakikası harcamamak için.
   # Düğmelere anında yanıt, her yeni videodan sonra açılan 30 dk'lık dinleme ile verilir.
+  # Kapı kuruluyken seçilen saatteki paylaşımı kapının zamanlayıcısı başlatır; bu saatler yedektir: saati gelmiş paylaşım
+  # yoksa çalışma Python kurulumu yapmadan biter.
   # TR saatleri: 12:00 12:30 18:00 19:00 19:30 20:00 21:00 22:00
   schedule:
     - cron: "0,30 9 * * *"
@@ -14,6 +19,10 @@ on:
         description: "Kaç dakika boyunca düğmelere anında yanıt verilsin (0 = tek kontrol)"
         required: false
         default: "0"
+      hedef:
+        description: "Hedeflenen paylaşım anı (UTC, ör. 2026-11-05T15:00Z); kapının zamanlayıcısı doldurur"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -34,12 +43,41 @@ jobs:
           git config user.name "shortgen-bot"
           git config user.email "shortgen-bot@users.noreply.github.com"
           git fetch -q origin main && git reset -q --hard origin/main
+      - name: Zamanlanmış çalışmada yapılacak iş var mı
+        id: gerek
+        if: github.event_name == 'schedule'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          # Kapı (webhook) kuruluyken düğmeleri kapı karşılar, seçilen saatteki paylaşımı kapının zamanlayıcısı başlatır.
+          # Saati gelmiş paylaşım yoksa bu zamanlanmış çalışma Python kurulumu yapmadan biter (Actions dakikası).
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import datetime as dt, json, os, sys, urllib.request
+          now = dt.datetime.now(dt.timezone.utc)
+          try:
+              vs = json.load(open("state/videos.json", encoding="utf-8"))
+              due = any(v.get("status") == "zamanlandi" and v.get("publish_at")
+                        and dt.datetime.fromisoformat(v["publish_at"]) <= now for v in vs)
+          except Exception:  # durum okunamazsa her zamanki gibi çalışır
+              due = True
+          try:
+              u = "https://api.telegram.org/bot" + os.environ["TELEGRAM_BOT_TOKEN"] + "/getWebhookInfo"
+              webhook = bool(json.load(urllib.request.urlopen(u, timeout=15))["result"].get("url"))
+          except Exception:  # öğrenilemezse (ör. anahtar yok) her zamanki gibi çalışır
+              webhook = False
+          atla = webhook and not due
+          print("Saati gelmiş paylaşım yok, kapı kurulu: kurulum yapılmadan bitiyor." if atla else "Çalışılıyor.", file=sys.stderr)
+          print("atla=" + ("evet" if atla else "hayir"))
+          PY
       - uses: actions/setup-python@v5
+        if: steps.gerek.outputs.atla != 'evet'
         with:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
+        if: steps.gerek.outputs.atla != 'evet'
       - name: Düğmeleri ve komutları oku
+        if: steps.gerek.outputs.atla != 'evet'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -48,6 +86,7 @@ jobs:
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "TELEGRAM_BOT_TOKEN tanımlı değil, atlanıyor."; exit 0; fi
           python -m shortgen.telegram_bot poll
       - name: Saati gelen videoları paylaş
+        if: steps.gerek.outputs.atla != 'evet'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -67,12 +106,15 @@ jobs:
           GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
           GITHUB_TOKEN: ${{ github.token }}
           BEST_TIMES: ${{ vars.BEST_TIMES }}
+          # girdi betiğe doğrudan yazılmaz (komut enjeksiyonu): ortamdan okunur, yalnız rakamsa kullanılır
+          DAKIKA: ${{ github.event.inputs.dakika || '0' }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then exit 0; fi
-          D="${{ github.event.inputs.dakika || '0' }}"
+          D="$DAKIKA"
+          case "$D" in ''|*[!0-9]*) D=0 ;; esac
           if [ "$D" != "0" ]; then python -m shortgen.telegram_bot listen "$D"; else python -m shortgen.telegram_bot publish-due; fi
       - name: Durumu kaydet
-        if: always()
+        if: always() && steps.gerek.outputs.atla != 'evet'
         run: |
           git config user.name "shortgen-bot"
           git config user.email "shortgen-bot@users.noreply.github.com"

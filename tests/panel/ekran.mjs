@@ -1,5 +1,6 @@
 // Panel ekran görüntüleri (Playwright + Chromium): 390x844 ve 1280x900, açık ve koyu tema, her sekme.
-//   OUT=<klasör> [FONTS=<Google Fonts önbelleği>] [VIDEO=<örnek video>] node tests/panel/ekran.mjs
+//   OUT=<klasör> [PORT=8790] [FONTS=<Google Fonts önbelleği>] [VIDEO=<örnek video>] node tests/panel/ekran.mjs
+// PORT, PORT+1 ve PORT+2 kullanılır. Takvim bölümü dokunmatik uzun basışla sürükleme ve Saat seç sayfasını da dener.
 // Sunucu (sunucu.mjs) ayrı süreçte sabit saatle çalışır; yazı tipleri yerelden verilir, dış ağa çıkılmaz.
 import { spawn } from "node:child_process";
 import { mkdirSync, readFileSync, existsSync, mkdtempSync, cpSync, writeFileSync } from "node:fs";
@@ -32,9 +33,9 @@ function durumHazirla(sorunlu) {
   return kok;
 }
 
-async function sunucuBaslat(kok, port) {
+async function sunucuBaslat(kok, port, saat = SAAT) {
   const p = spawn(process.execPath, [join(BURASI, "sunucu.mjs")], {
-    env: { ...process.env, KOK: kok, PORT: String(port), SAAT, VIDEO: process.env.VIDEO || "" }, stdio: ["ignore", "pipe", "inherit"] });
+    env: { ...process.env, KOK: kok, PORT: String(port), SAAT: saat, VIDEO: process.env.VIDEO || "" }, stdio: ["ignore", "pipe", "inherit"] });
   await new Promise((ok, hata) => {
     p.stdout.on("data", (d) => { if (String(d).includes("hazir")) ok(); });
     p.on("exit", (c) => hata(new Error("sunucu kapandı " + c)));
@@ -75,7 +76,7 @@ async function bekle(page) {
 async function main() {
   const browser = await chromium.launch();
   const kayit = [];
-  const port = 8790;
+  const port = Number(process.env.PORT || 8790);
   const sunucu = await sunucuBaslat(durumHazirla(false), port);
   const URL = `http://127.0.0.1:${port}`;
   const hatalar = [];
@@ -192,9 +193,283 @@ async function main() {
   } finally {
     s2.kill();
   }
+  await takvimEkranlari(browser, port + 2, kayit, hatalar);
   await browser.close();
   console.log(kayit.join("\n"));
   if (hatalar.length) { console.error("SORUNLAR:\n" + hatalar.join("\n")); process.exitCode = 1; }
+}
+
+// ---------------------------------------------------------------- Takvim
+// Öğlen saatinde (13:10) dolu bir takvim: kısmen paylaşılmış (GTA: Instagram 12:30'da paylaşıldı), paylaşımı 8 dk
+// sonra başlayan (kilitli), zamanlanmış (Açlık Oyunları TikTok'u 5'in katı olmayan 22:02'de) ve onay bekleyen videolar.
+const TAKVIM_SAAT = "2026-11-05T13:10:00+03:00";
+const GTA = "short-20261104-2023", ACLIK = "short-20261104-2048", ONAY = ["short-20261104-1019", "short-20261104-1057"];
+function takvimDurumu() {
+  const kok = mkdtempSync(join(tmpdir(), "panel_takvim_"));
+  cpSync(FIKSTUR, kok, { recursive: true });
+  const vs = JSON.parse(readFileSync(join(kok, "videos.json"), "utf8"));
+  const bul = (t) => vs.find((v) => v.tag === t);
+  Object.assign(bul(GTA), { publish_at: "2026-11-05T15:00:00+00:00",
+    platforms: { instagram: { status: "ok", url: "https://www.instagram.com/reel/x/", at: "2026-11-05T12:30:05+03:00" } } });
+  const k = bul("short-20261104-2100");
+  Object.assign(k, { publish_at: "2026-11-05T10:18:00+00:00", schedule: { ...k.schedule, youtube: "2026-11-05T10:18:00+00:00" } });
+  bul(ACLIK).schedule.tiktok = "2026-11-05T19:02:00+00:00";
+  writeFileSync(join(kok, "videos.json"), JSON.stringify(vs, null, 1));
+  return kok;
+}
+
+// çipin ortası (ekrana getirilmiş)
+async function cipKutusu(page, sec) {
+  await page.evaluate((s) => document.querySelector(s).scrollIntoView({ block: "center" }), sec);
+  await page.waitForTimeout(250);
+  const b = await page.locator(sec).boundingBox();
+  return { x: b.x + b.width / 2, y: b.y + Math.min(14, b.height / 2) };
+}
+
+// dokunmatik: 650 ms basılı tut (uzun basış 500 ms), sonra adım adım taşı (CDP dokunma olayları → pointer olayları)
+const nokta = (x, y) => [{ x: Math.round(x), y: Math.round(y), id: 1, radiusX: 4, radiusY: 4, force: 1 }];
+async function dokunSurukle(page, cdp, a, b, araEkran) {
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: nokta(a.x, a.y) });
+  await page.waitForTimeout(650);
+  const adim = 12;
+  for (let i = 1; i <= adim; i++) {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: nokta(a.x + (b.x - a.x) * i / adim, a.y + (b.y - a.y) * i / adim) });
+    await page.waitForTimeout(30);
+  }
+  await page.waitForTimeout(120);
+  if (araEkran) await araEkran();
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+}
+// dokunmatik: ms kadar basılı tut, sonra (varsa) dy kadar 10 adımda kaydır ve bırak; araEkran bırakmadan önce
+async function dokunTut(page, cdp, a, ms, dy = 0, araEkran) {
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: nokta(a.x, a.y) });
+  await page.waitForTimeout(ms);
+  for (let i = 1; dy && i <= 10; i++) {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: nokta(a.x, a.y + dy * i / 10) });
+    await page.waitForTimeout(20);
+  }
+  if (araEkran) await araEkran();
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await page.waitForTimeout(250);
+}
+// iki rengin kontrast oranı ("rgb(r, g, b)")
+function kontrast(a, b) {
+  const L = (c) => {
+    const [r, g, bl] = c.match(/\d+(\.\d+)?/g).slice(0, 3).map((x) => Number(x) / 255)
+      .map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [x, y] = [L(a), L(b)].sort((m, n) => n - m);
+  return (x + 0.05) / (y + 0.05);
+}
+const dialogKapat = async (page) => {
+  await page.keyboard.press("Escape");
+  await page.waitForSelector("dialog[open]", { state: "detached" }).catch(() => {});
+  await page.waitForFunction(() => !document.querySelector("dialog[open]"));
+};
+async function fareSurukle(page, a, b, araEkran) {
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(a.x, a.y + 8, { steps: 2 });
+  await page.mouse.move(b.x, b.y, { steps: 12 });
+  await page.waitForTimeout(120);
+  if (araEkran) await araEkran();
+  await page.mouse.up();
+}
+
+async function takvimEkranlari(browser, port, kayit, hatalar) {
+  const sunucu = await sunucuBaslat(takvimDurumu(), port, TAKVIM_SAAT);
+  const URL = `http://127.0.0.1:${port}`;
+  const ekran = async (page, ad, ek = {}) => {
+    const dosya = join(OUT, ad + ".png");
+    await page.screenshot({ animations: "disabled", path: dosya, ...ek });
+    kayit.push(dosya);
+  };
+  try {
+    let onaySirasi = 0;
+    for (const tema of ["light", "dark"]) {
+      for (const [ad, viewport, dsf] of GORUNUMLER) {
+        const mobil = ad === "mobil";
+        const ek = `${ad}_${tema === "light" ? "acik" : "koyu"}`;
+        const ctx = await browser.newContext({ viewport, deviceScaleFactor: dsf, colorScheme: tema, locale: "tr-TR",
+          timezoneId: "Europe/Istanbul", hasTouch: mobil, isMobile: mobil });
+        await yaziTipleri(ctx);
+        const page = await ctx.newPage();
+        const sorun = (m) => hatalar.push(`takvim ${ek}: ${m}`);
+        page.on("pageerror", (e) => sorun(e.message));
+        page.on("console", (m) => { if (m.type() === "error") sorun("console: " + m.text()); });
+        await page.goto(URL + "/__giris");
+        await bekle(page);
+        await page.goto(`${URL}/panel#takvim`);
+        await bekle(page);
+        await page.waitForSelector(".tk-govde .tk-cip");
+        const genislik = await page.evaluate(() => document.documentElement.scrollWidth);
+        if (genislik > viewport.width) sorun(`yatay kaydırma (${genislik}px)`);
+        // beklenen içerik: prime bantları, paylaşılmış (kilitli ✅) ve yakında paylaşılan (🔒) çipler, onay tepsisi
+        const icerik = await page.evaluate(() => ({
+          prime: document.querySelectorAll(".tk-prime").length,
+          paylasildi: document.querySelectorAll(".tk-cip.paylasildi").length,
+          kilitli: document.querySelectorAll(".tk-cip.kilitli:not(.paylasildi)").length,
+          tepsi: document.querySelectorAll(".tk-tepsi-satir").length,
+          lejant: (document.querySelector(".tk-lejant") || {}).textContent || "",
+        }));
+        if (icerik.prime < 6 || !icerik.paylasildi || icerik.kilitli < 3 || icerik.tepsi !== 2 || !icerik.lejant.includes("⭐ En iyi saat (prime time)")) {
+          sorun("eksik takvim içeriği " + JSON.stringify(icerik));
+        }
+        await ekran(page, `takvim_dolu_${ek}`, { fullPage: true });
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await ekran(page, `takvim_ust_${ek}`);
+        // masaüstünde 14 günün hepsi görünür; "Şimdi" etiketi her temada okunur (en az 4.5:1)
+        const ust = await page.evaluate(() => {
+          const s = document.querySelector(".tk-gunler"), r = s.getBoundingClientRect();
+          const disarda = [...s.querySelectorAll(".tk-gun")].filter((g) => g.getBoundingClientRect().right > r.right + 0.5).length;
+          const e = document.querySelector(".tk-simdi span"), st = e && getComputedStyle(e);
+          return { disarda, renk: st && st.color, zemin: st && st.backgroundColor };
+        });
+        if (!mobil && ust.disarda) sorun(`gün şeridinde ${ust.disarda} gün görünmüyor`);
+        if (!ust.renk || kontrast(ust.renk, ust.zemin) < 4.5) sorun("Şimdi etiketi kontrastı düşük: " + JSON.stringify(ust));
+
+        // dokun: Saat seç sayfası (YouTube açık), +15 dk, takvime uygula → kaydedilmemiş değişiklik çubuğu
+        const yt = `[data-cip="${GTA}:youtube"]`;
+        await page.evaluate((s) => document.querySelector(s).scrollIntoView({ block: "center" }), yt);
+        await page.click(yt);
+        await page.waitForSelector("dialog[open] .tk-secici");
+        await page.waitForTimeout(200);
+        await ekran(page, `takvim_saat_sec_${ek}`);
+        await page.click('dialog[open] [data-odak="youtube-ileri"]');
+        const baslik = await page.textContent('dialog[open] [data-odak="youtube-bas"]');
+        if (!baslik.includes("18:15") || !baslik.includes("değişti")) sorun("+15 dk uygulanmadı: " + baslik);
+        await page.click("dialog[open] >> text=Takvime uygula");
+        await page.waitForSelector(".tk-kayit");
+        await page.waitForTimeout(200);
+        const cubuk = await page.textContent(".tk-kayit");
+        if (!cubuk.includes("Kaydedilmemiş değişiklik") || !/YouTube .*18:00 → .*18:15/.test(cubuk)) sorun("kayıt çubuğu: " + cubuk);
+        await ekran(page, `takvim_kaydedilmemis_${ek}`);
+        await page.click(".tk-kayit >> text=Vazgeç");
+        await page.waitForSelector(".tk-kayit", { state: "detached" });
+
+        // basılı tutup sürükle: TikTok 19:30 → 21:00 (90 dk aşağı, 1 dk = 1 px)
+        const tt = `[data-cip="${GTA}:tiktok"]`;
+        const a = await cipKutusu(page, tt);
+        const b = { x: a.x, y: a.y + 90 };
+        const araEkran = async () => {
+          const etiket = await page.textContent(".tk-surukle-etiket").catch(() => "");
+          if (!etiket.startsWith("21:00")) sorun("sürükleme etiketi: " + etiket);
+          await ekran(page, `takvim_surukle_${ek}`);
+        };
+        if (mobil) await dokunSurukle(page, await ctx.newCDPSession(page), a, b, araEkran);
+        else await fareSurukle(page, a, b, araEkran);
+        await page.waitForSelector(".tk-kayit");
+        const sonra = await page.evaluate((s) => ({ saat: document.querySelector(s + " time").textContent,
+          kirli: document.querySelector(s).classList.contains("kirli"), cubuk: document.querySelector(".tk-kayit").textContent }), tt);
+        if (sonra.saat !== "21:00" || !sonra.kirli || !/TikTok .*19:30 → .*21:00/.test(sonra.cubuk)) sorun("sürükleme taslağa yazılmadı: " + JSON.stringify(sonra));
+        // bildirim yapışık gün şeridini (bırakma hedefi) ve kayıt çubuğunu örtmez
+        const ortu = await page.evaluate(() => {
+          const kesisir = (a, b) => a.bottom > b.top && a.top < b.bottom && a.right > b.left && a.left < b.right;
+          const b = [...document.querySelectorAll(".bildirim")].map((e) => e.getBoundingClientRect());
+          const g = document.querySelector(".tk-gunler").getBoundingClientRect(), k = document.querySelector(".tk-kayit").getBoundingClientRect();
+          return { bildirim: b.length, serit: b.filter((r) => kesisir(r, g)).length, kayit: b.filter((r) => kesisir(r, k)).length };
+        });
+        if (!ortu.bildirim || ortu.serit || ortu.kayit) sorun("bildirim yeri: " + JSON.stringify(ortu));
+        // gün şeridine bırak: YouTube 18:00 → yarın 18:00
+        const yarin = await page.locator('.tk-gun[data-gun="1"]').boundingBox();
+        const y0 = await cipKutusu(page, yt);
+        const hedef = { x: yarin.x + yarin.width / 2, y: yarin.y + yarin.height / 2 };
+        if (mobil) await dokunSurukle(page, await ctx.newCDPSession(page), y0, hedef);
+        else await fareSurukle(page, y0, hedef);
+        await page.waitForTimeout(200);
+        const gun = await page.evaluate(() => ({ secili: document.querySelector('.tk-gun[aria-pressed="true"]').dataset.gun,
+          cubuk: document.querySelector(".tk-kayit").textContent }));
+        if (gun.secili !== "1" || !/YouTube .*18:00 → 6 Kas.* 18:00/.test(gun.cubuk)) sorun("güne bırakma: " + JSON.stringify(gun));
+        // yarın YouTube 18:00'de iki video yan yana: dar çiplerde saat kesilmeden okunur
+        const dar = await page.evaluate(() => [...document.querySelectorAll(".tk-cip.dar")].map((c) => {
+          const t = c.querySelector("time").getBoundingClientRect(), r = c.getBoundingClientRect();
+          return { cip: c.dataset.cip, gen: Math.round(r.width), saat: c.querySelector("time").textContent, tasma: Math.round(t.right - r.right) };
+        }));
+        if (dar.length < 2 || dar.some((d) => d.saat !== "18:00" || d.tasma > -1)) sorun("dar çipler: " + JSON.stringify(dar));
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await ekran(page, `takvim_iki_degisiklik_${ek}`, { fullPage: true });
+        await page.click(".tk-kayit >> text=Vazgeç");
+        await page.waitForSelector(".tk-kayit", { state: "detached" });
+
+        // basılı tutup kıpırdatmadan bırakmak dokunmadır: Saat seç açılır, 22:02 5 dk'ya yuvarlanmaz, değişiklik olmaz
+        await page.click('.tk-gun[data-gun="0"]');
+        await page.waitForTimeout(400);
+        const tek = `[data-cip="${ACLIK}:tiktok"]`;
+        const t0 = await cipKutusu(page, tek);
+        let tutEtiket = "";
+        const etiketOku = async () => { tutEtiket = await page.textContent(".tk-surukle-etiket").catch(() => ""); };
+        if (mobil) await dokunTut(page, await ctx.newCDPSession(page), t0, 650, 0, etiketOku);
+        else {
+          await page.mouse.move(t0.x, t0.y);
+          await page.mouse.down();
+          await page.mouse.move(t0.x, t0.y + 6, { steps: 2 }); // sürükleme başlar (5 px) ama kıpırdama sayılmaz (8 px)
+          await page.waitForTimeout(100);
+          await etiketOku();
+          await page.mouse.up();
+        }
+        await page.waitForSelector("dialog[open] .tk-pf", { timeout: 3000 }).catch(() => {});
+        const tut = await page.evaluate((s) => ({ dlg: !!document.querySelector("dialog[open] .tk-pf"),
+          kayit: !!document.querySelector(".tk-kayit"), saat: document.querySelector(s + " time").textContent }), tek);
+        if (!tutEtiket.startsWith("22:02") || !tut.dlg || tut.kayit || tut.saat !== "22:02") sorun("basılı tutup bırakma: " + JSON.stringify({ tutEtiket, ...tut }));
+        if (tut.dlg) await dialogKapat(page);
+        if (mobil) {
+          const cdp = await ctx.newCDPSession(page);
+          // okurken dinlenen parmak (350 ms) sonra kaydırırsa çip taşınmaz
+          const k0 = await cipKutusu(page, tek);
+          await dokunTut(page, cdp, k0, 350, -200);
+          const kaydir = await page.evaluate(() => ({ kayit: !!document.querySelector(".tk-kayit"), dlg: !!document.querySelector("dialog[open]") }));
+          if (kaydir.kayit || kaydir.dlg) sorun("dinlenip kaydırma çipi taşıdı: " + JSON.stringify(kaydir));
+          // yavaş dokunma (380 ms): Saat seç açılır
+          const k1 = await cipKutusu(page, tek);
+          await dokunTut(page, cdp, k1, 380);
+          await page.waitForSelector("dialog[open] .tk-pf", { timeout: 3000 }).catch(() => {});
+          if (!(await page.$("dialog[open] .tk-pf"))) sorun("yavaş dokunma Saat seç'i açmadı");
+          else await dialogKapat(page);
+        }
+
+        // derin bağlantı: onay bekleyen video için "Takvime yerleştir" (önerilen boş prime saatler); iki görünüm onaylar
+        const tag = ONAY[onaySirasi % 2];
+        await page.goto(`${URL}/panel#takvim/${tag}`);
+        await bekle(page);
+        await page.waitForSelector("dialog[open] .tk-pf");
+        const saatler = () => page.evaluate(() => Object.fromEntries(["youtube", "instagram", "tiktok"].map((p) =>
+          [p, ((document.querySelector(`dialog[open] [data-odak="${p}-bas"] div`) || {}).textContent || "")])));
+        const ilkOneri = await saatler();
+        const yerlestir = await page.textContent("dialog[open]");
+        if (!yerlestir.includes("Takvime yerleştir") || (yerlestir.match(/⭐/g) || []).length < 3) sorun("takvime yerleştir sayfası: " + yerlestir.slice(0, 200));
+        await ekran(page, `takvim_yerlestir_${ek}`);
+        if ((ad === "mobil" && tema === "light") || (ad === "masaustu" && tema === "dark")) {
+          onaySirasi++;
+          await page.click("dialog[open] >> text=Onayla ve zamanla");
+          await page.waitForSelector(".bildirim");
+          const giden = await (await fetch(`${URL}/__cagrilar`)).json();
+          const g = giden.filter((c) => /isle\.yml\/dispatches$/.test(c.url)).map((c) => JSON.parse(c.govde.inputs.update).panel)
+            .filter((p) => p && p.action === "schedule" && p.tag === tag);
+          if (g.length !== 1 || Object.keys(g[0].schedule).sort().join() !== "instagram,tiktok,youtube") sorun("takvim onayı gönderilmedi: " + JSON.stringify(g));
+          await page.waitForTimeout(300);
+          await ekran(page, `takvim_onay_isleniyor_${ek}`);
+          // sıradaki onay: işlenen onayın saatleri dolu sayılır (takvimde "kaydediliyor"), aynı boş saat önerilmez
+          await page.click('.tk-gun[data-gun="1"]');
+          await page.waitForTimeout(300);
+          const isl = await page.$$eval(`.tk-cip.isleniyor[data-cip^="${tag}:"]`, (l) => l.length);
+          await page.click(".tk-tepsi-satir button:not([disabled])");
+          await page.waitForSelector("dialog[open] .tk-pf");
+          await page.waitForTimeout(200);
+          const ikinci = await saatler();
+          const ayni = Object.keys(ikinci).filter((p) => ikinci[p] && ikinci[p] === ilkOneri[p]);
+          if (isl !== 3 || ayni.length) sorun("art arda onay: " + JSON.stringify({ isl, ilkOneri, ikinci }));
+          await ekran(page, `takvim_ikinci_oneri_${ek}`);
+          await page.click("dialog[open] >> text=Vazgeç");
+        } else {
+          await page.click("dialog[open] >> text=Vazgeç");
+        }
+        await ctx.close();
+      }
+    }
+  } finally {
+    sunucu.kill();
+  }
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

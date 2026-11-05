@@ -59,7 +59,8 @@ GH_SURUM = "https://api.github.com/repos/sabriemin/bilgimakasi/releases/"
 
 
 class SahteRequests:
-    """telegram_bot.requests yerine: Telegram ve GitHub dispatch çağrılarını, release'ten metadata.json okumayı kaydeder."""
+    """telegram_bot.requests yerine: Telegram ve GitHub dispatch çağrılarını, release'ten metadata.json okumayı kaydeder.
+    isler / isler_durum: onay.yml iş listesinin (GET …/onay.yml/runs) cevabı."""
 
     def __init__(self):
         self.cagrilar: list[dict] = []
@@ -70,6 +71,8 @@ class SahteRequests:
         self.hatalar: dict[str, str] = {}  # Telegram yöntemi -> hata açıklaması (400 döner)
         self.mesaj_no: dict[str, int] = {}  # Telegram yöntemi -> dönen message_id (varsayılan 900)
         self.surumler: dict[str, dict] = {}  # etiket -> GitHub Release'teki metadata.json (yoksa 404)
+        self.isler: list[dict] = []
+        self.isler_durum = 200
 
     def post(self, url, timeout=None, data=None, json=None, headers=None, files=None, **kw):  # noqa: A002
         if "api.telegram.org" in url:
@@ -88,7 +91,11 @@ class SahteRequests:
             return Yanit(self.dispatch_durum, {})
         raise AssertionError("beklenmeyen istek: " + url)
 
-    def get(self, url, headers=None, timeout=None, **kw):
+    def get(self, url, params=None, headers=None, timeout=None, **kw):
+        if url.endswith("/actions/workflows/onay.yml/runs"):
+            self.cagrilar.append({"gh_get": "onay.yml/runs", "params": params,
+                                  "auth": (headers or {}).get("Authorization")})
+            return Yanit(self.isler_durum, {"total_count": len(self.isler), "workflow_runs": self.isler})
         self.cagrilar.append({"get": url, "accept": (headers or {}).get("Accept"),
                               "yetki": (headers or {}).get("Authorization")})
         etiketler = list(self.surumler)
@@ -238,11 +245,28 @@ class DugmeDavranisi(Ortak):
         type(self).tb, type(self).req = self.tb, self.req
         self.assertEqual(len(yeni), len(golden))
         for g, y in zip(golden, yeni):
-            if g["ad"] == "/start":  # tek bilinçli fark: yardım metninde /panel satırı
+            if g["ad"] == "/start":  # bilinçli fark: yardım metninde /panel satırı
                 self.assertEqual(y["cagrilar"][0]["data"]["text"], g["cagrilar"][0]["data"]["text"].replace(
                     "/yardim: bu liste", "/panel: yönetim paneline giriş bağlantısı\n/yardim: bu liste"))
                 continue
+            if g["ad"] in self.SAAT_METNI:
+                # bilinçli fark (panel takvimi): yalnız en iyi saatler (ek saat yok), ⭐ prime time işareti, uzun
+                # "Asıl en iyi saatler…" açıklaması yerine panel notu. Seçilen saatler, düğmeler ve kayıt aynı.
+                beklenen = json.loads(json.dumps(g))
+                beklenen["cagrilar"][-1]["data"]["text"] = self.SAAT_METNI[g["ad"]]
+                self.assertEqual(y, beklenen, g["ad"])
+                continue
             self.assertEqual(y, g, g["ad"])
+
+    SAAT_METNI = {
+        "at best": "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n• Instagram: 6 Kasım Cuma 20:00 ⭐\n"
+                   "• YouTube: 6 Kasım Cuma 21:00 ⭐\n• TikTok: 6 Kasım Cuma 22:00 ⭐\n"
+                   "Saatleri değiştirmek için panelde Takvim: /panel\nBir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+        "/saatler": "Platformların en iyi paylaşım saatleri (Türkiye, ⭐ prime time):\n• YouTube: 18:00, 21:00\n"
+                    "• Instagram: 12:30, 20:00\n• TikTok: 19:30, 22:00\n\nOnaylarken '🎯 Her platform en iyi saatinde' "
+                    "seçersen her biri kendi boş en iyi saatinde paylaşılır; o günün en iyi saatleri doluysa ertesi güne "
+                    "geçer.\nSaatleri değiştirmek için panelde Takvim: /panel",
+    }
 
     def test_komut_menusunde_panel(self):
         self.assertIn({"command": "panel", "description": "Yönetim paneline giriş bağlantısı"}, self.tb.COMMANDS)
@@ -1131,6 +1155,339 @@ class SadeMesajlar(Ortak):
         self.assertEqual(res, {"id": "p1", "draft": True, "caption": eski})
 
 
+def utc(s: str) -> _dt.datetime:
+    return _dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+
+
+class Takvim(Ortak):
+    """Panel takvimi (action "schedule"), en iyi saat planı ve saati gelen paylaşım için iş başlatma."""
+
+    def setUp(self):
+        super().setUp()
+        self.uzak = None  # _origin_record'un döndüreceği uzak kayıt (None: alınamadı)
+        self._eski_origin = self.tb._origin_record
+        self.tb._origin_record = lambda tag: json.loads(json.dumps(self.uzak)) if self.uzak else None
+
+    def tearDown(self):
+        self.tb._origin_record = self._eski_origin
+
+    def takvim(self, tag, **sched):
+        return self.panel(action="schedule", tag=tag, schedule=sched, rid="r1")
+
+    def kismen(self, saat="2026-11-05T10:00:00Z"):
+        """Z: Instagram 12:30'da paylaşıldı, sıradaki YouTube 18:00 (TR)."""
+        FakeDateTime.simdi = utc(saat)
+        self.video_degistir(Z, platforms={"instagram": {"status": "ok", "url": "u", "at": "2026-11-05T12:30:05+03:00"}},
+                            publish_at="2026-11-05T15:00:00+00:00")
+
+    def test_onay_bekleyen_video_takvimdeki_saatlerle_onaylanir(self):
+        c = self.takvim(T, youtube="2026-11-05T18:00:00+03:00", instagram="2026-11-05T09:30:20Z",
+                        tiktok="2026-11-05T14:17:40+00:00")
+        v = self.vid(T)
+        self.assertEqual(v["schedule"], {"youtube": "2026-11-05T15:00:00+00:00", "instagram": "2026-11-05T09:30:00+00:00",
+                                         "tiktok": "2026-11-05T14:18:00+00:00"})
+        self.assertEqual((v["status"], v["publish_at"], v["decided"]),
+                         ("zamanlandi", "2026-11-05T09:30:00+00:00", "2026-11-05T00:45:00+03:00"))
+        self.assertEqual(self.tg(c, "editMessageReplyMarkup")[-1]["data"]["reply_markup"],
+                         {"inline_keyboard": [[{"text": "🚫 Paylaşımı iptal et", "callback_data": f"cancel:{T}"}]]})
+        m = self.tg(c, "sendMessage")[-1]["data"]
+        self.assertEqual(m["text"], "🖥 Panelden: ✅ Onaylandı, takvimdeki saatlerde paylaşılacak:\n"
+                         "• Instagram: 5 Kasım Perşembe 12:30 ⭐\n• TikTok: 5 Kasım Perşembe 17:18\n"
+                         "• YouTube: 5 Kasım Perşembe 18:00 ⭐\nBir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası")
+        self.assertEqual(m["reply_to_message_id"], 2)
+        self.assertEqual([x for x in c if "gh" in x], [], "olay işi paylaşım başlatmaz (dispatch-if-due başlatır)")
+        # ikinci istek (çift basış): video artık onay beklemiyor değil, saatleri değişir; aynı saatlerse dokunulmaz
+        self.req.cagrilar.clear()
+        c = self.takvim(T, youtube="2026-11-05T15:00:00+00:00", instagram="2026-11-05T09:30:00+00:00",
+                        tiktok="2026-11-05T14:18:00+00:00")
+        self.assertEqual(self.vid(T), v)
+        self.assertIn("ℹ️ Saatler zaten böyle", self.mesajlar(c)[-1])
+
+    def test_gecersiz_takvim_videoyu_degistirmez(self):
+        tam = {"youtube": "2026-11-05T15:00:00+00:00", "instagram": "2026-11-05T09:30:00+00:00",
+               "tiktok": "2026-11-05T16:30:00+00:00"}
+        for sched, hata in (({k: tam[k] for k in ("youtube", "instagram")}, "üç platformun da saati"),
+                            ({**tam, "facebook": tam["tiktok"]}, "bilinmeyen platform"),
+                            ({}, "platform saatleri eksik"), (["x"], "platform saatleri eksik"),
+                            ({**tam, "tiktok": "yarın"}, "TikTok saati geçersiz"),
+                            ({**tam, "tiktok": "2026-11-05T16:30:00"}, "TikTok saati geçersiz"),  # saat dilimi yok
+                            ({**tam, "tiktok": 1762360200}, "TikTok saati geçersiz"),
+                            ({**tam, "youtube": "2026-11-04T21:41:00+00:00"}, "YouTube saati geçmişte kaldı"),
+                            ({**tam, "youtube": "2026-12-05T21:46:00+00:00"}, "en çok 30 gün")):
+            durum_sifirla(self.root)
+            self.req.cagrilar.clear()
+            once = self.vid(T)
+            c = self.panel(action="schedule", tag=T, schedule=sched)
+            self.assertEqual(self.vid(T), once, sched)
+            self.assertIn("⚠️ İşlem yapılamadı: ", self.mesajlar(c)[-1])
+            self.assertIn(hata, self.mesajlar(c)[-1], sched)
+            # kapının '⏳ İşleniyor' kilidi geri alınır
+            self.assertEqual(self.tg(c, "editMessageReplyMarkup")[-1]["data"]["reply_markup"]["inline_keyboard"][0][0]
+                             ["callback_data"], f"ok:{T}")
+        # yanlış durumdaki video (paylaşılmış): işlem yapılmaz
+        once = self.vid(Y)
+        c = self.panel(action="schedule", tag=Y, schedule={"tiktok": tam["tiktok"]})
+        self.assertEqual(self.vid(Y), once)
+        self.assertIn("ℹ️ İşlem yapılmadı: video şu an 'paylaşıldı' durumunda", self.mesajlar(c)[-1])
+
+    def test_kapidan_gec_gelen_saat_simdiye_cekilir(self):
+        # kapı şimdi+2 dk'yı denetler; iş 1-2 dk geç başlarsa saat geçmiş olabilir: 3 dk'ya kadar şimdiye çekilir
+        FakeDateTime.simdi = SIMDI + _dt.timedelta(seconds=20)
+        self.takvim(T, youtube="2026-11-04T21:43:00+00:00", instagram="2026-11-04T21:47:00+00:00",
+                    tiktok="2026-11-05T16:30:00+00:00")
+        v = self.vid(T)
+        self.assertEqual((v["schedule"]["youtube"], v["schedule"]["instagram"], v["publish_at"]),
+                         ("2026-11-04T21:45:20+00:00", "2026-11-04T21:47:00+00:00", "2026-11-04T21:45:20+00:00"))
+
+    def test_zamanlanmis_videoda_yalniz_verilen_platformun_saati_degisir(self):
+        FakeDateTime.simdi = utc("2026-11-05T05:00:00Z")
+        c = self.takvim(Z, tiktok="2026-11-05T19:00:00+00:00")
+        v = self.vid(Z)
+        self.assertEqual(v["schedule"], {"youtube": "2026-11-05T15:00:00+00:00", "instagram": "2026-11-05T09:30:00+00:00",
+                                         "tiktok": "2026-11-05T19:00:00+00:00"})
+        self.assertEqual((v["status"], v["publish_at"]), ("zamanlandi", "2026-11-05T09:30:00+00:00"))
+        self.assertEqual(v["decided"], "2026-11-04T23:38:40+03:00", "onay anı değişmez")
+        self.assertEqual(self.mesajlar(c)[-1], "🖥 Panelden: 🗓 Paylaşım saatleri değişti:\n"
+                         "• Instagram: 5 Kasım Perşembe 12:30 ⭐\n• YouTube: 5 Kasım Perşembe 18:00 ⭐\n"
+                         "• TikTok: 5 Kasım Perşembe 22:00 ⭐\n" + v["title"])
+        self.assertEqual(self.tg(c, "editMessageReplyMarkup")[-1]["data"]["reply_markup"]["inline_keyboard"][0][0]
+                         ["callback_data"], f"cancel:{Z}")
+        # en erken saat öne alınırsa publish_at da öne gelir
+        self.takvim(Z, instagram="2026-11-05T05:30:00+00:00")
+        self.assertEqual(self.vid(Z)["publish_at"], "2026-11-05T05:30:00+00:00")
+
+    def test_kismen_paylasilmis_videoda_paylasilan_platformun_saati_degismez(self):
+        self.kismen()
+        once = self.vid(Z)
+        c = self.takvim(Z, instagram="2026-11-05T17:00:00+00:00", tiktok="2026-11-05T17:00:00+00:00")
+        self.assertEqual(self.vid(Z), once)
+        self.assertIn("ℹ️ Saatler değiştirilmedi: Instagram zaten paylaşıldı.", self.mesajlar(c)[-1])
+        self.assertEqual(self.tg(c, "editMessageReplyMarkup")[-1]["data"]["reply_markup"]["inline_keyboard"][0][0]
+                         ["callback_data"], f"cancel:{Z}")
+        c = self.takvim(Z, youtube="2026-11-05T17:00:00+00:00")
+        v = self.vid(Z)
+        self.assertEqual(v["schedule"]["instagram"], "2026-11-05T09:30:00+00:00", "paylaşılan platformun saati kalır")
+        self.assertEqual(v["platforms"], once["platforms"])
+        self.assertEqual((v["schedule"]["youtube"], v["publish_at"]), ("2026-11-05T17:00:00+00:00", "2026-11-05T16:30:00+00:00"))
+        # mesajda yalnız bekleyen platformlar; 20:00 YouTube için prime time değil
+        self.assertEqual(self.mesajlar(c)[-1].split("\n")[1:3], ["• TikTok: 5 Kasım Perşembe 19:30 ⭐",
+                                                                  "• YouTube: 5 Kasım Perşembe 20:00"])
+
+    def test_uzak_kayit_esas_alinir(self):
+        # bu işin kopyası eski: uzakta YouTube az önce paylaşıldı
+        FakeDateTime.simdi = utc("2026-11-05T10:00:00Z")
+        self.video_degistir(Z, publish_at="2026-11-05T15:00:00+00:00",
+                            platforms={"instagram": {"status": "ok", "url": "u"}})
+        self.uzak = {**self.vid(Z), "platforms": {"instagram": {"status": "ok", "url": "u"},
+                                                  "youtube": {"status": "ok", "url": "y"}},
+                     "publish_at": "2026-11-05T16:30:00+00:00"}
+        once = self.vid(Z)
+        c = self.takvim(Z, youtube="2026-11-05T17:00:00+00:00")
+        self.assertEqual(self.vid(Z), once)
+        self.assertIn("YouTube zaten paylaşıldı", self.mesajlar(c)[-1])
+        c = self.takvim(Z, tiktok="2026-11-05T18:00:00+00:00")
+        v = self.vid(Z)
+        # publish_at yalnız bekleyen platformdan (TikTok) hesaplanır; YouTube'un eski saati onu öne çekmez
+        self.assertEqual((v["schedule"]["tiktok"], v["publish_at"]), ("2026-11-05T18:00:00+00:00", "2026-11-05T18:00:00+00:00"))
+        self.assertEqual(self.mesajlar(c)[-1].split("\n")[1:-1], ["• TikTok: 5 Kasım Perşembe 21:00"])
+        # uzakta iptal edilmiş
+        self.uzak = {**self.vid(Z), "status": "onay_bekliyor", "publish_at": None}
+        once = self.vid(Z)
+        c = self.takvim(Z, tiktok="2026-11-05T19:00:00+00:00")
+        self.assertEqual(self.vid(Z), once)
+        self.assertIn("ℹ️ Saatler değiştirilmedi: video şu an 'onay bekliyor' durumunda.", self.mesajlar(c)[-1])
+        self.assertEqual(self.tg(c, "editMessageReplyMarkup")[-1]["data"]["reply_markup"]["inline_keyboard"][0][0]
+                         ["callback_data"], f"ok:{Z}")
+
+    def test_paylasima_10_dk_kala_saat_degismez(self):
+        self.kismen("2026-11-05T14:51:00Z")  # YouTube 15:00Z: 9 dk kaldı
+        once = self.vid(Z)
+        c = self.takvim(Z, tiktok="2026-11-05T19:00:00+00:00")
+        self.assertEqual(self.vid(Z), once)
+        self.assertIn("ℹ️ Saatler değiştirilmedi: bir paylaşım şu an sürüyor ya da 10 dakika içinde", self.mesajlar(c)[-1])
+        # uzak kayıtta paylaşım anı yakınsa da (yerel kopya eski) değişmez
+        self.kismen("2026-11-05T10:00:00Z")
+        self.uzak = {**self.vid(Z), "publish_at": "2026-11-05T10:05:00+00:00",
+                     "schedule": {**self.vid(Z)["schedule"], "youtube": "2026-11-05T10:05:00+00:00"}}
+        c = self.takvim(Z, tiktok="2026-11-05T19:00:00+00:00")
+        self.assertIn("10 dakika içinde", self.mesajlar(c)[-1])
+        # eskimiş publish_at (bekleyen platformların hepsi daha sonra) kilitlemez
+        self.uzak = None
+        self.video_degistir(Z, publish_at="2026-11-05T09:30:00+00:00")
+        self.takvim(Z, tiktok="2026-11-05T19:00:00+00:00")
+        self.assertEqual(self.vid(Z)["schedule"]["tiktok"], "2026-11-05T19:00:00+00:00")
+
+    def test_paylasim_ani(self):
+        v = {"status": "zamanlandi", "publish_at": "2026-11-05T09:30:00+00:00",
+             "schedule": {"youtube": "2026-11-05T15:00:00+00:00", "instagram": "2026-11-05T09:30:00+00:00",
+                          "tiktok": "2026-11-05T16:30:00+00:00"}, "platforms": {}}
+        self.assertEqual(self.tb._due_at(v), utc("2026-11-05T09:30:00Z"))
+        v["platforms"] = {"instagram": {"status": "ok"}}  # eskimiş publish_at: sıradaki YouTube
+        self.assertEqual(self.tb._due_at(v), utc("2026-11-05T15:00:00Z"))
+        v["platforms"] = {"instagram": {"status": "hata"}}  # saati geçip paylaşılamayan platform publish_at'te denenir
+        v["publish_at"] = "2026-11-05T15:00:00+00:00"
+        self.assertEqual(self.tb._due_at(v), utc("2026-11-05T15:00:00Z"))
+        self.assertEqual(self.tb._due_at({"status": "zamanlandi", "publish_at": "2026-11-05T12:00:00+00:00", "schedule": None}),
+                         utc("2026-11-05T12:00:00Z"))
+        self.assertIsNone(self.tb._due_at({**v, "status": "onay_bekliyor"}))
+        self.assertIsNone(self.tb._due_at({"status": "zamanlandi"}))
+
+    def dispatch(self, saat):
+        """dispatch_if_due: (sonuç, başlatılan onay.yml işleri, iş listesi istekleri)."""
+        FakeDateTime.simdi = utc(saat)
+        self.req.cagrilar.clear()
+        with contextlib.redirect_stdout(io.StringIO()):
+            sonuc = self.tb.dispatch_if_due()
+        return sonuc, [c for c in self.req.cagrilar if "gh" in c], [c for c in self.req.cagrilar if "gh_get" in c]
+
+    @staticmethod
+    def is_(st, dk, ad, simdi, sonuc=None):
+        """onay.yml iş listesindeki bir iş: simdi'den dk dakika önce başlatılmış."""
+        return {"display_title": ad, "name": "Telegram onaylarını işle", "status": st, "conclusion": sonuc,
+                "created_at": (utc(simdi) - _dt.timedelta(minutes=dk)).isoformat().replace("+00:00", "Z")}
+
+    def test_saati_yaklasan_paylasim_icin_onay_isi_hedefle_baslatilir(self):
+        calistir = self.dispatch
+        # fikstürdeki en yakın paylaşım: GTA (Z) 09:30Z; iş en çok 3 dk önce başlatılır (kurulum ~1 dk, boş bekleme olmasın)
+        ok, d, g = calistir("2026-11-05T09:27:30Z")
+        self.assertTrue(ok)
+        self.assertEqual(d, [{"gh": "onay.yml", "json": {"ref": "main", "inputs": {"dakika": "5", "hedef": "2026-11-05T09:30Z"}}}])
+        self.assertEqual(g, [{"gh_get": "onay.yml/runs", "params": {"per_page": 20}, "auth": "Bearer ghs_TEST"}])
+        self.assertEqual(calistir("2026-11-05T09:26:30Z")[:2], (False, []), "3 dakikadan uzak")
+        self.assertEqual(calistir("2026-11-05T09:29:50Z")[1][0]["json"]["inputs"], {"dakika": "3", "hedef": "2026-11-05T09:30Z"})
+        # aynı hedefle bekleyen iş ya da son 30 dk'da başlatılmış iş varsa başlatılmaz
+        is_ = lambda st, dk, ad="Paylaşım 2026-11-05T09:30Z": self.is_(st, dk, ad, "2026-11-05T09:28:00Z")  # noqa: E731
+        for isler in ([is_("queued", 1)], [is_("in_progress", 40)], [is_("completed", 20)]):
+            self.req.isler = isler
+            self.assertEqual(calistir("2026-11-05T09:28:00Z")[:2], (False, []), isler)
+        iptal = {**is_("completed", 5), "conclusion": "cancelled"}  # state grubunda çalışmadan iptal edilmiş
+        for isler in ([is_("completed", 31)], [is_("queued", 1, "Paylaşım 2026-11-05T12:00Z")], [is_("queued", 1, "Telegram onaylarını işle")],
+                      [iptal]):
+            self.req.isler = isler
+            self.assertTrue(calistir("2026-11-05T09:28:00Z")[0], isler)
+        # iş listesi alınamazsa yine başlatılır (bu adım her kayıttan sonra bir kez çalışır, döngü yapmaz)
+        self.req.isler, self.req.isler_durum = [], 500
+        self.assertTrue(calistir("2026-11-05T09:28:00Z")[0])
+        self.req.isler_durum, self.req.dispatch_durum = 200, 422
+        self.assertFalse(calistir("2026-11-05T09:28:00Z")[0])
+        self.req.dispatch_durum = 204
+        # saati 3 saatten eski takılı kayıt (Z, 09:30Z) sayılmaz: sıradaki (2048, 17:00Z) için başlatılır
+        self.video_degistir("short-20261104-2100", status="iptal")
+        self.assertEqual(calistir("2026-11-05T16:57:30Z")[1][0]["json"]["inputs"], {"dakika": "5", "hedef": "2026-11-05T17:00Z"})
+        self.video_degistir("short-20261104-2048", status="iptal")
+        self.assertEqual(calistir("2026-11-05T16:57:30Z")[:2], (False, []), "yalnız takılı kayıt ve uzak saat kaldı")
+
+    def test_saati_gecmis_kaydin_isi_sonraki_videonun_paylasimini_bekletmez(self):
+        # A (GTA) 40 dk önce paylaşılacaktı, hâlâ bekliyor; B (Açlık Oyunları) Instagram'ı 1,5 dk sonra
+        simdi, A, B = "2026-11-05T14:52:30Z", "2026-11-05T14:12Z", "2026-11-05T14:54Z"
+        self.video_degistir("short-20261104-2100", status="iptal")
+        self.video_degistir(Z, publish_at="2026-11-05T14:12:00+00:00", schedule={p: "2026-11-05T14:12:00+00:00" for p in
+                                                                                  ("youtube", "instagram", "tiktok")})
+        self.video_degistir("short-20261104-2048", publish_at="2026-11-05T14:54:00+00:00",
+                            schedule={"youtube": "2026-11-05T18:00:00+00:00", "instagram": "2026-11-05T14:54:00+00:00",
+                                      "tiktok": "2026-11-05T19:00:00+00:00"})
+        is_ = lambda st, dk, ad, sonuc=None: self.is_(st, dk, ad, simdi, sonuc)  # noqa: E731
+        b_isi = {"ref": "main", "inputs": {"dakika": "4", "hedef": B}}
+        # A'nın işi hata aldı (20 dk önce) ya da hâlâ yüklüyor: B için ayrıca başlatılır
+        for isler in ([is_("completed", 20, f"Paylaşım {A}", "failure")], [is_("in_progress", 39, f"Paylaşım {A}")]):
+            self.req.isler = isler
+            ok, d, g = self.dispatch(simdi)
+            self.assertEqual((ok, [x["json"] for x in d], len(g)), (True, [b_isi], 1), isler)
+        # A'nın işi yok (ör. 30 dk'dan eski): önce A için başlatılır (hemen paylaşır; B 2 dk'lık pencerede)
+        self.req.isler = [is_("completed", 45, f"Paylaşım {A}", "failure")]
+        self.assertEqual(self.dispatch(simdi)[1][0]["json"]["inputs"], {"dakika": "2", "hedef": A})
+        # B'nin işi kuyrukta, A'nınki onun yüzünden iptal oldu: başlamamış iş A'yı da paylaşır, yenisi başlatılmaz
+        # (başlatılsaydı kuyruktaki B işini iptal eder, iki hedef birbirini iptal edip dururdu)
+        self.req.isler = [is_("queued", 1, f"Paylaşım {B}"), is_("completed", 2, f"Paylaşım {A}", "cancelled")]
+        self.assertEqual(self.dispatch(simdi)[:2], (False, []))
+        # başlamamış başka iş, saati henüz gelmemiş B'yi üstlenmez
+        self.req.isler = [is_("completed", 20, f"Paylaşım {A}", "failure"), is_("queued", 1, "Telegram onaylarını işle")]
+        self.assertEqual([x["json"] for x in self.dispatch(simdi)[1]], [b_isi])
+
+    def test_kismen_paylasilip_iptal_edilen_video_takvimden_onaylanir(self):
+        # Instagram paylaşıldı, kalanlar iptal edildi: video yeniden onay bekler, Instagram kaydı kalır
+        self.kismen("2026-11-05T13:00:00Z")
+        self.panel(action="cancel", tag=Z)
+        v = self.vid(Z)
+        self.assertEqual((v["status"], v["schedule"], v["platforms"]["instagram"]["status"]), ("onay_bekliyor", None, "ok"))
+        once = self.vid(Z)
+        for sched, hata in (({"youtube": "2026-11-05T15:00:00Z", "instagram": "2026-11-05T15:00:00Z", "tiktok": "2026-11-05T16:30:00Z"},
+                             "Instagram zaten paylaşıldı"),
+                            ({"youtube": "2026-11-05T15:00:00Z"}, "onay için TikTok saati de seçilmeli")):
+            self.req.cagrilar.clear()
+            c = self.takvim(Z, **sched)
+            self.assertEqual(self.vid(Z), once, sched)
+            self.assertIn(hata, self.mesajlar(c)[-1])
+        # paylaşılmamış platformların saatiyle onaylanır; Instagram yeniden paylaşılmaz
+        c = self.takvim(Z, youtube="2026-11-05T16:00:00Z", tiktok="2026-11-05T15:20:00Z")
+        v = self.vid(Z)
+        self.assertEqual((v["status"], v["publish_at"], v["platforms"]), ("zamanlandi", "2026-11-05T15:20:00+00:00", once["platforms"]))
+        self.assertEqual(v["schedule"], {"youtube": "2026-11-05T16:00:00+00:00", "tiktok": "2026-11-05T15:20:00+00:00"})
+        self.assertEqual(self.mesajlar(c)[-1].split("\n")[:3], ["🖥 Panelden: ✅ Onaylandı, takvimdeki saatlerde paylaşılacak:",
+                                                               "• TikTok: 5 Kasım Perşembe 18:20", "• YouTube: 5 Kasım Perşembe 19:00"])
+        self.assertEqual(self.tb._due_at(v), utc("2026-11-05T15:20:00Z"))
+
+    def test_hata_alan_platform_baska_saat_one_alininca_kendi_saatinde_kalir(self):
+        # YouTube 15:00'te hata aldı (sıradaki turda, publish_at 16:30'da yeniden denenecek), Instagram paylaşıldı
+        FakeDateTime.simdi = utc("2026-11-05T15:10:00Z")
+        self.video_degistir(Z, publish_at="2026-11-05T16:30:00+00:00",
+                            platforms={"instagram": {"status": "ok", "url": "u"}, "youtube": {"status": "hata", "error": "x"}})
+        c = self.takvim(Z, tiktok="2026-11-05T15:30:00Z")
+        v = self.vid(Z)
+        self.assertEqual(v["schedule"], {"youtube": "2026-11-05T16:30:00+00:00", "instagram": "2026-11-05T09:30:00+00:00",
+                                         "tiktok": "2026-11-05T15:30:00+00:00"})
+        self.assertEqual(v["publish_at"], "2026-11-05T15:30:00+00:00")
+        # mesaj kaydedilen planla (ve panelle) aynı: YouTube 19:30'da (16:30Z) denenir, TikTok'la öne çekilmez
+        self.assertEqual(self.mesajlar(c)[-1].split("\n")[1:3], ["• TikTok: 5 Kasım Perşembe 18:30", "• YouTube: 5 Kasım Perşembe 19:30"])
+        self.assertEqual(self.tb._pending_sched(v), {"youtube": "2026-11-05T16:30:00+00:00", "tiktok": "2026-11-05T15:30:00+00:00"})
+
+    def test_en_iyi_saat_yalniz_prime_time(self):
+        self.assertEqual(self.tb.EXTRA_TIMES, {"youtube": [], "instagram": [], "tiktok": []})
+        # 5 Kasım 08:00 TR: bugünün en iyi saatleri boş
+        now = _dt.datetime(2026, 11, 5, 8, 0, tzinfo=TRZ)
+        self.assertEqual(self.tb._best_schedule(now, ignore_busy=True),
+                         {"youtube": "2026-11-05T15:00:00+00:00", "instagram": "2026-11-05T09:30:00+00:00",
+                          "tiktok": "2026-11-05T16:30:00+00:00"})
+        # fikstürde 5 Kasım'ın saatleri dolu: ek saate (15:00/17:00) değil ertesi günün en iyi saatine geçer
+        sec = self.tb._best_schedule(now, exclude=T)
+        for p, t in sec.items():
+            self.assertTrue(self.tb._is_prime(p, t), (p, t))
+        # Instagram 12:30 ve 20:00 (5 Kasım) ile 12:30 (6 Kasım) dolu: 6 Kasım 20:00
+        self.assertEqual(sec["instagram"], "2026-11-06T17:00:00+00:00")
+        # EXTRA_TIMES ortam değişkeniyle verilirse ek saat yine kullanılır
+        eski = self.tb.EXTRA_TIMES
+        try:
+            self.tb.EXTRA_TIMES = {"youtube": [], "instagram": ["23:00"], "tiktok": []}
+            self.assertEqual(self.tb._best_schedule(now, exclude=T)["instagram"], "2026-11-05T20:00:00+00:00")
+        finally:
+            self.tb.EXTRA_TIMES = eski
+
+    def test_plan_metni_prime_time_ve_panel_notu(self):
+        s = {"tiktok": "2026-11-05T16:31:00+00:00", "youtube": "2026-11-05T15:00:00+00:00"}
+        self.assertEqual(self.tb._plan_text(s), "• YouTube: 5 Kasım Perşembe 18:00 ⭐\n• TikTok: 5 Kasım Perşembe 19:31\n"
+                                                "Saatleri değiştirmek için panelde Takvim: /panel")
+        self.assertEqual(self.tb._plan_text({}), "")
+        self.assertTrue(self.tb._is_prime("instagram", "2026-11-05T12:30:00+03:00"))
+        self.assertFalse(self.tb._is_prime("youtube", "2026-11-05T12:30:00+03:00"))
+        # düzeltme mesajı: uzun açıklama ve "(günün ek saati)" yok
+        self.kismen("2026-11-05T05:00:00Z")
+        self.req.cagrilar.clear()
+        self.tb.duzelt(Z)
+        metin = self.mesajlar(self.req.cagrilar)[-1]
+        self.assertNotIn("Asıl en iyi", metin)
+        self.assertNotIn("ek saat", metin)
+        self.assertIn("✅ Instagram: paylaşıldı (5 Kasım Perşembe 12:30)\n• YouTube: 5 Kasım Perşembe 18:00 ⭐\n"
+                      "• TikTok: 5 Kasım Perşembe 19:30 ⭐\nSaatleri değiştirmek için panelde Takvim: /panel", metin)
+        # yeniden hesapla: yalnız en iyi saatlere
+        self.req.cagrilar.clear()
+        self.tb.duzelt(Z, "yeniden")
+        v = self.vid(Z)
+        self.assertEqual(v["schedule"]["instagram"], "2026-11-05T09:30:00+00:00")
+        for p in ("youtube", "tiktok"):
+            self.assertTrue(self.tb._is_prime(p, v["schedule"][p]), v["schedule"])
+
+
+
 class Gizleme(Ortak):
     """Hata metinlerindeki anahtarlar (Instagram access_token, bot anahtarı) videos.json'a, Telegram'a, günlüğe gitmez."""
     IG = "IGAAJx8TEStoken0123456789abcdefABCDEF_uzun"
@@ -1527,6 +1884,30 @@ class Birlestirme(unittest.TestCase):
         out = json.loads(self.ss._merge("state/konu_sirasi.json", d(["a", "b"], "p0"), d(["b"], "p0"), d(["b", "a", "c"], "p1")))
         self.assertEqual((out["konular"], out["rid"]), (["b", "c"], "p1"))
 
+    def test_takvim_degisikligi_ve_paylasim_birlikte(self):
+        d = lambda v: json.dumps([v])  # noqa: E731
+        sch = {"youtube": "Y15", "instagram": "I09", "tiktok": "T16"}
+        b = {"tag": "t", "status": "zamanlandi", "publish_at": "I09", "schedule": sch, "platforms": {}}
+        paylasim = {**b, "publish_at": "Y15", "platforms": {"instagram": {"status": "ok", "url": "u"}}}
+        takvim = {**b, "schedule": {**sch, "tiktok": "T19"}}  # panel: yalnız TikTok'un saati
+        # paylaşım işi önce kaydetti (uzak), takvim işi sonra (yerel): yeni saat kalır, paylaşılan platform kaybolmaz
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(paylasim), d(takvim)))[0]
+        self.assertEqual(out["schedule"], {**sch, "tiktok": "T19"})
+        self.assertEqual(out["platforms"], {"instagram": {"status": "ok", "url": "u"}})
+        self.assertEqual(out["status"], "zamanlandi")
+        # tersi: takvim önce (uzak), paylaşım işi sonra (yerel): kullanıcı kararı (saat) geçerli, paylaşım korunur
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(takvim), d(paylasim)))[0]
+        self.assertEqual(out["schedule"], {**sch, "tiktok": "T19"})
+        self.assertEqual(out["platforms"], {"instagram": {"status": "ok", "url": "u"}})
+        # takvim işi paylaşılmış platformun saatini eski kopyadan yazmış olsa bile uzaktaki gerçek saat kalır
+        eski = {**b, "schedule": {**sch, "instagram": "I08", "tiktok": "T19"}}
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(paylasim), d(eski)))[0]
+        self.assertEqual(out["schedule"]["instagram"], "I09")
+        # son platform da paylaşılıp video bittiyse (uzak), takvim işinin bekleyen kalmayan kaydı durumu geri almaz
+        bitti = {**b, "status": "yayinlandi", "published": "P", "platforms": {p: {"status": "ok"} for p in sch}}
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(bitti), d(takvim)))[0]
+        self.assertEqual((out["status"], out["published"]), ("yayinlandi", "P"))
+
     def test_bos_konu_sirayi_tikamaz(self):
         with tempfile.TemporaryDirectory() as t:
             f = Path(t) / "k.json"
@@ -1576,6 +1957,13 @@ class KapiIleTutarlilik(unittest.TestCase):
         self.assertEqual(tuple(map(int, sinir)), (100, 2000, 4000))  # _check_edit ile aynı sınırlar
         kod = json.loads(re.search(r"KODLAR = (\[.*?\]);", self.js).group(1))
         self.assertEqual(tuple(kod), self.tb.SLOT_CODES)
+
+    def test_zamanlayici_kurallari(self):
+        # kapının zamanlayıcısı (worker.js) ve dispatch-if-due aynı pencere ve "başlamamış iş" durumlarıyla çalışır
+        w = (REPO / "cloudflare" / "worker.js").read_text(encoding="utf-8")
+        self.assertEqual(int(re.search(r"const ONCE_MS = (\d+) \* 60e3;", w).group(1)) * 60, self.tb.DUE_WINDOW.total_seconds())
+        self.assertEqual(tuple(json.loads(re.search(r"const BASLAMAMIS = (\[.*?\]);", w).group(1))), self.tb.NOT_STARTED)
+        self.assertIn("Math.ceil((an - simdi) / 60e3)) + 2)", w)  # dakika = kalan + 2 (telegram_bot._due_inputs)
 
 
 if __name__ == "__main__":

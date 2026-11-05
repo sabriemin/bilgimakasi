@@ -3,7 +3,7 @@ import { test, describe, before, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import worker from "../../cloudflare/worker.js";
+import worker, { hedefAdi } from "../../cloudflare/worker.js";
 import { SAYFA_HTML, UYGULAMA_JS } from "../../cloudflare/panel_ui.js";
 import { calistir, SENARYOLAR, SABIT_SAAT } from "./webhook_senaryolar.mjs";
 import { ORTAM, BURASI, META, FIKSTUR, fetchKur, ctxYap, saatKur, saatIlerlet, saatBirak, cacheKur, imza, oturumImza,
@@ -54,6 +54,15 @@ describe("Telegram webhook davranışı değişmedi", () => {
         assert.deepEqual({ ...y, cagrilar: [] }, { ...g, cagrilar: [] });
         continue;
       }
+      if (g.ad === "düğme ok (saat seçenekleri)") {
+        // bilinçli fark: saat seçeneklerine "↩️ Geri"nin üstünde panel takvimine giden bağlantı düğmesi eklendi;
+        // saat düğmeleri (callback_data) ve diğer çağrılar aynı
+        const beklenen = structuredClone(g);
+        beklenen.cagrilar[0].govde.reply_markup.inline_keyboard.splice(-1, 0, [{ text: "🗓 Takvimde seç",
+          url: "https://bilgimakasi-kapi.bilgimakasi.workers.dev/panel#takvim/short-20261104-1019" }]);
+        assert.deepEqual(y, beklenen, g.ad);
+        continue;
+      }
       assert.deepEqual(y, g, g.ad);
     }
   });
@@ -84,6 +93,18 @@ describe("Telegram webhook davranışı değişmedi", () => {
       assert.equal((await istek("/panel/giris?t=" + t)).r.status, 302);
       assert.equal((await istek("/panel/giris?t=" + t)).r.status, 403);
     }
+  });
+
+  test("Onayla: saat seçeneklerinde kapının kendi adresiyle panel takvimine bağlantı satırı", async () => {
+    const tag = "short-20261104-1057";
+    const { cagrilar } = await istek("/", { method: "POST", basliklar: { "X-Telegram-Bot-Api-Secret-Token": ORTAM.WEBHOOK_SECRET },
+      govde: { callback_query: { id: "c", from: { id: 424242 }, data: `ok:${tag}`, message: { message_id: 4, chat: { id: 424242 } } } } });
+    const satirlar = cagrilar[0].govde.reply_markup.inline_keyboard;
+    assert.deepEqual(satirlar[satirlar.length - 2], [{ text: "🗓 Takvimde seç", url: `${HOST}/panel#takvim/${tag}` }]);
+    assert.deepEqual(satirlar[satirlar.length - 1], [{ text: "↩️ Geri", callback_data: `back:${tag}` }]);
+    // URL düğmesi dışındaki bütün düğmeler callback düğmesi (saat seçimi aynı kaldı)
+    assert.ok(satirlar.flat().every((d) => d.url ? d.text === "🗓 Takvimde seç" : /^(at|back):/.test(d.callback_data)));
+    assert.equal(cagrilar.filter((c) => c.url.includes("api.github.com")).length, 0, "arayüz adımı GitHub'a gitmez");
   });
 
   test("/panel başkasından gelirse cevap yok", async () => {
@@ -526,6 +547,13 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
       { action: "queue_set", queue: ["a", "b"], queue_base: ["b", "x y"] }],
     [{ action: "edit", tag: T, title: "B", description: "Bilgi.\n\n#yeni #etiket\n#iki" },
       { action: "edit", tag: T, title: "B", description: "Bilgi.\n\n#yeni #etiket\n#iki" }],
+    // takvim: onay (üç platform) ve zamanlanmış videoda tek platform; saatler UTC'ye çevrilir, dakikaya yuvarlanır
+    [{ action: "schedule", tag: T, schedule: { youtube: "2026-11-05T18:00:00+03:00", instagram: "2026-11-05T09:30:20Z",
+      tiktok: "2026-11-06T19:29:40.000Z" } },
+    { action: "schedule", tag: T, schedule: { youtube: "2026-11-05T15:00:00+00:00", instagram: "2026-11-05T09:30:00+00:00",
+      tiktok: "2026-11-06T19:30:00+00:00" } }],
+    [{ action: "schedule", tag: Z, schedule: { tiktok: "2026-11-06T17:00:00Z" } },
+      { action: "schedule", tag: Z, schedule: { tiktok: "2026-11-06T17:00:00+00:00" } }],
   ];
   for (const [govde, beklenen] of IYI) {
     test(`${govde.action} ${govde.code || govde.tag || ""} -> isle.yml olayı`, async () => {
@@ -544,7 +572,7 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
       assert.deepEqual(p, JSON.parse(JSON.stringify(beklenen)));
       // durum değiştiren video işlemlerinde Telegram'daki düğme de kilitlenir (kapının düğme basışındaki gibi)
       const tgCagri = cagrilar.filter((x) => x.url.includes("api.telegram.org"));
-      if (["approve", "reject", "cancel", "retry"].includes(govde.action)) {
+      if (["approve", "reject", "cancel", "retry", "schedule"].includes(govde.action)) {
         assert.equal(tgCagri.length, 1);
         assert.match(tgCagri[0].url, /editMessageReplyMarkup$/);
         assert.deepEqual(tgCagri[0].govde.reply_markup, { inline_keyboard: [[{ text: "⏳ İşleniyor…", callback_data: "noop:x" }]] });
@@ -609,6 +637,20 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
     [{ action: "edit", tag: T, title: "a", description: "Bilgi.\n\n📷 Ben" }, 400, /Görsel atfı/],
     [{ action: "edit", tag: T, title: "a", description: "Bilgi.\n\n#etiket\n🎙 Seslendirme" }, 400, /Görsel atfı/],
     [{ action: "edit", tag: T, title: "a", description: "😀".repeat(1001) }, 400, /çok uzun/],
+    [{ action: "schedule", tag: T, schedule: { youtube: "2026-11-06T15:00:00Z", instagram: "2026-11-06T17:00:00Z" } }, 400, /üç platformun/],
+    [{ action: "schedule", tag: T, schedule: { youtube: "2026-11-06T15:00:00Z", instagram: "2026-11-06T17:00:00Z",
+      tiktok: "2026-11-06T19:00:00Z", facebook: "2026-11-06T19:00:00Z" } }, 400, /Bilinmeyen platform/],
+    [{ action: "schedule", tag: Z, schedule: { tiktok: "2026-11-06T19:00:00Z" }, code: "best" }, 400, /bilinmeyen alan/],
+    [{ action: "schedule", tag: Z }, 400, /saatleri eksik/],
+    [{ action: "schedule", tag: Z, schedule: {} }, 400, /saatleri eksik/],
+    [{ action: "schedule", tag: Z, schedule: ["2026-11-06T19:00:00Z"] }, 400, /saatleri eksik/],
+    [{ action: "schedule", tag: Z, schedule: { tiktok: "yarın 19:00" } }, 400, /TikTok saati geçersiz/],
+    [{ action: "schedule", tag: Z, schedule: { tiktok: "2026-11-06T19:00:00" } }, 400, /geçersiz/], // saat dilimi yok
+    [{ action: "schedule", tag: Z, schedule: { tiktok: 1762455600000 } }, 400, /geçersiz/],
+    [{ action: "schedule", tag: Z, schedule: { tiktok: "2026-11-04T10:00:00Z" } }, 409, /geçti/],
+    [{ action: "schedule", tag: Z, schedule: { tiktok: "2026-12-30T10:00:00Z" } }, 400, /30 gün/],
+    [{ action: "schedule", tag: Z, schedule: { tiktok: "2026-11-05T16:30:00+00:00" } }, 400, /değişiklik yok/],
+    [{ action: "schedule", tag: Y, schedule: { tiktok: "2026-11-06T19:00:00Z" } }, 409, /durumu değişmiş/],
   ];
   for (const [govde, kod, mesaj] of KOTU) {
     test(`doğrulama: ${JSON.stringify(govde).slice(0, 70)} -> ${kod}`, async () => {
@@ -677,6 +719,194 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
       { text: "❌ Reddet", callback_data: `no:${T}` }]] });
     // başarısız işlem tekrar engeline takılmaz
     assert.equal((await gonder({ action: "approve", tag: T, code: "best" })).r.status, 202);
+  });
+});
+
+// ------------------------------------------------------------------ takvim (schedule) kısmen paylaşılmış video
+describe("takvim işlemi: kısmen paylaşılmış ve paylaşımı yaklaşan video", () => {
+  const Z = "short-20261104-2023"; // GTA: youtube 15:00Z, instagram 09:30Z, tiktok 16:30Z
+  const SAAT = Date.parse("2026-11-05T12:00:00Z"); // önceki testlerin işlem kilitlerinden sonra
+  function kokYap(degistir) {
+    const kok = mkdtempSync(join(tmpdir(), "panel_takvim_"));
+    cpSync(FIKSTUR, kok, { recursive: true });
+    const vs = JSON.parse(readFileSync(join(FIKSTUR, "videos.json"), "utf8"));
+    degistir(vs.find((v) => v.tag === Z));
+    writeFileSync(join(kok, "videos.json"), JSON.stringify(vs));
+    return kok;
+  }
+  const kismen = (v) => { // Instagram 12:30'da paylaşıldı, sıradaki YouTube
+    v.platforms = { instagram: { status: "ok", url: "u", at: "2026-11-05T12:30:05+03:00" } };
+    v.publish_at = "2026-11-05T15:00:00+00:00";
+  };
+  async function gonder(kok, schedule) {
+    saatIlerlet(91000);
+    const c = await oturum();
+    const x = await istek("/panel/api/islem", { ...POST({ action: "schedule", tag: Z, schedule }, c), fetchAyar: { kok } });
+    return { ...x, j: await x.r.json() };
+  }
+  beforeEach(() => saatKur(SAAT));
+
+  test("paylaşılmış platformun saati değiştirilemez, bekleyenin değiştirilebilir", async () => {
+    const kok = kokYap(kismen);
+    let x = await gonder(kok, { instagram: "2026-11-05T17:00:00Z" });
+    assert.equal(x.r.status, 409);
+    assert.match(x.j.hata, /Instagram zaten paylaşıldı/);
+    assert.equal(dispatchlar(x.cagrilar).length, 0);
+    x = await gonder(kok, { tiktok: "2026-11-05T19:00:00Z", youtube: "2026-11-05T18:00:00+00:00" });
+    assert.equal(x.r.status, 202, x.j.hata);
+    const p = panelOlayi(x.cagrilar);
+    assert.deepEqual(p.schedule, { youtube: "2026-11-05T18:00:00+00:00", tiktok: "2026-11-05T19:00:00+00:00" });
+  });
+
+  test("kısmen paylaşılıp kalanları iptal edilen video: onayda yalnız paylaşılmamış platformlar", async () => {
+    const kok = kokYap((v) => { kismen(v); Object.assign(v, { status: "onay_bekliyor", publish_at: null, schedule: null }); });
+    let x = await gonder(kok, { youtube: "2026-11-05T18:00:00Z", instagram: "2026-11-05T18:00:00Z", tiktok: "2026-11-05T19:00:00Z" });
+    assert.equal(x.r.status, 409);
+    assert.match(x.j.hata, /Instagram zaten paylaşıldı/);
+    x = await gonder(kok, { youtube: "2026-11-05T18:00:00Z" });
+    assert.equal(x.r.status, 400);
+    assert.equal(x.j.hata, "Onay için TikTok saati de seçilmeli.");
+    assert.equal(dispatchlar(x.cagrilar).length, 0);
+    x = await gonder(kok, { youtube: "2026-11-05T18:00:00Z", tiktok: "2026-11-05T19:00:30+00:00" });
+    assert.equal(x.r.status, 202, x.j.hata);
+    assert.deepEqual(panelOlayi(x.cagrilar).schedule, { youtube: "2026-11-05T18:00:00+00:00", tiktok: "2026-11-05T19:01:00+00:00" });
+  });
+
+  test("paylaşıma 10 dakikadan az kalan videoda saat değişmez; en erken 2 dakika sonrası seçilir", async () => {
+    let kok = kokYap((v) => { kismen(v); v.publish_at = new Date(SAAT + 9 * 60e3).toISOString(); v.schedule.youtube = v.publish_at; });
+    let x = await gonder(kok, { tiktok: "2026-11-05T19:00:00Z" });
+    assert.equal(x.r.status, 409);
+    assert.match(x.j.hata, /10 dakika/);
+    // eskimiş publish_at (bekleyen bütün platformlar daha sonra) kilitlemez: paylaşım anı bekleyen en erken saattir
+    kok = kokYap((v) => { kismen(v); v.publish_at = "2026-11-05T09:30:00+00:00"; });
+    x = await gonder(kok, { tiktok: new Date(SAAT + 60e3 + 30e3).toISOString() });
+    assert.equal(x.r.status, 409);
+    assert.match(x.j.hata, /en erken 2 dakika/);
+    x = await gonder(kok, { tiktok: new Date(Date.now() + 91000 + 3 * 60e3).toISOString() }); // gonder saati 91 sn ilerletir
+    assert.equal(x.r.status, 202, x.j.hata);
+  });
+});
+
+// ------------------------------------------------------------------ zamanlayıcı (Cloudflare cron)
+describe("zamanlayıcı: saati yaklaşan paylaşım için onay.yml", () => {
+  const SIMDI = Date.parse("2026-11-05T14:52:30Z");
+  const iso = (ms) => new Date(ms).toISOString().replace(".000Z", "+00:00");
+  const video = (dk, ek = {}) => ({ tag: "short-20261105-120000", title: "Deneme", status: "zamanlandi", platforms: {},
+    publish_at: iso(SIMDI + dk * 60e3), schedule: { youtube: iso(SIMDI + dk * 60e3), instagram: iso(SIMDI + (dk + 60) * 60e3),
+      tiktok: iso(SIMDI + (dk + 120) * 60e3) }, ...ek });
+  async function calistir(vs, ayar = {}) {
+    const kok = mkdtempSync(join(tmpdir(), "panel_cron_"));
+    cpSync(FIKSTUR, kok, { recursive: true });
+    if (vs) writeFileSync(join(kok, "videos.json"), JSON.stringify(vs));
+    const f = fetchKur({ kok, ...ayar });
+    const loglar = [];
+    console.log = (...a) => loglar.push(a.map(String).join(" "));
+    try {
+      await worker.scheduled({ cron: "* * * * *", scheduledTime: Date.now() }, { ...ORTAM }, ctxYap().ctx);
+    } finally { console.log = () => {}; }
+    const yol = (c) => c.url.replace(`https://api.github.com/repos/${ORTAM.REPO}/`, "");
+    return { cagrilar: f.cagrilar, loglar, yollar: f.cagrilar.map((c) => `${c.method} ${yol(c)}`),
+      onay: f.cagrilar.filter((c) => c.url.endsWith("/actions/workflows/onay.yml/dispatches")) };
+  }
+  // onay.yml iş listesindeki bir iş: SIMDI'den dkOnce dakika önce başlatılmış; hedef null ise cron işi
+  const is_ = (status, dkOnce, hedef, conclusion = null) => ({ display_title: hedef ? `Paylaşım ${hedef}` : "Telegram onaylarını işle",
+    name: "Telegram onaylarını işle", status, conclusion, created_at: new Date(SIMDI - dkOnce * 60e3).toISOString() });
+  beforeEach(() => saatKur(SIMDI));
+
+  test("3 dakika içindeki paylaşım için bir kez, doğru girdilerle başlatır", async () => {
+    const { yollar, onay, cagrilar, loglar } = await calistir([video(2.5)]);
+    assert.deepEqual(yollar, ["GET contents/state/videos.json?ref=main", "GET actions/workflows/onay.yml/runs?per_page=20",
+      "POST actions/workflows/onay.yml/dispatches"]);
+    assert.deepEqual(onay[0].govde, { ref: "main", inputs: { dakika: "5", hedef: "2026-11-05T14:55Z" } });
+    assert.ok(cagrilar.every((c) => c.basliklar.authorization === `Bearer ${ORTAM.GH_PAT}`));
+    assert.match(loglar.join("\n"), /başlatıldı \(2026-11-05T14:55Z, 5 dk\)/);
+    assert.ok(!loglar.join("\n").includes(ORTAM.GH_PAT));
+    // saniyeli an dakikaya iner, kalan süre yukarı yuvarlanır (iş ~1 dk'da kurulur, boş bekleme olmasın)
+    assert.equal(hedefAdi(Date.parse("2026-11-05T14:57:59Z")), "2026-11-05T14:57Z");
+    const yakin = await calistir([video(1.2)]);
+    assert.deepEqual(yakin.onay[0].govde.inputs, { dakika: "4", hedef: "2026-11-05T14:53Z" });
+    assert.equal((await calistir([video(3.5)])).onay.length, 0, "3 dakikadan uzak");
+    // Telegram'a hiçbir şey gitmez
+    assert.equal(cagrilar.filter((c) => c.url.includes("telegram")).length, 0);
+  });
+
+  test("aynı hedefle bekleyen/çalışan ya da son 30 dk'da başlatılmış iş varsa başlatmaz", async () => {
+    const hedef = "2026-11-05T14:55Z";
+    for (const isler of [[is_("queued", 1, hedef)], [is_("in_progress", 25, hedef)], [is_("completed", 10, hedef)]]) {
+      const x = await calistir([video(2.5)], { isler });
+      assert.equal(x.onay.length, 0, JSON.stringify(isler));
+      assert.match(x.loglar.join(" "), /iş zaten var/);
+    }
+    const iptal = is_("completed", 5, hedef, "cancelled"); // state grubunda çalışmadan iptal edilmiş
+    for (const isler of [[is_("completed", 40, hedef)], [is_("queued", 1, "2026-11-05T13:57Z")], [is_("in_progress", 2, null)], [iptal]]) {
+      assert.equal((await calistir([video(2.5)], { isler })).onay.length, 1, JSON.stringify(isler));
+    }
+  });
+
+  test("bekleyen yoksa, saati uzaksa ya da 3 saatten eskiyse başlatmaz", async () => {
+    for (const vs of [[], [video(30)], [video(4)], [video(-181)], [{ ...video(2), status: "onay_bekliyor" }], [{ ...video(2), status: "yayinlandi" }]]) {
+      const x = await calistir(vs);
+      assert.equal(x.onay.length, 0, JSON.stringify(vs));
+      assert.deepEqual(x.yollar, ["GET contents/state/videos.json?ref=main"], "iş listesine bile bakılmaz");
+    }
+    // 3 saatten yeni, saati geçmiş paylaşım: hemen (2 dk dinleme)
+    assert.deepEqual((await calistir([video(-30)])).onay[0].govde.inputs, { dakika: "2", hedef: "2026-11-05T14:22Z" });
+    // takılı (3 saatten eski) kayıt diğer videonun paylaşımını engellemez
+    const ikinci = { ...video(2), tag: "short-20261105-130000" };
+    assert.equal((await calistir([video(-200), ikinci])).onay[0].govde.inputs.hedef, "2026-11-05T14:54Z");
+  });
+
+  test("paylaşım anı: paylaşılan platformlar sayılmaz; saati geçmiş ama publish_at'te denenecek platform erken başlatmaz", async () => {
+    // YouTube paylaşıldı (saati geçmiş), sıradaki Instagram 2 dk sonra
+    let v = video(-50, { platforms: { youtube: { status: "ok" } } });
+    v.schedule.instagram = iso(SIMDI + 2 * 60e3); v.publish_at = v.schedule.instagram;
+    assert.equal((await calistir([v])).onay[0].govde.inputs.hedef, "2026-11-05T14:54Z");
+    // YouTube 30 dk önce hata aldı, publish_at 60 dk sonra (Instagram): şimdi başlatılmaz
+    v = video(-30, { platforms: { youtube: { status: "hata", error: "x" } } });
+    v.publish_at = v.schedule.instagram;
+    assert.equal((await calistir([v])).onay.length, 0);
+    // eskimiş publish_at, bekleyen platformlar 2,5 dk sonra: o ana göre
+    v = video(2.5); v.publish_at = iso(SIMDI - 100 * 60e3);
+    assert.equal((await calistir([v])).onay[0].govde.inputs.hedef, "2026-11-05T14:55Z");
+  });
+
+  test("saati geçmiş kaydın işi (hata almış, yüklüyor) sonraki videonun paylaşımını bekletmez; işler birbirini iptal etmez", async () => {
+    const A = video(-40), B = { ...video(1.5), tag: "short-20261105-130000" }; // A 14:12:30'du, B 14:54:00
+    const b = { dakika: "4", hedef: "2026-11-05T14:54Z" };
+    for (const isler of [[is_("completed", 20, "2026-11-05T14:12Z", "failure")], [is_("in_progress", 39, "2026-11-05T14:12Z")]]) {
+      const x = await calistir([A, B], { isler });
+      assert.deepEqual(x.onay.map((o) => o.govde.inputs), [b], JSON.stringify(isler));
+      assert.equal(x.yollar.filter((y) => y.includes("/runs")).length, 1, "iş listesi bir kez okunur");
+    }
+    // A'nın işi yok (30 dk'dan eski): önce A için (hemen paylaşır; B 2 dk'lık pencerede)
+    let x = await calistir([A, B], { isler: [is_("completed", 45, "2026-11-05T14:12Z", "failure")] });
+    assert.deepEqual(x.onay.map((o) => o.govde.inputs), [{ dakika: "2", hedef: "2026-11-05T14:12Z" }]);
+    // B'nin işi kuyrukta, A'nınki onun yüzünden iptal oldu: başlamamış iş A'yı da paylaşır, yenisi başlatılmaz
+    x = await calistir([A, B], { isler: [is_("queued", 1, "2026-11-05T14:54Z"), is_("completed", 2, "2026-11-05T14:12Z", "cancelled")] });
+    assert.equal(x.onay.length, 0);
+    assert.match(x.loglar.join(" "), /iş zaten var \(2026-11-05T14:12Z, 2026-11-05T14:54Z\)/);
+    // iş listesi alınamazsa saati geçmiş A atlanır, B için başlatılır
+    x = await calistir([A, B], { islerDurum: 500 });
+    assert.deepEqual(x.onay.map((o) => o.govde.inputs), [b]);
+  });
+
+  test("GitHub hatalarında hata fırlatmaz; iş listesi alınamazsa yalnız saati gelmemiş paylaşım için başlatır", async () => {
+    let x = await calistir([video(2.5)], { dosyaHata: { "videos.json": 500 } });
+    assert.equal(x.onay.length, 0);
+    assert.match(x.loglar.join(" "), /durum okunamadı \(500\)/);
+    x = await calistir([video(2.5)], { islerDurum: 500 });
+    assert.equal(x.onay.length, 1);
+    x = await calistir([video(-10)], { islerDurum: 500 });
+    assert.equal(x.onay.length, 0);
+    assert.match(x.loglar.join(" "), /iş listesi alınamadı/);
+    x = await calistir([video(2.5)], { onayDurum: 422 });
+    assert.match(x.loglar.join(" "), /başlatılamadı \(422\)/);
+    x = await calistir([video(2.5)], { ghAgHatasi: true });
+    assert.match(x.loglar.join(" "), /zamanlayıcı hatası/);
+    // ayar eksikse GitHub'a hiç gidilmez
+    const f = fetchKur({});
+    await worker.scheduled({}, { ...ORTAM, GH_PAT: undefined }, ctxYap().ctx);
+    assert.equal(f.cagrilar.length, 0);
   });
 });
 

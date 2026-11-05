@@ -10,6 +10,7 @@
 //   /panel/api/meta/<tag>   metadata.json (başlık, açıklama, etiketler, atıflar): düzenleme formu için
 // İşlem (POST, çerez + "X-Panel: 1" başlığı gerekir):
 //   /panel/api/islem        {action, ...} doğrulanır, işle.yml'e {"panel": {...}} olayı olarak iletilir;
+//                           takvim: {action: "schedule", tag, schedule: {youtube?, instagram?, tiktok?: UTC ISO}};
 //                           Python tarafı (telegram_bot.process_panel) Telegram düğmeleriyle aynı kodu çalıştırır.
 //   /panel/api/cikis        oturumu kapatır
 
@@ -26,12 +27,19 @@ const KODLAR = ["best", "now", "b12", "b19", "y12", "y19"];
 const VIDEO_ISLEM = {
   approve: ["onay_bekliyor"], reject: ["onay_bekliyor"], cancel: ["zamanlandi"],
   retry: ["hata", "kismen", "baglanti_yok"], edit: ["onay_bekliyor", "zamanlandi"],
+  schedule: ["onay_bekliyor", "zamanlandi"],
 };
-const KILITLI = ["approve", "reject", "cancel", "retry"]; // Telegram'daki düğme de "⏳ İşleniyor" olur
+const KILITLI = ["approve", "reject", "cancel", "retry", "schedule"]; // Telegram'daki düğme de "⏳ İşleniyor" olur
 const DIGER_ISLEM = ["produce_suggestion", "produce_topic", "refresh_suggestions", "report", "queue_set"];
 // shortgen/telegram_bot.py BEST_TIMES / EXTRA_TIMES varsayılanlarıyla aynı (test karşılaştırır)
 export const BEST_TIMES = { youtube: ["18:00", "21:00"], instagram: ["12:30", "20:00"], tiktok: ["19:30", "22:00"] };
-export const EXTRA_TIMES = { youtube: ["15:00"], instagram: ["17:00"], tiktok: ["17:00"] };
+export const EXTRA_TIMES = { youtube: [], instagram: [], tiktok: [] };
+const PLATFORMLAR = ["youtube", "instagram", "tiktok"];
+const PF_ADI = { youtube: "YouTube", instagram: "Instagram", tiktok: "TikTok" };
+// takvim saatleri (telegram_bot._check_schedule): en erken şimdi+2 dk, en geç 30 gün sonrası, dakikaya yuvarlanır
+const SAAT_EN_ERKEN = 2 * 60e3, SAAT_EN_GEC = 30 * 86400e3;
+const YAKIN_MS = 10 * 60e3; // telegram_bot.EDIT_GUARD_MIN: paylaşıma bu kadar kala metin ve saat değişmez
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/;
 
 const enc = new TextEncoder();
 const BELLEK = new Map(); // izolat içi kısa önbellek (workers.dev'de Cache API çalışmayabilir)
@@ -199,13 +207,13 @@ function gizliTemizle(x, env, alanda = false) {
 }
 
 // ---------------------------------------------------------------- GitHub
-function ghBasliklari(env, accept) {
+export function ghBasliklari(env, accept) {
   return {
     authorization: `Bearer ${env.GH_PAT}`, accept, "user-agent": "bilgimakasi-kapi", "x-github-api-version": "2022-11-28",
   };
 }
 
-async function dosya(env, yol) {
+export async function dosya(env, yol) {
   const r = await fetch(`https://api.github.com/repos/${env.REPO}/contents/${yol}?ref=main`,
     { headers: ghBasliklari(env, "application/vnd.github.raw") });
   if (r.status === 404) return { yok: true };
@@ -213,7 +221,7 @@ async function dosya(env, yol) {
   return { metin: await r.text() };
 }
 
-function jsonCoz(metin, yedek) {
+export function jsonCoz(metin, yedek) {
   try { return JSON.parse(metin); } catch { return yedek; }
 }
 
@@ -279,6 +287,33 @@ function durumDugmeleri(tag, status) {
     hata: [[["🔁 Hatalıları tekrar dene", `rt:${tag}`]]],
     kismen: [[["🔁 Hatalıları tekrar dene", `rt:${tag}`]]],
   }[status] || [];
+}
+
+// ---------------------------------------------------------------- paylaşım anı
+function okPlatformlar(v) {
+  return new Set(Object.entries((v && v.platforms) || {}).filter(([, r]) => r && r.status === "ok").map(([p]) => p));
+}
+
+// telegram_bot._due_at ile aynı: paylaşım işinin zamanlanmış videoda bir şey paylaşacağı an (ms) = publish_at ile
+// bekleyen (paylaşılmamış) en erken platform saatinin geç olanı. Zamanlanmamış videoda null.
+export function paylasimAni(v) {
+  if (!v || v.status !== "zamanlandi") return null;
+  const ok = okPlatformlar(v);
+  const takvim = v.schedule && typeof v.schedule === "object" ? v.schedule : {};
+  const bekleyen = Object.entries(takvim).filter(([p, t]) => t && !ok.has(p)).map(([, t]) => Date.parse(t))
+    .filter(Number.isFinite);
+  const aday = [Date.parse(v.publish_at || ""), bekleyen.length ? Math.min(...bekleyen) : NaN].filter(Number.isFinite);
+  return aday.length ? Math.max(...aday) : null;
+}
+
+// zamanlanmış videolardaki [enAz, enCok] içindeki paylaşım anları, sıralı ve tekil (telegram_bot._due_times)
+export function paylasimAnlari(vs, enAz = -Infinity, enCok = Infinity) {
+  const anlar = new Set();
+  for (const v of vs || []) {
+    const t = paylasimAni(v);
+    if (t != null && t >= enAz && t <= enCok) anlar.add(t);
+  }
+  return [...anlar].sort((a, b) => a - b);
 }
 
 // ---------------------------------------------------------------- durum
@@ -467,6 +502,51 @@ function konuListesi(x, ad) {
   return q;
 }
 
+// Takvimden gelen platform saatleri (telegram_bot._check_schedule ile aynı kurallar). Onay bekleyen videoda paylaşılmamış
+// her platform verilmeli (bu bir onaydır; kalanları iptal edilmiş videoda paylaşılmış platform olabilir); zamanlanmış
+// videoda yalnız henüz paylaşılmamış platformlar, verilmeyenler aynı kalır. Paylaşılmış platformun saati verilemez.
+function saatleriAl(b, video) {
+  const fazla = Object.keys(b).filter((k) => !["action", "tag", "schedule"].includes(k));
+  if (fazla.length) throw new Hata(400, "İstekte bilinmeyen alan var.");
+  const s = b.schedule;
+  if (!s || typeof s !== "object" || Array.isArray(s) || !Object.keys(s).length) throw new Hata(400, "Platform saatleri eksik.");
+  if (Object.keys(s).some((k) => !PLATFORMLAR.includes(k))) throw new Hata(400, "Bilinmeyen platform.");
+  const onay = video.status === "onay_bekliyor";
+  const ok = okPlatformlar(video);
+  const paylasilan = PLATFORMLAR.filter((p) => p in s && ok.has(p));
+  if (paylasilan.length) {
+    throw new Hata(409, `${paylasilan.map((p) => PF_ADI[p]).join(", ")} zaten paylaşıldı; saati değiştirilemez. Sayfa yenileniyor.`);
+  }
+  const eksik = PLATFORMLAR.filter((p) => !(p in s) && !ok.has(p));
+  if (onay && eksik.length) {
+    throw new Hata(400, ok.size ? `Onay için ${eksik.map((p) => PF_ADI[p]).join(", ")} saati de seçilmeli.`
+      : "Onay için üç platformun da saati seçilmeli.");
+  }
+  const simdi = Date.now();
+  const an = paylasimAni(video);
+  if (!onay && an != null && an <= simdi + YAKIN_MS) {
+    throw new Hata(409, "Bir paylaşım şu an sürüyor ya da 10 dakika içinde başlayacak; saatler şimdi değiştirilemez.");
+  }
+  const out = {};
+  for (const p of PLATFORMLAR) {
+    if (!(p in s)) continue;
+    const ham = typeof s[p] === "string" && ISO_RE.test(s[p]) ? Date.parse(s[p]) : NaN;
+    if (!Number.isFinite(ham)) throw new Hata(400, `${PF_ADI[p]} saati geçersiz.`);
+    const t = Math.round(ham / 60e3) * 60e3;
+    if (t < simdi + SAAT_EN_ERKEN) throw new Hata(409, `${PF_ADI[p]} için seçilen saat geçti ya da çok yakın; en erken 2 dakika sonrası seçilebilir.`);
+    if (t > simdi + SAAT_EN_GEC) throw new Hata(400, `${PF_ADI[p]} saati en çok 30 gün sonrası olabilir.`);
+    out[p] = new Date(t).toISOString().slice(0, 19) + "+00:00";
+  }
+  if (!onay) {
+    const eski = video.schedule && typeof video.schedule === "object" ? video.schedule
+      : Object.fromEntries(PLATFORMLAR.map((p) => [p, video.publish_at]));
+    if (Object.keys(out).every((p) => Date.parse(eski[p] || "") === Date.parse(out[p]))) {
+      throw new Hata(400, "Saatlerde değişiklik yok.");
+    }
+  }
+  return out;
+}
+
 function slotZamani(kod, simdi = Date.now()) {
   const t = new Date(simdi + TR_OFFSET);
   const gun = kod[0] === "b" ? 0 : 1, saat = Number(kod.slice(1));
@@ -495,6 +575,7 @@ async function islemHazirla(env, b) {
       }
       p.code = b.code;
     }
+    if (action === "schedule") p.schedule = saatleriAl(b, video);
     if (action === "edit") {
       // paylaşım işi publish_at'te başlar ve durumu yüklemeden sonra kaydeder (telegram_bot.EDIT_GUARD_MIN ile aynı)
       if (video.status === "zamanlandi" && video.publish_at && Date.parse(video.publish_at) <= Date.now() + 10 * 60e3) {

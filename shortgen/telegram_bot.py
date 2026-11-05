@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 import re
 import tempfile
 import os
@@ -192,13 +193,13 @@ BEST_TIMES = json.loads(os.environ.get("BEST_TIMES") or json.dumps({
     "instagram": ["12:30", "20:00"],
     "tiktok": ["19:30", "22:00"],
 }))
-# Ek saatler: o günün kalan (en az 15 dk sonraki) asıl saatleri başka videolara ayrılmışsa kullanılır
-# (ör. aynı güne 3. video ya da günün ilk asıl saati geçtikten sonra gelen 2. video).
-# EXTRA_TIMES ile değiştirilebilir.
+# Ek saatler: varsayılan olarak yok; otomatik seçim (🎯) yalnız asıl en iyi saatleri kullanır, o günün asıl saatleri
+# doluysa ertesi günün asıl saatine geçer. EXTRA_TIMES ortam değişkeniyle (JSON) ek saat tanımlanırsa asıl saatlerden
+# sonra o günün ek saati denenir. İstenen her saat panelin Takvim sekmesinden elle seçilebilir.
 EXTRA_TIMES = json.loads(os.environ.get("EXTRA_TIMES") or json.dumps({
-    "youtube": ["15:00"],
-    "instagram": ["17:00"],
-    "tiktok": ["17:00"],
+    "youtube": [],
+    "instagram": [],
+    "tiktok": [],
 }))
 ICONS = {"youtube": "▶️", "instagram": "📸", "tiktok": "🎵"}
 
@@ -226,14 +227,15 @@ def _busy(exclude: str | None = None) -> dict[str, list[dt.datetime]]:
 
 def _best_schedule(now: dt.datetime | None = None, exclude: str | None = None,
                    ignore_busy: bool = False) -> dict[str, str]:
-    """Her platform için en az 15 dk sonraki, başka bir videoya ayrılmamış ilk önerilen saati (UTC ISO) döndürür.
-    Aynı platformda iki paylaşım arasında en az MIN_GAP olur; bugünün saatleri doluysa sonraki günlere geçer."""
+    """Her platform için en az 15 dk sonraki, başka bir videoya ayrılmamış ilk en iyi saati (UTC ISO) döndürür.
+    Aynı platformda iki paylaşım arasında en az MIN_GAP olur; bugünün en iyi saatleri doluysa sonraki günün en iyi
+    saatine geçer (14 gün ileriye kadar bakar)."""
     now = now or dt.datetime.now(TR)
     busy = {} if ignore_busy else _busy(exclude)
     out = {}
     for p, times in BEST_TIMES.items():
         chosen = None
-        for d in range(0, 7):
+        for d in range(0, 14):
             for hm in sorted(times) + sorted(EXTRA_TIMES.get(p, [])):  # önce asıl saatler, sonra ek saat
                 h, m = map(int, hm.split(":"))
                 t = dt.datetime.combine(now.date() + dt.timedelta(days=d), dt.time(h, m), TR)
@@ -271,8 +273,9 @@ def _fmt(iso: str) -> str:
     return f"{t.day} {AYLAR[t.month - 1]} {GUNLER[t.weekday()]} {t:%H:%M}"
 
 
-def _is_extra(p: str, iso: str) -> bool:
-    return f"{dt.datetime.fromisoformat(iso).astimezone(TR):%H:%M}" in EXTRA_TIMES.get(p, [])
+def _is_prime(p: str, iso: str) -> bool:
+    """Saat, platformun en iyi saatlerinden (prime time) biri mi (TR saatiyle)."""
+    return f"{dt.datetime.fromisoformat(iso).astimezone(TR):%H:%M}" in BEST_TIMES.get(p, [])
 
 
 def _sched_of(v: dict) -> dict[str, str]:
@@ -293,22 +296,18 @@ def _pending_sched(v: dict) -> dict[str, str]:
             for p, t in _sched_of(v).items() if p not in _done(v)}
 
 
-def _plan_text(tag: str, sched: dict[str, str], explain: bool = True) -> str:
-    """Bir videonun platform saatleri. explain: plan az önce hesaplandıysa, asıl en iyi saatler başka videolara
-    ayrıldığı için kaydığını ve hangi videolara ayrıldığını da yazar."""
-    lines = [f"• {PLATFORM_NAMES[p]}: {_fmt(t)}" + (" (günün ek saati)" if _is_extra(p, t) else "")
-             for p, t in sorted(sched.items(), key=lambda x: x[1])]
-    free = _best_schedule(exclude=tag, ignore_busy=True) if explain and sched else {}
-    if explain and sched and any(sched[p] != free.get(p) for p in sched):
-        lo = dt.datetime.fromisoformat(min(free.values())).astimezone(TR).date()
-        hi = dt.datetime.fromisoformat(max(sched.values())).astimezone(TR).date()
-        others = [v["title"] for v in load(VIDEOS, []) if v.get("status") == "zamanlandi" and v.get("tag") != tag
-                  and any(lo <= dt.datetime.fromisoformat(t).astimezone(TR).date() <= hi
-                          for t in _pending_sched(v).values())]
-        if others:
-            lines.append("\nAsıl en iyi saatler şu videolara ayrılmıştı, aynı saate iki video konmadı:\n"
-                         + "\n".join(f"  - {t[:60]}" for t in others))
-    return "\n".join(lines)
+PANEL_HINT = "Saatleri değiştirmek için panelde Takvim: /panel"
+
+
+def _sched_lines(sched: dict[str, str]) -> str:
+    """Platform saatleri, saate göre sıralı; en iyi saatler (prime time) ⭐ ile (ör. "• YouTube: 6 Kasım Cuma 18:00 ⭐")."""
+    return "\n".join(f"• {PLATFORM_NAMES[p]}: {_fmt(t)}" + (" ⭐" if _is_prime(p, t) else "")
+                     for p, t in sorted(sched.items(), key=lambda x: x[1]))
+
+
+def _plan_text(sched: dict[str, str]) -> str:
+    """Bir videonun platform saatleri ve panelde değiştirme notu (saat yoksa boş)."""
+    return f"{_sched_lines(sched)}\n{PANEL_HINT}" if sched else ""
 
 
 def plan_all() -> str:
@@ -345,7 +344,7 @@ def _approve(tag: str, code: str, chat: str, mid: int) -> str:
     if code == "best":
         sched = _best_schedule(exclude=tag)
         iso = min(sched.values())
-        note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + _plan_text(tag, sched)
+        note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + _plan_text(sched)
     else:
         # düğme gösterildikten sonra saat 15 dk sınırına girmiş olabilir: seçilen saati yine de kullan
         when = next((t for c, _, t in _slots(all_=True) if c == code), dt.datetime.now(TR))
@@ -604,11 +603,13 @@ def process_update(u: dict, chat: str) -> None:
             except Exception as e:  # noqa: BLE001
                 api("sendMessage", data={"chat_id": chat, "text": f"Rapor hazırlanamadı: {_err_text(e)}"})
         elif text.startswith("/saatler"):
-            lines = ["Platformların en iyi paylaşım saatleri (Türkiye):"]
+            lines = ["Platformların en iyi paylaşım saatleri (Türkiye, ⭐ prime time):"]
             lines += [f"• {PLATFORM_NAMES[p]}: {', '.join(t)}" + (f" (ek saat: {', '.join(EXTRA_TIMES[p])})"
                       if EXTRA_TIMES.get(p) else "") for p, t in BEST_TIMES.items()]
-            lines += ["Ek saat, günün kalan (en az 15 dk sonraki) asıl saatleri başka videolara ayrıldıysa kullanılır."]
-            lines += ["", "Onaylarken '🎯 Her platform en iyi saatinde' seçersen her biri kendi saatinde paylaşılır."]
+            if any(EXTRA_TIMES.get(p) for p in BEST_TIMES):
+                lines += ["Ek saat, günün kalan (en az 15 dk sonraki) asıl saatleri başka videolara ayrıldıysa kullanılır."]
+            lines += ["", "Onaylarken '🎯 Her platform en iyi saatinde' seçersen her biri kendi boş en iyi saatinde "
+                      "paylaşılır; o günün en iyi saatleri doluysa ertesi güne geçer.", PANEL_HINT]
             api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
         elif text.startswith("/start") or text.startswith("/yardim"):
             api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
@@ -632,7 +633,8 @@ DURUM_ADI = {"onay_bekliyor": "onay bekliyor", "zamanlandi": "zamanlandı", "yay
              "baglanti_yok": "bağlantı yok", "reddedildi": "reddedildi", "iptal": "iptal"}
 # video işlemleri yalnız bu durumlarda yapılır: çift basış veya eski sayfadan gelen istek hiçbir şeyi değiştirmez
 PANEL_VIDEO_ACTIONS = {"approve": ("onay_bekliyor",), "reject": ("onay_bekliyor",), "cancel": ("zamanlandi",),
-                       "retry": ("hata", "kismen", "baglanti_yok"), "edit": ("onay_bekliyor", "zamanlandi")}
+                       "retry": ("hata", "kismen", "baglanti_yok"), "edit": ("onay_bekliyor", "zamanlandi"),
+                       "schedule": ("onay_bekliyor", "zamanlandi")}
 _TAIL = ("#", "📷", "🎙", "Görseller:", "Kaynaklar:", "Bu videoda yapay zekâ")
 
 
@@ -779,6 +781,86 @@ def _refresh_desc(tag: str, v: dict, chat: str) -> bool:
     return _write_desc(tag, v, chat, text) is not None
 
 
+# ---- Panel takvimi: platform başına elle seçilen saatler (action "schedule") ----
+SCHEDULE_MAX = dt.timedelta(days=30)
+# kapı (panel.js) şimdi+2 dk denetler; iş 30-60 sn geç başlayabildiği için 3 dk öncesine kadarki saat kabul edilir
+SCHEDULE_LATE = dt.timedelta(minutes=3)
+
+
+def _check_schedule(p: dict, approve: bool, done: set[str] = frozenset()) -> dict[str, str]:
+    """Kapının (panel.js saatleriAl) denetiminin aynısı: {platform: ISO}, yalnız bilinen platformlar, saat dilimli
+    geçerli ISO, dakikaya yuvarlanır, en çok 30 gün sonrası. Geçmişte kalan (en çok 3 dk) saat şimdiye çekilir.
+    Onayda paylaşılmamış her platformun saati verilmeli (done: paylaşılmışlar; kalanları iptal edilip yeniden onay
+    bekleyen videoda olur), paylaşılmış platformun saati verilemez. UTC ISO döndürür."""
+    s = p.get("schedule")
+    if not isinstance(s, dict) or not s:
+        raise ValueError("platform saatleri eksik")
+    if set(s) - set(PLATFORM_NAMES):
+        raise ValueError("bilinmeyen platform")
+    if approve:
+        shared = [PLATFORM_NAMES[k] for k in PLATFORM_NAMES if k in s and k in done]
+        if shared:
+            raise ValueError(f"{', '.join(shared)} zaten paylaşıldı")
+        missing = [PLATFORM_NAMES[k] for k in PLATFORM_NAMES if k not in s and k not in done]
+        if missing:
+            raise ValueError("onay için üç platformun da saati seçilmeli" if not done
+                             else f"onay için {', '.join(missing)} saati de seçilmeli")
+    now = dt.datetime.now(dt.timezone.utc)
+    out = {}
+    for k, iso in s.items():
+        try:
+            t = dt.datetime.fromisoformat(str(iso).replace("Z", "+00:00"))
+        except ValueError:
+            t = None
+        if t is None or t.tzinfo is None:
+            raise ValueError(f"{PLATFORM_NAMES[k]} saati geçersiz")
+        t = (t + dt.timedelta(seconds=30)).replace(second=0, microsecond=0)
+        if t < now - SCHEDULE_LATE:
+            raise ValueError(f"{PLATFORM_NAMES[k]} saati geçmişte kaldı, yeni bir saat seç")
+        if t > now + SCHEDULE_MAX:
+            raise ValueError(f"{PLATFORM_NAMES[k]} saati en çok 30 gün sonrası olabilir")
+        out[k] = max(t, now).astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+    return out
+
+
+def _schedule(tag: str, p: dict, v: dict, chat: str) -> str:
+    """Panel takviminden gelen saatler. Onay bekleyen video tam bu saatlerle onaylanır; zamanlanmış videoda yalnız
+    verilen (henüz paylaşılmamış) platformların saati değişir, verilmeyenler kendi saatinde kalır.
+    Telegram'a yazılacak notu döndürür (ℹ️ ile başlayan not: değişiklik yapılmadı)."""
+    if v["status"] == "onay_bekliyor":
+        new = _check_schedule(p, approve=True, done=_done(v))  # paylaşılmış platform (kısmen paylaşılıp iptal) yeniden paylaşılmaz
+        _update(tag, status="zamanlandi", schedule=new, publish_at=min(new.values()),
+                decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
+        _restore_kb(tag, chat, "zamanlandi")
+        return "✅ Onaylandı, takvimdeki saatlerde paylaşılacak:\n" + _sched_lines(new)
+    # bu işin kopyası birkaç saniye eski olabilir: paylaşılan platformlar ve saatler için uzaktaki en güncel kayda bakılır
+    fresh = _origin_record(tag) or v
+    st, due = fresh.get("status", "?"), _due_at(fresh)
+    if st != "zamanlandi":
+        _restore_kb(tag, chat, st)
+        return f"ℹ️ Saatler değiştirilmedi: video şu an '{DURUM_ADI.get(st, st)}' durumunda."
+    if due and due <= dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=EDIT_GUARD_MIN):
+        _restore_kb(tag, chat, st)
+        return ("ℹ️ Saatler değiştirilmedi: bir paylaşım şu an sürüyor ya da 10 dakika içinde başlayacak. "
+                "Paylaşım bittikten sonra kalan platformların saatini yeniden ayarlayabilirsin.")
+    new = _check_schedule(p, approve=False)
+    done = _done(v) | _done(fresh)
+    shared = [PLATFORM_NAMES[x] for x in PLATFORM_NAMES if x in new and x in done]
+    if shared:
+        _restore_kb(tag, chat, st)
+        return f"ℹ️ Saatler değiştirilmedi: {', '.join(shared)} zaten paylaşıldı."
+    old = _sched_of(fresh)
+    if all(old.get(k) and dt.datetime.fromisoformat(old[k]) == dt.datetime.fromisoformat(t) for k, t in new.items()):
+        _restore_kb(tag, chat, st)
+        return "ℹ️ Saatler zaten böyle, değişiklik yapılmadı."
+    # paylaşılmış platformlar kayıtlı saatinde kalır. Saati geçip paylaşılamamış platform eskisi gibi (eski) publish_at'te
+    # denenir: o saat kayda yazılır ki başka bir platform öne alınınca o da öne çekilmesin, mesaj ve panel aynı saati göstersin.
+    pend = {k: t for k, t in {**_pending_sched(fresh), **new}.items() if k not in done}
+    _update(tag, status="zamanlandi", schedule={**old, **pend}, publish_at=min(pend.values()))
+    _restore_kb(tag, chat, "zamanlandi")
+    return "🗓 Paylaşım saatleri değişti:\n" + _sched_lines(pend)
+
+
 def process_panel(p: dict, chat: str) -> None:
     """Panelden gelen işlem. Telegram düğmeleriyle aynı yardımcıları (_approve, _reject, _cancel, _retry, _dispatch,
     stats.report) kullanır; sonucu sohbete "🖥 Panelden:" diye yazar ki Telegram konuşması asıl kayıt olarak kalsın."""
@@ -807,6 +889,8 @@ def process_panel(p: dict, chat: str) -> None:
                 if p.get("code") not in SLOT_CODES:
                     raise ValueError("geçersiz saat seçimi")
                 say(f"{_approve(tag, p['code'], chat, mid)}\n{v['title']}")
+            elif action == "schedule":
+                say(f"{_schedule(tag, p, v, chat)}\n{v['title']}")
             elif action == "reject":
                 say(f"{_reject(tag, chat, v)}\n{v['title']}")
             elif action == "cancel":
@@ -908,16 +992,104 @@ def poll(wait: int = 0) -> int:
     return len(updates)
 
 
+def _due_at(v: dict) -> dt.datetime | None:
+    """Paylaşım işinin zamanlanmış bir videoda bir şey paylaşacağı an (worker.js paylasimAni ile aynı kural).
+    publish_due yalnız publish_at gelince ve saati gelmiş, paylaşılmamış platform varken yükler: an, publish_at ile
+    bekleyen en erken platform saatinin geç olanıdır. (Saati geçip paylaşılamamış platform publish_at'te yeniden
+    denenir; bekleyen bütün platformlardan erken kalmış bir publish_at ise kendi başına bir şey paylaşmaz.)"""
+    if v.get("status") != "zamanlandi":
+        return None
+    pend = [dt.datetime.fromisoformat(t) for k, t in (v.get("schedule") or {}).items() if t and k not in _done(v)]
+    cands = [x for x in (dt.datetime.fromisoformat(v["publish_at"]) if v.get("publish_at") else None,
+                         min(pend) if pend else None) if x]
+    return max(cands) if cands else None
+
+
 def _next_due() -> dt.datetime | None:
     """Zamanlanmış videolardaki en yakın paylaşım anı (platform bazlı saatler dahil)."""
-    times = []
-    for v in load(VIDEOS, []):
-        if v["status"] != "zamanlandi":
-            continue
-        done = {k for k, r in (v.get("platforms") or {}).items() if r.get("status") == "ok"}
-        sched = {k: t for k, t in (v.get("schedule") or {}).items() if k not in done}
-        times += [dt.datetime.fromisoformat(t) for t in (sched.values() if sched else [v["publish_at"]]) if t]
+    times = [t for v in load(VIDEOS, []) if (t := _due_at(v))]
     return min(times) if times else None
+
+
+def _due_times(since: dt.datetime, until: dt.datetime) -> list[dt.datetime]:
+    """[since, until] içindeki paylaşım anları, sıralı ve tekil (worker.js paylasimAnlari ile aynı)."""
+    return sorted({t for v in load(VIDEOS, []) if (t := _due_at(v)) and since <= t <= until})
+
+
+# Seçilen saatte tam zamanında paylaşım: kapının dakikalık zamanlayıcısı (worker.js scheduled) ve işle.yml'in
+# dispatch-if-due adımı, saati yaklaşan paylaşım için onay.yml'i o anı hedefleyerek başlatır. İş, paylaşımdan en çok
+# birkaç dakika önce başlatılır (kurulum ~1 dk) ki Actions dakikası beklemeye harcanmasın.
+DUE_WINDOW = dt.timedelta(minutes=3)  # worker.js ONCE_MS
+DUE_STALE = dt.timedelta(hours=3)  # bundan eski bekleyen saat için iş başlatılmaz (takılı bir kayıt döngü yapmasın)
+RUN_DEDUPE = dt.timedelta(minutes=30)
+NOT_STARTED = ("queued", "pending", "waiting", "requested")  # state grubunda sırasını bekleyen (başlamamış) iş
+
+
+def _due_inputs(due: dt.datetime, now: dt.datetime) -> dict[str, str]:
+    """onay.yml girdileri: dakika = paylaşıma kalan dakika + 2 (en çok 15), hedef = paylaşım anı (UTC, "…THH:MMZ")."""
+    left = max(0, math.ceil((due - now).total_seconds() / 60))
+    return {"dakika": str(min(15, left + 2)), "hedef": due.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")}
+
+
+def _onay_runs() -> list[dict] | None:
+    """onay.yml'in son 20 işi (iş adı hedefi içerir); öğrenilemezse None."""
+    repo, token = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN")
+    if not (repo and token):
+        return None
+    try:
+        r = requests.get(f"https://api.github.com/repos/{repo}/actions/workflows/onay.yml/runs",
+                         params={"per_page": 20}, timeout=30,
+                         headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"})
+        if r.status_code != 200:
+            print("Paylaşım işleri listelenemedi:", r.status_code)
+            return None
+        runs = r.json().get("workflow_runs")
+        return runs if isinstance(runs, list) else None
+    except Exception as e:  # noqa: BLE001
+        print("Paylaşım işleri listelenemedi:", _redact_safe(e))
+        return None
+
+
+def _due_covered(runs: list[dict], due: dt.datetime, now: dt.datetime) -> bool:
+    """Bu paylaşım anını üstlenmiş iş var mı (worker.js isVar ile aynı): aynı hedefle kuyrukta bekleyen/çalışan ya da son
+    30 dakikada başlatılmış, iptal edilmemiş iş (state grubunda yenisi gelince bekleyen iş çalışmadan iptal olur).
+    Saati gelmiş paylaşımı henüz başlamamış herhangi bir iş de üstlenir: başlayınca saati gelenlerin hepsini paylaşır;
+    yenisi başlatılırsa o işi iptal eder ve iki hedef birbirini iptal edip durur."""
+    hedef = _due_inputs(due, now)["hedef"]
+    for run in runs:
+        if due <= now and run.get("status") in NOT_STARTED:
+            return True
+        if hedef not in f"{run.get('display_title') or ''} {run.get('name') or ''}":
+            continue
+        try:
+            created = dt.datetime.fromisoformat(str(run.get("created_at") or "").replace("Z", "+00:00"))
+        except ValueError:
+            created = now  # tarihi okunamayan iş yeni sayılır
+        if run.get("status") != "completed" or (run.get("conclusion") != "cancelled" and created >= now - RUN_DEDUPE):
+            return True
+    return False
+
+
+def dispatch_if_due() -> bool:
+    """Durum kaydedildikten SONRA çağrılır: 3 dakika içinde paylaşılacak bir şey varsa tek sıra hâlinde çalışan
+    onay.yml'i (state grubu) o anı hedefleyerek başlatır. Anlara sırayla bakılır: üstlenen işi olan atlanır, ilk
+    üstlenilmemiş an için iş başlatılır (saati geçmiş bir kaydın işi, ör. hata almış ya da hâlâ yükleyen iş, sonraki
+    videonun paylaşımını bekletmesin). Kapının zamanlayıcısı da aynı hedefle başlatır. 3 saatten eski takılı kayıt
+    sayılmaz. İş listesi alınamazsa ilk an için başlatılır (bu adım her kayıttan sonra bir kez çalışır, döngü yapmaz)."""
+    now = dt.datetime.now(dt.timezone.utc)
+    dues = _due_times(now - DUE_STALE, now + DUE_WINDOW)
+    if not dues:
+        return False
+    runs = _onay_runs()
+    for due in dues:
+        if runs is not None and _due_covered(runs, due, now):
+            continue
+        inputs = _due_inputs(due, now)
+        ok = _dispatch("", "onay.yml", inputs)
+        print("Paylaşım işi başlatıldı:", ok, inputs["hedef"], "dakika:", inputs["dakika"])
+        return ok
+    print("Bu saatler için paylaşım işi zaten var:", ", ".join(_due_inputs(d, now)["hedef"] for d in dues))
+    return False
 
 
 def _window_poll_until(start: float, end: float) -> float:
@@ -963,8 +1135,8 @@ def listen(minutes: float) -> None:
                 wait = 60
             else:
                 return
-            if now < poll_until:
-                wait = min(wait, 60)
+            # en çok dakikada bir yeniden bakılır: bu arada panel takviminden öne alınan bir saat kaçmasın
+            wait = min(wait, 60)
             time.sleep(max(5, min(wait, end - now + 1)))
     while time.time() < end:
         try:
@@ -1053,11 +1225,12 @@ def _redact_safe(text) -> str:
     return _redact(text or "")
 
 
-def _dispatch(topic: str, workflow: str = "uret.yml") -> bool:
+def _dispatch(topic: str, workflow: str = "uret.yml", inputs: dict | None = None) -> bool:
     repo, token = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN")
     if not (repo and token):
         return False
-    inputs = {"topic": topic} if workflow == "uret.yml" else {}
+    if inputs is None:
+        inputs = {"topic": topic} if workflow == "uret.yml" else {}
     r = requests.post(f"https://api.github.com/repos/{repo}/actions/workflows/{workflow}/dispatches",
                       headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
                       json={"ref": os.environ.get("GITHUB_REF_NAME", "main"), "inputs": inputs}, timeout=30)
@@ -1075,7 +1248,7 @@ def duzelt(tag: str, islem: str = "", neden: str = "") -> None:
         v = _find(load(VIDEOS, []), tag)
         if not v:
             raise SystemExit(f"Video bulunamadı: {tag}")
-        fresh, note = False, ""
+        note = ""
         if islem == "yeniden" and v.get("status") == "zamanlandi" and v.get("schedule"):
             done = _done(v)  # paylaşılmış platformların gerçek saati korunur, yalnız bekleyenler yeniden planlanır
             soon = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=40)
@@ -1090,14 +1263,13 @@ def duzelt(tag: str, islem: str = "", neden: str = "") -> None:
                 pend = [t for p, t in sched.items() if p not in done]
                 if pend:
                     v = _update(tag, schedule=sched, publish_at=min(pend))
-                    fresh = True
         if v.get("status") == "zamanlandi":
             shared = []  # paylaşılmış platformlar da görünsün (saatleri artık planda değil)
             for p in PLATFORM_NAMES:
                 if p in _done(v):
                     at = (v.get("platforms") or {})[p].get("at")
                     shared.append(f"✅ {PLATFORM_NAMES[p]}: paylaşıldı" + (f" ({_fmt(at)})" if at else ""))
-            body = "\n".join(shared + [_plan_text(tag, _pending_sched(v), explain=fresh)]).strip() \
+            body = "\n".join(shared + [_plan_text(_pending_sched(v))]).strip() \
                 or ("Tüm platformlarda paylaşıldı." if len(_done(v)) == len(PLATFORM_NAMES)
                     else "Bu video için kayıtlı paylaşım saati yok.")
         else:
@@ -1125,11 +1297,7 @@ if __name__ == "__main__":
         except Exception as e:  # noqa: BLE001  (düğme tazeleme hatası işi düşürmesin)
             print("Düğmeler tazelenemedi:", _redact_safe(e))
     elif sys.argv[1] == "dispatch-if-due":
-        # Durum kaydedildikten SONRA çağrılır: şimdi paylaşılacak bir şey varsa tek sıra hâlinde çalışan
-        # onay.yml'i (state grubu) başlatır.
-        nxt = _next_due()
-        if nxt and nxt <= dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=2):
-            print("Paylaşım işi başlatıldı:", _dispatch("", "onay.yml"))
+        dispatch_if_due()
     elif sys.argv[1] == "duzelt":  # düzeltme sonrası: videonun mesajına güncel planı yanıt olarak yazar
         duzelt(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "", " ".join(sys.argv[4:]))
     elif sys.argv[1] == "notify":

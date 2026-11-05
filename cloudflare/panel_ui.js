@@ -184,23 +184,147 @@ details.diger summary::before{content:"+";font:400 18px/1 var(--display);width:2
 details.diger[open] summary::before{content:"–"}
 .liste-satir{display:flex;gap:10px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
 .liste-satir .tarih{flex:none}
-/* takvim */
-.gun{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
-.gun+.gun{margin-top:10px}
-.gun-bas{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.gun-bas h3{margin:0;font:400 20px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase}
-.gun-bas .etiket{font:500 11.5px/1 var(--mono);background:var(--yellow);color:var(--ink);padding:5px 8px;border-radius:6px}
-.gun-bas .say{margin-left:auto;font:12.5px/1 var(--mono);color:var(--muted)}
-.gun.bosgun{padding:10px 14px;box-shadow:none;background:transparent;border-style:dashed}
-.gun.bosgun h3{font-size:16px;color:var(--muted)}
-.gun ol{list-style:none;margin:10px 0 0;padding:0}
-.satir{display:grid;grid-template-columns:58px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:start}
-.satir time{font:500 17px/1.25 var(--mono);letter-spacing:-.02em}
-.satir .ne{min-width:0;display:flex;flex-direction:column;gap:2px}
-.satir .pfad{display:inline-flex;align-items:center;gap:6px;font:500 12.5px/1.2 var(--mono);color:var(--muted)}
-.satir .pfad svg{width:15px;height:15px;color:var(--text)}
-.satir .vbaslik{font:600 14.5px/1.35 var(--sans);overflow-wrap:anywhere}
-.satir .gecikti{color:var(--err)}
+/* takvim: gün şeridi + üç platform şeritli zaman çizelgesi (1 dk = 1 px) */
+:root{--yt:#d4202a;--ig:#b5307a;--tt:#0a8079;--ust-h:64px;--gun-h:76px;--olc:44px;--simdi:var(--red);
+  --prime-bg:rgba(252,213,33,.30);--prime-cizgi:#d9a900;--gecmis:rgba(20,19,19,.07)}
+@media (prefers-color-scheme:dark){:root{--yt:#ff6a62;--ig:#f27ab9;--tt:#4fd3cb;--simdi:#ff6a62;
+  --prime-bg:rgba(252,213,33,.16);--prime-cizgi:#FCD521;--gecmis:rgba(255,255,255,.06)}}
+.pf-youtube{--pf:var(--yt)}.pf-instagram{--pf:var(--ig)}.pf-tiktok{--pf:var(--tt)}
+.tk-duzen{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.tk-yan{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tk-ana{min-width:0}
+@media (min-width:960px){.tk-duzen{grid-template-columns:minmax(0,1fr) 320px;align-items:start}
+  .tk-yan{grid-column:2;grid-row:1;position:sticky;top:calc(var(--ust-h) + 12px)}.tk-ana{grid-column:1;grid-row:1}}
+.tk-tepsi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 12px 4px;box-shadow:var(--shadow)}
+.tk-tepsi h3{margin:0 0 6px;display:flex;align-items:center;gap:8px;font:400 17px/1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.tk-tepsi h3 .sayi{font:500 12px/1 var(--mono);background:var(--yellow);color:var(--ink);border-radius:999px;min-width:24px;height:24px;display:grid;place-items:center;padding:0 7px}
+.tk-tepsi-bos{margin:0 0 8px;font:13px/1.4 var(--mono);color:var(--muted)}
+.tk-tepsi-satir{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.tk-tepsi-satir>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.tk-tepsi-satir b{font:600 14px/1.3 var(--sans);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.tk-tepsi-satir small{font:12px/1.2 var(--mono);color:var(--muted)}
+.tk-tepsi-satir .btn{flex:0 0 auto;font-size:14px;padding:0 12px}
+.tk-lejant{display:flex;flex-wrap:wrap;gap:6px 14px;font:12.5px/1.3 var(--mono);color:var(--muted);padding:2px 2px 0}
+.tk-lejant span{display:inline-flex;align-items:center;gap:6px}
+.tk-lejant i{width:22px;height:12px;border-radius:3px;flex:none}
+.tk-lejant .l-prime{background:var(--prime-bg);border-top:2px solid var(--prime-cizgi)}
+.tk-lejant .l-kirli{border:2px dashed var(--text)}
+.tk-uyari{display:flex;gap:8px;align-items:flex-start;font:13px/1.4 var(--mono);color:var(--text);background:var(--plan-bg);border-radius:12px;padding:9px 11px;margin:0}
+.tk-uyari svg{width:18px;height:18px;flex:none;margin-top:1px}
+.tk-uyari ul{margin:2px 0 0;padding-left:16px}
+.tk-gunler{position:sticky;top:var(--ust-h);z-index:12;display:flex;gap:6px;overflow-x:auto;padding:8px 0 10px;margin:0 -16px;padding-left:16px;padding-right:16px;
+  background:var(--bg);scrollbar-width:none;height:var(--gun-h);scroll-padding:0 16px}
+.tk-gunler::-webkit-scrollbar{display:none}
+@media (min-width:960px){.tk-gunler{margin:0;padding-left:0;padding-right:0}}
+.tk-gun{flex:0 0 54px;height:58px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative;padding:0;color:var(--text)}
+.tk-gun-ad{font:500 11px/1 var(--mono);color:var(--muted)}
+.tk-gun b{font:400 20px/1 var(--display);letter-spacing:.02em}
+.tk-gun-say{position:absolute;top:-6px;right:-5px;min-width:17px;height:17px;border-radius:9px;background:var(--yellow);color:var(--ink);
+  font:500 10.5px/17px var(--mono);padding:0 4px;text-align:center;box-shadow:0 0 0 2px var(--bg)}
+.tk-gun[aria-pressed=true]{background:var(--btn-dark);color:var(--btn-dark-text);border-color:var(--btn-dark)}
+.tk-gun[aria-pressed=true] .tk-gun-ad{color:inherit;opacity:.75}
+.tk-gun.kirli::after{content:"";position:absolute;bottom:5px;width:6px;height:6px;border-radius:50%;background:var(--red)}
+.tk-gun.hedef{outline:3px dashed var(--red);outline-offset:-3px;transform:scale(1.06)}
+/* geniş ekranda 14 gün de sığsın (kaydırma çubuğu gizli; fare tekerleği de yatay kaydırır) */
+@media (min-width:700px){.tk-gunler{gap:4px}.tk-gun{flex:1 1 0;min-width:38px}}
+.tk-zaman{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.tk-serit-bas{position:sticky;top:calc(var(--ust-h) + var(--gun-h));z-index:11;display:grid;grid-template-columns:var(--olc) repeat(3,minmax(0,1fr));
+  background:var(--surface);border-bottom:1px solid var(--line-strong);border-radius:var(--radius) var(--radius) 0 0}
+.tk-serit-bas span{display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 2px;font:600 12.5px/1 var(--sans);min-width:0;overflow:hidden}
+.tk-serit-bas span b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk-serit-bas svg{width:17px;height:17px;flex:none;color:var(--pf)}
+.tk-gece{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:44px;border:0;border-bottom:1px solid var(--line);
+  background:var(--surface-2);color:var(--muted);font:500 12.5px/1 var(--mono);cursor:pointer}
+.tk-govde{position:relative;display:grid;grid-template-columns:var(--olc) repeat(3,minmax(0,1fr));
+  background-image:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 60px);border-radius:0 0 var(--radius) var(--radius)}
+.tk-saatler{position:relative}
+.tk-saatler span{position:absolute;left:0;right:6px;text-align:right;margin-top:3px;font:11px/1 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.tk-serit{position:relative;border-left:1px solid var(--line);min-width:0}
+.tk-prime{position:absolute;left:0;right:0;height:30px;background:var(--prime-bg);border-top:2px solid var(--prime-cizgi);pointer-events:none}
+.tk-prime span{position:absolute;right:4px;top:4px;font:500 10.5px/1 var(--mono);color:var(--text);white-space:nowrap}
+.tk-gecmis{position:absolute;left:var(--olc);right:0;top:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(135deg,transparent 0 7px,var(--gecmis) 7px 9px)}
+.tk-simdi{position:absolute;left:calc(var(--olc) - 5px);right:0;height:0;border-top:2px solid var(--simdi);z-index:4;pointer-events:none}
+.tk-simdi::before{content:"";position:absolute;left:0;top:-6px;width:10px;height:10px;border-radius:50%;background:var(--simdi)}
+.tk-simdi span{position:absolute;right:4px;top:-17px;font:500 10.5px/1 var(--mono);color:var(--simdi);background:var(--surface);padding:2px 4px;border-radius:4px}
+.tk-cip{position:absolute;height:44px;padding:4px 6px 4px 8px;border-radius:8px;border:0;border-left:4px solid var(--pf);
+  background:color-mix(in srgb,var(--pf) 14%,var(--surface));color:var(--text);text-align:left;display:flex;flex-direction:column;justify-content:center;gap:3px;
+  cursor:grab;box-shadow:0 1px 2px rgba(0,0,0,.14),inset 0 0 0 1px color-mix(in srgb,var(--pf) 30%,transparent);overflow:hidden;z-index:2;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;transition:box-shadow .15s}
+.tk-cip-ust{display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden}
+.tk-cip time{flex:none;font:500 13px/1 var(--mono);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tk-cip-ust>span{font-size:11px;line-height:1}
+.tk-cip-ust svg{width:12px;height:12px}
+.tk-cip-ad{font:12px/1.15 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.tk-cip-not{font:italic 11px/1.15 var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk-cip-kilit{font:italic 11px/1 var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;display:none}
+@media (min-width:700px){.tk-cip-ust>.tk-cip-kilit{display:block}}
+/* telefonda aynı şeritte yan yana çipler: saat sığsın diye ⭐/🔒 gizlenir, boşluk daralır; üç ve fazlasında saat iki satır */
+@media (max-width:699px){
+  .tk-cip.dar{padding:4px 2px 4px 4px;border-left-width:3px}
+  .tk-cip.dar time{font-size:12px;letter-spacing:-.04em}
+  .tk-cip.dar .tk-cip-ust>span{display:none}
+  .tk-cip.dar3{padding:3px 1px 3px 3px;border-left-width:2px}
+  .tk-cip.dar3 time{flex:0 1 auto;min-width:0;font-size:11px;line-height:1.1;white-space:normal}
+  .tk-cip.dar3 .tk-cip-ad,.tk-cip.dar3 .tk-cip-not{display:none}
+}
+.tk-cip.paylasildi{background:var(--surface-2);border-left-style:dashed;border-left-color:var(--muted);color:var(--muted);box-shadow:none;cursor:default}
+.tk-cip.kilitli{cursor:not-allowed}
+.tk-cip.kirli{outline:2px dashed var(--text);outline-offset:-2px}
+.tk-cip.isleniyor time::after{content:"";display:inline-block;width:9px;height:9px;margin-left:5px;border-radius:50%;border:2px solid currentColor;
+  border-right-color:transparent;animation:don .8s linear infinite;vertical-align:-1px}
+.tk-cip.cakisiyor{box-shadow:inset 0 0 0 2px var(--red)}
+.tk-cip.suruklenen{z-index:20;pointer-events:none;cursor:grabbing;box-shadow:0 14px 28px -8px rgba(0,0,0,.55);transform:scale(1.05);outline:2px solid var(--text)}
+.tk-surukle-etiket{position:fixed;z-index:70;pointer-events:none;background:var(--btn-dark);color:var(--btn-dark-text);font:500 15px/1 var(--mono);
+  padding:9px 12px;border-radius:10px;transform:translate(-50%,-100%);white-space:nowrap;box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
+.tk-surukle-etiket.hata{background:var(--red);color:#fff}
+body.tk-surukle{cursor:grabbing;-webkit-user-select:none;user-select:none}
+.tk-kayit{position:fixed;left:12px;right:12px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);z-index:25;max-width:640px;margin:0 auto;
+  display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow:auto}
+@media (min-width:860px){.tk-kayit{bottom:16px}}
+/* takvimde bildirimler altta (kayıt çubuğunun üstünde): üstteki yapışık gün şeridini (bırakma hedefi) örtmesin */
+.sekme-takvim .bildirimler{top:auto;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px + var(--kayit-h,0px))}
+@media (min-width:860px){.sekme-takvim .bildirimler{bottom:calc(24px + var(--kayit-h,0px))}}
+.tk-kayit-satir{display:flex;align-items:center;gap:10px;background:var(--btn-dark);color:var(--btn-dark-text);border-radius:14px;
+  padding:10px 10px 10px 14px;box-shadow:0 14px 30px -12px rgba(0,0,0,.6)}
+.tk-kayit-bilgi{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tk-kayit-bilgi b{font:600 13px/1.2 var(--sans)}
+.tk-kayit-bilgi span{font:12.5px/1.25 var(--sans);opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk-kayit-bilgi small{font:11.5px/1.3 var(--mono);opacity:.8;overflow-wrap:anywhere}
+.tk-kayit-dugme{display:flex;gap:6px;flex:none}
+.tk-kayit .btn-cizgi{color:inherit;box-shadow:inset 0 0 0 2px currentColor}
+.tk-bosluk{height:140px}
+/* takvim sayfası (saat seç) */
+.tk-pf{border:1px solid var(--line-strong);border-radius:12px;overflow:hidden}
+.tk-pf-bas{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:8px 12px;border:0;background:var(--bg);text-align:left;cursor:pointer;color:var(--text)}
+.tk-pf-bas .pf-ikon{color:var(--pf)}
+.tk-pf-bas>div{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.tk-pf-bas b{font:600 15px/1.2 var(--sans)}
+.tk-pf-bas span{font:13.5px/1.3 var(--mono);color:var(--text)}
+.tk-pf-bas .degistir{flex:none;font:500 12px/1 var(--mono);color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.tk-pf-bas .degistir svg{width:16px;height:16px}
+.tk-pf.kilitli .tk-pf-bas{cursor:default}
+.tk-pf.kilitli .tk-pf-bas span{color:var(--muted)}
+.tk-secici{padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);background:var(--surface)}
+.tk-secici>small{font:12px/1.3 var(--mono);color:var(--muted)}
+.tk-sec-gunler{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:thin}
+.tk-sec-gun{flex:0 0 50px;min-height:58px;border-radius:10px;border:1px solid var(--line-strong);background:var(--bg);color:var(--text);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;cursor:pointer;font:500 11px/1 var(--mono);padding:0}
+.tk-sec-gun b{font:400 18px/1 var(--display)}
+.tk-sec-gun small{font-size:10px;opacity:.7}
+.tk-sec-gun[aria-pressed=true]{background:var(--btn-dark);color:var(--btn-dark-text);border-color:var(--btn-dark)}
+.tk-sec-gun[disabled]{opacity:.35;cursor:not-allowed}
+.tk-sec-zaman{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end}
+.tk-sec-zaman label{display:flex;flex-direction:column;gap:4px;font:500 12px/1 var(--mono);color:var(--muted)}
+.tk-sec-zaman select{flex:none;width:100%;min-height:50px;font:500 22px/1 var(--mono);text-align:center;padding:6px 8px;background:var(--bg);color:var(--text)}
+.tk-sec-zaman .iki{font:400 26px/50px var(--display);padding-bottom:0}
+.tk-sec-hizli{display:flex;flex-wrap:wrap;gap:6px}
+.tk-sec-hizli button{min-height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--bg);color:var(--text);padding:0 12px;
+  font:500 14px/1 var(--mono);cursor:pointer;flex:1 1 auto}
+.tk-sec-hizli button.prime{background:var(--prime-bg);border-color:var(--prime-cizgi)}
+.tk-sec-hizli button[aria-pressed=true]{background:var(--btn-dark);color:var(--btn-dark-text);border-color:var(--btn-dark)}
+.tk-sec-hizli button[disabled]{opacity:.4;cursor:not-allowed}
 .saatler{margin-top:18px}
 .saat-izgara{display:grid;grid-template-columns:1fr;gap:8px}
 @media (min-width:640px){.saat-izgara{grid-template-columns:repeat(3,1fr)}}
@@ -468,6 +592,8 @@ function uygulama(AYAR) {
     D: null, imza: "", fark: 0, sekme: "videolar", yukleniyor: false, hata: "", giris: false, sonYukleme: 0,
     bekleyen: new Map(), kuyruk: null, kuyrukTaban: null, kuyrukKirli: false, metrik: "followers", uretKonu: "", yeniKonu: "",
     tumPaylasilan: false, ertelenen: false,
+    // takvim: seçili gün (bugünden uzaklık), gece saatleri, video başına kaydedilmemiş saatler {platform: ms}, derin bağlantı
+    takvimGun: 0, takvimGece: false, taslak: new Map(), surukleniyor: false, derin: null, gunKaydir: 0,
   };
   const $ = (id) => document.getElementById(id);
 
@@ -554,8 +680,13 @@ function uygulama(AYAR) {
       // kaydedilmemiş ya da kaydı süren sıra sunucudaki eski listeyle ezilmez (kayıt görülünce izlemeyiDenetle alır)
       if (!S.kuyrukKirli && !S.bekleyen.has("queue_set")) { S.kuyruk = (D.konu_sirasi || []).slice(); S.kuyrukTaban = S.kuyruk.slice(); }
       izlemeyiDenetle();
+      taslakTemizle();
       if (degisti || !sessiz) ciz(); else ustCiz();
+      if (S.derin) derinAc();
     } catch (e) {
+      if (e.status === 401 && S.derin) { // giriş bağlantısı /panel'e döner: derin bağlantı girişten sonra açılsın
+        try { localStorage.setItem("bm_derin", JSON.stringify({ tag: S.derin, t: Date.now() })); } catch { /* yok */ }
+      }
       if (e.status !== 401) { S.hata = e.message; if (!sessiz || !S.D) ciz(); else bildir(e.message, true); }
     } finally {
       S.yukleniyor = false;
@@ -586,10 +717,10 @@ function uygulama(AYAR) {
     refresh_suggestions: "🔎 Öneriler hâlâ hazırlanıyor; birkaç dakika sonra yenile.",
   };
 
-  async function islem(anah, govde, etiket) {
+  async function islem(anah, govde, etiket, ek) {
     if (S.bekleyen.has(anah)) return false;
     const iz = govde.tag ? videoIzi(govde.tag) : (IZLER[govde.action] || (() => ""));
-    S.bekleyen.set(anah, { basla: Date.now(), iz, once: iz(S.D), govde, etiket, gonderiliyor: true });
+    S.bekleyen.set(anah, { basla: Date.now(), iz, once: iz(S.D), govde, etiket, gonderiliyor: true, ...(ek || {}) });
     ciz();
     try {
       const j = await istek("islem", govde);
@@ -619,6 +750,8 @@ function uygulama(AYAR) {
   function bitti(b) {
     // konu sırası: Python kaydı panel isteğinin numarasıyla (rid) yazar; üretimin sıradan konu alması karışmaz
     if (b.govde.action === "queue_set" && S.D && S.D.konu_sirasi_rid !== undefined && b.rid) return S.D.konu_sirasi_rid === b.rid;
+    // takvim: kayıt başka bir nedenle (ör. bir platformun paylaşılması) değişse de yeni saatler görünene kadar "işleniyor"
+    if (b.govde.action === "schedule") return takvimIslendi(b);
     return b.iz(S.D) !== b.once;
   }
   function izlemeyiDenetle() {
@@ -628,6 +761,11 @@ function uygulama(AYAR) {
         S.bekleyen.delete(anah);
         if (b.govde.action === "queue_set") { // kaydedilen (birleştirilmiş) sıra artık sunucudaki
           S.kuyruk = (S.D.konu_sirasi || []).slice(); S.kuyrukTaban = S.kuyruk.slice(); S.kuyrukKirli = false;
+        }
+        if (b.govde.action === "schedule") {
+          S.taslak.delete(b.govde.tag);
+          bildir((b.takvimOnce || "").includes("onay_bekliyor") ? `✅ Onaylandı, takvime yerleşti: ${b.etiket}` : `✅ Paylaşım saatleri kaydedildi: ${b.etiket}`);
+          continue;
         }
         bildir(BITTI[b.govde.action] || `✅ Güncellendi: ${b.etiket}`);
       } else if (Date.now() - b.basla > IZLEME_SURE) {
@@ -651,6 +789,7 @@ function uygulama(AYAR) {
     // oynayan video veya yazı yazılan alan varken arka plan yenilemesi sayfayı yeniden çizmesin
     const a = document.activeElement;
     if (a && $("uygulama").contains(a) && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) return false;
+    if (S.surukleniyor || sur) return false; // takvimde çip sürükleniyor ya da basılı tutuluyor
     return ![...document.querySelectorAll("#uygulama video")].some((v) => !v.paused && !v.ended);
   }
 
@@ -677,6 +816,23 @@ function uygulama(AYAR) {
     kok.append(main);
     grafikleriCiz();
     ustCiz();
+    cizimSonrasi();
+  }
+
+  // yapışık takvim şeritleri üst çubuğun gerçek yüksekliğine göre durur; gün şeridi kaldığı yerden devam eder
+  function cizimSonrasi() {
+    const ust = document.querySelector(".ust");
+    if (ust) document.documentElement.style.setProperty("--ust-h", ust.offsetHeight + "px");
+    document.body.classList.toggle("sekme-takvim", S.sekme === "takvim");
+    const kayit = document.querySelector(".tk-kayit");
+    document.documentElement.style.setProperty("--kayit-h", kayit ? kayit.offsetHeight + 6 + "px" : "0px");
+    const serit = document.querySelector(".tk-gunler");
+    if (!serit) return;
+    serit.scrollLeft = S.gunKaydir || 0;
+    const g = serit.querySelector('[aria-pressed="true"]');
+    if (g && (g.offsetLeft < serit.scrollLeft || g.offsetLeft + g.offsetWidth > serit.scrollLeft + serit.clientWidth)) {
+      serit.scrollLeft = S.gunKaydir = Math.max(0, g.offsetLeft - serit.clientWidth / 2 + g.offsetWidth / 2);
+    }
   }
 
   function ertelenmisiCiz() { if (S.ertelenen && guvenliMi()) ciz(); }
@@ -704,7 +860,9 @@ function uygulama(AYAR) {
     const nav = h("nav", { class: "sekmeler", "aria-label": "Bölümler" }, SEKMELER.map(([id, ad, ik]) =>
       h("button", { class: "sekme", "aria-current": S.sekme === id ? "page" : null, onclick: () => sekmeyeGec(id) },
         ikon(ik), h("span", null, ad),
-        id === "videolar" && say + sorun ? h("span", { class: "rozet", "aria-label": `${say + sorun} işlem bekliyor` }, say + sorun) : null)));
+        id === "videolar" && say + sorun ? h("span", { class: "rozet", "aria-label": `${say + sorun} işlem bekliyor` }, say + sorun) : null,
+        id === "takvim" && S.taslak.size ? h("span", { class: "rozet", style: "background:var(--yellow);color:var(--ink)",
+          "aria-label": `${S.taslak.size} videoda kaydedilmemiş saat` }, S.taslak.size) : null)));
     return h("header", { class: "ust" }, h("div", { class: "ust-ic" }, marka(), nav,
       h("div", { class: "ust-bilgi" }, h("span", { class: "guncel", id: "guncel" }),
         h("button", { class: "ikon-btn", id: "yenile", "aria-label": "Yenile", title: "Yenile", onclick: () => yukle() }, ikon("yenile")))));
@@ -921,6 +1079,10 @@ function uygulama(AYAR) {
     if ((v.status === "onay_bekliyor" || v.status === "zamanlandi") && !yakin) { // paylaşıma 10 dk kala düzenlenmez
       d.push(dugme("edit:" + t, "Düzenle", "btn-cizgi", () => duzenleSayfasi(v), kilit));
     }
+    const an = paylasimAni(v);
+    if (v.status === "onay_bekliyor" || (v.status === "zamanlandi" && !(an != null && an <= simdi() + 10 * 60e3))) {
+      d.push(h("button", { class: "btn btn-cizgi", disabled: mesgul, onclick: () => takvimdeAyarla(v) }, "🗓 Takvimde ayarla"));
+    }
     if (d.length) k.append(h("div", { class: "dugmeler" }, d));
     return k;
   }
@@ -956,7 +1118,7 @@ function uygulama(AYAR) {
   function slotlar() {
     const t = new Date(simdi() + TR);
     const y = t.getUTCFullYear(), m = t.getUTCMonth(), d = t.getUTCDate();
-    const out = [["best", "🎯 Her platform en iyi saatinde", "Her platform kendi en uygun boş saatinde paylaşılır."],
+    const out = [["best", "🎯 Her platform en iyi saatinde", "Her platform kendi boş en iyi saatinde (⭐) paylaşılır; o gün doluysa ertesi gün."],
       ["now", "⚡ Şimdi", "Birkaç dakika içinde tüm platformlarda paylaşılır."]];
     for (const [kod, ad, ek, sa] of [["b12", "Bugün 12:00", 0, 12], ["b19", "Bugün 19:00", 0, 19],
       ["y12", "Yarın 12:00", 1, 12], ["y19", "Yarın 19:00", 1, 19]]) {
@@ -971,7 +1133,9 @@ function uygulama(AYAR) {
       h("button", { class: "secenek" + (kod === "best" ? " vurgu" : ""), onclick: () => {
         dlg.close();
         islem("approve:" + v.tag, { action: "approve", tag: v.tag, code: kod }, v.title);
-      } }, h("b", null, ad), h("span", null, ac)))));
+      } }, h("b", null, ad), h("span", null, ac))),
+    h("button", { class: "secenek", onclick: () => { dlg.close(); takvimdeAyarla(v); } }, h("b", null, "🗓 Takvimde seç"),
+      h("span", null, "Her platform için günü ve saati kendin seç (⭐ en iyi saatler işaretli)."))));
   }
 
   async function duzenleSayfasi(v) {
@@ -1049,45 +1213,611 @@ function uygulama(AYAR) {
   }
 
   // ---------------------------------------------------------------- Takvim
-  function takvim() {
-    const kap = h("div");
-    const bugun = gunNo(simdi());
-    const satirlar = [];
+  // Gün şeridi (bugün + 13 gün) ve seçili gün için üç platform şeritli zaman çizelgesi (1 dk = 1 px). Zamanlanmış her
+  // videonun paylaşılmamış her platformu bir çiptir: dokununca "Saat seç" sayfası, basılı tutup sürükleyince 5 dk adımla
+  // taşınır. Değişiklikler video başına taslakta (S.taslak) birikir ve tek "Kaydet" ile tek işlem olarak gider.
+  const GUN_SAYISI = 14, ADIM_DK = 5, CIP_Y = 44, GUNDUZ = 7 * 60;
+  // basılı tutma platformların uzun basışı kadar (500 ms): okurken dinlenen parmak kaydırınca çip taşınmasın
+  const YAKIN_MS = 10 * 60e3, EN_ERKEN_MS = 3 * 60e3, ARALIK_MS = 2 * 3600e3, BASILI_MS = 500, KIPIR_PX = 8;
+  const GUN_KISA = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+  const gunBasi = (n) => n * 86400000 - TR; // TR gününün (gunNo) 00:00'ı
+  const gunDk = (z) => Math.floor((((z + TR) % 86400000) + 86400000) % 86400000 / 60000);
+  const hmDk = (hm) => { const [a, b] = String(hm).split(":").map(Number); return a * 60 + b; };
+  const enIyi = (p) => ((((S.D && S.D.saatler) || {}).en_iyi || {})[p] || []).slice().sort();
+  const primeMi = (p, z) => enIyi(p).includes(saatDk(z));
+  const enErken = () => Math.ceil((simdi() + EN_ERKEN_MS) / 60000) * 60000; // seçilebilecek en erken an
+  const gunEtiketi = (i, n) => (i === 0 ? "Bugün" : i === 1 ? "Yarın" : GUN_KISA[parca(gunBasi(n) + 43200000).g]);
+  const kisaGunSaat = (z) => (z == null ? "—" : `${kisaTarih(z)} ${saatDk(z)}`);
+  const okSet = (v) => new Set(Object.entries(v.platforms || {}).filter(([, r]) => r && r.status === "ok").map(([p]) => p));
+
+  // telegram_bot._pending_sched: paylaşılmamış platformların saati; saati geçip paylaşılamamış platform publish_at'te denenir
+  function bekleyenSaatler(v) {
+    const pa = ms(v.publish_at), out = {};
+    for (const [p, t] of Object.entries(bekleyenTakvim(v))) {
+      const z = ms(t);
+      if (z != null) out[p] = pa != null && z < pa ? pa : z;
+    }
+    return out;
+  }
+  // panel.js paylasimAni / telegram_bot._due_at: paylaşım işinin bu videoda bir şey paylaşacağı an
+  function paylasimAni(v) {
+    if (v.status !== "zamanlandi") return null;
+    const b = Object.values(bekleyenTakvim(v)).map(ms).filter((x) => x != null);
+    const a = [ms(v.publish_at), b.length ? Math.min(...b) : null].filter((x) => x != null);
+    return a.length ? Math.max(...a) : null;
+  }
+  const isleniyorMu = (tag) => [...S.bekleyen.keys()].some((k) => k.endsWith(":" + tag));
+
+  // takvimdeki çipler: paylaşılmamış platformlar (taslaktaki saatiyle) ve [bas, son) içinde paylaşılmış olanlar
+  function takvimCipleri(bas, son) {
+    const out = [];
     for (const v of S.D.videos) {
-      if (v.status !== "zamanlandi") continue;
-      for (const [p, t] of Object.entries(bekleyenTakvim(v))) {
-        const z = ms(t);
-        if (z != null) satirlar.push({ z, p, v });
+      for (const [p] of PF) {
+        const r = (v.platforms || {})[p];
+        if (!r || r.status !== "ok") continue;
+        const z = ms(r.at) || ms(v.published) || ms(takvimi(v)[p]);
+        if (z != null && z >= bas && z < son) out.push({ v, p, z, paylasildi: true, kilit: "paylaşıldı" });
+      }
+      if (v.status === "onay_bekliyor") {
+        // onayı işleniyor (30-60 sn): gönderilen saatler "kaydediliyor" çipi olur; sıradaki onayın önerisi ve 2 saat
+        // uyarısı bu saatleri dolu sayar (aynı boş saat iki videoya önerilmesin)
+        const b = S.bekleyen.get("schedule:" + v.tag);
+        for (const [p, iso] of Object.entries((b && b.govde.schedule) || {})) {
+          const z = ms(iso);
+          if (z != null && z < son) out.push({ v, p, z, kilit: "kaydediliyor" });
+        }
+        continue;
+      }
+      if (v.status !== "zamanlandi" && v.status !== "yayinlaniyor") continue;
+      const taslak = S.taslak.get(v.tag) || {};
+      const an = paylasimAni(v);
+      const kilit = v.status === "yayinlaniyor" ? "paylaşılıyor" : isleniyorMu(v.tag) ? "kaydediliyor"
+        : an != null && an <= simdi() + YAKIN_MS ? "yakında paylaşılıyor" : null;
+      for (const [p, z0] of Object.entries(bekleyenSaatler(v))) {
+        const z = taslak[p] != null ? taslak[p] : z0;
+        if (z < son) out.push({ v, p, z, kirli: taslak[p] != null && taslak[p] !== z0, kilit });
       }
     }
-    satirlar.sort((a, b) => a.z - b.z || a.p.localeCompare(b.p));
-    const ileri = satirlar.filter((s) => gunNo(s.z) > bugun + 6).length;
-    kap.append(bolumBasligi("takvim", "Önümüzdeki 7 gün", null,
-      `${satirlar.filter((s) => gunNo(s.z) <= bugun + 6).length} paylaşım · Türkiye saati`));
-    for (let g = 0; g < 7; g++) {
-      const gun = satirlar.filter((s) => Math.max(gunNo(s.z), bugun) === bugun + g);
-      const ornek = (bugun + g) * 86400000 - TR + 12 * 3600000;
-      const etiket = g === 0 ? "Bugün" : g === 1 ? "Yarın" : null;
-      const bas = h("div", { class: "gun-bas" }, h("h3", null, gunAdi(ornek)), etiket ? h("span", { class: "etiket" }, etiket) : null,
-        h("span", { class: "say" }, gun.length ? `${gun.length} paylaşım` : "Paylaşım yok"));
-      if (!gun.length) { kap.append(h("section", { class: "gun bosgun" }, bas)); continue; }
-      kap.append(h("section", { class: "gun" }, bas, h("ol", null, gun.map((s) => {
-        const gecti = s.z < simdi();
-        return h("li", { class: "satir" }, h("time", { class: gecti ? "gecikti" : null }, gecti ? "Sırada" : saatDk(s.z)),
-          h("div", { class: "ne" }, h("span", { class: "pfad" }, ikon(s.p), PF_AD[s.p] || s.p,
-            gecti ? ` · ${saatDk(s.z)} saati geldi, paylaşım sırada` : ""), h("span", { class: "vbaslik" }, s.v.title)));
-      }))));
+    return out;
+  }
+  // aynı platformda başka bir videonun 2 saatten yakın paylaşımı (uyarı; seçimi engellemez)
+  function yakinlar(p, z, tag) {
+    const b = gunNo(simdi());
+    return takvimCipleri(gunBasi(b - 1), gunBasi(b + GUN_SAYISI + 1))
+      .filter((c) => c.p === p && c.v.tag !== tag && Math.abs(c.z - z) < ARALIK_MS);
+  }
+  const yakinMetni = (p, z, l) => `${PF_AD[p]} ${saatDk(z)}: ` + l.map((c) => `"${kisalt(c.v.title, 34)}" ${saatDk(c.z)}`).join(", ");
+
+  // onay bekleyen video için önerilen saatler: her platformda şimdi+15 dk'dan sonraki, başka paylaşıma 2 saatten yakın
+  // olmayan ilk en iyi saat (14 gün ileriye kadar); yoksa 20 dk sonrası
+  function oneriSaatleri(tag) {
+    const b = gunNo(simdi());
+    const dolu = takvimCipleri(gunBasi(b - 1), gunBasi(b + GUN_SAYISI)).filter((c) => c.v.tag !== tag);
+    const out = {};
+    for (const [p] of PF) {
+      let sec = null;
+      for (let g = 0; g < GUN_SAYISI && sec == null; g++) {
+        for (const hm of enIyi(p)) {
+          const t = gunBasi(b + g) + hmDk(hm) * 60000;
+          if (t >= simdi() + 15 * 60e3 && dolu.every((c) => c.p !== p || Math.abs(c.z - t) >= ARALIK_MS)) { sec = t; break; }
+        }
+      }
+      out[p] = sec != null ? sec : Math.ceil((simdi() + 20 * 60e3) / 300000) * 300000;
     }
-    if (ileri) kap.append(h("p", { class: "tarih", style: "margin:12px 2px 0" }, `7 günden sonra: ${ileri} paylaşım daha.`));
-    const sa = S.D.saatler || {};
-    kap.append(h("div", { class: "saatler" }, bolumBasligi("saatler", "En iyi saatler", null, "🎯 seçeneği bunları kullanır"),
-      h("div", { class: "saat-izgara" }, PF.map(([p, ad]) => h("div", { class: "saat-kart" },
-        h("span", { class: "pf-ikon" }, ikon(p)),
-        h("div", null, h("b", null, ad), h("span", null, ((sa.en_iyi || {})[p] || []).join(" · ")
-          + (((sa.ek || {})[p] || []).length ? ` (ek: ${sa.ek[p].join(", ")})` : "")))))),
-      h("p", { class: "tarih", style: "margin:10px 2px 0" },
-        "Ek saat, günün kalan asıl saatleri başka videolara ayrıldıysa kullanılır. Aynı platformda iki paylaşım arası en az 2 saat.")));
+    return out;
+  }
+
+  // taslak: video başına {platform: ms}; sunucudaki saate geri dönen platform taslaktan çıkar
+  function tasla(tag, p, z) {
+    const v = S.D.videos.find((x) => x.tag === tag);
+    const t = { ...(S.taslak.get(tag) || {}) };
+    if (v && bekleyenSaatler(v)[p] === z) delete t[p]; else t[p] = z;
+    if (Object.keys(t).length) S.taslak.set(tag, t); else S.taslak.delete(tag);
+  }
+  // yeni durum gelince: artık zamanlanmamış videonun, paylaşılmış ya da sunucuda aynı saate gelmiş platformun taslağı silinir
+  function taslakTemizle() {
+    for (const [tag, t] of [...S.taslak]) {
+      if (S.bekleyen.has("schedule:" + tag)) continue; // kayıt sürüyor: izlemeyiDenetle kapatır
+      const v = S.D.videos.find((x) => x.tag === tag);
+      const sunucu = v && v.status === "zamanlandi" ? bekleyenSaatler(v) : {};
+      const kalan = Object.fromEntries(Object.entries(t).filter(([p, z]) => p in sunucu && sunucu[p] !== z));
+      if (Object.keys(kalan).length) S.taslak.set(tag, kalan); else S.taslak.delete(tag);
+    }
+  }
+  // takvim kaydı tamamlandı mı: gönderilen saatler kayıtta göründü ya da video artık bu takvimde değil
+  function takvimIslendi(b) {
+    const v = S.D && S.D.videos.find((x) => x.tag === b.govde.tag);
+    if (!v || !["onay_bekliyor", "zamanlandi"].includes(v.status)) return true;
+    if (v.status !== "zamanlandi") return false;
+    const t = takvimi(v);
+    return Object.entries(b.govde.schedule).every(([p, iso]) => ms(t[p]) === ms(iso))
+      || JSON.stringify([v.status, v.schedule]) !== b.takvimOnce;
+  }
+
+  function takvimKaydet(v, t) {
+    if (Object.values(t).some((z) => z < enErken())) { bildir("Seçilen saatlerden biri geçti; yeni bir saat seç.", true); return; }
+    const an = paylasimAni(v);
+    if (v.status === "zamanlandi" && an != null && an <= simdi() + YAKIN_MS) {
+      bildir("Bu videonun paylaşımı 10 dakika içinde başlıyor; saatler şu an değiştirilemez.", true);
+      return;
+    }
+    if (v.status === "zamanlandi") S.taslak.set(v.tag, { ...t }); // kayıt bitene kadar takvimde yeni saat görünür
+    const schedule = Object.fromEntries(Object.entries(t).map(([p, z]) => [p, new Date(z).toISOString()]));
+    islem("schedule:" + v.tag, { action: "schedule", tag: v.tag, schedule }, v.title, { takvimOnce: JSON.stringify([v.status, v.schedule]) });
+  }
+
+  function takvim() {
+    const bugun = gunNo(simdi());
+    S.takvimGun = Math.min(Math.max(S.takvimGun || 0, 0), GUN_SAYISI - 1);
+    const secili = bugun + S.takvimGun;
+    const cipler = takvimCipleri(gunBasi(bugun), gunBasi(bugun + GUN_SAYISI));
+    const gunu = (c) => Math.max(gunNo(c.z), bugun);
+    const bugunku = cipler.filter((c) => gunu(c) === secili);
+    const kap = h("div", { class: "tk" });
+    kap.append(bolumBasligi("takvim", "Takvim", null, "Türkiye saati · 14 gün · dokun ya da basılı tutup sürükle"));
+    const yan = h("aside", { class: "tk-yan" }, onayTepsisi(), lejant());
+    const ana = h("div", { class: "tk-ana" }, gunSeridi(bugun, cipler, gunu), cakismaUyarisi(bugunku),
+      zamanCizelgesi(secili, bugun, bugunku));
+    kap.append(h("div", { class: "tk-duzen" }, yan, ana), enIyiSaatler());
+    const cubuk = kayitCubugu();
+    if (cubuk) kap.append(h("div", { class: "tk-bosluk" }), cubuk);
     return kap;
+  }
+
+  function onayTepsisi() {
+    const liste = S.D.videos.filter((v) => v.status === "onay_bekliyor")
+      .sort((a, b) => (tagZamani(b.tag) || 0) - (tagZamani(a.tag) || 0));
+    const kap = h("section", { class: "tk-tepsi", "aria-labelledby": "tk-tepsi-bas" },
+      h("h3", { id: "tk-tepsi-bas" }, "Onay bekleyenler", h("span", { class: "sayi" }, liste.length)));
+    if (!liste.length) kap.append(h("p", { class: "tk-tepsi-bos" }, "Onay bekleyen video yok."));
+    for (const v of liste) {
+      const tz = tagZamani(v.tag);
+      kap.append(h("div", { class: "tk-tepsi-satir" },
+        h("div", null, h("b", null, v.title || v.tag), h("small", null, "Üretim · " + (tz ? tamTarih(tz) : v.tag))),
+        dugme("schedule:" + v.tag, "Takvime yerleştir", "btn-ana btn-kucuk", () => takvimSayfasi(v),
+          isleniyorMu(v.tag) ? { disabled: true } : { "aria-label": "Takvime yerleştir: " + v.title })));
+    }
+    return kap;
+  }
+
+  function lejant() {
+    return h("div", { class: "tk-lejant", "aria-label": "Takvim işaretleri" },
+      h("span", null, h("i", { class: "l-prime" }), "⭐ En iyi saat (prime time)"),
+      h("span", null, "✅ Paylaşıldı"), h("span", null, "🔒 Yakında paylaşılıyor"),
+      h("span", null, h("i", { class: "l-kirli" }), "Kaydedilmemiş"));
+  }
+
+  function cakismaUyarisi(cipler) {
+    const satir = [];
+    for (const [p] of PF) {
+      const l = cipler.filter((c) => c.p === p).sort((a, b) => a.z - b.z);
+      for (let i = 1; i < l.length; i++) {
+        const a = l[i - 1], b = l[i];
+        if (a.v.tag !== b.v.tag && b.z - a.z < ARALIK_MS && !(a.paylasildi && b.paylasildi)) {
+          a.cakisiyor = b.cakisiyor = true;
+          satir.push(`${PF_AD[p]} ${saatDk(a.z)} ve ${saatDk(b.z)}`);
+        }
+      }
+    }
+    if (!satir.length) return null;
+    return h("p", { class: "tk-uyari", role: "note", style: "margin-bottom:8px" }, ikon("uyari"),
+      h("span", null, "Aynı platformda 2 saatten yakın iki paylaşım: " + satir.join(" · ") + ". İstersen böyle bırakabilirsin."));
+  }
+
+  function gunSec(i) {
+    S.takvimGun = i;
+    ciz(true);
+    ilkCipeKaydir();
+  }
+  // seçili günün ilk paylaşımı ekranda değilse görünür yere kaydırır
+  function ilkCipeKaydir() {
+    requestAnimationFrame(() => {
+      const c = document.querySelector(".tk-cip:not(.paylasildi)") || document.querySelector(".tk-simdi");
+      const bas = document.querySelector(".tk-serit-bas");
+      if (!c || !bas) return;
+      const r = c.getBoundingClientRect(), ust = bas.getBoundingClientRect().bottom;
+      if (r.top < ust + 8 || r.bottom > window.innerHeight - 160) window.scrollBy({ top: r.top - ust - 90, behavior: "smooth" });
+    });
+  }
+
+  function gunSeridi(bugun, cipler, gunu) {
+    const kirli = new Set(cipler.filter((c) => c.kirli).map((c) => gunu(c)));
+    const serit = h("div", { class: "tk-gunler", role: "group", "aria-label": "Gün seç (sürüklenen paylaşımı bir güne bırakmak da olur)",
+      onscroll: (e) => { S.gunKaydir = e.currentTarget.scrollLeft; }, onwheel: gunTekerlek },
+    Array.from({ length: GUN_SAYISI }, (_, i) => {
+      const n = bugun + i, pr = parca(gunBasi(n) + 43200000);
+      const say = cipler.filter((c) => !c.paylasildi && gunu(c) === n).length;
+      return h("button", { type: "button", class: "tk-gun" + (kirli.has(n) ? " kirli" : ""), "data-gun": i,
+        "aria-pressed": i === S.takvimGun ? "true" : "false", "aria-label": `${gunAdi(gunBasi(n) + 43200000)}: ${say} paylaşım`,
+        onclick: () => gunSec(i) },
+      h("span", { class: "tk-gun-ad" }, gunEtiketi(i, n)), h("b", null, pr.d), say ? h("span", { class: "tk-gun-say" }, say) : null);
+    }));
+    return serit;
+  }
+
+  // şerit sığmıyorsa farenin dikey tekerleği günleri yatay kaydırır (uçta sayfa kayar)
+  function gunTekerlek(e) {
+    const s = e.currentTarget, once = s.scrollLeft;
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    s.scrollLeft += e.deltaY;
+    if (s.scrollLeft !== once) e.preventDefault();
+  }
+
+  // aynı şeritte üst üste binen çipler yan yana sütunlara bölünür
+  function yerlesim(liste) {
+    let grup = [], ucl = [], enSon = -Infinity;
+    const kapat = () => { for (const c of grup) { c.gen = 100 / ucl.length; c.sol = c.sutun * c.gen; } grup = []; ucl = []; enSon = -Infinity; };
+    for (const c of liste) {
+      if (grup.length && c.y >= enSon) kapat();
+      let i = ucl.findIndex((u) => u <= c.y);
+      if (i < 0) { i = ucl.length; ucl.push(0); }
+      ucl[i] = c.y + CIP_Y; c.sutun = i; grup.push(c);
+      enSon = Math.max(enSon, c.y + CIP_Y);
+    }
+    if (grup.length) kapat();
+  }
+
+  function zamanCizelgesi(secili, bugun, tumu) {
+    // gece saatleri (00-07) yalnız o saatte bekleyen paylaşım varsa kendiliğinden açılır; gecenin paylaşılmışları düğmede sayılır
+    const erken = tumu.some((c) => !c.paylasildi && gunNo(c.z) === secili && gunDk(c.z) < GUNDUZ);
+    const bas = S.takvimGece || erken ? 0 : GUNDUZ, son = 24 * 60;
+    const gizli = tumu.filter((c) => c.paylasildi && gunNo(c.z) === secili && gunDk(c.z) < bas);
+    const cipler = tumu.filter((c) => !gizli.includes(c));
+    const govde = h("div", { class: "tk-govde", style: `height:${son - bas}px`, "data-bas": bas, "data-gun": secili });
+    const saatler = h("div", { class: "tk-saatler", "aria-hidden": "true" });
+    for (let m = bas; m < son; m += 60) saatler.append(h("span", { style: `top:${m - bas}px` }, `${pad(m / 60)}:00`));
+    govde.append(saatler);
+    for (const [p, ad] of PF) {
+      const serit = h("div", { class: "tk-serit pf-" + p, "data-pf": p, role: "group", "aria-label": ad + " paylaşımları" });
+      for (const hm of enIyi(p)) {
+        const m = hmDk(hm);
+        if (m >= bas) serit.append(h("div", { class: "tk-prime", style: `top:${m - bas}px`, title: "En iyi saat" }, h("span", null, "⭐ " + hm)));
+      }
+      const liste = cipler.filter((c) => c.p === p).map((c) => ({ ...c, y: gunNo(c.z) < secili ? 0 : Math.max(0, gunDk(c.z) - bas) }))
+        .sort((a, b) => a.y - b.y || a.z - b.z);
+      yerlesim(liste);
+      for (const c of liste) serit.append(cipEl(c));
+      govde.append(serit);
+    }
+    if (secili === bugun) { // geçmiş (seçilemez) bölge ve şimdi çizgisi
+      const g = Math.min(son, Math.max(bas, gunNo(enErken()) > bugun ? son : gunDk(enErken())));
+      if (g > bas) govde.append(h("div", { class: "tk-gecmis", style: `height:${g - bas}px`, "aria-hidden": "true" }));
+      const n = gunDk(simdi());
+      if (n >= bas) govde.append(h("div", { class: "tk-simdi", style: `top:${n - bas}px`, "aria-hidden": "true" }, h("span", null, "Şimdi " + saatDk(simdi()))));
+    }
+    const gece = bas > 0 ? h("button", { type: "button", class: "tk-gece", onclick: () => { S.takvimGece = true; ciz(true); } },
+      "🌙 Gece (00:00–07:00) göster" + (gizli.length ? ` · ${gizli.length} paylaşıldı` : ""))
+      : !erken && S.takvimGece ? h("button", { type: "button", class: "tk-gece", onclick: () => { S.takvimGece = false; ciz(true); } }, "Gece saatlerini gizle") : null;
+    return h("section", { class: "tk-zaman", "aria-label": `${gunAdi(gunBasi(secili) + 43200000)} zaman çizelgesi` },
+      h("div", { class: "tk-serit-bas", "aria-hidden": "true" }, h("span"), PF.map(([p, ad]) => h("span", { class: "pf-" + p }, ikon(p), h("b", null, ad)))),
+      gece, govde);
+  }
+
+  function cipEl(c) {
+    const { v, p, z } = c;
+    const prime = primeMi(p, z);
+    const durum = c.paylasildi ? "Paylaşıldı." : c.kilit ? `${c.kilit[0].toUpperCase()}${c.kilit.slice(1)}; saat şu an değiştirilemez.`
+      : (c.kirli ? "Kaydedilmemiş değişiklik. " : "") + "Saati değiştirmek için dokun ya da basılı tutup sürükle.";
+    const bosluk = c.gen < 50 ? 1 : 2; // üç ve fazla yan yana çipte aradaki boşluk daralır
+    const el = h("button", { type: "button", "data-cip": `${v.tag}:${p}`,
+      class: `tk-cip pf-${p}` + (c.paylasildi ? " paylasildi" : "") + (c.kilit ? " kilitli" : "") + (c.kirli ? " kirli" : "")
+        + (c.kilit === "kaydediliyor" ? " isleniyor" : "") + (c.cakisiyor ? " cakisiyor" : "")
+        + (c.gen < 100 ? " dar" : "") + (c.gen < 50 ? " dar3" : ""),
+      style: `top:${c.y}px;left:calc(${c.sol}% + ${bosluk}px);width:calc(${c.gen}% - ${2 * bosluk}px)`,
+      "aria-label": `${PF_AD[p]}, ${tamTarih(z)}${prime ? ", en iyi saat" : ""}: ${v.title}. ${durum}`,
+      "aria-disabled": c.kilit ? "true" : null, onclick: () => cipTikla(c) },
+    // kilitli çipte (yakında paylaşılıyor) hangi video olduğu görünsün: başlık kalır, kilit 🔒 ile (geniş ekranda yazıyla) gösterilir
+    h("span", { class: "tk-cip-ust" }, h("time", null, saatDk(z).slice(0, 2), h("wbr"), saatDk(z).slice(2)), prime ? h("span", { "aria-hidden": "true" }, "⭐") : null,
+      c.paylasildi ? h("span", { "aria-hidden": "true" }, "✅") : c.kilit && c.kilit !== "kaydediliyor" ? h("span", { "aria-hidden": "true" }, "🔒") : null,
+      c.kilit && !c.paylasildi && c.kilit !== "kaydediliyor" ? h("span", { class: "tk-cip-kilit", "aria-hidden": "true" }, c.kilit) : null),
+    c.kilit === "kaydediliyor" ? h("span", { class: "tk-cip-not" }, "kaydediliyor…") : h("span", { class: "tk-cip-ad" }, v.title));
+    el._cip = c;
+    el.addEventListener("contextmenu", (e) => e.preventDefault()); // uzun basışta menü açılmasın
+    if (!c.kilit) el.addEventListener("pointerdown", cipBas);
+    return el;
+  }
+
+  function cipTikla(c) {
+    if (Date.now() - sonSurukleme < 400) return; // sürükleme bitti, dokunma sayılmaz
+    if (c.paylasildi) { bildir(`${PF_AD[c.p]}: ${tamTarih(c.z)} paylaşıldı.`); return; }
+    if (c.kilit === "kaydediliyor") { bildir("Bu videonun saatleri kaydediliyor; birazdan güncellenir."); return; }
+    if (c.kilit) { bildir("Bu videonun paylaşımı başladı ya da 10 dakika içinde başlıyor; saatler şu an değiştirilemez."); return; }
+    takvimSayfasi(c.v, c.p);
+  }
+
+  // ---- sürükle bırak (fare, dokunmatik, kalem): dokunmatikte 500 ms basılı tutunca alınır, önce kaydırma çalışır.
+  // Alınan çip kıpırdatılmadan bırakılırsa dokunma sayılır (Saat seç sayfası açılır), saat değişmez.
+  let sur = null, sonSurukleme = 0, kaydirRaf = 0;
+  function cipBas(e) {
+    if (sur || (e.pointerType === "mouse" && e.button !== 0)) return;
+    const el = e.currentTarget;
+    sur = { el, c: el._cip, id: e.pointerId, tip: e.pointerType, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, basladi: false };
+    if (e.pointerType !== "mouse") sur.sayac = setTimeout(surukleBasla, BASILI_MS);
+  }
+  function surukleBasla() {
+    if (!sur || sur.basladi) return;
+    const { el } = sur;
+    const govde = el.isConnected && el.closest(".tk-govde");
+    if (!govde) { sur = null; return; }
+    sur.basladi = true;
+    S.surukleniyor = true;
+    sur.govde = govde;
+    sur.bas = Number(govde.dataset.bas);
+    sur.gun = Number(govde.dataset.gun);
+    sur.tut = sur.y0 - el.getBoundingClientRect().top; // çipin tutulduğu nokta
+    sur.ilkTop = el.offsetTop;
+    try { el.setPointerCapture(sur.id); } catch { /* yok */ }
+    el.classList.add("suruklenen");
+    document.body.classList.add("tk-surukle");
+    $("bildirimler").replaceChildren(); // eski bildirim bırakma hedeflerini (gün şeridi) örtmesin
+    sur.etiket = h("div", { class: "tk-surukle-etiket", role: "status", "aria-live": "polite" });
+    document.body.append(sur.etiket);
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch { /* yok */ }
+    surukleTasi();
+    kaydirRaf = requestAnimationFrame(otoKaydir);
+  }
+  function surukleTasi() {
+    const { el, c, x, y } = sur;
+    if (!sur.kipirdadi && (sur.oto || Math.hypot(x - sur.x0, y - sur.y0) >= KIPIR_PX)) sur.kipirdadi = true;
+    for (const g of document.querySelectorAll(".tk-gun.hedef")) g.classList.remove("hedef");
+    const alt = document.elementFromPoint(x, y);
+    const gun = alt && alt.closest(".tk-gun");
+    const gr = sur.govde.getBoundingClientRect();
+    let metin;
+    if (gun) { // gün şeridine bırakılırsa aynı saatte o güne taşınır
+      const i = Number(gun.dataset.gun);
+      gun.classList.add("hedef");
+      sur.hedef = { z: gunBasi(gunNo(simdi()) + i) + gunDk(c.z) * 60000, gun: i };
+      el.style.top = sur.ilkTop + "px";
+      metin = `${gunEtiketi(i, gunNo(simdi()) + i)} ${parca(sur.hedef.z).d} ${AYLAR[parca(sur.hedef.z).m].slice(0, 3)} · ${saatDk(c.z)}`;
+    } else if (!sur.kipirdadi) { // henüz kıpırdamadı: 5 dk'ya yuvarlanmaz (18:02 basılı tutulunca 18:00 olmasın)
+      sur.hedef = { z: c.z };
+      el.style.top = sur.ilkTop + "px";
+      metin = saatDk(c.z) + (primeMi(c.p, c.z) ? " ⭐" : "");
+    } else if (x >= gr.left - 32 && x <= gr.right + 32 && y >= gr.top && y <= gr.bottom) {
+      const dk = Math.round((y - sur.tut - gr.top + sur.bas) / ADIM_DK) * ADIM_DK;
+      const m = Math.min(24 * 60 - ADIM_DK, Math.max(sur.bas, dk));
+      el.style.top = (m - sur.bas) + "px";
+      sur.hedef = { z: gunBasi(sur.gun) + m * 60000 };
+      metin = saatDk(sur.hedef.z) + (primeMi(c.p, sur.hedef.z) ? " ⭐" : "");
+    } else {
+      sur.hedef = null;
+      el.style.top = sur.ilkTop + "px";
+      metin = "Bırakırsan iptal";
+    }
+    const gecmis = sur.hedef && sur.hedef.z < enErken();
+    sur.etiket.textContent = gecmis ? metin + " · geçmiş saat" : metin;
+    sur.etiket.classList.toggle("hata", !sur.hedef || !!gecmis);
+    sur.etiket.style.left = Math.min(window.innerWidth - 70, Math.max(70, x)) + "px";
+    sur.etiket.style.top = Math.max(56, y - 44) + "px";
+    const t = el.querySelector("time");
+    if (t) t.textContent = saatDk(sur.hedef ? sur.hedef.z : c.z);
+  }
+  // kenara yaklaşınca sayfa kendiliğinden kayar (üstte yapışık şerit başlığı, altta sekme ve kayıt çubuğu)
+  function altSinir() {
+    let alt = window.innerHeight;
+    for (const s of [".sekmeler", ".tk-kayit"]) {
+      const e = document.querySelector(s);
+      if (e && getComputedStyle(e).position === "fixed") alt = Math.min(alt, e.getBoundingClientRect().top);
+    }
+    return alt;
+  }
+  function otoKaydir() {
+    if (!sur || !sur.basladi) return;
+    const bas = document.querySelector(".tk-serit-bas");
+    const ust = bas ? bas.getBoundingClientRect().bottom : 0, alt = altSinir();
+    let d = 0;
+    if (sur.y > ust - 4 && sur.y < ust + 44) d = -Math.ceil((ust + 44 - sur.y) / 5);
+    else if (sur.y > alt - 44) d = Math.ceil((sur.y - alt + 44) / 5);
+    if (d) { sur.oto = true; window.scrollBy(0, d); surukleTasi(); }
+    kaydirRaf = requestAnimationFrame(otoKaydir);
+  }
+  function surukleBitir(iptal) {
+    if (!sur) return;
+    clearTimeout(sur.sayac);
+    const s = sur;
+    sur = null;
+    if (!s.basladi) return;
+    cancelAnimationFrame(kaydirRaf);
+    S.surukleniyor = false;
+    sonSurukleme = Date.now();
+    s.etiket.remove();
+    document.body.classList.remove("tk-surukle");
+    if (!iptal && !s.kipirdadi) { ciz(true); takvimSayfasi(s.c.v, s.c.p); return; } // basılı tutup bırakmak: dokunma
+    const hd = iptal ? null : s.hedef;
+    if (hd && hd.z !== s.c.z) {
+      if (hd.z < enErken()) bildir("Geçmiş bir saate taşınamaz; en erken 3 dakika sonrası seçilebilir.", true);
+      else {
+        tasla(s.c.v.tag, s.c.p, hd.z);
+        if (hd.gun != null) S.takvimGun = hd.gun;
+        const l = yakinlar(s.c.p, hd.z, s.c.v.tag);
+        bildir(`${PF_AD[s.c.p]}: ${tamTarih(hd.z)}. Kaydetmek için Kaydet'e bas.` + (l.length ? " ⚠️ Aynı platformda 2 saatten yakın başka paylaşım var." : ""));
+      }
+    } else if (!hd && (iptal || !s.hedef)) bildir("Taşıma iptal edildi.");
+    ciz(true);
+  }
+  window.addEventListener("pointermove", (e) => {
+    if (!sur || e.pointerId !== sur.id) return;
+    sur.x = e.clientX; sur.y = e.clientY;
+    if (!sur.basladi) {
+      const d = Math.hypot(e.clientX - sur.x0, e.clientY - sur.y0);
+      if (sur.tip === "mouse" && d > 5) surukleBasla();
+      else if (sur.tip !== "mouse" && d > 10) { clearTimeout(sur.sayac); sur = null; } // kaydırma: sürükleme yok
+      return;
+    }
+    surukleTasi();
+  });
+  window.addEventListener("pointerup", (e) => { if (sur && e.pointerId === sur.id) surukleBitir(false); });
+  window.addEventListener("pointercancel", (e) => { if (sur && e.pointerId === sur.id) surukleBitir(true); });
+  window.addEventListener("keydown", (e) => { if (sur && sur.basladi && e.key === "Escape") { e.preventDefault(); surukleBitir(true); } });
+  // sürüklerken parmak hareketi sayfayı kaydırmasın (yalnız çip alındıktan sonra)
+  document.addEventListener("touchmove", (e) => { if (sur && sur.basladi && e.cancelable) e.preventDefault(); }, { passive: false });
+
+  function kayitCubugu() {
+    const satirlar = [];
+    for (const [tag, t] of S.taslak) {
+      const v = S.D.videos.find((x) => x.tag === tag);
+      if (!v) continue;
+      const sunucu = bekleyenSaatler(v), isliyor = S.bekleyen.has("schedule:" + tag);
+      const ozet = PF.filter(([p]) => p in t).map(([p, ad]) => `${ad} ${kisaGunSaat(sunucu[p])} → ${kisaGunSaat(t[p])}`).join(" · ");
+      satirlar.push(h("div", { class: "tk-kayit-satir" },
+        h("div", { class: "tk-kayit-bilgi" }, h("b", null, isliyor ? "İşleniyor (30-60 sn)…" : "Kaydedilmemiş değişiklik"),
+          h("span", null, v.title), h("small", null, ozet)),
+        h("div", { class: "tk-kayit-dugme" },
+          isliyor ? null : h("button", { class: "btn btn-cizgi btn-kucuk", onclick: () => { S.taslak.delete(tag); ciz(true); } }, "Vazgeç"),
+          dugme("schedule:" + tag, "Kaydet", "btn-sari btn-kucuk", () => takvimKaydet(v, t)))));
+    }
+    return satirlar.length ? h("div", { class: "tk-kayit", role: "region", "aria-label": "Kaydedilmemiş takvim değişiklikleri" }, satirlar) : null;
+  }
+
+  function enIyiSaatler() {
+    const sa = S.D.saatler || {};
+    const ek = Object.values(sa.ek || {}).some((l) => l && l.length);
+    return h("div", { class: "saatler" }, bolumBasligi("saatler", "En iyi saatler", null, "⭐ prime time · 🎯 bunları kullanır"),
+      h("div", { class: "saat-izgara" }, PF.map(([p, ad]) => h("div", { class: "saat-kart pf-" + p },
+        h("span", { class: "pf-ikon", style: "color:var(--pf)" }, ikon(p)),
+        h("div", null, h("b", null, ad), h("span", null, enIyi(p).map((x) => "⭐ " + x).join(" · ")
+          + (((sa.ek || {})[p] || []).length ? ` (ek: ${sa.ek[p].join(", ")})` : "")))))),
+      h("p", { class: "tarih", style: "margin:10px 2px 0" }, "🎯 seçeneği her platformu boş en iyi saatine koyar; o günün en iyi saatleri "
+        + "doluysa ertesi güne geçer. Başka bir saat istersen takvimden seç." + (ek ? " Ek saat, günün asıl saatleri doluysa kullanılır." : "")
+        + " Aynı platformda iki paylaşım arası en az 2 saat önerilir."));
+  }
+
+  // Saat seçici: 14 gün, saat ve dakika (5 dk), o platformun en iyi saatleri, ±15 dk. Geçmiş (şimdi+3 dk'dan önce) seçilemez.
+  function saatSecici(p, z, degis) {
+    const bugun = gunNo(simdi()), min = enErken(), sonAn = gunBasi(bugun + GUN_SAYISI) - ADIM_DK * 60000;
+    const secGun = Math.max(gunNo(z), bugun), dk = gunDk(z);
+    const adim = ADIM_DK * 60000;
+    const ayarla = (t) => degis(Math.min(sonAn, t < min ? Math.ceil(min / adim) * adim : t));
+    const gunler = h("div", { class: "tk-sec-gunler", role: "group", "aria-label": "Gün" }, Array.from({ length: GUN_SAYISI }, (_, i) => {
+      const n = bugun + i, pr = parca(gunBasi(n) + 43200000);
+      const olmaz = gunBasi(n + 1) - adim < min;
+      return h("button", { type: "button", class: "tk-sec-gun", "aria-pressed": n === secGun ? "true" : "false", disabled: olmaz,
+        "data-odak": `${p}-g${i}`, "aria-label": gunAdi(gunBasi(n) + 43200000), onclick: () => ayarla(gunBasi(n) + dk * 60000) },
+      h("span", null, gunEtiketi(i, n)), h("b", null, pr.d), h("small", null, AYLAR[pr.m].slice(0, 3)));
+    }));
+    const saat = h("select", { class: "alan", "data-odak": p + "-saat", onchange: (e) => ayarla(gunBasi(secGun) + (Number(e.target.value) * 60 + dk % 60) * 60000) },
+      Array.from({ length: 24 }, (_, s) => h("option", { value: s, selected: s === Math.floor(dk / 60),
+        disabled: gunBasi(secGun) + (s * 60 + 55) * 60000 < min }, pad(s))));
+    const dakikalar = Array.from({ length: 12 }, (_, i) => i * 5);
+    if (!dakikalar.includes(dk % 60)) dakikalar.push(dk % 60);
+    const dakika = h("select", { class: "alan", "data-odak": p + "-dk", onchange: (e) => ayarla(gunBasi(secGun) + (Math.floor(dk / 60) * 60 + Number(e.target.value)) * 60000) },
+      dakikalar.sort((a, b) => a - b).map((m) => h("option", { value: m, selected: m === dk % 60,
+        disabled: gunBasi(secGun) + (Math.floor(dk / 60) * 60 + m) * 60000 < min }, pad(m))));
+    const hizli = enIyi(p).map((hm) => {
+      const t = gunBasi(secGun) + hmDk(hm) * 60000;
+      return h("button", { type: "button", class: "prime", disabled: t < min, "aria-pressed": t === z ? "true" : "false", "data-odak": `${p}-p${hm}`,
+        "aria-label": `En iyi saat ${hm}`, onclick: () => ayarla(t) }, "⭐ " + hm);
+    });
+    return h("div", { class: "tk-secici" },
+      gunler,
+      h("div", { class: "tk-sec-zaman" }, h("label", null, "Saat", saat), h("span", { class: "iki", "aria-hidden": "true" }, ":"), h("label", null, "Dakika", dakika)),
+      h("div", { class: "tk-sec-hizli", role: "group", "aria-label": "Hızlı seçim" }, hizli,
+        h("button", { type: "button", disabled: z - 15 * 60000 < min, "data-odak": p + "-geri", onclick: () => ayarla(z - 15 * 60000) }, "−15 dk"),
+        h("button", { type: "button", disabled: z + 15 * 60000 > sonAn, "data-odak": p + "-ileri", onclick: () => ayarla(z + 15 * 60000) }, "+15 dk")),
+      h("small", null, `En erken ${saatDk(min)} · en geç ${kisaTarih(sonAn)} · Türkiye saati`));
+  }
+
+  // Video sayfası: onay bekleyen videoyu takvime yerleştirir (onay) ya da zamanlanmış videonun saatlerini değiştirir.
+  function takvimSayfasi(v, odak) {
+    const onay = v.status === "onay_bekliyor";
+    if (!onay && v.status !== "zamanlandi") { bildir("Bu videonun takvimde değiştirilecek saati yok.", true); return; }
+    const ok = okSet(v);
+    const sunucu = onay ? {} : bekleyenSaatler(v);
+    const ilk = onay ? oneriSaatleri(v.tag) : { ...sunucu, ...(S.taslak.get(v.tag) || {}) };
+    const deger = { ...ilk };
+    const pfler = PF.filter(([p]) => ok.has(p) || p in deger);
+    let acik = odak && odak in deger ? odak : null;
+    const an = paylasimAni(v);
+    const yakin = !onay && an != null && an <= simdi() + YAKIN_MS;
+    const kap = h("div", { class: "secenekler" });
+    const hata = h("p", { class: "alan-hata", role: "alert", hidden: true });
+    const sorunlar = () => Object.entries(deger).filter(([p, z]) => !ok.has(p) && z < enErken() && (onay || z !== sunucu[p]))
+      .map(([p]) => `${PF_AD[p]}: geçmiş saat seçilemez (en erken ${saatDk(enErken())}).`);
+    const degisen = () => Object.fromEntries(Object.entries(deger).filter(([p, z]) => !ok.has(p) && (onay || z !== sunucu[p])));
+    const kirli = () => JSON.stringify(deger) !== JSON.stringify(ilk);
+    const kaydet = h("button", { class: "btn btn-ana", type: "button", onclick: () => {
+      if (sorunlar().length || yakin) return;
+      const t = degisen();
+      dlg.close();
+      if (!Object.keys(t).length) { if (!onay) S.taslak.delete(v.tag); ciz(true); return; }
+      takvimKaydet(v, t);
+    } }, onay ? "Onayla ve zamanla" : "Kaydet");
+    const ikinci = onay ? h("button", { class: "btn btn-cizgi", type: "button", onclick: () => dlg.close() }, "Vazgeç")
+      : h("button", { class: "btn btn-cizgi", type: "button", onclick: () => {
+        if (sorunlar().length) return;
+        S.taslak.delete(v.tag);
+        for (const [p, z] of Object.entries(degisen())) tasla(v.tag, p, z);
+        dlg.close();
+        S.takvimGun = Math.min(GUN_SAYISI - 1, Math.max(0, gunNo(Math.min(...Object.values(deger))) - gunNo(simdi())));
+        ciz(true);
+        if (S.taslak.has(v.tag)) bildir("Takvime uygulandı; kaydetmek için alttaki Kaydet'e bas.");
+      } }, "Takvime uygula");
+    const yaz = () => {
+      const odakta = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.odak;
+      kap.replaceChildren();
+      if (yakin) kap.append(h("p", { class: "tk-uyari", role: "note" }, ikon("uyari"), h("span", null, "🔒 Yakında paylaşılıyor: paylaşım başladı ya da 10 dakika içinde başlıyor; saatler şu an değiştirilemez.")));
+      for (const [p, ad] of pfler) {
+        if (ok.has(p)) {
+          const r = (v.platforms || {})[p] || {};
+          kap.append(h("div", { class: "tk-pf kilitli pf-" + p }, h("div", { class: "tk-pf-bas" }, h("span", { class: "pf-ikon" }, ikon(p)),
+            h("div", null, h("b", null, ad), h("span", null, "✅ Paylaşıldı" + (ms(r.at) ? " · " + tamTarih(ms(r.at)) : ""))))));
+          continue;
+        }
+        const z = deger[p], acikMi = acik === p && !yakin;
+        const l = yakinlar(p, z, v.tag);
+        const bas = h("button", { type: "button", class: "tk-pf-bas", "aria-expanded": acikMi ? "true" : "false", disabled: yakin,
+          "data-odak": p + "-bas", onclick: () => { acik = acikMi ? null : p; yaz(); } },
+        h("span", { class: "pf-ikon" }, ikon(p)),
+        h("div", null, h("b", null, ad), h("span", null, tamTarih(z) + (primeMi(p, z) ? " ⭐" : "") + (!onay && z !== sunucu[p] ? " · değişti" : ""))),
+        yakin ? null : h("span", { class: "degistir" }, acikMi ? "Kapat" : "Değiştir", ikon(acikMi ? "yukari" : "asagi")));
+        kap.append(h("div", { class: "tk-pf pf-" + p }, bas,
+          acikMi ? saatSecici(p, z, (t) => { deger[p] = t; yaz(); }) : null,
+          l.length ? h("p", { class: "tk-uyari", style: "margin:0 12px 10px" }, ikon("uyari"),
+            h("span", null, "Aynı platformda 2 saatten yakın iki paylaşım: " + yakinMetni(p, z, l))) : null));
+      }
+      const s = sorunlar();
+      hata.textContent = s.join(" ");
+      hata.hidden = !s.length;
+      kap.append(hata);
+      kap.append(h("p", { class: "sayfa-alt", style: "margin:0" }, onay
+        ? "Önerilen saatler her platformun boş en iyi saati (⭐). Onaylayınca video tam bu saatlerde paylaşılır."
+        : "Paylaşılmış platformlar değişmez. Kaydedince işlem 30-60 sn sürer."));
+      kaydet.disabled = !!s.length || yakin || (!onay && !Object.keys(degisen()).length && !S.taslak.has(v.tag));
+      ikinci.disabled = !onay && (!!s.length || yakin);
+      kap.append(dugmeler, soru);
+      if (odakta) { const e = kap.querySelector(`[data-odak="${odakta}"]`); if (e) e.focus(); }
+    };
+    const dugmeler = h("div", { class: "sayfa-dugmeler" }, ikinci, kaydet);
+    const donBtn = h("button", { class: "btn btn-cizgi", type: "button", onclick: () => { soru.hidden = true; dugmeler.hidden = false; } }, "Seçime dön");
+    const soru = h("div", { class: "kapat-onay", role: "alertdialog", "aria-label": "Uygulanmamış değişiklik", hidden: true },
+      h("p", null, "Seçtiğin saatler uygulanmadı. Kapatılsın mı?"),
+      h("div", { class: "sayfa-dugmeler" }, donBtn, h("button", { class: "btn btn-ana", type: "button", onclick: () => dlg.close() }, "Kapat")));
+    const dlg = sayfaAc(onay ? "Takvime yerleştir" : "Saat seç", v.title, kap);
+    koruma = { kirli, sor: () => { dugmeler.hidden = true; soru.hidden = false; donBtn.focus(); } };
+    yaz();
+  }
+
+  // Videolar sekmesinden ya da derin bağlantıdan (/panel#takvim/<etiket>): Takvim sekmesi ve o videonun sayfası
+  function takvimdeAyarla(v) {
+    S.sekme = "takvim";
+    try { history.replaceState(null, "", "#takvim"); } catch { /* yok */ }
+    if (v.status === "zamanlandi") {
+      const z = Object.values({ ...bekleyenSaatler(v), ...(S.taslak.get(v.tag) || {}) });
+      if (z.length) S.takvimGun = Math.min(GUN_SAYISI - 1, Math.max(0, gunNo(Math.min(...z)) - gunNo(simdi())));
+    }
+    ciz(true);
+    window.scrollTo(0, 0);
+    if (v.status === "onay_bekliyor" || v.status === "zamanlandi") takvimSayfasi(v);
+    else bildir(`Bu video ${((DURUM[v.status] || [v.status])[0] || "").toLowerCase()}; takvimde değiştirilecek saat yok.`, true);
+  }
+  function derinAc() {
+    const tag = S.derin;
+    S.derin = null;
+    try { localStorage.removeItem("bm_derin"); } catch { /* yok */ }
+    const v = S.D.videos.find((x) => x.tag === tag);
+    if (!v) { S.sekme = "takvim"; ciz(true); bildir("Bu video panelde bulunamadı.", true); return; }
+    takvimdeAyarla(v);
   }
 
   // ---------------------------------------------------------------- İstatistik
@@ -1395,12 +2125,32 @@ function uygulama(AYAR) {
   function kuyrukSil(i) { if (S.bekleyen.has("queue_set")) return; S.kuyruk.splice(i, 1); S.kuyrukKirli = true; ciz(true); }
 
   // ---------------------------------------------------------------- başlat
+  // /panel#takvim/<etiket>: Telegram'daki "🗓 Takvimde seç" düğmesi. Oturum yoksa giriş bağlantısı /panel'e döner;
+  // bekleyen derin bağlantı bu tarayıcıda 15 dk saklanır ve girişten sonra açılır.
+  function derinOku(hash) {
+    const m = /^takvim\/(short-[\w-]{6,40})$/.exec(hash);
+    if (!m) return false;
+    S.sekme = "takvim";
+    S.derin = m[1];
+    return true;
+  }
   const ilk = (location.hash || "").slice(1);
-  if (SEKMELER.some(([id]) => id === ilk)) S.sekme = ilk;
+  if (derinOku(ilk)) { /* yükleme bitince açılır */ } else if (SEKMELER.some(([id]) => id === ilk)) S.sekme = ilk;
+  else {
+    try {
+      const d = JSON.parse(localStorage.getItem("bm_derin") || "null");
+      if (d && Date.now() - d.t < 15 * 60e3) derinOku("takvim/" + d.tag); else localStorage.removeItem("bm_derin");
+    } catch { /* yok */ }
+  }
   window.addEventListener("hashchange", () => {
     const id = (location.hash || "").slice(1);
+    if (derinOku(id)) { if (S.D) derinAc(); return; }
     if (SEKMELER.some(([x]) => x === id) && id !== S.sekme) { S.sekme = id; ciz(true); }
   });
+  window.addEventListener("beforeunload", (e) => { if (S.taslak.size) { e.preventDefault(); e.returnValue = ""; } });
+  window.addEventListener("resize", () => { const u = document.querySelector(".ust"); if (u) document.documentElement.style.setProperty("--ust-h", u.offsetHeight + "px"); });
+  // takvimde şimdi çizgisi ve "yakında paylaşılıyor" kilitleri dakikada bir yenilenir
+  setInterval(() => { if (S.sekme === "takvim" && S.D && !S.giris && !$("sayfa").open && guvenliMi()) ciz(); }, 60000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && Date.now() - S.sonYukleme > 30000) yukle(true);
   });
