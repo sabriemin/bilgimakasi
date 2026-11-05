@@ -1,7 +1,21 @@
 {
  "seen": [
   "ig:18105929234280447",
-  "ig:18200339638382906"
+  "ig:18200339638382906",
+  "yt:Ugxk8OL9Sw2X_AH9Wz14AaABAg"
  ],
- "pending": {}
+ "pending": {
+  "3": {
+   "id": "yt:Ugxk8OL9Sw2X_AH9Wz14AaABAg",
+   "platform": "youtube",
+   "parent": "Ugxk8OL9Sw2X_AH9Wz14AaABAg",
+   "tag": "short-20261104-2100",
+   "video": "Galatasaray 100 Günde Avrupa'nın İki Devini Nasıl Devirdi?",
+   "author": "@HakanÜstün-q6g5i",
+   "text": "Galatasaray lıyım diye demiyom ama bir daha yasanmaz",
+   "reply": "O 100 gün gerçekten çok özeldi, tekrarı kolay değil. Sence o sürecin en unutulmaz anı hangisiydi? ⚽",
+   "message_id": 128,
+   "created": "2026-11-05T15:09:34"
+  }
+ }
 }
