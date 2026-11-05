@@ -7,6 +7,8 @@
 // Okuma (GET, çerez gerekir):
 //   /panel/api/durum        videos.json, stats.json, oneriler.json, konu_sirasi.json, stats_gecmis.jsonl, saatler
 //   /panel/api/video/<tag>  GitHub Release'teki video.mp4'ün kısa ömürlü imzalı adresine 302
+//   /panel/api/plan         yayin_plani.json + videos.json (14 günlük yayın takvimi, seriler), secim/plan_s1.json
+//                           (Karar Senin hikâyesi), claude_usage.json (dönem harcaması), yenilikler.json
 //   /panel/api/meta/<tag>   metadata.json (başlık, açıklama, etiketler, atıflar): düzenleme formu için
 // İşlem (POST, çerez + "X-Panel: 1" başlığı gerekir):
 //   /panel/api/islem        {action, ...} doğrulanır, işle.yml'e {"panel": {...}} olayı olarak iletilir;
@@ -415,12 +417,13 @@ async function durumOku(env) {
   };
 }
 
-async function durum(env, ctx, oturum) {
-  const anah = `durum:${oturum}`; // oturuma özel: önbellek kişiler arasında paylaşılmaz
+// /durum ve /plan yanıtı ~20 sn önbellekte (oturuma özel: önbellek kişiler arasında paylaşılmaz)
+async function onbellekli(ad, uret, ctx, oturum) {
+  const anah = `${ad}:${oturum}`;
   const m = BELLEK.get(anah);
   if (m && Date.now() - m.t < ONBELLEK_MS) return m.govde;
   const cache = globalThis.caches && caches.default;
-  const istek = new Request(`https://panel-onbellek.bilgimakasi.invalid/durum/${oturum}`);
+  const istek = new Request(`https://panel-onbellek.bilgimakasi.invalid/${ad}/${oturum}`);
   if (cache) {
     const hit = await cache.match(istek).catch(() => null);
     if (hit) {
@@ -429,7 +432,7 @@ async function durum(env, ctx, oturum) {
       return govde;
     }
   }
-  const govde = JSON.stringify(await durumOku(env));
+  const govde = JSON.stringify(await uret());
   if (BELLEK.size > 50) BELLEK.clear();
   BELLEK.set(anah, { t: Date.now(), govde });
   if (cache) {
@@ -439,6 +442,258 @@ async function durum(env, ctx, oturum) {
     if (ctx && ctx.waitUntil) ctx.waitUntil(p);
   }
   return govde;
+}
+
+const durum = (env, ctx, oturum) => onbellekli("durum", () => durumOku(env), ctx, oturum);
+const planDurumu = (env, ctx, oturum) => onbellekli("plan", () => planOku(env), ctx, oturum);
+
+// ---------------------------------------------------------------- yayın planı (Takvim ve Seriler)
+// /panel/api/plan: haftalık plan (state/yayin_plani.json, shortgen/takvim.py ile tek kaynak) önümüzdeki 14 günün
+// gerçek videolarıyla birleşir; seriler, Karar Senin hikâye planı, Claude harcaması ve yenilikler. Dosyası olmayan
+// bölüm null döner (eski durumda panel yine çalışır). Bütün metinler tarayıcıda textContent ile yazılır.
+const PLAN_DOSYALARI = {
+  videos: "state/videos.json", plan: "state/yayin_plani.json", hikaye: "state/secim/plan_s1.json",
+  claude: "state/claude_usage.json", yenilikler: "state/yenilikler.json",
+};
+const PLAN_OKUNAMADI = {
+  videos: "Videolar okunamadı", plan: "Yayın planı okunamadı", hikaye: "Karar Senin hikâye planı okunamadı",
+  claude: "Claude harcaması okunamadı", yenilikler: "Yenilikler okunamadı",
+};
+export const PLAN_GUN = 14;
+const GUN_ADLARI = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]; // takvim.py: Pazartesi = 0
+const SERI_DURUMLARI = ["yayında", "örnek bekliyor", "kuruluyor"];
+const ESLESME_MS = 90 * 60e3; // aynı serinin videosu plan saatine bu kadar yakınsa o saatin videosu sayılır
+const SAAT_ESLESME_MS = 30 * 60e3; // başka serinin videosu tam plan saatindeyse (±30 dk) o saati doldurur
+const TAKVIMDE = new Set(["zamanlandi", "yayinlaniyor", "yayinlandi", "kismen", "hata", "baglanti_yok"]);
+const ANAHTAR_RE = /^[a-z][a-z0-9_]{0,23}$/;
+const HM_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const TARIH_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+const yazi = (x, n = 200) => (typeof x === "string" ? x.trim().slice(0, n) : "");
+const tamSayi = (x, a, b) => (Number.isInteger(x) && x >= a && x <= b ? x : null);
+const gunKodu = (ms) => new Date(ms + TR_OFFSET).toISOString().slice(0, 10); // TR takvim günü "YYYY-AA-GG"
+const gunBasiMs = (kod) => Date.parse(kod + "T00:00:00Z") - TR_OFFSET;
+const hm = (s) => { const m = HM_RE.exec(s); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+function hmYaz(x) { // "9:30" -> "09:30"; geçersizse ""
+  const m = /^(\d{1,2}):(\d{2})$/.exec(typeof x === "string" ? x.trim() : "");
+  const s = m ? `${m[1].padStart(2, "0")}:${m[2]}` : "";
+  return hm(s) == null ? "" : s;
+}
+
+// state/yayin_plani.json -> {seriler, sablon_seri, hafta: 7 gün (Pazartesi ilk), istisnalar}; geçersizse null
+export function planCoz(d) {
+  if (!d || typeof d !== "object" || !Array.isArray(d.hafta)) return null;
+  const seriler = [];
+  for (const s of Array.isArray(d.seriler) ? d.seriler.slice(0, 20) : []) {
+    if (!s || !ANAHTAR_RE.test(s.key) || seriler.some((x) => x.key === s.key)) continue;
+    seriler.push({ key: s.key, ad: yazi(s.ad, 60) || s.key, ikon: yazi(s.ikon, 8), sablon: yazi(s.sablon, 30),
+      yeni_sablon: yazi(s.yeni_sablon, 30), durum: SERI_DURUMLARI.includes(s.durum) ? s.durum : "yayında",
+      not: yazi(s.not, 300), baslangic: TARIH_RE.test(s.baslangic || "") ? s.baslangic : "" });
+  }
+  const hafta = GUN_ADLARI.map(() => []);
+  for (const g of d.hafta) {
+    const i = GUN_ADLARI.findIndex((a) => a.toLocaleLowerCase("tr") === String((g && g.gun) || "").toLocaleLowerCase("tr"));
+    if (i < 0 || !Array.isArray(g.slotlar)) continue;
+    for (const x of g.slotlar.slice(0, 12)) {
+      const saat = hmYaz(x && x.saat);
+      if (saat && ANAHTAR_RE.test(x.seri)) hafta[i].push({ saat, seri: x.seri });
+    }
+    hafta[i].sort((a, b) => hm(a.saat) - hm(b.saat));
+  }
+  if (!hafta.some((g) => g.length)) return null;
+  for (const g of hafta) { // planda olup seri listesinde olmayan seri de görünsün
+    for (const x of g) if (!seriler.some((s) => s.key === x.seri)) seriler.push({ key: x.seri, ad: x.seri, ikon: "", sablon: "", yeni_sablon: "", durum: "yayında", not: "", baslangic: "" });
+  }
+  const sablon_seri = {};
+  for (const [k, v] of Object.entries(d.sablon_seri && typeof d.sablon_seri === "object" ? d.sablon_seri : {})) {
+    if (ANAHTAR_RE.test(k) && ANAHTAR_RE.test(v)) sablon_seri[k] = v;
+  }
+  const istisnalar = [];
+  for (const x of Array.isArray(d.istisnalar) ? d.istisnalar.slice(0, 100) : []) {
+    const [gun, saat] = String((x && x.zaman) || "").split(" ");
+    if (TARIH_RE.test(gun || "") && hmYaz(saat)) istisnalar.push({ zaman: `${gun} ${hmYaz(saat)}`, seri: ANAHTAR_RE.test(x.seri) ? x.seri : "", neden: yazi(x.neden, 200) });
+  }
+  return { seriler, sablon_seri, hafta, istisnalar };
+}
+
+// takvim.seri_of: önce anlatım kalıbı (plan serisi ise), sonra şablon; ikisi de değilse "genel"
+export function seriOf(v, plan) {
+  if (plan.seriler.some((s) => s.key === v.structure)) return v.structure;
+  return plan.sablon_seri[String(v.template || "")] || "genel";
+}
+
+// videonun takvimdeki anları: paylaşılmış platformların saati, bekleyen platform saatleri ve publish_at
+function videoAnlari(v) {
+  const out = new Set();
+  const ekle = (x) => { const t = Date.parse(x || ""); if (Number.isFinite(t)) out.add(t); };
+  const pf = v.platforms && typeof v.platforms === "object" ? v.platforms : {};
+  const ok = okPlatformlar(v);
+  for (const [p, t] of Object.entries(v.schedule && typeof v.schedule === "object" ? v.schedule : {})) if (!ok.has(p)) ekle(t);
+  for (const p of ok) ekle(pf[p] && pf[p].at);
+  if (!ok.size || v.status === "zamanlandi") ekle(v.publish_at);
+  if (!out.size) ekle(v.published);
+  return [...out].sort((a, b) => a - b);
+}
+
+function videoOzeti(v, seri, an) {
+  const pf = v.platforms && typeof v.platforms === "object" ? v.platforms : {};
+  const linkler = {};
+  for (const p of PLATFORMLAR) {
+    const u = pf[p] && pf[p].status === "ok" && typeof pf[p].url === "string" && /^https:\/\//.test(pf[p].url) ? pf[p].url : null;
+    if (u) linkler[p] = u;
+  }
+  return { tag: v.tag, title: yazi(v.title, 160) || v.tag, status: v.status, seri, an: new Date(an).toISOString(), linkler };
+}
+
+// Önümüzdeki `gun` gün: her gün planın saatleri, eşleşen video ya da boş; plana uymayan videolar da kendi saatinde.
+export function yayinTakvimi(plan, videos, simdi, gun = PLAN_GUN) {
+  const bugun = gunKodu(simdi), bas = gunBasiMs(bugun), son = bas + gun * 86400e3;
+  const seri = Object.fromEntries(plan.seriler.map((s) => [s.key, s]));
+  const kapali = new Map(plan.istisnalar.map((x) => [x.zaman, x]));
+  const adaylar = [];
+  for (const v of videos || []) {
+    if (!v || typeof v !== "object" || typeof v.tag !== "string" || !TAKVIMDE.has(v.status)) continue;
+    const anlar = videoAnlari(v).filter((t) => t >= bas && t < son);
+    if (anlar.length) adaylar.push({ v, anlar, seri: seriOf(v, plan), kullanildi: false });
+  }
+  const gunler = [];
+  for (let i = 0; i < gun; i++) {
+    const g0 = bas + i * 86400e3, kod = gunKodu(g0 + 43200e3);
+    const hg = (new Date(g0 + TR_OFFSET + 43200e3).getUTCDay() + 6) % 7;
+    const ogeler = plan.hafta[hg].map((x) => {
+      const an = g0 + hm(x.saat) * 60e3, k = kapali.get(`${kod} ${x.saat}`);
+      const s = seri[x.seri] || {};
+      const o = { saat: x.saat, an: new Date(an).toISOString(), seri: x.seri, plan: true, gecti: an < simdi };
+      if (k && (!k.seri || k.seri === x.seri)) { o.kapali = true; o.neden = k.neden; }
+      if (s.baslangic && kod < s.baslangic) { o.baslamadi = true; o.baslangic = s.baslangic; }
+      return o;
+    });
+    gunler.push({ tarih: kod, gun_adi: GUN_ADLARI[hg], bugun: kod === bugun, ogeler, g0 });
+  }
+  const tumOgeler = gunler.flatMap((g) => g.ogeler);
+  // 1) aynı serinin en yakın videosu (±90 dk), 2) başka serinin tam o saatteki videosu (±30 dk)
+  for (const [ayni, pay] of [[true, ESLESME_MS], [false, SAAT_ESLESME_MS]]) {
+    for (const o of tumOgeler) {
+      if (o.video) continue;
+      const an = Date.parse(o.an);
+      let enIyi = null, fark = Infinity;
+      for (const a of adaylar) {
+        if (a.kullanildi || (ayni && a.seri !== o.seri)) continue;
+        for (const t of a.anlar) if (Math.abs(t - an) <= pay && Math.abs(t - an) < fark) { enIyi = a; fark = Math.abs(t - an); }
+      }
+      if (enIyi) {
+        enIyi.kullanildi = true;
+        o.video = videoOzeti(enIyi.v, enIyi.seri, enIyi.anlar[0]);
+        if (!ayni) o.video.seri_farkli = true;
+      }
+    }
+  }
+  for (const a of adaylar) { // plan dışı: ilk anının gününe
+    if (a.kullanildi) continue;
+    const g = gunler.find((x) => x.tarih === gunKodu(a.anlar[0]));
+    if (!g) continue;
+    const t = a.anlar[0];
+    g.ogeler.push({ saat: new Date(t + TR_OFFSET).toISOString().slice(11, 16), an: new Date(t).toISOString(), seri: a.seri,
+      plan: false, gecti: t < simdi, video: videoOzeti(a.v, a.seri, t) });
+  }
+  for (const g of gunler) { g.ogeler.sort((a, b) => Date.parse(a.an) - Date.parse(b.an)); delete g.g0; }
+  return gunler;
+}
+
+// Her seri: şablonu, durumu, haftalık saatleri, sıradaki plan saati, son paylaşılan video, bekleyen videolar
+export function seriOzetleri(plan, videos, gunler, simdi) {
+  const kisa = (g) => ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"][g];
+  return plan.seriler.map((s) => {
+    const slot = [];
+    plan.hafta.forEach((g, i) => g.forEach((x) => { if (x.seri === s.key) slot.push(`${kisa(i)} ${x.saat}`); }));
+    const sonraki = gunler.flatMap((g) => g.ogeler).find((o) => o.plan && o.seri === s.key && !o.gecti && !o.kapali && !o.baslamadi);
+    let son = null, onay = 0, plan_ = 0;
+    for (const v of videos || []) {
+      if (!v || typeof v !== "object" || seriOf(v, plan) !== s.key) continue;
+      if (v.status === "onay_bekliyor") onay++;
+      else if (v.status === "zamanlandi" || v.status === "yayinlaniyor") plan_++;
+      else if (v.status === "yayinlandi" || v.status === "kismen") {
+        const t = Date.parse(v.published || "") || videoAnlari(v).pop() || 0;
+        if (t <= simdi && (!son || t > son.t)) son = { t, v };
+      }
+    }
+    return { ...s, haftalik: slot.length, saatler: slot,
+      sonraki: sonraki ? { an: sonraki.an, saat: sonraki.saat, tarih: gunKodu(Date.parse(sonraki.an)),
+        video: sonraki.video ? { tag: sonraki.video.tag, title: sonraki.video.title, status: sonraki.video.status } : null } : null,
+      son_video: son ? { tag: son.v.tag, title: yazi(son.v.title, 160) || son.v.tag, an: new Date(son.t).toISOString() } : null,
+      onay_bekleyen: onay, zamanlanan: plan_ };
+  });
+}
+
+// script._period ile aynı dönem: kredi her ay CLAUDE_BUDGET_RESET_DAY'de (varsayılan 24) yenilenir; gün 1 ise "YYYY-AA"
+export function claudeOzeti(kullanim, env = {}, simdi = Date.now()) {
+  const u = kullanim && typeof kullanim === "object" && !Array.isArray(kullanim) ? kullanim : {};
+  const gun = Math.min(Math.max(parseInt(env.CLAUDE_BUDGET_RESET_DAY || "24", 10) || 1, 1), 28);
+  const tavan = Number(env.CLAUDE_MONTHLY_BUDGET_USD) > 0 ? Number(env.CLAUDE_MONTHLY_BUDGET_USD) : 90;
+  const t = new Date(simdi);
+  let y = t.getUTCFullYear(), m = t.getUTCMonth();
+  if (t.getUTCDate() < gun) { m -= 1; if (m < 0) { m = 11; y -= 1; } }
+  const p2 = (n) => String(n).padStart(2, "0");
+  const anahtar = gun === 1 ? `${y}-${p2(m + 1)}` : `${y}-${p2(m + 1)}-${p2(gun)}`;
+  const bitis = new Date(Date.UTC(y, m + 1, gun) - 86400e3).toISOString().slice(0, 10);
+  const harcanan = Number(u[anahtar]) || 0;
+  const oran = harcanan / tavan;
+  const gecmis = Object.entries(u).filter(([k, v]) => k !== anahtar && /^\d{4}-\d{2}(-\d{2})?$/.test(k) && typeof v === "number")
+    .sort(([a], [b]) => (a < b ? 1 : -1)).slice(0, 6).map(([donem, h]) => ({ donem, harcanan: Math.round(h * 100) / 100 }));
+  return { donem: anahtar, baslangic: `${y}-${p2(m + 1)}-${p2(gun)}`, bitis, tavan, harcanan: Math.round(harcanan * 100) / 100,
+    kalan: Math.round(Math.max(0, tavan - harcanan) * 100) / 100, oran: Math.round(oran * 1000) / 1000,
+    uyari: oran >= 0.8, doldu: oran >= 1, gecmis };
+}
+
+// state/secim/plan_s1.json (Karar Senin sezon planı) -> salt okunur hikâye; geçersizse null
+export function hikayeCoz(d) {
+  if (!d || typeof d !== "object" || !Array.isArray(d.donum_noktalari)) return null;
+  const AB = (x) => ({ A: yazi(x && x.A, 200), B: yazi(x && x.B, 200) });
+  const oy = (x) => ({ A: Number.isFinite(x && x.A) ? Math.max(0, x.A) : null, B: Number.isFinite(x && x.B) ? Math.max(0, x.B) : null });
+  const belge = typeof d.plan_belgesi === "string" && /^https:\/\/claude\.ai\/[\w/-]+$/.test(d.plan_belgesi) ? d.plan_belgesi : null;
+  return {
+    sezon: tamSayi(d.sezon, 1, 99) || 1, ad: yazi(d.ad, 80), ozet: yazi(d.ozet, 600), bolum_sayisi: tamSayi(d.bolum_sayisi, 1, 50),
+    bolum_suresi: yazi(d.bolum_suresi, 40), yayin: yazi(d.yayin, 80), ilk_bolum: yazi(d.ilk_bolum, 40), oylama: yazi(d.oylama, 120),
+    sablon: yazi(d.sablon, 40), plan_belgesi: belge, karakter_notu: yazi(d.karakter_notu, 120),
+    karakterler: (Array.isArray(d.karakterler) ? d.karakterler.slice(0, 20) : []).filter((k) => k && yazi(k.ad))
+      .map((k) => ({ ad: yazi(k.ad, 40), yas: tamSayi(k.yas, 0, 120), rol: yazi(k.rol, 120) })),
+    donum_noktalari: d.donum_noktalari.slice(0, 30).filter((x) => x && tamSayi(x.bolum, 1, 99))
+      .map((x) => ({ bolum: x.bolum, yas: tamSayi(x.yas, 0, 120), baslik: yazi(x.baslik, 120), ikilem: yazi(x.ikilem, 300), bilgi: yazi(x.bilgi, 300) })),
+    bolumler: (Array.isArray(d.bolumler) ? d.bolumler.slice(0, 50) : []).filter((x) => x && tamSayi(x.bolum, 1, 99))
+      .map((x) => ({ bolum: x.bolum, yayin: yazi(x.yayin, 40), secenekler: AB(x.secenekler), oylar: oy(x.oylar),
+        kazanan: x.kazanan === "A" || x.kazanan === "B" ? x.kazanan : "" })),
+  };
+}
+
+// state/yenilikler.json: [{tarih, metin}] -> en yeni üstte, en çok 12
+export function yeniliklerCoz(d) {
+  const l = Array.isArray(d) ? d : d && Array.isArray(d.yenilikler) ? d.yenilikler : null;
+  if (!l) return null;
+  return l.filter((x) => x && TARIH_RE.test(x.tarih || "") && yazi(x.metin)).map((x, i) => ({ tarih: x.tarih, metin: yazi(x.metin, 240), i }))
+    .sort((a, b) => (a.tarih === b.tarih ? a.i - b.i : a.tarih < b.tarih ? 1 : -1)).slice(0, 12).map(({ tarih, metin }) => ({ tarih, metin }));
+}
+
+async function planOku(env) {
+  const adlar = Object.keys(PLAN_DOSYALARI);
+  const sonuc = await Promise.all(adlar.map((a) => dosya(env, PLAN_DOSYALARI[a])));
+  const f = Object.fromEntries(adlar.map((a, i) => [a, sonuc[i]]));
+  const uyarilar = adlar.filter((a) => f[a].hata).map((a) => `${PLAN_OKUNAMADI[a]} (${f[a].hata}).`);
+  const simdi = Date.now();
+  const tum = jsonCoz(f.videos.metin, []);
+  const videos = Array.isArray(tum) ? tum : [];
+  const plan = f.plan.metin == null ? null : planCoz(jsonCoz(f.plan.metin, null));
+  if (f.plan.metin != null && !plan) uyarilar.push("Yayın planı dosyası (state/yayin_plani.json) bozuk; takvim gösterilemiyor.");
+  const takvim = plan ? yayinTakvimi(plan, videos, simdi) : null;
+  return {
+    zaman: new Date(simdi).toISOString(),
+    plan: plan && { seriler: plan.seriler, hafta: plan.hafta.map((g, i) => ({ gun: GUN_ADLARI[i], slotlar: g })), istisnalar: plan.istisnalar },
+    takvim,
+    seriler: plan ? seriOzetleri(plan, videos, takvim, simdi) : null,
+    hikaye: f.hikaye.metin == null ? null : hikayeCoz(jsonCoz(f.hikaye.metin, null)),
+    claude: f.claude.hata ? null : claudeOzeti(jsonCoz(f.claude.metin || "{}", {}), env, simdi),
+    yenilikler: f.yenilikler.metin == null ? null : yeniliklerCoz(jsonCoz(f.yenilikler.metin, null)),
+    uyarilar,
+  };
 }
 
 // ---------------------------------------------------------------- meta
@@ -675,8 +930,8 @@ async function api(req, env, ctx, url, yol) {
     return islem(req, env);
   }
   if (req.method !== "GET" && req.method !== "HEAD") return json(405, { hata: "Yalnız GET." }, { allow: "GET" });
-  if (yol === "durum") {
-    return new Response(await durum(env, ctx, oturum), {
+  if (yol === "durum" || yol === "plan") {
+    return new Response(await (yol === "plan" ? planDurumu : durum)(env, ctx, oturum), {
       headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...GUVENLIK },
     });
   }

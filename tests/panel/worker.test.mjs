@@ -11,7 +11,7 @@ import { ORTAM, BURASI, META, FIKSTUR, fetchKur, ctxYap, saatKur, saatIlerlet, s
 import { mkdtempSync, cpSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
-import { gizle } from "../../cloudflare/panel.js";
+import { gizle, planCoz, seriOf, yayinTakvimi, seriOzetleri, claudeOzeti, hikayeCoz, yeniliklerCoz } from "../../cloudflare/panel.js";
 
 const HOST = "https://bilgimakasi-kapi.bilgimakasi.workers.dev";
 const SN = () => Math.floor(Date.now() / 1000);
@@ -1156,6 +1156,182 @@ describe("Konular: öneri serileri", () => {
         await tarayici.close();
       }
     });
+});
+
+// ------------------------------------------------------------------ yayın planı (Takvim > Yayın planı, Seriler sekmesi)
+describe("yayın planı: /panel/api/plan", () => {
+  beforeEach(() => cacheKur());
+  const PLAN = () => planCoz(JSON.parse(readFileSync(join(BURASI, "..", "..", "state", "yayin_plani.json"), "utf8")));
+
+  test("oturumsuz 401; oturumla beş dosya PAT ile okunur, gizli değer yanıta girmez", async () => {
+    saatIlerlet(30000);
+    assert.equal((await istek("/panel/api/plan")).r.status, 401);
+    const { r, cagrilar } = await istek("/panel/api/plan", { cerez: await oturum(17 * 86400) });
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get("cache-control"), "no-store");
+    const yollar = cagrilar.map((x) => x.url.replace(/^.*\/contents\//, "")).sort();
+    assert.deepEqual(yollar, ["state/claude_usage.json?ref=main", "state/secim/plan_s1.json?ref=main", "state/videos.json?ref=main",
+      "state/yayin_plani.json?ref=main", "state/yenilikler.json?ref=main"]);
+    for (const x of cagrilar) assert.equal(x.basliklar.authorization, `Bearer ${ORTAM.GH_PAT}`);
+    const metin = await r.text();
+    for (const g of [ORTAM.GH_PAT, ORTAM.TELEGRAM_BOT_TOKEN, ORTAM.PANEL_SECRET]) assert.ok(!metin.includes(g));
+    const d = JSON.parse(metin);
+    assert.deepEqual(d.uyarilar, []);
+    assert.equal(d.plan.seriler.length, 7);
+    assert.equal(d.hikaye.donum_noktalari.length, 8);
+    assert.ok(d.yenilikler.length >= 5);
+    assert.equal(d.claude.donem, "2026-10-24");
+    // ~20 sn önbellek: ikinci istek GitHub'a gitmez
+    assert.equal((await istek("/panel/api/plan", { cerez: await oturum(17 * 86400) })).cagrilar.length, 0);
+  });
+
+  test("14 gün: bugün işaretli, haftada 18 saat, 10 Kasım akşamı kapalı, Karar Senin 16 Kasım'dan önce başlamadı", async () => {
+    saatIlerlet(30000);
+    const { r } = await istek("/panel/api/plan", { cerez: await oturum(16 * 86400) });
+    const d = await r.json();
+    assert.equal(d.takvim.length, 14);
+    assert.deepEqual([d.takvim[0].tarih, d.takvim[0].gun_adi, d.takvim[0].bugun], ["2026-11-05", "Perşembe", true]);
+    assert.ok(d.takvim.slice(1).every((g) => !g.bugun));
+    assert.equal(d.takvim.flatMap((g) => g.ogeler).filter((o) => o.plan).length, 36);
+    const sal = d.takvim.find((g) => g.tarih === "2026-11-10");
+    const genel = sal.ogeler.find((o) => o.saat === "18:00");
+    assert.equal(genel.kapali, true);
+    assert.match(genel.neden, /Atatürk/);
+    const kararlar = d.takvim.flatMap((g) => g.ogeler.map((o) => ({ ...o, tarih: g.tarih }))).filter((o) => o.seri === "karar");
+    assert.ok(kararlar.filter((o) => o.tarih < "2026-11-16").every((o) => o.baslamadi));
+    assert.ok(kararlar.filter((o) => o.tarih >= "2026-11-16").every((o) => !o.baslamadi));
+    // Perşembe 18:00 Genel: YouTube'u 18:00'de paylaşılacak video; plan dışı video kendi saatinde
+    const per = d.takvim[0].ogeler;
+    assert.equal(per.find((o) => o.plan && o.saat === "18:00").video.tag, "short-20261104-2023");
+    const disi = per.filter((o) => !o.plan);
+    assert.ok(disi.some((o) => o.video.tag === "short-20261104-2100" && o.saat === "15:00"));
+    // her video en çok bir kez görünür
+    const etiketler = d.takvim.flatMap((g) => g.ogeler).filter((o) => o.video).map((o) => o.video.tag);
+    assert.equal(new Set(etiketler).size, etiketler.length);
+    // seriler: sıradaki saat ve haftalık saatler
+    const nasil = d.seriler.find((s) => s.key === "nasil");
+    assert.deepEqual(nasil.saatler, ["Pzt 11:30", "Cum 11:30"]);
+    assert.equal(nasil.sonraki.an, "2026-11-06T08:30:00.000Z");
+    assert.equal(d.seriler.find((s) => s.key === "karar").sonraki.tarih, "2026-11-16");
+    assert.equal(d.seriler.reduce((a, s) => a + s.haftalik, 0), 18);
+  });
+
+  test("yeni dosyalar yoksa bölümler boş, okuma hatası uyarı olur", async () => {
+    saatIlerlet(30000);
+    const c = await oturum(15 * 86400);
+    let { r } = await istek("/panel/api/plan", { cerez: c, fetchAyar: { dosyaHata: { "yayin_plani.json": 404, "secim/plan_s1.json": 404,
+      "yenilikler.json": 404, "claude_usage.json": 404 } } });
+    let d = await r.json();
+    assert.equal(r.status, 200);
+    assert.equal(d.plan, null); assert.equal(d.takvim, null); assert.equal(d.seriler, null);
+    assert.equal(d.hikaye, null); assert.equal(d.yenilikler, null);
+    assert.equal(d.claude.harcanan, 0);
+    assert.deepEqual(d.uyarilar, []);
+    saatIlerlet(30000);
+    ({ r } = await istek("/panel/api/plan", { cerez: c, fetchAyar: { dosyaHata: { "yayin_plani.json": 500, "claude_usage.json": 502 } } }));
+    d = await r.json();
+    assert.equal(d.takvim, null);
+    assert.equal(d.claude, null);
+    assert.deepEqual(d.uyarilar, ["Yayın planı okunamadı (500).", "Claude harcaması okunamadı (502)."]);
+    saatIlerlet(30000);
+  });
+
+  test("plan dosyası: geçersiz satırlar atlanır, tamamen bozuksa null", () => {
+    assert.equal(planCoz(null), null);
+    assert.equal(planCoz({ hafta: [] }), null);
+    const p = planCoz({ seriler: [{ key: "Kötü Anahtar", ad: "x" }, { key: "nasil", ad: "<b>Nasıl</b>", durum: "garip" }],
+      hafta: [{ gun: "PAZARTESİ", slotlar: [{ saat: "9:30", seri: "nasil" }, { saat: "25:00", seri: "nasil" }, { saat: "10:00", seri: "../x" }] }],
+      istisnalar: [{ zaman: "2026-11-10 18:00" }, { zaman: "dün akşam" }] });
+    assert.deepEqual(p.hafta[0], [{ saat: "09:30", seri: "nasil" }]);
+    assert.deepEqual(p.seriler.map((s) => [s.key, s.ad, s.durum]), [["nasil", "<b>Nasıl</b>", "yayında"]]);
+    assert.equal(p.istisnalar.length, 1);
+  });
+
+  test("depodaki plan: shortgen/takvim.py ile aynı 18 saat; seri tahmini takvim.seri_of gibi", () => {
+    const p = PLAN();
+    const kisa = p.hafta.map((g) => g.map((x) => `${x.saat} ${x.seri}`).join(", "));
+    assert.deepEqual(kisa, ["11:30 nasil, 18:00 genel, 21:00 karar", "13:00 efsane, 18:00 genel, 22:00 kitap",
+      "16:30 uretim, 18:00 genel, 21:00 karar", "18:00 genel, 19:30 olsaydin", "11:30 nasil, 18:00 genel, 21:00 karar",
+      "13:00 efsane, 19:30 olsaydin", "16:30 uretim, 22:00 kitap"]);
+    assert.equal(seriOf({ structure: "nasil", template: "kart" }, p), "nasil");
+    assert.equal(seriOf({ template: "uretim" }, p), "uretim");
+    assert.equal(seriOf({ template: "ajanda" }, p), "olsaydin");
+    assert.equal(seriOf({ template: "kolaj", structure: "hikaye" }, p), "genel");
+    assert.equal(seriOf({ template: "kart", structure: null }, p), "genel");
+    assert.deepEqual(p.seriler.map((s) => s.durum), ["yayında", "yayında", "yayında", "yayında", "örnek bekliyor", "örnek bekliyor", "kuruluyor"]);
+  });
+
+  test("eşleşme: serinin videosu ±90 dk, başka serinin videosu yalnız tam saatte; paylaşılmış video da görünür", () => {
+    const p = PLAN();
+    const simdi = Date.parse("2026-11-06T01:00:00+03:00"); // Cuma
+    const v = (tag, an, ek = {}) => ({ tag, title: tag, status: "zamanlandi", publish_at: an, template: "kolaj", ...ek });
+    const vs = [
+      v("short-20261105-100000", "2026-11-06T12:15:00+03:00", { template: "nasil" }), // Cuma 11:30 nasil (+45 dk)
+      v("short-20261105-100100", "2026-11-07T13:10:00+03:00"), // Cmt 13:00 efsane saatinde Genel video
+      v("short-20261105-100200", "2026-11-07T15:00:00+03:00"), // plan dışı
+      { tag: "short-20261101-100300", title: "eski", status: "yayinlandi", template: "kart", structure: "efsane",
+        platforms: { youtube: { status: "ok", at: "2026-11-06T18:01:00+03:00", url: "https://youtube.com/shorts/x" } } },
+      { tag: "short-20261105-100400", title: "red", status: "reddedildi", publish_at: "2026-11-06T18:00:00+03:00" },
+    ];
+    const t = yayinTakvimi(p, vs, simdi);
+    const cum = t[0].ogeler, cmt = t[1].ogeler;
+    assert.equal(cum.find((o) => o.saat === "11:30").video.tag, "short-20261105-100000");
+    const genel = cum.find((o) => o.saat === "18:00");
+    assert.equal(genel.video.tag, "short-20261101-100300", "paylaşılmış (başka seri) video tam saatte");
+    assert.equal(genel.video.seri_farkli, true);
+    assert.deepEqual(genel.video.linkler, { youtube: "https://youtube.com/shorts/x" });
+    const efs = cmt.find((o) => o.saat === "13:00");
+    assert.equal(efs.video.tag, "short-20261105-100100");
+    assert.ok(cmt.some((o) => !o.plan && o.video.tag === "short-20261105-100200" && o.saat === "15:00"));
+    assert.ok(!JSON.stringify(t).includes("short-20261105-100400"), "reddedilen video takvimde yok");
+    assert.equal(cum.find((o) => o.saat === "11:30").gecti, false);
+    const oz = seriOzetleri(p, vs, t, Date.parse("2026-11-06T20:00:00+03:00"));
+    assert.equal(oz.find((s) => s.key === "efsane").son_video.tag, "short-20261101-100300");
+  });
+
+  test("Claude harcaması: dönem 24'ünde başlar, %80'de uyarı, tavan ve gün ortamdan", () => {
+    const u = { "2026-10-24": 71.99, "2026-11-24": 3, "2026-11": 18.9566 };
+    let c = claudeOzeti(u, {}, Date.parse("2026-11-23T20:00:00Z"));
+    assert.deepEqual([c.donem, c.baslangic, c.bitis, c.tavan, c.harcanan, c.uyari], ["2026-10-24", "2026-10-24", "2026-11-23", 90, 71.99, false]);
+    assert.equal(claudeOzeti({ "2026-10-24": 72 }, {}, Date.parse("2026-11-01T00:00:00Z")).uyari, true);
+    c = claudeOzeti(u, {}, Date.parse("2026-11-24T00:30:00Z"));
+    assert.deepEqual([c.donem, c.harcanan, c.kalan, c.uyari], ["2026-11-24", 3, 87, false]);
+    c = claudeOzeti({ "2025-12-24": 95 }, {}, Date.parse("2026-01-05T00:00:00Z"));
+    assert.deepEqual([c.donem, c.bitis, c.doldu, c.kalan], ["2025-12-24", "2026-01-23", true, 0]);
+    c = claudeOzeti(u, { CLAUDE_MONTHLY_BUDGET_USD: "20", CLAUDE_BUDGET_RESET_DAY: "1" }, Date.parse("2026-11-05T00:00:00Z"));
+    assert.deepEqual([c.donem, c.tavan, c.harcanan, c.uyari, c.bitis], ["2026-11", 20, 18.96, true, "2026-11-30"]);
+    assert.deepEqual(claudeOzeti(null, {}, Date.parse("2026-11-05T00:00:00Z")).harcanan, 0);
+  });
+
+  test("hikâye ve yenilikler: alanlar süzülür, plan belgesi yalnız claude.ai adresi", () => {
+    const h = hikayeCoz({ sezon: 1, ad: "Mahalleden Yıldıza", plan_belgesi: "javascript:alert(1)",
+      karakterler: [{ ad: "Kuzey", yas: 15, rol: "golcü" }, { yas: 3 }],
+      donum_noktalari: [{ bolum: 1, yas: 15, baslik: "İki teklif", ikilem: "<img src=x>" }, { bolum: "iki" }],
+      bolumler: [{ bolum: 1, yayin: "2026-11-16", secenekler: { A: "Galatasaray", B: "Samsunspor" }, oylar: { A: 120, B: -4 }, kazanan: "A" },
+        { bolum: 2, kazanan: "C" }] });
+    assert.equal(h.plan_belgesi, null);
+    assert.equal(h.karakterler.length, 1);
+    assert.equal(h.donum_noktalari.length, 1);
+    assert.equal(h.donum_noktalari[0].ikilem, "<img src=x>", "metin ham döner; tarayıcı textContent ile yazar");
+    assert.deepEqual(h.bolumler[0].oylar, { A: 120, B: 0 });
+    assert.equal(h.bolumler[1].kazanan, "");
+    const gercek = hikayeCoz(JSON.parse(readFileSync(join(BURASI, "..", "..", "state", "secim", "plan_s1.json"), "utf8")));
+    assert.equal(gercek.plan_belgesi, "https://claude.ai/artifact/RT4aBRHV2GFBzVzpoQRXkz");
+    assert.deepEqual(gercek.donum_noktalari.map((d) => d.yas), [15, 15, 16, 16, 17, 17, 18, 18]);
+    assert.equal(gercek.karakterler.length, 7);
+    const y = yeniliklerCoz([{ tarih: "2026-11-01", metin: "eski" }, { tarih: "2026-11-05", metin: "yeni" }, { tarih: "x", metin: "y" }]);
+    assert.deepEqual(y.map((x) => x.metin), ["yeni", "eski"]);
+    assert.equal(yeniliklerCoz("bozuk"), null);
+  });
+
+  test("arayüz: Seriler sekmesi, Yayın planı görünümü; plan metinleri innerHTML ile yazılmaz", () => {
+    assert.match(UYGULAMA_JS, /\["seriler", "Seriler", "seri"\]/);
+    assert.match(UYGULAMA_JS, /istek\("plan"\)/);
+    assert.match(UYGULAMA_JS, /boş · üretilecek/);
+    const govde = UYGULAMA_JS.slice(UYGULAMA_JS.indexOf("---- yayın planı, seriler, hikâye"), UYGULAMA_JS.indexOf("---- İstatistik"));
+    assert.ok(govde.length > 1000);
+    assert.ok(!/innerHTML|insertAdjacentHTML/.test(govde));
+  });
 });
 
 test("webhook senaryo listesi boş değil", () => assert.ok(SENARYOLAR.length > 20));

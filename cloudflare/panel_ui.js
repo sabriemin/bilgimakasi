@@ -63,7 +63,7 @@ a{color:inherit}
 @keyframes don{to{transform:rotate(360deg)}}
 /* sekmeler */
 .sekmeler{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);
-  display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom)}
+  display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom)}
 .sekme{height:var(--nav-h);border:0;background:none;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:3px;cursor:pointer;color:var(--muted);font:500 11.5px/1 var(--mono);position:relative;padding:0}
 .sekme svg{width:24px;height:24px}
@@ -508,6 +508,129 @@ textarea.alan.tek{min-height:0;resize:none}
 .alt-bilgi{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 12px;
   align-items:center;font:12.5px/1.45 var(--mono);color:var(--muted)}
 .alt-bilgi span{flex:1 1 240px;min-width:0}
+/* takvim görünümü: yayın planı / saatler */
+.tk-gorunum{display:flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:0 0 12px;max-width:420px}
+.tk-gorunum button{flex:1;min-height:44px;border:0;border-radius:9px;background:none;font:600 14px/1 var(--sans);color:var(--muted);cursor:pointer}
+.tk-gorunum button[aria-pressed=true]{background:var(--btn-dark);color:var(--btn-dark-text)}
+/* yayın planı (14 gün) */
+.yp-ozet{display:flex;flex-wrap:wrap;gap:6px 8px;margin:0 0 12px}
+.yp-ozet span{display:inline-flex;align-items:center;gap:6px;font:500 12.5px/1 var(--mono);background:var(--surface);border:1px solid var(--line);
+  border-radius:999px;padding:8px 11px}
+.yp-ozet b{font:400 16px/1 var(--display);letter-spacing:.02em}
+.yp-ozet .bos-say{border-style:dashed;border-color:var(--line-strong)}
+.yp-gunler{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:760px){.yp-gunler{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}}
+.yp-gun{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.yp-gun.bugun{border-color:var(--red);box-shadow:inset 4px 0 0 var(--red),var(--shadow)}
+.yp-gun-bas{display:flex;align-items:center;gap:8px;padding:10px 12px 8px 14px;border-bottom:1px solid var(--line)}
+.yp-gun-bas h3{margin:0;font:400 18px/1.05 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.yp-gun-bas .etiket{font:400 13px/1 var(--display);letter-spacing:.05em;background:var(--red);color:#fff;padding:4px 7px 3px}
+.yp-gun-bas .etiket.yarin{background:var(--label-bg);color:var(--label-text)}
+.yp-gun-bas small{margin-left:auto;font:12px/1 var(--mono);color:var(--muted);white-space:nowrap}
+.yp-gun.gecmis-gun .yp-gun-bas{opacity:.7}
+.yp-satir{display:grid;grid-template-columns:50px minmax(0,1fr);gap:4px 10px;padding:10px 12px 10px 14px;border-top:1px solid var(--line);align-items:start}
+.yp-satir:first-of-type{border-top:0}
+.yp-satir time{font:500 14px/1.35 var(--mono);font-variant-numeric:tabular-nums;padding-top:1px}
+.yp-govde{min-width:0;display:flex;flex-direction:column;gap:5px}
+.yp-seri{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:600 12.5px/1.2 var(--sans);color:var(--muted)}
+.yp-seri .ad{color:var(--text)}
+.yp-seri .ek{font:500 11px/1 var(--mono);border-radius:999px;padding:4px 7px;box-shadow:inset 0 0 0 1px var(--line-strong);color:var(--muted)}
+.yp-video{display:flex;align-items:flex-start;gap:8px;width:100%;border:0;background:none;padding:0;text-align:left;color:var(--text);cursor:pointer;min-width:0}
+.yp-video b{flex:1;min-width:0;font:600 14.5px/1.3 var(--sans);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.yp-video .pil{flex:none;margin-top:1px}
+.yp-video:hover b{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px}
+.yp-bos{font:13px/1.35 var(--mono);color:var(--muted);border:1.5px dashed var(--line-strong);border-radius:9px;padding:7px 9px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.yp-bos.uret{color:var(--text);border-color:var(--red);background:color-mix(in srgb,var(--red) 6%,transparent)}
+.yp-bos.kapali{border-style:solid;background:var(--surface-2)}
+.yp-satir.gecti{opacity:.55}
+.yp-satir.plan-disi time{color:var(--muted)}
+.yp-lejant{font:12px/1.45 var(--mono);color:var(--muted);margin:12px 2px 0}
+/* seriler sekmesi */
+.sr-ust{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:760px){.sr-ust{grid-template-columns:minmax(0,2fr) minmax(0,3fr);align-items:start}}
+.sr-kutu{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;min-width:0}
+.sr-kutu h3{margin:0 0 10px;font:400 18px/1 var(--display);letter-spacing:.03em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.yn-liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.yn-liste li{display:grid;grid-template-columns:50px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line);font:14px/1.4 var(--sans)}
+.yn-liste li:first-child{border-top:0;padding-top:0}
+.yn-liste time{font:500 12px/1.6 var(--mono);color:var(--muted);white-space:nowrap}
+.cl-sayi{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.cl-sayi b{font:400 34px/1 var(--display);letter-spacing:.02em}
+.cl-sayi span{font:13px/1.3 var(--mono);color:var(--muted)}
+.cl-cubuk{height:14px;border-radius:7px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.cl-cubuk i{display:block;height:100%;background:var(--ok);border-radius:7px 0 0 7px}
+.cl-cubuk.uyari i{background:var(--yellow)}
+.cl-cubuk.doldu i{background:var(--red)}
+.cl-not{margin:10px 0 0;font:12.5px/1.45 var(--mono);color:var(--muted)}
+.cl-not.uyari{color:var(--text);background:var(--plan-bg);border-radius:10px;padding:8px 10px}
+.cl-not.doldu{color:#fff;background:var(--red);border-radius:10px;padding:8px 10px}
+.sr-izgara{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:760px){.sr-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1100px){.sr-izgara{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.sr-kart{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.sr-bas{display:flex;align-items:flex-start;gap:10px}
+.sr-ikon{width:42px;height:42px;flex:none;border-radius:11px;background:var(--surface-2);display:grid;place-items:center;font-size:22px;line-height:1}
+.sr-bas h3{margin:0;font:400 20px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase;overflow-wrap:anywhere}
+.sr-bas>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.pil.kur{background:var(--surface-2);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--line-strong);border:0}
+.sr-saatler{display:flex;flex-wrap:wrap;gap:5px}
+.sr-saatler span{font:500 12px/1 var(--mono);background:var(--surface-2);border-radius:7px;padding:6px 7px;box-shadow:inset 0 0 0 1px var(--line)}
+.sr-alan{display:grid;grid-template-columns:86px minmax(0,1fr);gap:8px 10px;margin:0;font:14px/1.35 var(--sans)}
+.sr-alan dt{font:500 12px/1.5 var(--mono);color:var(--muted)}
+.sr-alan dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.sr-alan dd small{display:block;font:12px/1.35 var(--mono);color:var(--muted);margin-top:2px}
+.sr-alan .bos-yazi{color:var(--muted);font-style:italic}
+.sr-not{margin:0;font:12.5px/1.45 var(--mono);color:var(--muted);border-top:1px solid var(--line);padding-top:9px}
+.sr-hafta{width:100%;border-collapse:collapse;font:13px/1.3 var(--mono)}
+.sr-hafta th{text-align:left;font-weight:500;color:var(--muted);padding:7px 8px 7px 0;white-space:nowrap;vertical-align:top;width:92px}
+.sr-hafta td{padding:5px 0;border-top:1px solid var(--line)}
+.sr-hafta tr:first-child td{border-top:0}
+.sr-hafta tr.bugun th{color:var(--red);font-weight:700}
+.sr-hafta td span{display:inline-flex;align-items:center;gap:5px;margin:2px 10px 2px 0;font:13px/1.3 var(--sans);white-space:nowrap}
+.sr-hafta td span b{font:500 12.5px/1 var(--mono)}
+/* Karar Senin hikâye akışı */
+.hk-ozet{display:flex;flex-direction:column;gap:10px}
+.hk-ozet p{margin:0;font:15px/1.5 var(--type)}
+.hk-bilgi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:760px){.hk-bilgi{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.hk-bilgi div{background:var(--surface-2);border-radius:10px;padding:8px 10px;min-width:0}
+.hk-bilgi dt{font:500 11px/1.2 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.hk-bilgi dd{margin:3px 0 0;font:600 14px/1.3 var(--sans);overflow-wrap:anywhere}
+.hk-duzen{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+@media (min-width:900px){.hk-duzen{grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}}
+.hk-yol{list-style:none;margin:0;padding:0;position:relative}
+.hk-dugum{position:relative;display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:0 0 14px}
+.hk-dugum::before{content:"";position:absolute;left:21px;top:44px;bottom:0;width:2px;background:var(--line-strong)}
+.hk-dugum:last-child::before{display:none}
+.hk-no{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:400 20px/1 var(--display);background:var(--surface);
+  box-shadow:inset 0 0 0 2px var(--line-strong);color:var(--muted);position:relative;z-index:1}
+.hk-kart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.hk-kart h4{margin:0;font:700 15.5px/1.3 var(--sans);overflow-wrap:anywhere}
+.hk-ust{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:500 11.5px/1 var(--mono);color:var(--muted)}
+.hk-ikilem{margin:0;font:14px/1.45 var(--type)}
+.hk-gercek{margin:0;font:12.5px/1.4 var(--mono);color:var(--muted)}
+.hk-gercek b{color:var(--text);font-weight:500}
+.hk-secenek{display:grid;grid-template-columns:1fr;gap:6px}
+@media (min-width:520px){.hk-secenek{grid-template-columns:1fr 1fr}}
+.hk-secenek div{border-radius:9px;padding:7px 9px;box-shadow:inset 0 0 0 1.5px var(--line-strong);font:13.5px/1.35 var(--sans);min-width:0;overflow-wrap:anywhere}
+.hk-secenek div b{font:400 15px/1 var(--display);margin-right:6px}
+.hk-secenek div small{display:block;font:12px/1.3 var(--mono);color:var(--muted);margin-top:3px}
+.hk-secenek .kazandi{background:var(--yellow);color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+.hk-secenek .kazandi small{color:var(--ink)}
+.hk-secenek .kaybetti{opacity:.55}
+.hk-dugum.yayinlandi .hk-no{background:var(--btn-dark);color:var(--btn-dark-text);box-shadow:none}
+.hk-dugum.yayinlandi::before{background:var(--text)}
+.hk-dugum.siradaki .hk-no{background:var(--red);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 25%,transparent)}
+.hk-dugum.siradaki .hk-kart{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.hk-dugum.gelecek .hk-kart{opacity:.62;border-style:dashed}
+.hk-dugum.gelecek::before{background:repeating-linear-gradient(to bottom,var(--line-strong) 0 5px,transparent 5px 10px)}
+.hk-karakterler{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hk-kisi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 10px;min-width:0;display:flex;flex-direction:column;gap:3px}
+.hk-kisi b{font:400 16px/1.1 var(--display);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
+.hk-kisi b span{font:500 12px/1 var(--mono);color:var(--muted);text-transform:none;letter-spacing:0;margin-left:5px}
+.hk-kisi small{font:12.5px/1.35 var(--sans);color:var(--muted);overflow-wrap:anywhere}
+.hk-dip{margin:8px 0 0;font:12px/1.4 var(--mono);color:var(--muted)}
+.hk-belge{align-self:flex-start;text-decoration:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 `;
 
@@ -603,7 +726,7 @@ function uygulama(AYAR) {
   ];
   const PF_DA = { youtube: "YouTube'da aç", instagram: "Instagram'da aç", tiktok: "TikTok'ta aç" };
   const SEKMELER = [["videolar", "Videolar", "video"], ["takvim", "Takvim", "takvim"],
-    ["istatistik", "İstatistik", "grafik"], ["konular", "Konular", "konu"]];
+    ["istatistik", "İstatistik", "grafik"], ["konular", "Konular", "konu"], ["seriler", "Seriler", "seri"]];
   const METRIKLER = [["followers", "Takipçi"], ["views", "İzlenme"], ["likes", "Beğeni"]];
   const IKON = {
     youtube: '<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4.5" fill="currentColor"/><path d="M10 9.2l5 2.8-5 2.8z" fill="var(--surface)"/></svg>',
@@ -623,6 +746,7 @@ function uygulama(AYAR) {
     yukari: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14l6-6 6 6"/></svg>',
     asagi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10l6 6 6-6"/></svg>',
     sil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg>',
+    seri: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="8.5" width="13" height="12" rx="2.5"/><path d="M7.5 5.5h10a3 3 0 0 1 3 3v9"/><path d="M8.5 13l3.5 2-3.5 2z" fill="currentColor"/></svg>',
     arti: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   };
 
@@ -631,6 +755,8 @@ function uygulama(AYAR) {
     bekleyen: new Map(), kuyruk: null, kuyrukTaban: null, kuyrukKirli: false, metrik: "followers", uretKonu: "", yeniKonu: "",
     tumPaylasilan: false, ertelenen: false,
     // takvim: seçili gün (bugünden uzaklık), gece saatleri, video başına kaydedilmemiş saatler {platform: ms}, derin bağlantı
+    // plan: /panel/api/plan yanıtı (yayın planı, seriler, hikâye, Claude, yenilikler); takvim görünümü: "plan" ya da "saat"
+    P: null, planImza: "", planHata: "", planYukleniyor: false, planSon: 0, takvimGorunum: "plan",
     takvimGun: 0, takvimGece: false, taslak: new Map(), surukleniyor: false, derin: null, gunKaydir: 0, cipKaydir: 0,
   };
   const $ = (id) => document.getElementById(id);
@@ -721,6 +847,7 @@ function uygulama(AYAR) {
       taslakTemizle();
       if (degisti || !sessiz) ciz(); else ustCiz();
       if (S.derin) derinAc();
+      planTazele(sessiz);
     } catch (e) {
       if (e.status === 401 && S.derin) { // giriş bağlantısı /panel'e döner: derin bağlantı girişten sonra açılsın
         try { localStorage.setItem("bm_derin", JSON.stringify({ tag: S.derin, t: Date.now() })); } catch { /* yok */ }
@@ -846,7 +973,7 @@ function uygulama(AYAR) {
     }
     if (!S.D) { main.append(h("div", { class: "yuk" }, S.hata ? "" : "Yükleniyor…")); kok.append(main); return; }
     for (const u of S.D.uyarilar || []) main.append(h("div", { class: "serit bilgi" }, ikon("uyari"), h("span", null, u)));
-    const icerik = { videolar: videolar, takvim: takvim, istatistik: istatistik, konular: konular }[S.sekme]();
+    const icerik = { videolar: videolar, takvim: takvim, istatistik: istatistik, konular: konular, seriler: seriler }[S.sekme]();
     main.append(icerik);
     main.append(h("footer", { class: "alt-bilgi" }, h("span", null, "Oturum bu tarayıcıda 30 gün açık kalır. Bütün cihazlardaki "
       + "oturumları kapatmak için GitHub'da 'Telegram kapısını kur' işini çalıştır."),
@@ -938,6 +1065,7 @@ function uygulama(AYAR) {
     try { history.replaceState(null, "", "#" + id); } catch { /* yok */ }
     ciz(true);
     window.scrollTo(0, 0);
+    planTazele();
   }
 
   function girisEkrani() {
@@ -1400,6 +1528,7 @@ function uygulama(AYAR) {
   }
 
   function takvim() {
+    if (S.takvimGorunum !== "saat") return yayinPlani();
     const bugun = gunNo(simdi());
     S.takvimGun = Math.min(Math.max(S.takvimGun || 0, 0), GUN_SAYISI - 1);
     const secili = bugun + S.takvimGun;
@@ -1407,7 +1536,7 @@ function uygulama(AYAR) {
     const gunu = (c) => Math.max(gunNo(c.z), bugun);
     const bugunku = cipler.filter((c) => gunu(c) === secili);
     const kap = h("div", { class: "tk" });
-    kap.append(bolumBasligi("takvim", "Takvim", null, "Türkiye saati · 14 gün · dokun ya da basılı tutup sürükle"));
+    kap.append(bolumBasligi("takvim", "Takvim", null, "Türkiye saati · 14 gün · dokun ya da basılı tutup sürükle"), gorunumSecici());
     const yan = h("aside", { class: "tk-yan" }, onayTepsisi(), lejant());
     const ana = h("div", { class: "tk-ana" }, gunSeridi(bugun, cipler, gunu), cakismaUyarisi(bugunku),
       zamanCizelgesi(secili, bugun, bugunku));
@@ -1854,6 +1983,7 @@ function uygulama(AYAR) {
   // Videolar sekmesinden ya da derin bağlantıdan (/panel#takvim/<etiket>): Takvim sekmesi ve o videonun sayfası
   function takvimdeAyarla(v) {
     S.sekme = "takvim";
+    S.takvimGorunum = "saat"; // platform başına saatler bu görünümde (seçim kalıcı yazılmaz)
     try { history.replaceState(null, "", "#takvim"); } catch { /* yok */ }
     if (v.status === "zamanlandi") {
       const z = Object.values({ ...bekleyenSaatler(v), ...(S.taslak.get(v.tag) || {}) });
@@ -1869,8 +1999,254 @@ function uygulama(AYAR) {
     S.derin = null;
     try { localStorage.removeItem("bm_derin"); } catch { /* yok */ }
     const v = S.D.videos.find((x) => x.tag === tag);
-    if (!v) { S.sekme = "takvim"; ciz(true); bildir("Bu video panelde bulunamadı.", true); return; }
+    if (!v) { S.sekme = "takvim"; S.takvimGorunum = "saat"; ciz(true); bildir("Bu video panelde bulunamadı.", true); return; }
     takvimdeAyarla(v);
+  }
+
+  // ---------------------------------------------------------------- yayın planı, seriler, hikâye (/panel/api/plan)
+  // Plan verisi yalnız Takvim ve Seriler sekmesinde istenir (Videolar açılırken GitHub'a fazladan istek gitmesin).
+  const planGerekli = () => S.sekme === "takvim" || S.sekme === "seriler";
+  async function planYukle(sessiz) {
+    if (S.planYukleniyor) return;
+    S.planYukleniyor = true;
+    try {
+      const P = await istek("plan");
+      const imza = JSON.stringify([P.takvim, P.seriler, P.hikaye, P.claude, P.yenilikler, P.uyarilar, P.plan]);
+      const degisti = imza !== S.planImza || S.planHata;
+      S.P = P; S.planImza = imza; S.planHata = ""; S.planSon = Date.now();
+      if (degisti && planGerekli()) ciz();
+    } catch (e) {
+      if (e.status !== 401) { S.planHata = e.message; if (planGerekli() && (!sessiz || !S.P)) ciz(); }
+    } finally {
+      S.planYukleniyor = false;
+    }
+  }
+  function planTazele(sessiz) { if (planGerekli() && (!S.P || Date.now() - S.planSon > 20000)) planYukle(sessiz); }
+
+  function planBekleniyor() {
+    if (S.planHata && !S.P) {
+      return h("div", { class: "serit hata", role: "alert" }, ikon("uyari"), h("span", null, S.planHata),
+        h("button", { class: "btn btn-koyu btn-kucuk", onclick: () => { S.planHata = ""; ciz(true); planYukle(); } }, "Tekrar dene"));
+    }
+    if (!S.P) return h("div", { class: "yuk" }, "Yükleniyor…");
+    return null;
+  }
+  const planUyarilari = () => (S.P.uyarilar || []).map((u) => h("div", { class: "serit bilgi" }, ikon("uyari"), h("span", null, u)));
+  function seriBilgi(key) {
+    return ((S.P && S.P.plan && S.P.plan.seriler) || []).find((s) => s.key === key) || { key, ad: AYAR.seriAdi[key] || key, ikon: "" };
+  }
+  // "2026-11-16" -> "16 Kasım Pazartesi" (TR takvim günü)
+  function gunYaz(kod, yil) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(kod || "");
+    if (!m) return kod || "";
+    const g = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay();
+    return `${+m[3]} ${AYLAR[+m[2] - 1]}${yil ? " " + m[1] : ""} ${GUNLER[g]}`;
+  }
+  const SABLON_ADI = { kart: "Kart", kolaj: "Kolaj", nasil: "Adım kartları", uretim: "Aşama kartları", dosya: "Dava Dosyası",
+    ajanda: "Ajanda", kitap: "Açılan Kitap", isemri: "İş Emri", cizgi: "Çizgi Roman", gazete: "Gazete", retro: "Retro",
+    doga: "Doğa", gece: "Gece", minimal: "Minimal" };
+  const sablonAdi = (k) => (k ? SABLON_ADI[k] || k : "");
+
+  function gorunumSecici() {
+    return h("div", { class: "tk-gorunum", role: "group", "aria-label": "Takvim görünümü" },
+      [["plan", "Yayın planı"], ["saat", "Saatler"]].map(([id, ad]) => h("button", { type: "button",
+        "aria-pressed": (S.takvimGorunum === "saat") === (id === "saat") ? "true" : "false",
+        onclick: () => { if (S.takvimGorunum === id) return; S.takvimGorunum = id; try { localStorage.setItem("bm_tk_gorunum", id); } catch { /* yok */ }
+          ciz(true); window.scrollTo(0, 0); } }, ad)));
+  }
+
+  // Takvim > Yayın planı: önümüzdeki 14 gün, her gün planın saatleri ve eşleşen video ya da "boş · üretilecek"
+  function yayinPlani() {
+    const kap = h("div", { class: "yp" });
+    kap.append(bolumBasligi("takvim", "Takvim", null, "Türkiye saati · önümüzdeki 14 gün · haftada 18 video"), gorunumSecici());
+    const bekle = planBekleniyor();
+    if (bekle) { kap.append(bekle); return kap; }
+    kap.append(...planUyarilari());
+    if (!S.P.takvim) {
+      kap.append(h("div", { class: "bos" }, "Yayın planı (state/yayin_plani.json) henüz yok. Paylaşım saatlerini Saatler görünümünde ayarlayabilirsin."));
+      return kap;
+    }
+    const acik = S.P.takvim.flatMap((g) => g.ogeler.filter((o) => o.plan && !o.kapali && !o.baslamadi && !o.gecti));
+    const dolu = acik.filter((o) => o.video).length;
+    kap.append(h("div", { class: "yp-ozet" },
+      h("span", null, h("b", null, acik.length), "yayın saati"),
+      h("span", null, h("b", null, dolu), "video hazır"),
+      h("span", { class: "bos-say" }, h("b", null, acik.length - dolu), "boş · üretilecek")));
+    kap.append(h("div", { class: "yp-gunler" }, S.P.takvim.map(gunKarti)));
+    kap.append(h("p", { class: "yp-lejant" }, "Bir videoya dokun: oynatıcı, durum ve saat ayarı açılır. Platform başına saat seçmek ve "
+      + "sürükleyip bırakmak için Saatler görünümünü kullan."));
+    const cubuk = kayitCubugu();
+    if (cubuk) kap.append(h("div", { class: "tk-bosluk" }), cubuk);
+    return kap;
+  }
+
+  function gunKarti(g, i) {
+    const plan = g.ogeler.filter((o) => o.plan && !o.kapali && !o.baslamadi);
+    const bos = plan.filter((o) => !o.video && !o.gecti).length;
+    const etiket = g.bugun ? "BUGÜN" : i === 1 ? "YARIN" : null;
+    return h("section", { class: "yp-gun" + (g.bugun ? " bugun" : ""), "aria-label": gunYaz(g.tarih) + (g.bugun ? ", bugün" : "") },
+      h("div", { class: "yp-gun-bas" }, etiket ? h("span", { class: "etiket" + (g.bugun ? "" : " yarin") }, etiket) : null,
+        h("h3", null, gunYaz(g.tarih)), h("small", null, bos ? `${bos} boş` : plan.length ? "hazır" : "")),
+      g.ogeler.length ? g.ogeler.map(planSatiri)
+        : h("div", { class: "yp-satir" }, h("time", null, "—"), h("div", { class: "yp-govde" }, h("span", { class: "yp-bos" }, "Bu gün planda yayın yok."))));
+  }
+
+  function planSatiri(o) {
+    const s = seriBilgi(o.seri);
+    const ek = [];
+    if (!o.plan) ek.push("plan dışı");
+    if (o.video && o.video.seri_farkli) ek.push(seriBilgi(o.video.seri).ad + " videosu");
+    const van = o.video && ms(o.video.an);
+    if (o.plan && van != null && Math.abs(van - ms(o.an)) >= 60000) ek.push("ilk paylaşım " + saatDk(van));
+    let alt;
+    if (o.video) {
+      const [dAd, dSinif] = DURUM[o.video.status] || [o.video.status, "notr"];
+      alt = h("button", { type: "button", class: "yp-video", onclick: () => planVideoAc(o.video),
+        "aria-label": `${o.video.title}. ${dAd}. Ayrıntı için dokun.` }, h("b", null, o.video.title), h("span", { class: "pil " + dSinif }, dAd));
+    } else if (o.kapali) alt = h("span", { class: "yp-bos kapali" }, "Kapalı · " + (o.neden || "bu saatte yayın yok"));
+    else if (o.baslamadi) alt = h("span", { class: "yp-bos" }, "henüz başlamadı · ilk bölüm " + gunYaz(o.baslangic).split(" ").slice(0, 2).join(" "));
+    else if (o.gecti) alt = h("span", { class: "yp-bos" }, "geçti · video yoktu");
+    else alt = h("span", { class: "yp-bos uret" }, "boş · üretilecek");
+    return h("div", { class: "yp-satir" + (o.gecti && !o.video ? " gecti" : "") + (o.plan ? "" : " plan-disi") },
+      h("time", { datetime: o.an }, o.saat),
+      h("div", { class: "yp-govde" }, h("div", { class: "yp-seri" }, s.ikon ? h("span", { "aria-hidden": "true" }, s.ikon) : null,
+        h("span", { class: "ad" }, s.ad), ek.map((x) => h("span", { class: "ek" }, x))), alt));
+  }
+
+  function planVideoAc(pv) {
+    const v = S.D && S.D.videos.find((x) => x.tag === pv.tag);
+    if (!v) { bildir("Bu video panelde bulunamadı; sayfayı yenile.", true); return; }
+    sayfaAc("Video", (ms(pv.an) != null ? "İlk paylaşım " + tamTarih(ms(pv.an)) : null), kart(v));
+  }
+
+  // ---------------------------------------------------------------- Seriler sekmesi
+  const SERI_DURUM = { "yayında": ["Yayında", "ok"], "örnek bekliyor": ["Örnek onay bekliyor", "onay"], "kuruluyor": ["Kuruluyor", "kur"] };
+
+  function seriler() {
+    const kap = h("div", { class: "sr" });
+    kap.append(bolumBasligi("son", "Son durum", null, S.P && S.P.zaman ? tamTarih(ms(S.P.zaman)) + " itibarıyla" : null));
+    const bekle = planBekleniyor();
+    if (bekle) { kap.append(bekle); return kap; }
+    kap.append(...planUyarilari());
+    kap.append(h("div", { class: "sr-ust" }, claudeKutusu(), yeniliklerKutusu()));
+    const sl = S.P.seriler || [];
+    const toplam = sl.reduce((a, s) => a + (s.haftalik || 0), 0);
+    kap.append(bolumBasligi("seriler", "Seriler", sl.length || null, toplam ? `haftada ${toplam} video` : null));
+    if (!sl.length) kap.append(h("div", { class: "bos" }, "Yayın planı (state/yayin_plani.json) henüz yok."));
+    else kap.append(h("div", { class: "sr-izgara" }, sl.map(seriKarti)));
+    if (S.P.plan) kap.append(bolumBasligi("hafta", "Haftalık plan", null, "Türkiye saati"), haftaTablosu());
+    kap.append(...hikayeBolumu());
+    return kap;
+  }
+
+  function yeniliklerKutusu() {
+    const l = S.P.yenilikler;
+    const k = h("section", { class: "sr-kutu", "aria-labelledby": "yn-bas" }, h("h3", { id: "yn-bas" }, "Yenilikler"));
+    if (!l || !l.length) { k.append(h("p", { class: "cl-not" }, "Henüz kayıt yok.")); return k; }
+    k.append(h("ul", { class: "yn-liste" }, l.map((x) => {
+      const [y, m, d] = x.tarih.split("-").map(Number);
+      return h("li", null, h("time", { datetime: x.tarih }, `${d} ${AYLAR[m - 1].slice(0, 3)}`), h("span", null, x.metin));
+    })));
+    return k;
+  }
+
+  function claudeKutusu() {
+    const C = S.P.claude;
+    const k = h("section", { class: "sr-kutu", "aria-labelledby": "cl-bas" }, h("h3", { id: "cl-bas" }, "Claude kullanımı"));
+    if (!C) { k.append(h("p", { class: "cl-not" }, "Harcama kaydı (state/claude_usage.json) okunamadı.")); return k; }
+    const para = (n) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " $";
+    const yuzde = Math.round(C.oran * 100);
+    const sinif = C.doldu ? " doldu" : C.uyari ? " uyari" : "";
+    k.append(h("div", { class: "cl-sayi" }, h("b", null, para(C.harcanan)), h("span", null, `/ ${para(C.tavan)} tavan · %${yuzde}`)),
+      h("div", { class: "cl-cubuk" + sinif, role: "meter", "aria-label": "Bu dönemin Claude harcaması", "aria-valuemin": "0",
+        "aria-valuemax": String(C.tavan), "aria-valuenow": String(C.harcanan), "aria-valuetext": `%${yuzde}` },
+      h("i", { style: `width:${Math.min(100, Math.max(0, C.oran * 100)).toFixed(1)}%` })),
+      h("p", { class: "cl-not" }, `Dönem ${gunYaz(C.baslangic).split(" ").slice(0, 2).join(" ")} – ${gunYaz(C.bitis).split(" ").slice(0, 2).join(" ")}`
+        + ` · kalan ${para(C.kalan)}`));
+    if (C.doldu) k.append(h("p", { class: "cl-not doldu" }, "Tavan doldu: dönem bitene kadar yeni video üretilmez."));
+    else if (C.uyari) k.append(h("p", { class: "cl-not uyari" }, `Tavanın %${yuzde}'i harcandı; dönem sonuna kadar üretimi seyrek tut.`));
+    return k;
+  }
+
+  function seriKarti(s) {
+    const [dAd, dS] = SERI_DURUM[s.durum] || [s.durum, "notr"];
+    const ornek = s.durum === "örnek bekliyor" ? `Örnek Sabri'nin onayında${s.yeni_sablon ? ": " + sablonAdi(s.yeni_sablon) : ""}`
+      : s.durum === "kuruluyor" ? `Şablon kuruluyor${s.yeni_sablon ? ": " + sablonAdi(s.yeni_sablon) : ""}`
+        : s.yeni_sablon ? `Yeni şablon kuruluyor: ${sablonAdi(s.yeni_sablon)}` : "Onaylı";
+    const sablon = s.sablon ? sablonAdi(s.sablon) + (s.key === "genel" ? " ve diğerleri" : "") : "henüz yok";
+    const sn = s.sonraki;
+    const sonraki = sn ? [gunYaz(sn.tarih).split(" ").slice(0, 3).join(" ") + " " + sn.saat,
+      h("small", null, sn.video ? sn.video.title : "boş · üretilecek")] : h("span", { class: "bos-yazi" }, "14 gün içinde yok");
+    const sv = s.son_video;
+    const son = sv ? [sv.title, h("small", null, tamTarih(ms(sv.an)))] : h("span", { class: "bos-yazi" }, "henüz yok");
+    const bekleyen = [s.zamanlanan ? `${s.zamanlanan} zamanlandı` : "", s.onay_bekleyen ? `${s.onay_bekleyen} onay bekliyor` : ""].filter(Boolean).join(" · ");
+    return h("article", { class: "sr-kart", "data-seri": s.key },
+      h("div", { class: "sr-bas" }, h("span", { class: "sr-ikon", "aria-hidden": "true" }, s.ikon || "•"),
+        h("div", null, h("h3", null, s.ad), h("span", { class: "pil " + dS }, dAd))),
+      s.saatler && s.saatler.length ? h("div", { class: "sr-saatler", "aria-label": "Haftalık yayın saatleri" }, s.saatler.map((x) => h("span", null, x))) : null,
+      h("dl", { class: "sr-alan" },
+        h("dt", null, "Şablon"), h("dd", null, sablon),
+        h("dt", null, "Örnek"), h("dd", null, ornek),
+        h("dt", null, "Sıradaki"), h("dd", null, sonraki),
+        h("dt", null, "Son video"), h("dd", null, son),
+        h("dt", null, "Bekleyen"), h("dd", null, bekleyen || h("span", { class: "bos-yazi" }, "yok"))),
+      s.not ? h("p", { class: "sr-not" }, s.not) : null);
+  }
+
+  function haftaTablosu() {
+    const bugun = (parca(simdi()).g + 6) % 7; // Pazartesi = 0
+    const tablo = h("table", { class: "sr-hafta" }, h("tbody", null, S.P.plan.hafta.map((g, i) =>
+      h("tr", { class: i === bugun ? "bugun" : null }, h("th", { scope: "row" }, g.gun),
+        h("td", null, g.slotlar.map((x) => { const s = seriBilgi(x.seri); return h("span", null, h("b", null, x.saat), (s.ikon ? s.ikon + " " : "") + s.ad); }))))));
+    const p = parca(simdi()), bugunKod = `${p.y}-${pad(p.m + 1)}-${pad(p.d)}`;
+    const ist = (S.P.plan.istisnalar || []).filter((x) => x.zaman.slice(0, 10) >= bugunKod); // geçmiş istisnalar gösterilmez
+    return h("div", { class: "sr-kutu" }, tablo, ist.length ? h("p", { class: "cl-not" }, "İstisna: " + ist.map((x) =>
+      `${gunYaz(x.zaman.slice(0, 10)).split(" ").slice(0, 2).join(" ")} ${x.zaman.slice(11)}: ${x.neden || (x.seri ? seriBilgi(x.seri).ad + " yok" : "yayın yok")}`).join(" · ")) : null);
+  }
+
+  function hikayeBolumu() {
+    const H = S.P.hikaye;
+    const out = [bolumBasligi("hikaye", "Hikâye akışı", null, "Karar Senin · salt okunur")];
+    if (!H) { out.push(h("div", { class: "bos" }, "Karar Senin hikâye planı (state/secim/plan_s1.json) henüz yok.")); return out; }
+    const ilk = ms(H.ilk_bolum);
+    const bilgi = [["Bölüm", H.bolum_sayisi], ["Süre", H.bolum_suresi], ["Yayın", H.yayin], ["İlk bölüm", ilk != null ? tamTarih(ilk) : H.ilk_bolum],
+      ["Oylama", H.oylama], ["Şablon", H.sablon]].filter(([, d]) => d);
+    out.push(h("section", { class: "sr-kutu hk-ozet", "aria-labelledby": "hk-bas" },
+      h("h3", { id: "hk-bas" }, `${H.sezon}. sezon · ${H.ad || "Karar Senin"}`), H.ozet ? h("p", null, H.ozet) : null,
+      bilgi.length ? h("dl", { class: "hk-bilgi" }, bilgi.map(([t, d]) => h("div", null, h("dt", null, t), h("dd", null, String(d))))) : null,
+      H.plan_belgesi ? h("a", { class: "btn btn-cizgi btn-kucuk hk-belge", href: H.plan_belgesi, target: "_blank", rel: "noopener noreferrer" },
+        ikon("disari"), "Plan belgesini aç") : null));
+    const yayinlanan = new Map((H.bolumler || []).map((b) => [b.bolum, b]));
+    let siradakiVar = false;
+    const yol = h("ol", { class: "hk-yol", "aria-label": "Bölümler ve dönüm noktaları" }, H.donum_noktalari.map((d) => {
+      const b = yayinlanan.get(d.bolum);
+      let durum = "gelecek", pil = null;
+      if (b && b.kazanan) { durum = "yayinlandi"; pil = h("span", { class: "pil ok" }, `Seçilen: ${b.kazanan}`); }
+      else if (b) { durum = "siradaki"; siradakiVar = true; pil = h("span", { class: "pil onay" }, "Oylama sürüyor"); }
+      else if (!siradakiVar) { durum = "siradaki"; siradakiVar = true; pil = h("span", { class: "pil plan" }, d.bolum === 1 && ilk != null ? "İlk bölüm · " + kisaTarih(ilk) : "Sıradaki"); }
+      const kart = h("div", { class: "hk-kart" },
+        h("div", { class: "hk-ust" }, h("span", null, `Bölüm ${d.bolum}`
+          + (b && b.yayin ? " · " + (ms(b.yayin) != null ? kisaTarih(ms(b.yayin)) : b.yayin) : "")
+          + (d.yas != null ? " · Kuzey " + d.yas + " yaşında" : "")), pil),
+        h("h4", null, d.baslik),
+        d.ikilem ? h("p", { class: "hk-ikilem" }, d.ikilem) : null);
+      if (b && (b.secenekler.A || b.secenekler.B)) {
+        const top = (b.oylar.A || 0) + (b.oylar.B || 0);
+        kart.append(h("div", { class: "hk-secenek" }, ["A", "B"].map((x) => h("div", {
+          class: b.kazanan ? (b.kazanan === x ? "kazandi" : "kaybetti") : null },
+        h("b", null, x), b.secenekler[x] || "—",
+        b.oylar[x] != null ? h("small", null, `${sayi(b.oylar[x])} oy${top ? ` · %${Math.round((b.oylar[x] / top) * 100)}` : ""}`) : null))));
+      }
+      if (d.bilgi) kart.append(h("p", { class: "hk-gercek" }, h("b", null, "Gerçek bilgi: "), d.bilgi));
+      return h("li", { class: "hk-dugum " + durum, "aria-current": durum === "siradaki" ? "step" : null },
+        h("span", { class: "hk-no", "aria-hidden": "true" }, d.bolum), kart);
+    }));
+    const kisiler = h("section", { class: "sr-kutu", "aria-labelledby": "hk-kisi-bas" }, h("h3", { id: "hk-kisi-bas" }, "Karakterler"),
+      h("div", { class: "hk-karakterler" }, (H.karakterler || []).map((k) => h("div", { class: "hk-kisi" },
+        h("b", null, k.ad, k.yas != null ? h("span", null, k.yas) : null), k.rol ? h("small", null, k.rol) : null))),
+      H.karakter_notu ? h("p", { class: "hk-dip" }, H.karakter_notu) : null);
+    out.push(h("div", { class: "hk-duzen" }, yol, kisiler));
+    return out;
   }
 
   // ---------------------------------------------------------------- İstatistik
@@ -2213,6 +2589,7 @@ function uygulama(AYAR) {
     S.derin = m[1];
     return true;
   }
+  try { if (localStorage.getItem("bm_tk_gorunum") === "saat") S.takvimGorunum = "saat"; } catch { /* yok */ }
   const ilk = (location.hash || "").slice(1);
   if (derinOku(ilk)) { /* yükleme bitince açılır */ } else if (SEKMELER.some(([id]) => id === ilk)) S.sekme = ilk;
   else {
@@ -2224,7 +2601,7 @@ function uygulama(AYAR) {
   window.addEventListener("hashchange", () => {
     const id = (location.hash || "").slice(1);
     if (derinOku(id)) { if (S.D) derinAc(); return; }
-    if (SEKMELER.some(([x]) => x === id) && id !== S.sekme) { S.sekme = id; ciz(true); }
+    if (SEKMELER.some(([x]) => x === id) && id !== S.sekme) { S.sekme = id; ciz(true); planTazele(); }
   });
   window.addEventListener("beforeunload", (e) => { if (S.taslak.size) { e.preventDefault(); e.returnValue = ""; } });
   window.addEventListener("resize", () => { const u = document.querySelector(".ust"); if (u) document.documentElement.style.setProperty("--ust-h", u.offsetHeight + "px"); });
@@ -2240,4 +2617,4 @@ function uygulama(AYAR) {
 }
 
 export const UYGULAMA_JS = `(${uygulama.toString()})(${JSON.stringify({ kuyrukBasi: KUYRUK_BASI, sinir: SINIR,
-  seriler: ONERI_SERILERI, seriNotu: SERI_NOTU })});\n`;
+  seriler: ONERI_SERILERI, seriNotu: SERI_NOTU, seriAdi: SERI_ADI })});\n`;
