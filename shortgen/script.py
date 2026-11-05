@@ -123,9 +123,11 @@ STRUCTURES = {
                "giren konu ve ayrıntı YOK: " + URETIM_YASAK + "."),
     "olsaydin": ("YA SEN OLSAYDIN?", "YA SEN OLSAYDIN: izleyiciyi ikinci tekil şahısla somut bir duruma koy: bir meslek "
                  "ya da iş ('Kuyumcu olsaydın'), bir para ya da hayat olayı ('Piyango sana çıksaydı') ya da bir hayat "
-                 "durumu ('Yurt dışına taşınsaydın'). İlk cümle izleyiciyi duruma koyup çarpıcı bir rakam versin → 3-4 "
-                 f"durak, her biri {YIL} Türkiye'sine ait somut bir rakamla (işe nasıl girilir ya da ilk adım, bir gün ya "
-                 "da ilk ay, gelir ve giderler ya da paranın neye yettiği, olasılık) → içeriden bilinen ya da şaşırtıcı "
+                 "durumu ('Yurt dışına taşınsaydın'); konu yalnız para değil, 'Elektrikçi olsaydın günün nasıl geçerdi' gibi bir "
+                 "gün de olabilir. İlk cümle izleyiciyi duruma koyup çarpıcı bir rakam ya da an versin → 3-4 durak: para "
+                 f"konusunda her biri {YIL} Türkiye'sine ait somut bir rakamla (işe nasıl girilir ya da ilk adım, bir gün ya "
+                 "da ilk ay, gelir ve giderler ya da paranın neye yettiği, olasılık), gün akışında her biri günün bir "
+                 "saatinde gerçekçi bir an → içeriden bilinen ya da şaşırtıcı "
                  "bir ayrıntı → son sahne 'Sen olsan ne yapardın? Yorumlara yaz.' ile bitsin. Rakamlar yuvarlanmış ve "
                  "resmî ya da güvenilir kaynaktan olsun; tahminse 'yaklaşık' ya da 'tahmini' de. Şu alanlara giren konu ve "
                  "açı YOK: " + OLSAYDIN_YASAK + "."),
@@ -352,23 +354,30 @@ ekrandır, adımların yerinde ürünün üretim AŞAMALARI vardır):
 # Yalnız 'olsaydin' kalıbında sisteme eklenir (Ya sen olsaydın? serisi, kart şablonu: sayaç kartları ve hesap fişi).
 # Hesap fişi yönergesi yalnız burada: diğer kart videolarının yönergesi (KART_RULES) değişmez.
 OLSAYDIN_RULES = f"""YA SEN OLSAYDIN? DÜZENİ (yalnız 'olsaydin' kalıbı; video kart şablonuyla kurulur):
-- Konu üç türden biridir: (a) bir meslek ya da iş ('Kuyumcu olsaydın': işe nasıl girilir, bir iş günü, aylık gelir ve
-  giderler, içeriden bir ayrıntı); (b) bir para ya da hayat olayı ('Piyango sana çıksaydı': vergiden sonra eline geçen
+- Konu her zaman para hesabı değildir. Üç türden biridir: (a) bir meslek ya da iş ('Kuyumcu olsaydın': işe nasıl
+  girilir, bir iş günü, aylık gelir ve giderler, içeriden bir ayrıntı; ya da 'Elektrikçi olsaydın günün nasıl geçerdi':
+  sabahtan akşama bir iş günü, işin zor ve güzel yanları, kimsenin bilmediği ayrıntılar); (b) bir para ya da hayat olayı ('Piyango sana çıksaydı': vergiden sonra eline geçen
   net tutar, o paranın neye yettiği, kazanma olasılığı, kazananların genelde ne yaptığı); (c) bir hayat durumu ('Yurt
   dışına taşınsaydın ilk ay kaç lira harcardın', 'Bir köyde yaşamaya başlasaydın').
 - Dış ses izleyiciyle ikinci tekil şahısla ve şart kipiyle konuşur ('olsaydın', 'kazanırdın', 'öderdin'); belgesel
   ağırbaşlılığı sürer, abartı ve vaaz yok.
-- KANCA: ilk cümle izleyiciyi duruma koyar ve çarpıcı bir rakam verir (en fazla 10 kelime). İlk headline durumu ve
-  rakamı söyler.
-- DURAKLAR: 3-4 durak, her biri somut bir rakama dayanır. Rakamın sahnesi card "counter" olur: card_value rakamın
+- KANCA: ilk cümle izleyiciyi duruma koyar ve çarpıcı bir rakam ya da çarpıcı bir an verir (en fazla 10 kelime).
+  İlk headline durumu ve rakamı ya da anı söyler.
+- GÜN AKIŞI ("günün nasıl geçerdi" konuları): 3-5 durak, her biri günün bir saati. kicker saat olur (ör. "07:30"),
+  headline o saatte olan somut iş ya da an (ör. "İLK ARIZA", "ÇATIDA ÖĞLE"); dış ses o anı gerçekçi bir ayrıntıyla
+  anlatır (kullanılan alet, tipik iş, iş güvenliği kuralı, müşteriyle bir an, yorgunluk ya da keyif). Para yalnız
+  konunun parçasıysa geçer (ör. günün sonunda eline kalan); geçiyorsa aşağıdaki rakam kuralları geçerlidir.
+- DURAKLAR (para konuları: gelir, gider, ikramiye, maliyet): 3-4 durak, her biri somut bir rakama dayanır. Rakamın sahnesi card "counter" olur: card_value rakamın
   kendisi birimiyle (ör. "1,2 MİLYON ₺", "%25", "18 AY"), card_label 1-3 kelimelik etiket (ör. "AYLIK KİRA"). Bu kalıpta
   bu kural KART ALANLARI'ndaki genel counter kuralının yerine geçer: birim card_value'da kalır, card_label'a yazılmaz.
-- HESAP FİŞİ: en az bir sahne card "receipt" olur. card_lines 2-5 satır, her satır "KALEM|TUTAR" (ör. "KİRA +
+- HESAP FİŞİ (para konuları; gün akışı konusunda para geçmiyorsa fiş yok): en az bir sahne card "receipt" olur. card_lines 2-5 satır, her satır "KALEM|TUTAR" (ör. "KİRA +
   DEPOZİTO|135.000 ₺"; kalem BÜYÜK HARF, en fazla 22 karakter; düşülen tutar eksiyle, ör. "VERGİ|-200.000 ₺").
   Satırların toplamı card_value'ya tam eşit olur (ör. "420.000 ₺"); card_label "TOPLAM" ya da benzeri ("AYLIK GİDER",
   "ELİNE KALAN"); card_note kaynak ve tarih (ör. "Tahmini · Kasım {YIL}"). Fişin sahnesinde dış ses toplamı söyler.
 - Videonun ortasında içeriden bilinen ya da şaşırtıcı bir ayrıntı olur (ikinci merak anı; card "interstitial" olabilir).
 - KAPANIŞ: Makas'ın yorumu tek kısa cümle; son sahne "Sen olsan ne yapardın? Yorumlara yaz." ile biter (card "cta").
+- GERÇEKLİK: gün akışındaki işler, saatler ve kurallar da gerçektir (meslek odaları, MEB meslek tanımları, iş
+  güvenliği mevzuatı, meslek sahiplerinin anlatımları); uydurma ayrıntı ya da abartılı tehlike yok.
 - RAKAMLAR: hepsi {YIL} Türkiye'sine aittir ve web aramasıyla bulunur; yuvarlanır (ör. "yaklaşık 48 bin lira"), tahminse
   "yaklaşık" ya da "tahmini" denir; şehre göre değişiyorsa şehir adı söylenir. Kaynaklar resmî ya da saygın olur:
   Resmî Gazete, ÇSGB ve SGK (asgari ücret, işveren maliyeti), TÜİK, Milli Piyango'nun resmî ikramiye ve olasılık
@@ -715,6 +724,23 @@ def tutar(metin: str) -> tuple[float, float] | None:
     return (-deger if m.group(1) else deger), kat * 10 ** -len(ondalik) / 2
 
 
+# 'gider'/'gelir' fiil de olabilir ("ilk arızaya gidersin"), 'kira' da 'kiraz' olabilir: yalnız para anlamındaki ekler
+_PARA_RE = re.compile(r"₺|\b(TL|lira\w*|maaş\w*|ücret\w*|ikramiye\w*|kira(?:s[ıi]|y[ıa]|da|dan|lar\w*|c[ıi]\w*)?|"
+                      r"maliyet\w*|masraf\w*|harcama\w*|gelir(?:i|in|ler\w*)|gider(?:i|ler\w*)|kazanç\w*|bütçe\w*|"
+                      r"borç\w*|kredi\w*)\b", re.IGNORECASE)
+
+
+def para_var(script) -> bool:
+    """Senaryoda para geçiyor mu (dış ses, kart değeri ya da fiş): Ya sen olsaydın? videosunda hesap fişi ve açıklamadaki
+    'rakamlar yaklaşık' uyarısı yalnız o zaman gerekir ('Elektrikçi olsaydın günün nasıl geçerdi' parasız olabilir)."""
+    for sc in getattr(script, "scenes", None) or []:
+        metin = " ".join([str(getattr(sc, "narration", "") or ""), str(getattr(sc, "card_value", "") or ""),
+                          str(getattr(sc, "card_label", "") or ""), *map(str, getattr(sc, "card_lines", None) or [])])
+        if getattr(sc, "card", "") == "receipt" or _PARA_RE.search(metin):
+            return True
+    return False
+
+
 def fis_sorunlari(script) -> list[str]:
     """Ya sen olsaydın? senaryosunun hesap fişi denetimi: en az bir card "receipt" sahnesi, 2-5 'KALEM|TUTAR' satırı ve
     satırların toplamı card_value'ya eşit (card_value yuvarlanmış yazılmışsa yuvarlama payı kadar). Sorunların listesi."""
@@ -741,7 +767,7 @@ def fis_sorunlari(script) -> list[str]:
             yazili = f"{sum(tutarlar):,.0f}".replace(",", ".")  # binlik ayracı nokta: 405.000
             out.append(f"{i}. sahnenin fişinde satırların toplamı {yazili} ama card_value "
                        f"{getattr(sc, 'card_value', '')}")
-    if not fis:
+    if not fis and para_var(script):
         out.append("hesap fişi (card \"receipt\") yok")
     return out
 
@@ -776,7 +802,9 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
                   "Son sahnedeki ölçek bilgisini (yıllık üretim, Türkiye'nin üretimi) doğrula. Şu alanlara giren ayrıntıyı "
                   "çıkar: " + URETIM_YASAK + ". ")
     elif yapi == "olsaydin":
-        kalip += (f"Her rakamı {YIL} Türkiye'si için web aramasıyla yeniden kontrol et (asgari ücret ve işveren maliyeti, "
+        kalip += ("Gün akışı anlatılıyorsa işlerin, saatlerin ve kuralların o meslekte gerçekten böyle olduğunu kontrol "
+                  "et; uydurma ya da abartılı ayrıntıyı düzelt. "
+                  f"Her rakamı {YIL} Türkiye'si için web aramasıyla yeniden kontrol et (asgari ücret ve işveren maliyeti, "
                   "vergi ve kesinti oranları, kira ve fiyat ortalamaları, ikramiye ve olasılıklar); eskiyse güncelle, "
                   "doğrulanamıyorsa 'yaklaşık' de ya da çıkar. Hesap fişinde (card 'receipt') card_lines satırlarının "
                   "toplamı card_value'ya tam eşit olsun; gelir eksi gider anlatılıyorsa sonuç tutarlı olsun; dış sesteki "

@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from . import illustrate, images, render, voice
-from .script import STRUCTURES, ShortScript, generate_script, load_script
+from .script import STRUCTURES, ShortScript, generate_script, load_script, para_var
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -246,6 +246,8 @@ def yayin_paketi(script: ShortScript, template: str, credits: list, ai_voice: bo
     }
     if script.alkollu:  # alkollü tarif (script.ALKOLLU_ICECEK açıkken): açıklamaya yaş uyarısı
         meta["alkollu"] = True
+    if script.structure == "olsaydin" and not para_var(script):
+        meta["rakamsiz"] = True  # parasız gün akışı: 'rakamlar yaklaşık, yatırım tavsiyesi değildir' satırı eklenmez
     from .publish import apply_disclaimer, apply_series_tag
     meta = apply_series_tag(meta)  # "Efsane mi, gerçek mi?" gibi format serilerinin etiketi
     return apply_disclaimer(meta)  # Ya sen olsaydın? rakam uyarısı / alkollü tarifin yaş uyarısı

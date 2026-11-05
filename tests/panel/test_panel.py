@@ -3260,8 +3260,8 @@ class YeniSeriler(unittest.TestCase):
     # ------------------------------------------------------------ Ya sen olsaydın?
     def test_olsaydin_istemleri(self):
         sc = self.sc
-        out, cagri, gunluk = self.uret(self.demo.model_copy(update={"structure": "olsaydin"}), konu="kuyumcu",
-                                       structure="olsaydin", kart=True)
+        out, cagri, gunluk = self.uret(self.paralı(self.demo).model_copy(update={"structure": "olsaydin"}),
+                                       konu="kuyumcu", structure="olsaydin", kart=True)
         self.assertEqual([(c[0], c[3]) for c in cagri], [("ShortScript", True), ("Review", True), ("Polished", False)])
         self.assertIn(sc.OLSAYDIN_RULES, cagri[0][1])
         self.assertIn(sc.KART_RULES, cagri[0][1])
@@ -3274,6 +3274,17 @@ class YeniSeriler(unittest.TestCase):
         self.assertIn(sc.EDITOR_OLSAYDIN, cagri[2][1])
         self.assertIn('UYARI hesap fişi: hesap fişi (card "receipt") yok', gunluk)
         self.assertEqual(out.structure, "olsaydin")
+        # parasız gün akışında fiş istenmez (ne günlükte ne doğrulayıcıda)
+        _, cagri_gun, gunluk_gun = self.uret(self.demo.model_copy(update={"structure": "olsaydin"}),
+                                             konu="Elektrikçi olsaydın günün nasıl geçerdi", structure="olsaydin")
+        self.assertNotIn("hesap fişi", gunluk_gun)
+        self.assertNotIn('hesap fişi (card "receipt") yok', cagri_gun[1][2])
+        for parca in ("Elektrikçi olsaydın günün nasıl geçerdi", "GÜN AKIŞI", 'kicker saat olur (ör. "07:30")',
+                      "gün akışı konusunda para geçmiyorsa fiş yok", "uydurma ayrıntı ya da abartılı tehlike yok"):
+            self.assertIn(parca, sc.OLSAYDIN_RULES)
+        self.assertIn("Gün akışı anlatılıyorsa", cagri_gun[1][2])
+        self.assertIn("günün nasıl geçerdi", sc.STRUCTURES["olsaydin"][1])
+        self.assertIn("Elektrikçi olsaydın", self.tr.SYSTEM)
         # kart yönergesi kapalıyken de olsaydin düzeni istenir
         _, cagri, _ = self.uret(self.demo.model_copy(update={"structure": "olsaydin"}), structure="olsaydin")
         self.assertIn(sc.OLSAYDIN_RULES, cagri[0][1])
@@ -3328,6 +3339,14 @@ class YeniSeriler(unittest.TestCase):
         self.assertEqual(sorun(fis("1,2 MİLYON ₺", "A|700.000 ₺", "B|400.000 ₺")),
                          ["1. sahnenin fişinde satırların toplamı 1.100.000 ama card_value 1,2 MİLYON ₺"])
         self.assertEqual(sorun(sayac), ['hesap fişi (card "receipt") yok'])
+        self.assertEqual(sorun(S(card="auto", narration="Sabah 07.30'da ilk arızaya gidersin.", card_value="")), [],
+                         "parasız gün akışında fiş istenmez")
+        for parasiz in ("Öğlen kiraz toplarsın.", "Akşam eve geç gelirsin."):
+            self.assertFalse(sc.para_var(S(scenes=[S(card="auto", narration=parasiz, card_value="")])), parasiz)
+        for parali in ("Kirası ayda 20 bin.", "Giderleri düşünce elde ne kalır?", "Kredi çekmen gerekir."):
+            self.assertTrue(sc.para_var(S(scenes=[S(card="auto", narration=parali, card_value="")])), parali)
+        self.assertEqual(sorun(S(card="auto", narration="Ayda 48 bin lira kazanırdın.", card_value="")),
+                         ['hesap fişi (card "receipt") yok'])
         self.assertEqual(sorun(sayac, fis("100 ₺", "A|100 ₺")), ["2. sahnenin fişinde 1 satır var (2-5 olmalı)"])
         self.assertEqual(sorun(fis("100 ₺", "A 50 ₺", "B|50 ₺")),
                          ["1. sahnenin fiş satırı 'KALEM|TUTAR' biçiminde değil: A 50 ₺"])
@@ -3371,10 +3390,16 @@ class YeniSeriler(unittest.TestCase):
         self.assertNotIn(sc.EDITOR_OLSAYDIN, sistem[-1])
 
     # ------------------------------------------------------------ açıklama: uyarı satırı ve seri etiketleri
+    def paralı(self, s):
+        """Demo senaryosuna para geçen bir sahne ekler (Ya sen olsaydın? para konusu)."""
+        s = s.model_copy(deep=True)
+        s.scenes[1].narration = "Ayda yaklaşık 48 bin lira kazanırdın."
+        return s
+
     def olsaydin_meta(self, **kw):
-        s = self.demo.model_copy(update={"structure": "olsaydin", "description": "Kuyumcu olsaydın ayda ne kalırdı? "
-                                         "Sence değer mi?", "hashtags": ["kuyumcuolsaydın", "altın", "kapalıçarşı",
-                                                                         "meslek", "bilgimakasi"], **kw})
+        s = self.paralı(self.demo).model_copy(update={
+            "structure": "olsaydin", "description": "Kuyumcu olsaydın ayda ne kalırdı? Sence değer mi?",
+            "hashtags": ["kuyumcuolsaydın", "altın", "kapalıçarşı", "meslek", "bilgimakasi"], **kw})
         kredi = self.pl.images.ImageCredit(file="f", title="t", author="John Doe", license="CC BY-SA 4.0", page="p")
         return self.pl.yayin_paketi(s, "kart", [kredi], True)
 
@@ -3411,6 +3436,13 @@ class YeniSeriler(unittest.TestCase):
             self.assertEqual(metin.count(uyari), 1)
             self.assertIn("📷 John Doe (CC BY-SA 4.0)", metin)
             self.assertTrue(metin.endswith("#bilgimakasi"))
+        # parasız gün akışı ("Elektrikçi olsaydın günün nasıl geçerdi"): rakam uyarısı eklenmez
+        gun = self.pl.yayin_paketi(self.demo.model_copy(update={"structure": "olsaydin", "description": "Bir gün."}),
+                                   "kart", [], True)
+        self.assertTrue(gun.get("rakamsiz"))
+        self.assertNotIn("Yatırım tavsiyesi", gun["description"])
+        self.assertNotIn("Yatırım tavsiyesi", P.tiktok_caption(gun))
+        self.assertNotIn("rakamsiz", m, "para geçen videoda bayrak yok")
         # başka kalıplarda uyarı yok
         for k in ("hikaye", "efsane", "nasil", "uretim"):
             d = {**m, "structure": k, "description": "Bilgi.\n\n#a"}
