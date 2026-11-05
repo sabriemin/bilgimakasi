@@ -2,28 +2,28 @@
   "date": "2026-11-05",
   "items": [
     {
-      "topic": "Kredi kartının 'cüzdanını unutan iş insanı' efsanesi: Diners Club'ın basın sorumlusu Matty Simmons'ın 1950'deki Frank McNamara hikâyesini sonradan uydurduğunu itiraf etmesi; ve kartın Türkiye'ye 1968'de Koç'a bağlı Servis Turistik eliyle Diners Club olarak gelmesi",
-      "hook": "Kredi kartının doğuş hikâyesini ezbere biliyorsun. Ama o hikâye uydurmaydı.",
-      "trend": "Kredi kartı borçlarına 60 ay taksit öngören kanun teklifi Meclis'e sunuldu",
+      "topic": "Kırat efsanesi: Elmas ve altın ölçüsü 'karat' (Türkçede kırat) keçiboynuzu çekirdeğinden gelir, ama 'bütün çekirdekler aynı ağırlıktadır' inancı yanlıştır. 2006 tarihli Biology Letters çalışmasında keçiboynuzu çekirdeklerinin ağırlığı diğer bitkiler kadar değişken çıktı (%23'e karşı %25). Benzer çekirdekleri gözle ayıklayan tüccarlardı, metrik karat da 1907'de 200 mg olarak sabitlendi.",
+      "hook": "Altının ayarı aslında bir ağaç çekirdeğiyle ölçülüyordu, ama bir sorun vardı",
+      "trend": "Gram altın yükselişi bugün manşetlerde, Türkiye'de herkes altın fiyatı konuşuyor",
       "scope": "TR",
-      "category": "ekonomi ve markalar",
+      "category": "efsane-gerçek",
       "score": 8
     },
     {
-      "topic": "Beşiktaş semtinin adı nereden geliyor: Barbaros'un gemi bağladığı 'beş taş', Bizans'tan kalma 'taş beşik' rivayeti ve Reşad Ekrem Koçu'nun en doğru bulduğu 'gemi beşiği' açıklaması",
-      "hook": "Beşiktaş'ın adı bir beşikten mi, beş taştan mı geliyor?",
-      "trend": "Beşiktaş bu gece Avrupa Ligi'nde Celtic deplasmanında; kulüp adı yine gündemde",
-      "scope": "TR",
-      "category": "dil ve kültür",
+      "topic": "Godzilla'nın 1954'teki meşhur kükremesini, besteci Akira Ifukube'nin reçineli deri bir eldiveni gevşetilmiş kontrbas tellerinde sürtüp kaydı yavaşlatarak üretmesi. Tokyo Hayvanat Bahçesi'nde kaydedilen hayvan sesleri işe yaramamıştı, 2014 filminin ses ekibi de aynı tekniği kullandı. Kapanışta 'Gojira' adının goriller ile Japonca balina (kujira) kelimelerinin birleşimi olduğu verilir.",
+      "hook": "Godzilla'nın kükremesinde tek bir hayvan sesi bile yok",
+      "trend": "Godzilla Minus Zero 3 Kasım'da Japonya'da, 6 Kasım'da ABD'de, 13 Kasım'da Türkiye'de vizyonda",
+      "scope": "Global",
+      "category": "sanat ve müzik",
       "score": 7
     },
     {
-      "topic": "Türk çayı sanıldığı kadar eski değil: Zihni Derin'in öncülük ettiği 1924 Rize kanunu, İkinci Dünya Savaşı yüzünden 1946'da gelen makineler ve 1947'de açılan ilk çay fabrikasıyla kahve ülkesinin çay ülkesine dönüşmesi",
-      "hook": "Dedenin dedesi bu çayı hiç içmedi. Çünkü daha yoktu.",
-      "trend": "Meteorolojinin Rize-Artvin dahil 16 ile yağış uyarısıyla Doğu Karadeniz gündemde",
+      "topic": "'İklim' ile 'klima' aslında aynı kelime: İkisi de Yunanca klima ('eğim', yani güneş ışınlarının geliş açısı) kelimesinden gelir. Antik coğrafyacılar dünyayı güneşin eğimine göre yedi kuşağa ayırdı. Kelime Arapçada 'iklîm' oldu ve Türkçeye 'iklim' olarak geçti (yedi iklim dört bucak), Fransızca 'climat' üzerinden de cihaz adı olan 'klima' olarak girdi.",
+      "hook": "Odandaki klima ile iklim değişikliği aynı kelimeden geliyor",
+      "trend": "BM İklim Zirvesi COP31, 9-20 Kasım'da Antalya'da Türkiye ev sahipliğinde başlıyor",
       "scope": "TR",
-      "category": "tarih",
-      "score": 6
+      "category": "dil ve kültür",
+      "score": 7
     }
   ]
 }
