@@ -635,12 +635,13 @@ def structure_ask(keys: list[str]) -> str:
 def generate_script(history_file: Path, topic_hint: str | None = None,
                     templates: dict[str, str] | None = None, series_prev: dict | None = None,
                     allow_series: bool = False, kart: bool = False, structure: str | None = None,
-                    adim_kartlari: bool = False) -> ShortScript:
+                    adim_kartlari: bool = False, sablon_kurali: str = "") -> ShortScript:
     """structure verilirse (öneriden üretim) kalıp sabittir: yalnız o sunulur, doğrulama ve dil düzeltmesi değiştiremez.
     adim_kartlari: video "Adım kartları" (renderer'ı nasil olan şablon: nasil, uretim) ile çizilecek; nasil ve uretim
     kalıplarında ekran düzeni (NASIL_RULES / URETIM_RULES) yalnız o zaman istenir. Kart şablonuna giden nasil
     senaryoları genel sahne kurallarıyla yazılır. olsaydin kalıbı her zaman kendi düzenini (OLSAYDIN_RULES) ister;
-    uretim ve olsaydin senaryoları yazılırken de web araması yapılır (WEB_KALIPLARI)."""
+    uretim ve olsaydin senaryoları yazılırken de web araması yapılır (WEB_KALIPLARI).
+    sablon_kurali: videoyu çizecek şablonun kendi ek yönergesi (şablon dosyasındaki "istem"; ör. ek sahne alanları)."""
     if structure and structure not in STRUCTURES:
         raise ValueError(f"bilinmeyen anlatım kalıbı: {structure}")
     used = _history(history_file)[-200:]
@@ -666,8 +667,8 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     web = yapi in WEB_KALIPLARI
     if web:
         ask += arastirma_ask(yapi)
-    script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + kalip_kurallari(yapi, nasil),
-                        web=web)
+    script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + kalip_kurallari(yapi, nasil)
+                        + ("\n" + sablon_kurali.strip() if sablon_kurali.strip() else ""), web=web)
     forced = None if series_prev else structure
     serbest = not series_prev and not structure  # kalıp dönüşümden seçilir: FORCED_ONLY (nasil, uretim, olsaydin) seçilemez
     if forced:

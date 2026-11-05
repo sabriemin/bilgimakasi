@@ -1780,7 +1780,7 @@ class KonuSirasiUretim(Ortak):
         cagri = {}
 
         def generate_script(history, topic=None, templates=None, series_prev=None, allow_series=False, kart=False,
-                            structure=None, adim_kartlari=False):
+                            structure=None, adim_kartlari=False, sablon_kurali=""):
             cagri.update(topic=topic, kart=kart, structure=structure, allow_series=allow_series)
             if uret:
                 uret()
@@ -2592,7 +2592,7 @@ class NasilSablonu(unittest.TestCase):
         cagri = {}
 
         def generate_script(history, topic=None, templates=None, series_prev=None, allow_series=False, kart=False,
-                            structure=None, adim_kartlari=False):
+                            structure=None, adim_kartlari=False, sablon_kurali=""):
             cagri.update(topic=topic, structure=structure, kart=kart, templates=templates, adim_kartlari=adim_kartlari)
             return self.cay.model_copy(deep=True)
         self.yama(pl, "generate_script", generate_script)
@@ -3209,7 +3209,7 @@ class YeniSeriler(unittest.TestCase):
         cagri = {}
 
         def generate_script(history, topic=None, templates=None, series_prev=None, allow_series=False, kart=False,
-                            structure=None, adim_kartlari=False):
+                            structure=None, adim_kartlari=False, sablon_kurali=""):
             cagri.update(structure=structure, kart=kart, templates=templates, adim_kartlari=adim_kartlari)
             return self.cay.model_copy(update={"structure": structure or "hikaye"}, deep=True)
         self.yama(pl, "generate_script", generate_script)

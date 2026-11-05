@@ -346,7 +346,9 @@ def main() -> None:
                                  structure=a.structure,
                                  # Adım kartları düzeni (NASIL_RULES / URETIM_RULES) yalnız video renderer'ı nasil
                                  # olan şablonla (nasil, uretim) çizilecekse istenir
-                                 adim_kartlari=sablon_renderer(hedef) == "nasil")
+                                 adim_kartlari=sablon_renderer(hedef) == "nasil",
+                                 # şablonun kendi ek yönergesi (templates/<ad>.json "istem"), ör. ek sahne alanları
+                                 sablon_kurali=str(_sablon(hedef).get("istem") or ""))
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":
