@@ -1,40 +1,60 @@
 {
- "time": "2026-11-05T13:47+03:00",
+ "time": "2026-11-05T23:22+03:00",
  "platforms": {
   "youtube": {
    "account": {
-    "followers": 893,
-    "views": 173868,
-    "videos": 6
+    "followers": 896,
+    "views": 688,
+    "videos": 10
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 84,
+     "views": 102,
      "likes": 0,
      "comments": 0
     },
     "short-20261104-1839": {
-     "views": 76,
+     "views": 86,
+     "likes": 2,
+     "comments": 0
+    },
+    "short-20261104-2023": {
+     "views": 250,
      "likes": 2,
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 388,
-     "likes": 8,
+     "views": 947,
+     "likes": 20,
      "comments": 0
     },
+    "short-20261104-2048": {
+     "views": 114,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261104-2100": {
+     "views": 1017,
+     "likes": 14,
+     "comments": 1
+    },
     "short-20261104-212900": {
-     "views": 18,
+     "views": 21,
      "likes": 1,
      "comments": 0
     },
     "short-20261105-042947": {
-     "views": 234,
+     "views": 254,
      "likes": 1,
      "comments": 0
     },
     "short-20261105-061537": {
-     "views": 0,
+     "views": 10,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261105-151659": {
+     "views": 2,
      "likes": 0,
      "comments": 0
     }
@@ -42,60 +62,81 @@
   },
   "instagram": {
    "account": {
-    "followers": 5,
-    "videos": 7,
-    "views": 6388,
-    "likes": 81,
+    "followers": 6,
+    "videos": 10,
+    "views": 10891,
+    "likes": 103,
     "comments": 4,
-    "saves": 10,
-    "shares": 21
+    "saves": 16,
+    "shares": 31
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 474,
-     "likes": 4,
+     "views": 609,
+     "likes": 5,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 1147,
-     "likes": 7,
+     "views": 1200,
+     "likes": 9,
      "comments": 0,
      "saves": 4,
      "shares": 2
     },
     "short-20261104-2023": {
-     "views": 781,
-     "likes": 3,
+     "views": 1621,
+     "likes": 6,
      "comments": 0,
-     "saves": 0,
-     "shares": 0
+     "saves": 1,
+     "shares": 7
     },
     "short-20261104-2033": {
-     "views": 2107,
-     "likes": 54,
+     "views": 2176,
+     "likes": 55,
      "comments": 4,
      "saves": 6,
      "shares": 19
     },
+    "short-20261104-2048": {
+     "views": 122,
+     "likes": 1,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261104-2100": {
+     "views": 1685,
+     "likes": 10,
+     "comments": 0,
+     "saves": 4,
+     "shares": 2
+    },
     "short-20261104-212900": {
-     "views": 295,
+     "views": 356,
      "likes": 3,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261105-042947": {
-     "views": 1584,
+     "views": 1721,
      "likes": 10,
      "comments": 0,
      "saves": 0,
-     "shares": 0
+     "shares": 1
     },
     "short-20261105-061537": {
-     "views": 0,
-     "likes": 0,
+     "views": 1275,
+     "likes": 2,
+     "comments": 0,
+     "saves": 1,
+     "shares": 0
+    },
+    "short-20261105-151659": {
+     "views": 126,
+     "likes": 2,
      "comments": 0,
      "saves": 0,
      "shares": 0
@@ -105,45 +146,80 @@
   "tiktok": {
    "account": {
     "followers": 17,
-    "likes": 263,
-    "videos": 5,
-    "views": 1398,
+    "likes": 270,
+    "videos": 10,
+    "views": 1789,
     "comments": 0,
     "shares": 1
    },
    "videos": {},
    "list": [
     {
+     "title": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu Suza",
+     "views": 0,
+     "likes": 0,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "📢 Paylaşıldı GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım",
+     "views": 39,
+     "likes": 2,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını",
+     "views": 43,
+     "likes": 1,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Galatasaray 2000 yılında önce Arsenal'i, 100 gün sonra da Re",
+     "views": 142,
+     "likes": 4,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Kredi kartını kim icat etti sorusunun ezber cevabı, Diners C",
+     "views": 125,
+     "likes": 0,
+     "comments": 0,
+     "shares": 0
+    },
+    {
      "title": "Ahtapotun üç kalbi ve mavi kanı var; üstelik jetle yüzerken ",
-     "views": 145,
+     "views": 150,
      "likes": 10,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
-     "views": 323,
+     "views": 330,
      "likes": 11,
      "comments": 0,
      "shares": 1
     },
     {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 251,
+     "views": 263,
      "likes": 7,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "You'll Never Walk Alone, Liverpool tribünlerinden önce 1945'",
-     "views": 191,
+     "views": 199,
      "likes": 8,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "1904 St. Louis Olimpiyatları'ndaki maratonda bir koşucu yolu",
-     "views": 488,
+     "views": 498,
      "likes": 6,
      "comments": 0,
      "shares": 0
@@ -156,8 +232,11 @@
   "short-20261104-1839": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı",
   "short-20261104-2023": "GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurtardı",
   "short-20261104-2033": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı",
+  "short-20261104-2048": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu",
+  "short-20261104-2100": "Galatasaray 100 Günde Avrupa'nın İki Devini Nasıl Devirdi?",
   "short-20261104-212900": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi",
   "short-20261105-042947": "Ahtapotun üç kalbi ve mavi kanı: Yüzerken kalbi bile duruyor",
-  "short-20261105-061537": "Kredi kartını kim icat etti? Ezberlenen hikâye uydurmaymış"
+  "short-20261105-061537": "Kredi kartını kim icat etti? Ezberlenen hikâye uydurmaymış",
+  "short-20261105-151659": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını taşıyor"
  }
 }
