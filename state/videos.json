@@ -268,8 +268,15 @@
     "category": "bilim",
     "template": "doga",
     "created": "2026-11-05T04:34:25",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 101,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-06T17:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-06T18:00:00+00:00",
+      "instagram": "2026-11-06T17:00:00+00:00",
+      "tiktok": "2026-11-06T19:00:00+00:00"
+    },
+    "decided": "2026-11-05T07:36:22+03:00"
   }
 ]
