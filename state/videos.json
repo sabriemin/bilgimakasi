@@ -167,7 +167,7 @@
     "category": "sanat ve müzik",
     "template": "retro",
     "created": "2026-11-04T20:48:24",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 56,
     "platforms": {
       "instagram": {
@@ -181,6 +181,13 @@
         "id": "6kyPHSVOkeI",
         "url": "https://youtube.com/shorts/6kyPHSVOkeI",
         "at": "2026-11-05T21:00:12+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704763305277016082",
+        "draft": true,
+        "caption": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu\n\nSuzanne Collins, Açlık Oyunları fikrini bir gece realite şovla savaş haberleri arasında kanal değiştirirken buldu. Sizce bugünün ekranları nasıl bir hikâye doğururdu?\n\n📷 Dorieo (CC BY-SA 4.0)\n\n#açlıkoyunları #suzannecollins #sunriseonthereaping #bilgi #ilginçbilgiler",
+        "at": "2026-11-05T22:00:39+03:00"
       }
     },
     "publish_at": "2026-11-05T19:00:00+00:00",
@@ -189,7 +196,9 @@
       "instagram": "2026-11-05T17:00:00+00:00",
       "tiktok": "2026-11-05T19:00:00+00:00"
     },
-    "decided": "2026-11-04T23:49:08+03:00"
+    "decided": "2026-11-04T23:49:08+03:00",
+    "published": "2026-11-05T22:00:39+03:00",
+    "aciklama_message_id": 168
   },
   {
     "tag": "short-20261104-2100",
