@@ -170,7 +170,7 @@
     "category": "spor",
     "template": "retro",
     "created": "2026-11-04T21:00:44",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 61,
     "platforms": {
       "youtube": {
@@ -178,6 +178,20 @@
         "id": "yFFF37sZqRM",
         "url": "https://youtube.com/shorts/yFFF37sZqRM",
         "at": "2026-11-05T15:04:37+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17994981873103245",
+        "url": "https://www.instagram.com/reel/DfXMk9tE5Sm/",
+        "at": "2026-11-05T17:01:33+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704687025266346004",
+        "draft": true,
+        "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
+        "caption": "Galatasaray 100 Günde Avrupa'nın İki Devini Nasıl Devirdi?\n\nGalatasaray 2000 yılında önce Arsenal'i, 100 gün sonra da Real Madrid'i yenerek UEFA Kupası'nı ve Süper Kupa'yı kazandı. Sizce bir Türk takımı bunu yeniden başarabilir mi?\n\n📷 kallerna (CC BY-SA 4.0), Threeohsix (CC BY-SA 4.0), Dan Avraham (CC BY-SA 3.0), Dan Avraham (CC BY-SA 3.0), Валерий Дед (CC BY 3.0), Jan S0L0 (CC BY-SA 2.0)\n\n#galatasaray #uefakupası #futboltarihi #bilgi #keşfet",
+        "at": "2026-11-05T17:01:33+03:00"
       }
     },
     "publish_at": "2026-11-05T14:00:00+00:00",
@@ -186,7 +200,8 @@
       "instagram": "2026-11-05T14:00:00+00:00",
       "tiktok": "2026-11-05T14:00:00+00:00"
     },
-    "decided": "2026-11-05T00:02:53+03:00"
+    "decided": "2026-11-05T00:02:53+03:00",
+    "published": "2026-11-05T17:01:33+03:00"
   },
   {
     "tag": "short-20261104-211525",
