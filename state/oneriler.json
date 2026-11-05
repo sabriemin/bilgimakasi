@@ -2,28 +2,28 @@
   "date": "2026-11-05",
   "items": [
     {
-      "topic": "Kırat efsanesi: Elmas ve altın ölçüsü 'karat' (Türkçede kırat) keçiboynuzu çekirdeğinden gelir, ama 'bütün çekirdekler aynı ağırlıktadır' inancı yanlıştır. 2006 tarihli Biology Letters çalışmasında keçiboynuzu çekirdeklerinin ağırlığı diğer bitkiler kadar değişken çıktı (%23'e karşı %25). Benzer çekirdekleri gözle ayıklayan tüccarlardı, metrik karat da 1907'de 200 mg olarak sabitlendi.",
-      "hook": "Altının ayarı aslında bir ağaç çekirdeğiyle ölçülüyordu, ama bir sorun vardı",
-      "trend": "Gram altın yükselişi bugün manşetlerde, Türkiye'de herkes altın fiyatı konuşuyor",
+      "topic": "'Benzin' kelimesinin Endonezya'dan gelen bir tütsünün adı olması: Arapça lubān jāwī ('Cava tütsüsü') önce benzoin reçinesi oldu, Alman kimyager Mitscherlich 1833'te bu reçineden elde edilen benzoik asitten damıttığı maddeye 'Benzin' adını verdi; kelime Türkçeye Fransızca/Almancadan geçti",
+      "hook": "Depoya her benzin aldığında aslında bir tütsünün adını söylüyorsun.",
+      "trend": "Benzine 6 Kasım gece yarısı litrede yaklaşık 6,08 TL indirim bekleniyor",
       "scope": "TR",
-      "category": "efsane-gerçek",
+      "category": "dil ve kültür",
       "score": 8
     },
     {
-      "topic": "Godzilla'nın 1954'teki meşhur kükremesini, besteci Akira Ifukube'nin reçineli deri bir eldiveni gevşetilmiş kontrbas tellerinde sürtüp kaydı yavaşlatarak üretmesi. Tokyo Hayvanat Bahçesi'nde kaydedilen hayvan sesleri işe yaramamıştı, 2014 filminin ses ekibi de aynı tekniği kullandı. Kapanışta 'Gojira' adının goriller ile Japonca balina (kujira) kelimelerinin birleşimi olduğu verilir.",
-      "hook": "Godzilla'nın kükremesinde tek bir hayvan sesi bile yok",
-      "trend": "Godzilla Minus Zero 3 Kasım'da Japonya'da, 6 Kasım'da ABD'de, 13 Kasım'da Türkiye'de vizyonda",
-      "scope": "Global",
-      "category": "sanat ve müzik",
-      "score": 7
-    },
-    {
-      "topic": "'İklim' ile 'klima' aslında aynı kelime: İkisi de Yunanca klima ('eğim', yani güneş ışınlarının geliş açısı) kelimesinden gelir. Antik coğrafyacılar dünyayı güneşin eğimine göre yedi kuşağa ayırdı. Kelime Arapçada 'iklîm' oldu ve Türkçeye 'iklim' olarak geçti (yedi iklim dört bucak), Fransızca 'climat' üzerinden de cihaz adı olan 'klima' olarak girdi.",
-      "hook": "Odandaki klima ile iklim değişikliği aynı kelimeden geliyor",
-      "trend": "BM İklim Zirvesi COP31, 9-20 Kasım'da Antalya'da Türkiye ev sahipliğinde başlıyor",
+      "topic": "'Kasım' ayının adının bir günden gelmesi: Halk takviminde 6 Mayıs Hıdrellez ile 7 Kasım arası 'Hızır günleri' (yaz), 8 Kasım'dan sonrası 'Kasım günleri' (kış) sayılırdı; Süryanice kökenli 'Teşrinisani' adı 1945'teki yasayla 'Kasım' oldu (kökeni çoğunlukla Arapça 'bölen' anlamındaki qāsim'e bağlanır, ancak 1945 Meclis tutanağı bu açıklamayı tartışmalı buluyor)",
+      "hook": "Kasım aslında bir ayın değil, kışı başlatan bir günün adıydı.",
+      "trend": "8 Kasım halk takviminde kışın başladığı gün; havalar soğuyor",
       "scope": "TR",
       "category": "dil ve kültür",
       "score": 7
+    },
+    {
+      "topic": "Godzilla'nın meşhur kükremesinin hiçbir hayvandan gelmemesi: 1954'te besteci Akira Ifukube'nin ekibi hayvanat bahçesi kayıtlarını beğenmeyince çam reçinesine bulanmış deri eldiveni gevşetilmiş kontrbas tellerinde sürttü ve kaydı yavaşlattı; 2014 filminin ses tasarımcıları da işe aynı yöntemle başladı",
+      "hook": "Godzilla'nın kükremesi aslında bir canavardan değil, bir kontrbastan çıktı.",
+      "trend": "Godzilla Minus Zero 3 Kasım'da Japonya'da vizyona girdi, övgü topluyor",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 6
     }
   ]
 }
