@@ -1,0 +1,156 @@
+{
+  "_not": "Yalnız yerel kurgu denemesi (render testi) içindir, yayınlanmaz. Tutarlar, vergi oranı ve kazanma ihtimali gerçek 2026 verisi DEĞİL: hesap fişi ve sayaç kartlarını denemek için seçilmiş yuvarlak örnek rakamlardır.",
+  "topic": "Piyango sana çıksaydı eline ne geçerdi",
+  "category": "ekonomi ve markalar",
+  "template": "kart",
+  "title": "Piyango sana çıksaydı eline gerçekte ne geçerdi?",
+  "description": "Büyük ikramiye sana çıksaydı vergiden ve harcamalardan sonra ne kalırdı? Sen olsan ilk neyi alırdın?",
+  "hashtags": [
+    "piyangosanaçıksaydı",
+    "piyango",
+    "ikramiye",
+    "hesap",
+    "bilgimakasi"
+  ],
+  "scenes": [
+    {
+      "narration": "Piyango sana çıksaydı, eline gerçekte ne geçerdi?",
+      "kicker": "",
+      "headline": [
+        "PİYANGO",
+        "SANA",
+        "ÇIKSAYDI"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/olsaydin/kanca_bilet.png",
+      "motion": "none"
+    },
+    {
+      "narration": "Diyelim ki büyük ikramiye tam 100 milyon lira.",
+      "kicker": "",
+      "headline": [
+        "100 MİLYON",
+        "LİRA"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "counter",
+      "card_value": "100 MİLYON ₺",
+      "card_label": "BÜYÜK İKRAMİYE",
+      "card_note": "örnek rakam"
+    },
+    {
+      "narration": "Önce vergi kesilir, sonra hesap başlar: bir ev, bir araba, ailene de pay. Geriye 52 milyon kalır.",
+      "kicker": "",
+      "headline": [
+        "GERİYE NE",
+        "KALIR?"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "receipt",
+      "card_lines": [
+        "İKRAMİYE|100 MİLYON ₺",
+        "VERGİ (%20)|-20 MİLYON ₺",
+        "EV|-15 MİLYON ₺",
+        "ARABA|-3 MİLYON ₺",
+        "AİLEYE PAY|-10 MİLYON ₺"
+      ],
+      "card_value": "52 MİLYON ₺",
+      "card_label": "KALAN",
+      "card_note": "Örnek hesap · render testi"
+    },
+    {
+      "narration": "Peki bu ihtimal ne kadar? Kazanma şansın 90 milyonda bir.",
+      "kicker": "",
+      "headline": [
+        "90 MİLYONDA",
+        "BİR"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "counter",
+      "card_value": "1 / 90 MİLYON",
+      "card_label": "KAZANMA İHTİMALİ",
+      "card_note": "örnek oran"
+    },
+    {
+      "narration": "Ama asıl şaşırtıcı olan, kazananların ilk yaptığı şey.",
+      "kicker": "",
+      "headline": [
+        "AMA ASIL",
+        "ŞAŞIRTICI",
+        "OLAN"
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    },
+    {
+      "narration": "Uzmanlar hep aynı şeyi önerir: hemen harcama, önce bir plan yap.",
+      "kicker": "",
+      "headline": [
+        "ÖNCE",
+        "PLAN YAP"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    },
+    {
+      "narration": "Sen olsan ilk neyi alırdın? Yorumlara yaz.",
+      "kicker": "",
+      "headline": [
+        "SEN OLSAN?"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none"
+    }
+  ],
+  "sources": [
+    "Render testi: örnek rakamlar, kaynak yok"
+  ],
+  "search_phrase": "piyango sana çıksaydı",
+  "structure": "olsaydin",
+  "series_part": 0,
+  "next_part_brief": ""
+}

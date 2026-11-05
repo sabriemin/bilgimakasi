@@ -80,13 +80,17 @@ class Scene(BaseModel):
     trail: bool = Field(default=False, description="Hareket eden nesnenin arkasında duman/iz olsun mu (roket, uçak için true; dalga, hayvan için false).")
     anim_query: str = Field(default="", description="(Eski alan) Kullanma.")
     # Yalnız "kart" şablonu kullanır; diğer şablonlar yok sayar. Eski senaryolar için hepsi isteğe bağlı.
-    card: Literal["auto", "photo", "drawing", "counter", "compare", "quote", "interstitial", "cta"] = Field(
+    card: Literal["auto", "photo", "drawing", "counter", "compare", "quote", "interstitial", "cta", "receipt"] = Field(
         default="auto", description="Kart şablonunda bu sahnenin kartı; çoğu sahnede auto.")
     card_value: str = Field(default="", description="counter kartı: sayılacak sayı, ör. '3.300' ya da '%90'.")
     card_label: str = Field(default="", description="counter: sayının etiketi (ör. 'YIL ÖNCE'); quote: alıntının kendisi.")
     card_myth: str = Field(default="", description="compare: yaygın inanış, en fazla 6 kelime.")
     card_fact: str = Field(default="", description="compare: doğrusu, en fazla 6 kelime.")
     card_note: str = Field(default="", description="Kartın küçük notu ya da kaynağı (ör. 'NASA arşivi · 1999'), en fazla 32 karakter.")
+    card_lines: List[str] = Field(default_factory=list, description=(
+        "Yalnız olsaydin kalıbının hesap fişi (receipt) kartı: 2-5 satır, her biri 'KALEM|TUTAR' (ör. "
+        "'KİRA + DEPOZİTO|135.000 ₺'); toplam card_value'da (ör. '420.000 ₺'), etiketi card_label'da ('TOPLAM'), "
+        "kaynak ya da tarih card_note'ta ('Tahmini · Kasım 2026'). Diğer kalıplarda ve diğer kartlarda boş."))
     mascot: Literal["auto", "normal", "surprised", "thinking", "happy"] = Field(
         default="auto", description="Kart şablonunda maskot Makas'ın ifadesi; çoğu sahnede auto.")
     # Yalnız 'nasil' kalıbı (Nasıl yapılır? / "nasil" şablonu) kullanır; eski senaryolar için isteğe bağlı.
