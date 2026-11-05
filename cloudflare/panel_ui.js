@@ -1171,7 +1171,7 @@ function uygulama(AYAR) {
   function slotlar() {
     const t = new Date(simdi() + TR);
     const y = t.getUTCFullYear(), m = t.getUTCMonth(), d = t.getUTCDate();
-    const out = [["best", "🎯 Her platform en iyi saatinde", "Her platform kendi boş en iyi saatinde (⭐) paylaşılır; o gün doluysa ertesi gün."],
+    const out = [["best", "🎯 Serinin takvim saatinde", "Serinin haftalık takvimdeki sıradaki boş saatinde, üç platformda birden paylaşılır."],
       ["now", "⚡ Şimdi", "Birkaç dakika içinde tüm platformlarda paylaşılır."]];
     for (const [kod, ad, ek, sa] of [["b12", "Bugün 12:00", 0, 12], ["b19", "Bugün 19:00", 0, 19],
       ["y12", "Yarın 12:00", 1, 12], ["y19", "Yarın 19:00", 1, 19]]) {

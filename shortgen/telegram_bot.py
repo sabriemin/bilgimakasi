@@ -21,6 +21,8 @@ from pathlib import Path
 
 import requests
 
+from . import takvim
+
 ROOT = Path(__file__).resolve().parent.parent
 TR = dt.timezone(dt.timedelta(hours=3))  # Türkiye saati (yaz saati uygulaması yok)
 PLATFORM_NAMES = {"youtube": "YouTube", "instagram": "Instagram", "tiktok": "TikTok"}
@@ -123,7 +125,8 @@ def notify(out_dir: Path, tag: str) -> None:
         print("Açıklama mesajı gönderilemedi:", _redact_safe(e))
     videos = load(VIDEOS, [])
     videos.append({"tag": tag, "title": meta["title"], "topic": meta["topic"], "category": meta["category"],
-                   "template": meta.get("template"), "created": meta["created"], "status": "onay_bekliyor",
+                   "template": meta.get("template"), "structure": meta.get("structure"),
+                   "created": meta["created"], "status": "onay_bekliyor",
                    "telegram_message_id": msg["message_id"],
                    **({"aciklama_message_id": desc_id} if desc_id else {}), "platforms": {}})
     save(VIDEOS, videos)
@@ -254,7 +257,7 @@ def _slots(now: dt.datetime | None = None, all_: bool = False) -> list[tuple[str
     """Saat seçenekleri: (kod, düğme yazısı, UTC zamanı). Geçmişte kalan saatler gösterilmez (all_=True hariç)."""
     now = now or dt.datetime.now(TR)
     today, tomorrow = now.date(), now.date() + dt.timedelta(days=1)
-    out = [("best", "🎯 Her platform en iyi saatinde", now), ("now", "⚡ Şimdi", now)]
+    out = [("best", "🎯 Serinin takvim saatinde", now), ("now", "⚡ Şimdi", now)]
     for code, label, day, hour in (("b12", "Bugün 12:00", today, 12), ("b19", "Bugün 19:00", today, 19),
                                    ("y12", "Yarın 12:00", tomorrow, 12), ("y19", "Yarın 19:00", tomorrow, 19)):
         t = dt.datetime.combine(day, dt.time(hour), TR)
@@ -346,10 +349,25 @@ def _produce_suggestion(it: dict) -> bool:
     return _dispatch(_suggestion_topic(it), kalip=kalip_of(it))
 
 
+def _seri_saati(tag: str) -> dt.datetime | None:
+    """Videonun serisinin haftalık takvimdeki sıradaki boş saati (dolu: başka videolara ayrılmış ya da paylaşılmış)."""
+    v = _find(load(VIDEOS, []), tag)
+    if not v:
+        return None
+    dolu = [t for ts in _busy(tag).values() for t in ts]
+    return takvim.sonraki_saat(takvim.seri_of(v), dolu)
+
+
 def _approve(tag: str, code: str, chat: str, mid: int) -> str:
     """Onay (kod: best|now|b12|b19|y12|y19): saati hesaplar ve kaydeder, video mesajının düğmesini 'iptal' yapar.
     Telegram'a yazılacak notu döndürür."""
-    if code == "best":
+    t = _seri_saati(tag) if code == "best" else None
+    if t:  # haftalık takvim: serinin sıradaki boş saati, üç platform aynı anda
+        iso = t.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+        sched = {p: iso for p in BEST_TIMES}
+        seri = takvim.SERI_ADI.get(takvim.seri_of(_find(load(VIDEOS, []), tag) or {}), "")
+        note = f"✅ Onaylandı. {seri} serisinin takvim saatinde, üç platformda birden paylaşılacak: {_fmt(iso)}\n" + PANEL_HINT
+    elif code == "best":
         sched = _best_schedule(exclude=tag)
         iso = min(sched.values())
         note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + _plan_text(sched)
@@ -623,8 +641,8 @@ def process_update(u: dict, chat: str) -> None:
                       if EXTRA_TIMES.get(p) else "") for p, t in BEST_TIMES.items()]
             if any(EXTRA_TIMES.get(p) for p in BEST_TIMES):
                 lines += ["Ek saat, günün kalan (en az 15 dk sonraki) asıl saatleri başka videolara ayrıldıysa kullanılır."]
-            lines += ["", "Onaylarken '🎯 Her platform en iyi saatinde' seçersen her biri kendi boş en iyi saatinde "
-                      "paylaşılır; o günün en iyi saatleri doluysa ertesi güne geçer.", PANEL_HINT]
+            lines += ["", "Onaylarken '🎯 Serinin takvim saatinde' seçersen video serisinin haftalık takvimdeki "
+                      "sıradaki boş saatinde üç platformda birden paylaşılır.", PANEL_HINT]
             api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
         elif text.startswith("/start") or text.startswith("/yardim"):
             api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"

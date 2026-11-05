@@ -47,7 +47,9 @@ describe("Telegram webhook davranışı değişmedi", () => {
     saatKur(SABIT_SAAT); cacheKur(); console.log = () => {};
     assert.equal(yeni.length, golden.length);
     for (let i = 0; i < golden.length; i++) {
-      const g = golden[i], y = yeni[i];
+      // bilinçli fark (haftalık takvim): 🎯 düğmesi serinin takvim saatini seçer
+      const g = JSON.parse(JSON.stringify(golden[i]).replaceAll("🎯 Her platform en iyi saatinde", "🎯 Serinin takvim saatinde")),
+        y = yeni[i];
       if (g.ad === "mesaj /start" || g.ad === "mesaj /yardim") {
         // bilinçli farklar: yardım metnine /panel satırı eklendi, /oneri yedi seriden 21 öneri veriyor
         const eski = g.cagrilar[0].govde.text, yeniMetin = y.cagrilar[0].govde.text;

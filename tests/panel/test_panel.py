@@ -261,6 +261,9 @@ class DugmeDavranisi(Ortak):
         type(self).tb, type(self).req = self.tb, self.req
         self.assertEqual(len(yeni), len(golden))
         for g, y in zip(golden, yeni):
+            # bilinçli fark (haftalık takvim): 🎯 düğmesi serinin takvim saatini seçer
+            g = json.loads(json.dumps(g, ensure_ascii=False).replace("🎯 Her platform en iyi saatinde",
+                                                                     "🎯 Serinin takvim saatinde"))
             if g["ad"] == "/start":  # bilinçli farklar: yardım metninde /panel satırı, yedi seriden 21 öneri ve
                 # yazılan konudan seri seçimi
                 self.assertEqual(y["cagrilar"][0]["data"]["text"], g["cagrilar"][0]["data"]["text"].replace(
@@ -274,18 +277,21 @@ class DugmeDavranisi(Ortak):
                 # "Asıl en iyi saatler…" açıklaması yerine panel notu. Seçilen saatler, düğmeler ve kayıt aynı.
                 beklenen = json.loads(json.dumps(g))
                 beklenen["cagrilar"][-1]["data"]["text"] = self.SAAT_METNI[g["ad"]]
+                if g["ad"] == "at best":  # 🎯: Genel serisinin takvimdeki sıradaki boş saati, üç platform aynı anda
+                    t = "2026-11-09T15:00:00+00:00"
+                    for rec in beklenen["degisen"].values():
+                        rec.update(publish_at=t, schedule={"youtube": t, "instagram": t, "tiktok": t})
                 self.assertEqual(y, beklenen, g["ad"])
                 continue
             self.assertEqual(y, g, g["ad"])
 
     SAAT_METNI = {
-        "at best": "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n• Instagram: 6 Kasım Cuma 20:00 ⭐\n"
-                   "• YouTube: 6 Kasım Cuma 21:00 ⭐\n• TikTok: 6 Kasım Cuma 22:00 ⭐\n"
+        "at best": "✅ Onaylandı. Genel serisinin takvim saatinde, üç platformda birden paylaşılacak: "
+                   "9 Kasım Pazartesi 18:00\n"
                    "Saatleri değiştirmek için panelde Takvim: /panel\nBir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
         "/saatler": "Platformların en iyi paylaşım saatleri (Türkiye, ⭐ prime time):\n• YouTube: 18:00, 21:00\n"
-                    "• Instagram: 12:30, 20:00\n• TikTok: 19:30, 22:00\n\nOnaylarken '🎯 Her platform en iyi saatinde' "
-                    "seçersen her biri kendi boş en iyi saatinde paylaşılır; o günün en iyi saatleri doluysa ertesi güne "
-                    "geçer.\nSaatleri değiştirmek için panelde Takvim: /panel",
+                    "• Instagram: 12:30, 20:00\n• TikTok: 19:30, 22:00\n\nOnaylarken '🎯 Serinin takvim saatinde' seçersen "
+                    "video serisinin haftalık takvimdeki sıradaki boş saatinde üç platformda birden paylaşılır.\nSaatleri değiştirmek için panelde Takvim: /panel",
     }
 
     def test_komut_menusunde_panel(self):
@@ -299,12 +305,13 @@ class PanelIslemleri(Ortak):
         self.assertEqual(v["status"], "zamanlandi")
         self.assertEqual(set(v["schedule"]), {"youtube", "instagram", "tiktok"})
         self.assertEqual(v["publish_at"], min(v["schedule"].values()))
+        self.assertEqual(len(set(v["schedule"].values())), 1, "takvim saati: üç platform aynı anda")
         kb = self.tg(c, "editMessageReplyMarkup")
         self.assertEqual(kb[0]["data"]["message_id"], 2)
         self.assertEqual(kb[0]["data"]["reply_markup"], {"inline_keyboard": [[{"text": "🚫 Paylaşımı iptal et",
                                                                                "callback_data": f"cancel:{T}"}]]})
         m = self.tg(c, "sendMessage")[-1]["data"]
-        self.assertTrue(m["text"].startswith("🖥 Panelden: ✅ Onaylandı. Her platform kendi en iyi saatinde"))
+        self.assertTrue(m["text"].startswith("🖥 Panelden: ✅ Onaylandı. Genel serisinin takvim saatinde"))
         self.assertTrue(m["text"].endswith(v["title"]))
         self.assertEqual(m["reply_to_message_id"], 2)
 

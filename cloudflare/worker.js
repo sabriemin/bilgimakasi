@@ -31,7 +31,7 @@ function kb(rows) {
 function slots() {
   const now = new Date(Date.now() + TR_OFFSET); // UTC alanları = Türkiye saati
   const y = now.getUTCFullYear(), m = now.getUTCMonth(), d = now.getUTCDate();
-  const out = [["best", "🎯 Her platform en iyi saatinde"], ["now", "⚡ Şimdi"]];
+  const out = [["best", "🎯 Serinin takvim saatinde"], ["now", "⚡ Şimdi"]];
   for (const [code, label, add, h] of [["b12", "Bugün 12:00", 0, 12], ["b19", "Bugün 19:00", 0, 19],
                                        ["y12", "Yarın 12:00", 1, 12], ["y19", "Yarın 19:00", 1, 19]]) {
     if (Date.UTC(y, m, d + add, h) > now.getTime() + 15 * 60 * 1000) out.push([code, "🕒 " + label]);
