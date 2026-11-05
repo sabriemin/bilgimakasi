@@ -404,13 +404,21 @@
     "status": "zamanlandi",
     "telegram_message_id": 129,
     "aciklama_message_id": 130,
-    "platforms": {},
+    "platforms": {
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704738018468562950",
+        "draft": true,
+        "caption": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını taşıyor\n\nBenzin kelimesinin kökeni Endonezya'dan gelen kokulu bir tütsüye uzanıyor. Sen kökenini en çok hangi kelimenin merak ediyorsun?\n\n📷 Midori (CC BY-SA 3.0)\n\n#benzinkelimesininkökeni #etimoloji #benzin #türkçe #bilgimakasi",
+        "at": "2026-11-05T20:20:58+03:00"
+      }
+    },
     "schedule": {
       "youtube": "2026-11-05T20:00:00+00:00",
       "instagram": "2026-11-05T19:30:00+00:00",
       "tiktok": "2026-11-05T17:20:00+00:00"
     },
-    "publish_at": "2026-11-05T17:20:00+00:00",
+    "publish_at": "2026-11-05T19:30:00+00:00",
     "decided": "2026-11-05T20:14:45+03:00"
   }
 ]
