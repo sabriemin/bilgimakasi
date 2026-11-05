@@ -118,6 +118,38 @@ def _fit_caption(head: str, tags: str, limit: int, measure=None) -> str:
     return out
 
 
+# Format serilerinin kendi etiketi: izleyici etikete dokununca serinin bütün videolarını görür. En çok 5 etiket kuralı
+# (Instagram sınırı) korunur: seri etiketi son konu etiketinin yerine, kanal etiketinin (bilgimakasi) önüne girer.
+SERIES_TAGS = {"efsane": "EfsaneMiGerçekMi"}
+
+
+def apply_series_tag(meta: dict) -> dict:
+    """Seri videosuysa (structure) seri etiketini etiket listesine ve açıklamadaki etiket satırına ekler. Zaten varsa
+    ya da seri değilse meta aynen döner. Üretimde (pipeline) ve paylaşımda (eski paketler için) çağrılır."""
+    tag = SERIES_TAGS.get(str(meta.get("structure") or ""))
+    if not tag:
+        return meta
+    norm = lambda h: re.sub(r"\W", "", str(h)).casefold()  # noqa: E731
+    hs = [h for h in (meta.get("hashtags") or []) if norm(h)]
+    if any(norm(h) == norm(tag) for h in hs):
+        return meta
+    brand = [h for h in hs if norm(h) == "bilgimakasi"][:1]
+    rest = [h for h in hs if norm(h) != "bilgimakasi"]
+    new = rest[:max(0, 5 - 1 - len(brand))] + [tag] + brand
+    line = " ".join("#" + re.sub(r"\W", "", h) for h in new)
+    pars = (meta.get("description") or "").split("\n\n")
+    is_tags = lambda x: bool(x.split()) and all(w.startswith("#") for w in x.split())  # noqa: E731
+    idx = next((i for i in range(len(pars) - 1, -1, -1) if is_tags(pars[i])), None)
+    if idx is not None:
+        pars[idx] = line
+    else:  # etiket satırı yoksa görsel atfının (📷) önüne
+        k = len(pars)
+        while k > 1 and pars[k - 1].strip().startswith("📷"):
+            k -= 1
+        pars.insert(k, line)
+    return {**meta, "hashtags": new, "description": "\n\n".join(x for x in pars if x.strip() or len(pars) == 1)}
+
+
 def _hashtags(meta: dict, limit: int) -> list[str]:
     tags = ["#" + re.sub(r"\W", "", h) for h in meta.get("hashtags", [])]  # kesme işareti, noktalama etiketi bölmesin
     return [t for t in tags if len(t) > 1][:limit]

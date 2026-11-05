@@ -194,6 +194,8 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         "series_part": script.series_part, "structure": script.structure, "search_phrase": script.search_phrase,
         "status": "onay_bekliyor", "created": dt.datetime.now().isoformat(timespec="seconds"),
     }
+    from .publish import apply_series_tag
+    meta = apply_series_tag(meta)  # "Efsane mi, gerçek mi?" gibi format serilerinin etiketi
     (out_dir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     return video
 

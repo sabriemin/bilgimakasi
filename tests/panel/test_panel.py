@@ -457,6 +457,24 @@ class PanelIslemleri(Ortak):
         m = self.tb._apply_edit(self.META, {"title": "T", "description": "Yeni bilgi."})
         self.assertEqual(m["hashtags"], self.META["hashtags"])
 
+    def test_efsane_serisi_etiketi(self):
+        import shortgen.publish as P
+        meta = {**self.META, "structure": "efsane", "hashtags": ["a", "b", "c", "d", "bilgimakasi"],
+                "description": "Bilgi.\n\n#a #b #c #d #bilgimakasi\n\n📷 John Doe (CC BY-SA 4.0)"}
+        self.panel(action="approve", tag=T, code="now")
+        m = self._paylas(meta)
+        # en çok 5 etiket: seri etiketi son konu etiketinin yerine, kanal etiketinin önüne
+        self.assertEqual(m["hashtags"], ["a", "b", "c", "EfsaneMiGerçekMi", "bilgimakasi"])
+        self.assertEqual(m["description"], "Bilgi.\n\n#a #b #c #EfsaneMiGerçekMi #bilgimakasi\n\n📷 John Doe (CC BY-SA 4.0)")
+        self.assertEqual(P.apply_series_tag(m), m)  # iki kez eklenmez
+        diger = {**meta, "structure": "neden"}
+        self.assertEqual(P.apply_series_tag(diger), diger)
+        # panelde kendi etiketlerini yazdıysa onunkiler geçerli
+        durum_sifirla(self.root)
+        self.panel(action="edit", tag=T, title="B", description="Bilgi.\n\n#benim #etiketim")
+        self.panel(action="approve", tag=T, code="now")
+        self.assertEqual(self._paylas(meta)["hashtags"], ["benim", "etiketim"])
+
     def test_duzenleme_yoksa_meta_aynen(self):
         self.panel(action="approve", tag=T, code="now")
         self.assertEqual(self._paylas(self.META), self.META)

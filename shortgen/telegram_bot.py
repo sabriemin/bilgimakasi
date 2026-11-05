@@ -898,7 +898,7 @@ def listen(minutes: float) -> None:
 
 def publish_due() -> None:
     """Saati gelen videoları paylaşır. Daha önce başarılı olan platformlara tekrar yüklemez."""
-    from .publish import fetch_release, publish
+    from .publish import apply_series_tag, fetch_release, publish
     chat = str(os.environ["TELEGRAM_CHAT_ID"])
     now = dt.datetime.now(dt.timezone.utc)
     due = [v for v in load(VIDEOS, []) if v["status"] == "zamanlandi" and v.get("publish_at")
@@ -916,7 +916,7 @@ def publish_due() -> None:
         try:
             with tempfile.TemporaryDirectory() as d:
                 video, meta = fetch_release(tag, Path(d))
-                res = publish(video, _apply_edit(meta, v.get("duzenleme")), todo)
+                res = publish(video, _apply_edit(apply_series_tag(meta), v.get("duzenleme")), todo)
         except Exception as e:  # noqa: BLE001
             from .publish import _redact
             res = {p: {"status": "hata", "error": _redact(f"video indirilemedi: {e}")[:600]} for p in todo}
