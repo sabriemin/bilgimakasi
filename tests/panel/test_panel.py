@@ -2259,7 +2259,7 @@ class OneriSerileri(Ortak):
         self.assertTrue(m["yapi_sablon"]["_aciklama"])
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
         nasil = demo.model_copy(update={"structure": "nasil", "category": "uzay"})
-        self.assertEqual(pl.pick_template(nasil), "kart", "yapı eşleşmesi kategori eşleşmesinden önce")
+        self.assertEqual(pl.pick_template(nasil), "nasil", "yapı eşleşmesi kategori eşleşmesinden önce")
         self.assertEqual(pl.pick_template(nasil, "kolaj"), "kolaj", "elle seçilen şablon kazanır")
         self.assertEqual(pl.pick_template(demo.model_copy(update={"structure": "hikaye", "category": "uzay"})), "gece")
         self.assertEqual(pl.series_label(nasil, self.root / "history.jsonl"), "NASIL YAPILIR? #1")
@@ -2549,10 +2549,10 @@ class NasilSablonu(unittest.TestCase):
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
         self.assertEqual(m["yapi_sablon"]["nasil"], "nasil", "Sabri onayladı: nasil kalıbı kendi şablonunda")
         self.assertEqual({k: v for k, v in m["yapi_sablon"].items() if not k.startswith("_")},
-                         {"nasil": "kart", "uretim": "uretim", "olsaydin": "kart"})
+                         {"nasil": "nasil", "uretim": "uretim", "olsaydin": "kart"})
         s = self.cay
         self.assertEqual(pl.pick_template(s, "nasil"), "nasil")
-        self.assertEqual(pl.pick_template(s), "kart")
+        self.assertEqual(pl.pick_template(s), "nasil")
         # Claude'un önerisi nasil olsa da (claude_secsin) nasil yalnız yapi_sablon ya da --template ile seçilir
         kok = self.tmp / "kok"
         shutil.copytree(REPO / "templates", kok / "templates")
