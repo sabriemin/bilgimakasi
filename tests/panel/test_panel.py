@@ -2580,7 +2580,7 @@ class NasilSablonu(unittest.TestCase):
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
         self.assertEqual(m["yapi_sablon"]["nasil"], "nasil", "Sabri onayladı: nasil kalıbı kendi şablonunda")
         self.assertEqual({k: v for k, v in m["yapi_sablon"].items() if not k.startswith("_")},
-                         {"nasil": "nasil", "uretim": "uretim", "olsaydin": "kart", "kitap": "kitap"})
+                         {"nasil": "nasil", "uretim": "uretim", "olsaydin": "kart", "efsane": "dosya", "kitap": "kitap"})
         s = self.cay
         self.assertEqual(pl.pick_template(s, "nasil"), "nasil")
         self.assertEqual(pl.pick_template(s), "nasil")

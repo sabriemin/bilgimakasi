@@ -531,10 +531,10 @@ class Sablon(unittest.TestCase):
 
     def test_yalniz_elle_secilir(self):
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
-        self.assertNotIn("dosya", [v for k, v in m["yapi_sablon"].items() if not k.startswith("_")])
+        self.assertEqual(m["yapi_sablon"]["efsane"], "dosya", "Sabri Japon balığı örneğini beğendi: efsane Dava Dosyası'nda")
         self.assertNotIn("dosya", m["kategoriler"].values())
         script = S.load_script(DEMO)
-        self.assertNotEqual(PL.pick_template(script, None), "dosya")
+        self.assertEqual(PL.pick_template(script, None), "dosya")
         self.assertEqual(PL.pick_template(script, "dosya"), "dosya")
 
 
