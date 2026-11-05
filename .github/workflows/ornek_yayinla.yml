@@ -1,0 +1,107 @@
+name: Örnek videoyu yayına al
+
+# ornek.yml'in ürettiği örnek videoyu (iş çıktısı "ornek-video") normal üretim gibi kayda alır: GitHub Release,
+# videos.json, geçmiş ve Telegram onay mesajı. simdi=evet yalnız sahibi o videonun hemen paylaşılmasını istediyse
+# kullanılır: video onaylanır ve paylaşım işi (onay.yml) başlar. Aksi hâlde Telegram'da onay bekler.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Örnek videoyu üreten ornek.yml çalışmasının numarası"
+        required: true
+      simdi:
+        description: "evet: hemen onayla ve paylaş (sahibi istediyse) / hayir: Telegram'da onay bekler"
+        required: false
+        default: "hayir"
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  yayinla:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: En güncel durumu al
+        run: |
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          git fetch -q origin main && git reset -q --hard origin/main
+      - name: Çalışmanın örnek iş akışı olduğunu doğrula
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          case "$RUN_ID" in ''|*[!0-9]*) echo "::error::run_id yalnız rakam olmalı"; exit 1;; esac
+          read -r WF SONUC <<< "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" --jq '.path + " " + (.conclusion // "")')"
+          if [ "$WF" != ".github/workflows/ornek.yml" ] || [ "$SONUC" != "success" ]; then
+            echo "::error::${RUN_ID} başarılı bir ornek.yml çalışması değil ($WF $SONUC)"; exit 1
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: ornek-video
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: ornek
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-bot.txt
+      - run: pip install -r requirements-bot.txt
+      - name: Daha önce kayda alınmadığını denetle
+        run: |
+          ls -la ornek
+          python3 - <<'PY'
+          import json, sys
+          meta = json.load(open("ornek/metadata.json", encoding="utf-8"))
+          vids = json.load(open("state/videos.json", encoding="utf-8"))
+          dup = [v["tag"] for v in vids if v.get("created") == meta["created"] and v.get("topic") == meta["topic"]]
+          if dup:
+              sys.exit(f"::error::Bu örnek zaten kayıtlı: {dup}")
+          print("Başlık:", meta["title"], "| şablon:", meta.get("template"))
+          PY
+          echo "TAG=short-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_ENV"
+      - name: Videoyu sakla (GitHub Release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE=$(python -c "import json;print(json.load(open('ornek/metadata.json', encoding='utf-8'))['title'])")
+          gh release create "$TAG" ornek/video.mp4 ornek/metadata.json ornek/script.json \
+            --title "$TITLE" --notes "Onay bekliyor (örnek videodan)" --prerelease
+      - name: Geçmişe ekle ve Telegram'a gönder
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          python3 - <<'PY'
+          import datetime as dt, json, os
+          m = json.load(open("ornek/metadata.json", encoding="utf-8"))
+          with open("history.jsonl", "a", encoding="utf-8") as f:  # konu tekrar seçilmesin, format numarası doğru saysın
+              f.write(json.dumps({"date": str(dt.date.today()), "topic": m["topic"], "dir": f"ornek:{os.environ['RUN_ID']}",
+                                  "structure": m.get("structure"), "search_phrase": m.get("search_phrase"),
+                                  "series_part": m.get("series_part")}, ensure_ascii=False) + "\n")
+          PY
+          python -m shortgen.telegram_bot notify ornek/ "$TAG"
+          python -m shortgen.state_sync "Yeni video (örnekten): $TAG"
+      - name: Sahibi istediyse hemen onayla
+        if: inputs.simdi == 'evet'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from shortgen import telegram_bot as tb
+          tag, chat = os.environ["TAG"], os.environ["TELEGRAM_CHAT_ID"]
+          v = tb._find(tb.load(tb.VIDEOS, []), tag)
+          note = tb._approve(tag, "now", chat, v["telegram_message_id"])
+          tb.api("sendMessage", data={"chat_id": chat, "text": f"{note}\n{v['title']}",
+                                      "reply_to_message_id": v["telegram_message_id"]})
+          PY
+          python -m shortgen.state_sync "Örnek video onaylandı: $TAG"
+          python -m shortgen.telegram_bot dispatch-if-due
