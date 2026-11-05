@@ -571,9 +571,16 @@
     "category": "bilim",
     "template": "nasil",
     "created": "2026-11-05T22:15:56",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 191,
     "aciklama_message_id": 192,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-07T17:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-07T18:00:00+00:00",
+      "instagram": "2026-11-07T17:00:00+00:00",
+      "tiktok": "2026-11-07T19:00:00+00:00"
+    },
+    "decided": "2026-11-06T01:18:23+03:00"
   }
 ]
