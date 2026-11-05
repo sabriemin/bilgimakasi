@@ -1,30 +1,30 @@
 {
- "time": "2026-11-05T03:07+03:00",
+ "time": "2026-11-05T07:19+03:00",
  "platforms": {
   "youtube": {
    "account": {
     "followers": 893,
-    "views": 173861,
+    "views": 173868,
     "videos": 6
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 40,
+     "views": 83,
      "likes": 0,
      "comments": 0
     },
     "short-20261104-1839": {
-     "views": 60,
-     "likes": 1,
+     "views": 74,
+     "likes": 2,
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 141,
-     "likes": 3,
+     "views": 232,
+     "likes": 5,
      "comments": 0
     },
     "short-20261104-212900": {
-     "views": 9,
+     "views": 17,
      "likes": 1,
      "comments": 0
     }
@@ -34,36 +34,36 @@
    "account": {
     "followers": 4,
     "videos": 4,
-    "views": 2517,
-    "likes": 59,
+    "views": 2900,
+    "likes": 61,
     "comments": 4,
-    "saves": 6,
+    "saves": 9,
     "shares": 19
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 181,
+     "views": 226,
      "likes": 2,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 179,
-     "likes": 1,
+     "views": 395,
+     "likes": 2,
      "comments": 0,
-     "saves": 1,
+     "saves": 3,
      "shares": 0
     },
     "short-20261104-2033": {
-     "views": 2002,
-     "likes": 53,
+     "views": 2092,
+     "likes": 54,
      "comments": 4,
-     "saves": 5,
+     "saves": 6,
      "shares": 19
     },
     "short-20261104-212900": {
-     "views": 155,
+     "views": 187,
      "likes": 3,
      "comments": 0,
      "saves": 0,
@@ -74,9 +74,9 @@
   "tiktok": {
    "account": {
     "followers": 17,
-    "likes": 244,
+    "likes": 249,
     "videos": 4,
-    "views": 871,
+    "views": 1065,
     "comments": 0,
     "shares": 0
    },
@@ -84,14 +84,14 @@
    "list": [
     {
      "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
-     "views": 54,
-     "likes": 4,
+     "views": 206,
+     "likes": 9,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 144,
+     "views": 185,
      "likes": 5,
      "comments": 0,
      "shares": 0
@@ -105,7 +105,7 @@
     },
     {
      "title": "1904 St. Louis Olimpiyatları'ndaki maratonda bir koşucu yolu",
-     "views": 486,
+     "views": 487,
      "likes": 6,
      "comments": 0,
      "shares": 0
