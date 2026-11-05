@@ -2254,7 +2254,7 @@ class OneriSerileri(Ortak):
         import shortgen.pipeline as pl
         import shortgen.script as sc
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
-        self.assertEqual(m["yapi_sablon"]["nasil"], "kart")
+        self.assertEqual(m["yapi_sablon"]["nasil"], "nasil")
         self.assertEqual((m["yapi_sablon"]["uretim"], m["yapi_sablon"]["olsaydin"]), ("uretim", "kart"))
         self.assertTrue(m["yapi_sablon"]["_aciklama"])
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
@@ -2547,7 +2547,7 @@ class NasilSablonu(unittest.TestCase):
         self.assertEqual(t["renderer"], "nasil")
         self.assertEqual(json.loads((REPO / "templates" / "kart.json").read_text(encoding="utf-8"))["renderer"], "kart")
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
-        self.assertEqual(m["yapi_sablon"]["nasil"], "kart", "onaydan önce nasil kalıbı kart şablonunda kalır")
+        self.assertEqual(m["yapi_sablon"]["nasil"], "nasil", "Sabri onayladı: nasil kalıbı kendi şablonunda")
         self.assertEqual({k: v for k, v in m["yapi_sablon"].items() if not k.startswith("_")},
                          {"nasil": "kart", "uretim": "uretim", "olsaydin": "kart"})
         s = self.cay
@@ -2611,7 +2611,7 @@ class NasilSablonu(unittest.TestCase):
                 sys.argv = eski
         for argv, kalip, sablon in ((["--topic", "çay", "--template", "nasil"], "nasil", "nasil"),
                                     (["--topic", "çay", "--template", "nasil", "--structure", "nasil"], "nasil", "nasil"),
-                                    (["--topic", "çay", "--structure", "nasil"], "nasil", "kart")):
+                                    (["--topic", "çay", "--structure", "nasil"], "nasil", "nasil")):
             cagri.clear()
             calistir(*argv)
             self.assertEqual((cagri["structure"], cagri["sablon"]), (kalip, sablon), argv)
@@ -3234,7 +3234,7 @@ class YeniSeriler(unittest.TestCase):
                                (["--topic", "kalem", "--template", "uretim", "--structure", "uretim"],
                                 ("uretim", "uretim", True, acik)),
                                (["--topic", "kuyumcu", "--structure", "olsaydin"], ("olsaydin", "kart", False, True)),
-                               (["--topic", "çay", "--structure", "nasil"], ("nasil", "kart", False, True))):
+                               (["--topic", "çay", "--structure", "nasil"], ("nasil", "nasil", True, True))):
             cagri.clear()
             calistir(*argv)
             self.assertEqual((cagri["structure"], cagri["sablon"], cagri["adim_kartlari"], cagri["kart"]), beklenen, argv)
