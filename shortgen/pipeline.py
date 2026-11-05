@@ -37,7 +37,8 @@ def template_catalog() -> dict[str, str]:
 
 
 # Kendi kurgu modülü olan şablonlar Claude'a önerilmez, yalnız kendi kuralıyla seçilir (kart: kart_uygun; renderer'ı
-# nasil olanlar: yapi_sablon ya da --template). Yeni bir kart/nasil şablonu (ör. uretim) da kendiliğinden bu gruba girer.
+# olan diğerleri: yapi_sablon ya da --template). Yeni bir şablon (ör. uretim) "renderer" yazınca kendiliğinden bu gruba
+# girer. kart ve nasil dışındaki kurgu modülleri shortgen/<renderer>.py içinde render(...) sunar (bkz. build).
 KENDI_RENDERER = ("kart", "nasil")
 
 
@@ -48,20 +49,22 @@ def _sablon(name: str | None) -> dict:
 
 
 def sablon_renderer(name: str | None) -> str:
-    """Şablonun kurgu modülü ('kart', 'nasil'; diğerleri ''). Bilinmeyen şablon adı ''."""
+    """Şablonun kurgu modülü ('kart', 'nasil', ...; render.render ile çizilenler ''). Bilinmeyen şablon adı ''."""
     return _sablon(name).get("renderer", "") or ""
 
 
 def sablon_yapisi(name: str | None) -> str:
-    """Adım kartları şablonunun (renderer nasil) zorunlu anlatım kalıbı: şablondaki "yapi" (nasil.json -> nasil,
-    uretim.json -> uretim; yazılmamışsa nasil). Diğer şablonlarda ''."""
+    """Şablonun zorunlu anlatım kalıbı: kurgu modülü olan şablondaki "yapi" (nasil.json -> nasil, uretim.json -> uretim;
+    renderer nasil olup yazılmamışsa nasil). Kalıba bağlı olmayan şablonlarda ''."""
     t = _sablon(name)
-    return (t.get("yapi") or "nasil") if t.get("renderer") == "nasil" else ""
+    if not t.get("renderer"):
+        return ""
+    return t.get("yapi") or ("nasil" if t.get("renderer") == "nasil" else "")
 
 
 def kendi_secimli() -> set[str]:
-    """Claude'un şablon listesine girmeyen şablonlar: kurgu modülü kart ya da nasil olanlar."""
-    return {k for k in template_catalog() if sablon_renderer(k) in KENDI_RENDERER}
+    """Claude'un şablon listesine girmeyen şablonlar: kendi kurgu modülü olanlar (kart, nasil, ...)."""
+    return {k for k in template_catalog() if sablon_renderer(k)}
 
 
 def kart_uygun(script: ShortScript, kart: dict) -> bool:
@@ -221,6 +224,18 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         nasil.render_nasil(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
                                                              "title": script.title, "category": script.category,
                                                              "sablon": tcfg})
+    elif renderer:
+        # diğer kurgu modülleri (shortgen/<renderer>.py): sahnenin bütün alanları spec.card'da, senaryo meta'da gelir
+        import importlib
+        mod = importlib.import_module(f".{renderer}", __package__)
+        for i, (spec, sc) in enumerate(zip(specs, script.scenes)):
+            spec.card = sc.model_dump()
+            if spec.image is not None and i in photo_credit:
+                cd = images.credit_dict(photo_credit[i])
+                spec.card["credit"] = {k: cd.get(k, "") for k in ("author", "license", "source")}
+        mod.render(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
+                                                      "title": script.title, "category": script.category,
+                                                      "sablon": tcfg, "script": script.model_dump()})
     else:
         render.render(specs, words, video, mp3, music, template=template)
 

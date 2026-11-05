@@ -2576,6 +2576,12 @@ class NasilSablonu(unittest.TestCase):
         for oneri in ("uretim", "deneme", "kart"):
             self.assertNotEqual(pl.pick_template(s.model_copy(update={"template": oneri, "structure": "hikaye"})),
                                 oneri, oneri)
+        # kart/nasil dışındaki kurgu modülleri (shortgen/<renderer>.py) de kendi kuralıyla seçilir ve kalıbını sabitler
+        (kok / "templates" / "ozel.json").write_text(json.dumps({"description": "o", "renderer": "ozel", "yapi": "efsane"}),
+                                                     encoding="utf-8")
+        (kok / "templates" / "ozel2.json").write_text(json.dumps({"description": "o", "renderer": "ozel"}), encoding="utf-8")
+        self.assertTrue({"ozel", "ozel2"} <= pl.kendi_secimli())
+        self.assertEqual((pl.sablon_yapisi("ozel"), pl.sablon_yapisi("ozel2")), ("efsane", ""))
 
     def test_template_nasil_kalibi_sabitler(self):
         pl = self.pl
