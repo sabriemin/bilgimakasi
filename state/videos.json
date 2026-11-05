@@ -293,8 +293,11 @@
     "category": "ekonomi ve markalar",
     "template": "kart",
     "created": "2026-11-05T06:15:37",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 110,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-05T10:44:52+00:00",
+    "schedule": null,
+    "decided": "2026-11-05T13:44:52+03:00"
   }
 ]
