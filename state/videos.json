@@ -401,12 +401,16 @@
     "category": "dil ve kültür",
     "template": "gazete",
     "created": "2026-11-05T15:16:59",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 129,
     "aciklama_message_id": 130,
     "platforms": {},
-    "schedule": null,
-    "publish_at": null,
-    "decided": "2026-11-05T20:11:56+03:00"
+    "schedule": {
+      "youtube": "2026-11-05T20:00:00+00:00",
+      "instagram": "2026-11-05T19:30:00+00:00",
+      "tiktok": "2026-11-05T17:20:00+00:00"
+    },
+    "publish_at": "2026-11-05T17:20:00+00:00",
+    "decided": "2026-11-05T20:14:45+03:00"
   }
 ]
