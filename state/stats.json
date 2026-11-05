@@ -1,11 +1,11 @@
 {
- "time": "2026-11-05T07:19+03:00",
+ "time": "2026-11-05T07:37+03:00",
  "platforms": {
   "youtube": {
    "account": {
     "followers": 893,
     "views": 173868,
-    "videos": 6
+    "videos": 5
    },
    "videos": {
     "short-20261104-1307": {
@@ -19,7 +19,7 @@
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 232,
+     "views": 241,
      "likes": 5,
      "comments": 0
     },
@@ -27,32 +27,37 @@
      "views": 17,
      "likes": 1,
      "comments": 0
+    },
+    "short-20261105-042947": {
+     "views": 0,
+     "likes": 0,
+     "comments": 0
     }
    }
   },
   "instagram": {
    "account": {
     "followers": 4,
-    "videos": 4,
-    "views": 2900,
-    "likes": 61,
+    "videos": 5,
+    "views": 2961,
+    "likes": 62,
     "comments": 4,
-    "saves": 9,
+    "saves": 10,
     "shares": 19
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 226,
+     "views": 237,
      "likes": 2,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 395,
+     "views": 443,
      "likes": 2,
      "comments": 0,
-     "saves": 3,
+     "saves": 4,
      "shares": 0
     },
     "short-20261104-2033": {
@@ -63,8 +68,15 @@
      "shares": 19
     },
     "short-20261104-212900": {
-     "views": 187,
+     "views": 188,
      "likes": 3,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261105-042947": {
+     "views": 1,
+     "likes": 1,
      "comments": 0,
      "saves": 0,
      "shares": 0
@@ -75,23 +87,30 @@
    "account": {
     "followers": 17,
     "likes": 249,
-    "videos": 4,
-    "views": 1065,
+    "videos": 5,
+    "views": 1086,
     "comments": 0,
     "shares": 0
    },
    "videos": {},
    "list": [
     {
+     "title": "Ahtapotun üç kalbi ve mavi kanı var; üstelik jetle yüzerken ",
+     "views": 2,
+     "likes": 0,
+     "comments": 0,
+     "shares": 0
+    },
+    {
      "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
-     "views": 206,
+     "views": 223,
      "likes": 9,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 185,
+     "views": 187,
      "likes": 5,
      "comments": 0,
      "shares": 0
@@ -117,6 +136,7 @@
   "short-20261104-1307": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi",
   "short-20261104-1839": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı",
   "short-20261104-2033": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı",
-  "short-20261104-212900": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi"
+  "short-20261104-212900": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi",
+  "short-20261105-042947": "Ahtapotun üç kalbi ve mavi kanı: Yüzerken kalbi bile duruyor"
  }
 }
