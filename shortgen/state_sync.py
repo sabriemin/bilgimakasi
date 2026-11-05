@@ -83,6 +83,9 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
             if k not in r.get("pending", {}) or k not in l.get("pending", {}):
                 pend.pop(k, None)
         return json.dumps({"seen": seen, "pending": pend}, ensure_ascii=False, indent=1)
+    if path.endswith("konu_sirasi.json"):  # üretim ilk konuyu alırken panelden sıra değişmiş olabilir
+        from .konu_sirasi import merge
+        return merge(base, remote, local)
     if path.endswith("telegram_offset.json"):
         return local if json.loads(local).get("offset", 0) >= json.loads(remote).get("offset", 0) else remote
     if path.endswith(".jsonl"):

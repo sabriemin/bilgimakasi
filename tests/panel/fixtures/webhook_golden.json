@@ -1,0 +1,672 @@
+[
+ {
+  "ad": "düğme ok (saat seçenekleri)",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "🎯 Her platform en iyi saatinde",
+         "callback_data": "at:short-20261104-1019:best"
+        },
+        {
+         "text": "⚡ Şimdi",
+         "callback_data": "at:short-20261104-1019:now"
+        }
+       ],
+       [
+        {
+         "text": "🕒 Bugün 12:00",
+         "callback_data": "at:short-20261104-1019:b12"
+        },
+        {
+         "text": "🕒 Bugün 19:00",
+         "callback_data": "at:short-20261104-1019:b19"
+        }
+       ],
+       [
+        {
+         "text": "🕒 Yarın 12:00",
+         "callback_data": "at:short-20261104-1019:y12"
+        },
+        {
+         "text": "🕒 Yarın 19:00",
+         "callback_data": "at:short-20261104-1019:y19"
+        }
+       ],
+       [
+        {
+         "text": "↩️ Geri",
+         "callback_data": "back:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "Ne zaman paylaşılsın?"
+    }
+   }
+  ]
+ },
+ {
+  "ad": "düğme back",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "✅ Onayla",
+         "callback_data": "ok:short-20261104-1019"
+        },
+        {
+         "text": "❌ Reddet",
+         "callback_data": "no:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1"
+    }
+   }
+  ]
+ },
+ {
+  "ad": "düğme at:best",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "⏳ Alındı, işleniyor (30-60 sn)…"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "⏳ İşleniyor…",
+         "callback_data": "noop:x"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":1,\"callback_query\":{\"id\":\"cq1\",\"from\":{\"id\":424242},\"data\":\"at:short-20261104-1019:best\",\"message\":{\"message_id\":2,\"chat\":{\"id\":424242},\"reply_markup\":{\"inline_keyboard\":[[{\"text\":\"✅ Onayla\",\"callback_data\":\"ok:short-20261104-1019\"},{\"text\":\"❌ Reddet\",\"callback_data\":\"no:short-20261104-1019\"}]]}}}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "düğme at:y19",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "⏳ Alındı, işleniyor (30-60 sn)…"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "⏳ İşleniyor…",
+         "callback_data": "noop:x"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":1,\"callback_query\":{\"id\":\"cq1\",\"from\":{\"id\":424242},\"data\":\"at:short-20261104-1019:y19\",\"message\":{\"message_id\":2,\"chat\":{\"id\":424242},\"reply_markup\":{\"inline_keyboard\":[[{\"text\":\"✅ Onayla\",\"callback_data\":\"ok:short-20261104-1019\"},{\"text\":\"❌ Reddet\",\"callback_data\":\"no:short-20261104-1019\"}]]}}}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "düğme no",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "⏳ Alındı, işleniyor (30-60 sn)…"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "⏳ İşleniyor…",
+         "callback_data": "noop:x"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":1,\"callback_query\":{\"id\":\"cq1\",\"from\":{\"id\":424242},\"data\":\"no:short-20261104-1019\",\"message\":{\"message_id\":2,\"chat\":{\"id\":424242},\"reply_markup\":{\"inline_keyboard\":[[{\"text\":\"✅ Onayla\",\"callback_data\":\"ok:short-20261104-1019\"},{\"text\":\"❌ Reddet\",\"callback_data\":\"no:short-20261104-1019\"}]]}}}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "düğme cancel",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "⏳ Alındı, işleniyor (30-60 sn)…"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "⏳ İşleniyor…",
+         "callback_data": "noop:x"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":1,\"callback_query\":{\"id\":\"cq1\",\"from\":{\"id\":424242},\"data\":\"cancel:short-20261104-1019\",\"message\":{\"message_id\":2,\"chat\":{\"id\":424242},\"reply_markup\":{\"inline_keyboard\":[[{\"text\":\"✅ Onayla\",\"callback_data\":\"ok:short-20261104-1019\"},{\"text\":\"❌ Reddet\",\"callback_data\":\"no:short-20261104-1019\"}]]}}}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "düğme rt",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "⏳ Alındı, işleniyor (30-60 sn)…"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "⏳ İşleniyor…",
+         "callback_data": "noop:x"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":1,\"callback_query\":{\"id\":\"cq1\",\"from\":{\"id\":424242},\"data\":\"rt:short-20261104-1019\",\"message\":{\"message_id\":2,\"chat\":{\"id\":424242},\"reply_markup\":{\"inline_keyboard\":[[{\"text\":\"✅ Onayla\",\"callback_data\":\"ok:short-20261104-1019\"},{\"text\":\"❌ Reddet\",\"callback_data\":\"no:short-20261104-1019\"}]]}}}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "düğme tp (kilitlenmez)",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "⏳ Alındı, işleniyor (30-60 sn)…"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":1,\"callback_query\":{\"id\":\"cq1\",\"from\":{\"id\":424242},\"data\":\"tp:_:1\",\"message\":{\"message_id\":2,\"chat\":{\"id\":424242},\"reply_markup\":{\"inline_keyboard\":[[{\"text\":\"✅ Onayla\",\"callback_data\":\"ok:short-20261104-1019\"},{\"text\":\"❌ Reddet\",\"callback_data\":\"no:short-20261104-1019\"}]]}}}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "düğme noop",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "İşleniyor, biraz bekle…"
+    }
+   }
+  ]
+ },
+ {
+  "ad": "düğme at, GitHub reddetti",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [
+   "dispatch 500 "
+  ],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/answerCallbackQuery",
+    "govde": {
+     "callback_query_id": "cq1",
+     "text": "⏳ Alındı, işleniyor (30-60 sn)…"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "⏳ İşleniyor…",
+         "callback_data": "noop:x"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":1,\"callback_query\":{\"id\":\"cq1\",\"from\":{\"id\":424242},\"data\":\"at:short-20261104-1019:now\",\"message\":{\"message_id\":2,\"chat\":{\"id\":424242},\"reply_markup\":{\"inline_keyboard\":[[{\"text\":\"✅ Onayla\",\"callback_data\":\"ok:short-20261104-1019\"},{\"text\":\"❌ Reddet\",\"callback_data\":\"no:short-20261104-1019\"}]]}}}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/sendMessage",
+    "govde": {
+     "chat_id": "424242",
+     "text": "⚠️ İşlem GitHub'a iletilemedi (500). Birazdan tekrar dene."
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/editMessageReplyMarkup",
+    "govde": {
+     "chat_id": 424242,
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "✅ Onayla",
+         "callback_data": "ok:short-20261104-1019"
+        },
+        {
+         "text": "❌ Reddet",
+         "callback_data": "no:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   }
+  ]
+ },
+ {
+  "ad": "mesaj /start",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/sendMessage",
+    "govde": {
+     "chat_id": 424242,
+     "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n/oneri: gündemden 5 konu önerisi (butonla üret)\n/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n/durum: bekleyen ve zamanlanan videolar\n/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n/saatler: platformların en iyi paylaşım saatleri\n/yardim: bu liste"
+    }
+   }
+  ]
+ },
+ {
+  "ad": "mesaj /yardim",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/sendMessage",
+    "govde": {
+     "chat_id": 424242,
+     "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n/oneri: gündemden 5 konu önerisi (butonla üret)\n/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n/durum: bekleyen ve zamanlanan videolar\n/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n/saatler: platformların en iyi paylaşım saatleri\n/yardim: bu liste"
+    }
+   }
+  ]
+ },
+ {
+  "ad": "mesaj /durum",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/sendChatAction",
+    "govde": {
+     "chat_id": 424242,
+     "action": "typing"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":2,\"message\":{\"message_id\":50,\"chat\":{\"id\":424242},\"from\":{\"id\":424242},\"text\":\"/durum\"}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "mesaj /uret konu",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/sendChatAction",
+    "govde": {
+     "chat_id": 424242,
+     "action": "typing"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":2,\"message\":{\"message_id\":50,\"chat\":{\"id\":424242},\"from\":{\"id\":424242},\"text\":\"/uret kara delikler\"}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "yanıt mesajı",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": [
+   {
+    "method": "POST",
+    "url": "https://api.telegram.org/bot123456:TEST-bot-token-gizli/sendChatAction",
+    "govde": {
+     "chat_id": 424242,
+     "action": "typing"
+    }
+   },
+   {
+    "method": "POST",
+    "url": "https://api.github.com/repos/sabriemin/bilgimakasi/actions/workflows/isle.yml/dispatches",
+    "govde": {
+     "ref": "main",
+     "inputs": {
+      "update": "{\"update_id\":2,\"message\":{\"message_id\":50,\"chat\":{\"id\":424242},\"from\":{\"id\":424242},\"text\":\"Teşekkürler, çok güzel olmuş!\",\"reply_to_message\":{\"message_id\":77}}}"
+     }
+    },
+    "yetki": "Bearer github_pat_TEST_gizli_anahtar"
+   }
+  ]
+ },
+ {
+  "ad": "sohbet mesajı (işlem yok)",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": []
+ },
+ {
+  "ad": "metinsiz mesaj",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": []
+ },
+ {
+  "ad": "başka kişi (düğme)",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": []
+ },
+ {
+  "ad": "başka kişi (mesaj)",
+  "yanit": {
+   "status": 200,
+   "govde": "ok"
+  },
+  "loglar": [],
+  "cagrilar": []
+ },
+ {
+  "ad": "yanlış gizli başlık",
+  "yanit": {
+   "status": 403,
+   "govde": "forbidden"
+  },
+  "loglar": [],
+  "cagrilar": []
+ },
+ {
+  "ad": "gizli başlık yok",
+  "yanit": {
+   "status": 403,
+   "govde": "forbidden"
+  },
+  "loglar": [],
+  "cagrilar": []
+ },
+ {
+  "ad": "bozuk JSON",
+  "yanit": {
+   "status": 400,
+   "govde": "bad request"
+  },
+  "loglar": [],
+  "cagrilar": []
+ },
+ {
+  "ad": "GET /",
+  "yanit": {
+   "status": 200,
+   "govde": "Bilgi Makası kapısı çalışıyor."
+  },
+  "loglar": [],
+  "cagrilar": []
+ },
+ {
+  "ad": "GET /baska/yol",
+  "yanit": {
+   "status": 200,
+   "govde": "Bilgi Makası kapısı çalışıyor."
+  },
+  "loglar": [],
+  "cagrilar": []
+ }
+]

@@ -2,6 +2,7 @@ name: Telegram kapısını kur (Cloudflare)
 
 # Cloudflare Worker'ı yükler, gizli değerlerini koyar ve Telegram webhook'unu ona bağlar.
 # islem=kaldir: webhook'u siler, bot eski dinleme (getUpdates) yöntemine döner.
+# Aynı worker /panel adresinde yönetim panelini de sunar (giriş: Telegram'da /panel).
 on:
   workflow_dispatch:
     inputs:
@@ -41,6 +42,18 @@ jobs:
             echo "::error::GH_SECRETS_PAT ile iş başlatılamıyor. Fine-grained token'a bilgimakasi deposu için 'Actions: Read and write' izni eklenmeli."
             exit 1
           fi
+      - name: GitHub anahtarının depo okuma iznini dene (panel)
+        if: inputs.islem != 'kaldir'
+        run: |
+          # Panel, durum dosyalarını ve videoları bu anahtarla okur. İzin yoksa kurulum sürer, yalnız panel açılmaz.
+          code=$(curl -s -o /tmp/c.txt -w '%{http_code}' \
+            -H "Authorization: Bearer ${GH_PAT}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/state/videos.json?ref=main")
+          echo "state/videos.json okuma: $code"
+          if [ "$code" != "200" ]; then
+            head -c 300 /tmp/c.txt; echo
+            echo "::error::Panel için GH_SECRETS_PAT depoyu okuyamıyor (HTTP $code). Fine-grained token'a bilgimakasi deposu için 'Contents: Read-only' izni eklenmeli. Bot düğmeleri yine çalışır; panel bu izin eklenene kadar veri gösteremez."
+          fi
       - name: Gizli kapı anahtarı üret
         if: inputs.islem != 'kaldir'
         run: |
@@ -48,6 +61,10 @@ jobs:
           SECRET=$(openssl rand -hex 24)
           echo "::add-mask::$SECRET"
           echo "WEBHOOK_SECRET=$SECRET" >> "$GITHUB_ENV"
+          # panel giriş bağlantılarını ve oturum çerezini imzalar; her kurulumda yenilenir (açık oturumlar kapanır)
+          PANEL=$(openssl rand -hex 32)
+          echo "::add-mask::$PANEL"
+          echo "PANEL_SECRET=$PANEL" >> "$GITHUB_ENV"
       - name: Worker'ı yükle
         if: inputs.islem != 'kaldir'
         run: |
@@ -59,11 +76,14 @@ jobs:
           print(json.dumps({"main_module": "worker.js", "compatibility_date": "2024-11-01", "bindings": [
               b("TELEGRAM_BOT_TOKEN", os.environ["TELEGRAM_BOT_TOKEN"]), b("CHAT_ID", os.environ["TELEGRAM_CHAT_ID"]),
               b("GH_PAT", os.environ["GH_PAT"]), b("WEBHOOK_SECRET", os.environ["WEBHOOK_SECRET"]),
+              b("PANEL_SECRET", os.environ["PANEL_SECRET"]),
               {"type": "plain_text", "name": "REPO", "text": os.environ["GITHUB_REPOSITORY"]}]}))
           PY
           r=$(curl -s -X PUT "${API}/workers/scripts/${NAME}" -H "Authorization: Bearer ${CF_TOKEN}" \
             -F "metadata=@/tmp/meta.json;type=application/json" \
-            -F "worker.js=@cloudflare/worker.js;type=application/javascript+module")
+            -F "worker.js=@cloudflare/worker.js;type=application/javascript+module" \
+            -F "panel.js=@cloudflare/panel.js;type=application/javascript+module" \
+            -F "panel_ui.js=@cloudflare/panel_ui.js;type=application/javascript+module")
           echo "$r" | python3 -c "import json,sys;d=json.load(sys.stdin);print('yükleme:', d['success'], d.get('errors'))"
           echo "$r" | python3 -c "import json,sys;sys.exit(0 if json.load(sys.stdin)['success'] else 1)"
           # workers.dev alt alan adı (yoksa oluştur) ve bu worker için aç
@@ -86,12 +106,15 @@ jobs:
             echo "$body" | grep -q "çalışıyor" && break; sleep 10
           done
           echo "$body" | grep -q "çalışıyor" || { echo "::error::Worker adresi yanıt vermiyor: $URL"; exit 1; }
+          pc=$(curl -s -o /dev/null -w '%{http_code}' -m 10 "$URL/panel" || true)
+          echo "panel sayfası: $pc ($URL/panel)"
           curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
             --data-urlencode "url=${URL}" \
             --data-urlencode "secret_token=${WEBHOOK_SECRET}" \
             --data-urlencode 'allowed_updates=["message","callback_query"]' \
             --data-urlencode "max_connections=10" | head -c 300; echo
           curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo" | python3 -c "import json,sys;d=json.load(sys.stdin)['result'];print('webhook:', bool(d.get('url')), 'bekleyen:', d.get('pending_update_count'), 'son hata:', d.get('last_error_message'))"
+          MSG="✅ Bot artık 7/24 açık. Düğmelere anında cevap verir, işlemler 30-60 saniyede tamamlanır."$'\n\n'"🖥 Yönetim paneli için /panel yaz; gelen bağlantı 10 dakika geçerli, panel o tarayıcıda 30 gün açık kalır."
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=✅ Bot artık 7/24 açık. Düğmelere anında cevap verir, işlemler 30-60 saniyede tamamlanır." > /dev/null
+            --data-urlencode "text=${MSG}" > /dev/null

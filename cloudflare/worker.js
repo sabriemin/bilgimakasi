@@ -2,8 +2,11 @@
 // Telegram her düğme basışını ve mesajı buraya gönderir (webhook).
 // Kapı anında "⏳ Alındı" der; işin kendisini GitHub'daki isle.yml'e iletir.
 // Yalnız arayüz olan adımları (Onayla -> saat seçenekleri, Geri) kendisi anında yapar.
+// /panel altındaki adresler yönetim panelidir (cloudflare/panel.js); /panel komutuna giriş bağlantısını kapı verir.
 //
-// Gizli değerler (bot_kapi.yml yükler): TELEGRAM_BOT_TOKEN, CHAT_ID, GH_PAT, WEBHOOK_SECRET, REPO
+// Gizli değerler (bot_kapi.yml yükler): TELEGRAM_BOT_TOKEN, CHAT_ID, GH_PAT, WEBHOOK_SECRET, PANEL_SECRET, REPO
+
+import { panel, girisMesaji } from "./panel.js";
 
 const TR_OFFSET = 3 * 3600 * 1000; // Türkiye UTC+3, yaz saati yok
 
@@ -59,9 +62,10 @@ const HELP = "Merhaba! Yeni videolar buraya onaya gelir.\n\n" +
   "/durum: bekleyen ve zamanlanan videolar\n" +
   "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n" +
   "/saatler: platformların en iyi paylaşım saatleri\n" +
+  "/panel: yönetim paneline giriş bağlantısı\n" +
   "/yardim: bu liste";
 
-async function handle(update, env) {
+async function handle(update, env, origin) {
   const cq = update.callback_query;
   if (cq) {
     const [action, tag] = cq.data.split(":");
@@ -110,6 +114,10 @@ async function handle(update, env) {
     await tg(env, "sendMessage", { chat_id: m.chat.id, text: HELP });
     return;
   }
+  if (/^\/panel(@\w+)?(\s|$)/.test(text)) { // panel giriş bağlantısı: imzayı kapı atar, GitHub'a gitmez
+    await tg(env, "sendMessage", await girisMesaji(env, m.chat.id, origin));
+    return;
+  }
   const isReply = !!(m.reply_to_message && !text.startsWith("/"));
   if (!text.startsWith("/") && !isReply) return; // sohbet mesajı: işlem yok
   await tg(env, "sendChatAction", { chat_id: m.chat.id, action: "typing" });
@@ -118,6 +126,8 @@ async function handle(update, env) {
 
 export default {
   async fetch(req, env, ctx) {
+    const url = new URL(req.url);
+    if (url.pathname === "/panel" || url.pathname.startsWith("/panel/")) return panel(req, env, ctx);
     if (req.method !== "POST") return new Response("Bilgi Makası kapısı çalışıyor.");
     if (req.headers.get("X-Telegram-Bot-Api-Secret-Token") !== env.WEBHOOK_SECRET) {
       return new Response("forbidden", { status: 403 });
@@ -127,7 +137,7 @@ export default {
     const from = update.callback_query ? update.callback_query.from.id
       : update.message ? update.message.chat.id : null;
     if (String(from) !== String(env.CHAT_ID)) return new Response("ok"); // yalnız Sabri
-    ctx.waitUntil(handle(update, env).catch((e) => console.log("hata", e && e.stack)));
+    ctx.waitUntil(handle(update, env, url.origin).catch((e) => console.log("hata", e && e.stack)));
     return new Response("ok");
   },
 };

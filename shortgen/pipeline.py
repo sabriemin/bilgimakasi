@@ -193,7 +193,11 @@ def main() -> None:
         print("Serinin 2. bölümü üretiliyor:", open_part["title"])
         script = generate_script(history, None, None, series_prev=open_part)
     else:
-        topic = a.topic
+        from . import konu_sirasi
+        queued = None if a.topic else konu_sirasi.peek()  # panelden sıraya konan konu gündemden önce gelir
+        if queued:
+            print("Konu sırasından alınan konu:", queued)
+        topic = a.topic or queued
         if not topic and os.environ.get("AUTO_TREND", "1") != "0":
             try:  # konu verilmediyse gündemden en yüksek puanlı öneriyi seç
                 from .trends import suggest
@@ -205,6 +209,8 @@ def main() -> None:
         allow = os.environ.get("SERIES", "1") != "0" and not open_part
         script = generate_script(history, topic, template_catalog() if m.get("claude_secsin") else None,
                                  allow_series=allow)
+        if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
+            print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":
         script.scenes[0].kicker = series_label(script, history)
         print("Format etiketi:", script.scenes[0].kicker)

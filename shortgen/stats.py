@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 STATE = ROOT / "state"
 VIDEOS = STATE / "videos.json"
 SNAP = STATE / "stats.json"
+HIST = STATE / "stats_gecmis.jsonl"
 TR = dt.timezone(dt.timedelta(hours=3))
 KEYS = ("views", "likes", "comments", "saves", "shares")
 LABEL = {"views": "👁", "likes": "❤️", "comments": "💬", "saves": "🔖", "shares": "↗️"}
@@ -222,7 +223,24 @@ def report(send: bool = True) -> str:
         api("sendMessage", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": text})
         SNAP.parent.mkdir(exist_ok=True)
         SNAP.write_text(json.dumps(snap, ensure_ascii=False, indent=1))
+        with HIST.open("a", encoding="utf-8") as f:  # panel grafikleri için kısa geçmiş (state_sync satır birleştirir)
+            f.write(json.dumps(history_line(snap), ensure_ascii=False, separators=(",", ":")) + "\n")
     return text
+
+
+def history_line(snap: dict, days: int = 30) -> dict:
+    """Bir ölçümün kısa özeti: platform hesap toplamları + son `days` günün videolarının [izlenme, beğeni] değerleri.
+    Hata veren platform yazılmaz (grafikte boşluk olur, sıfır görünmez)."""
+    since = (dt.datetime.now(TR) - dt.timedelta(days=days)).strftime("%Y%m%d")
+    acc, vids = {}, {}
+    for name, d in (snap.get("platforms") or {}).items():
+        if not isinstance(d, dict) or "error" in d:
+            continue
+        acc[name] = {k: v for k, v in (d.get("account") or {}).items() if isinstance(v, int)}
+        for tag, v in (d.get("videos") or {}).items():
+            if (tag.split("-") + ["", ""])[1] >= since:  # short-YYYYMMDD-HHMM(SS)
+                vids.setdefault(tag, {})[name] = [_int(v.get("views")), _int(v.get("likes"))]
+    return {"time": snap.get("time"), "hesap": acc, "video": vids}
 
 
 if __name__ == "__main__":

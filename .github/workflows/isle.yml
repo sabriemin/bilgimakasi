@@ -79,6 +79,10 @@ jobs:
               data = urllib.parse.urlencode({"chat_id": m["chat"]["id"], "message_id": m["message_id"],
                                              "reply_markup": json.dumps(m.get("reply_markup") or {"inline_keyboard": []})}).encode()
               urllib.request.urlopen(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/editMessageReplyMarkup", data, timeout=20)
+          p = u.get("panel")
+          if isinstance(p, dict) and p.get("tag"):  # panelden gelen işlemde düğmeleri videonun durumuna göre geri koy
+              from shortgen.telegram_bot import _restore_kb
+              _restore_kb(p["tag"], os.environ["TELEGRAM_CHAT_ID"])
           PY
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \

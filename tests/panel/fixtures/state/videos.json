@@ -1,0 +1,226 @@
+[
+  {
+    "tag": "short-20261104-1019",
+    "title": "Bir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+    "topic": "1919 Büyük Boston Melas Seli: Sızdıran bir tankın yarılmasıyla oluşan ölümcül melas dalgası",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T10:19:49",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 2,
+    "platforms": {}
+  },
+  {
+    "tag": "short-20261104-1057",
+    "title": "1919'da Bir Boston Mahallesini Melas Dalgası Yuttu",
+    "topic": "1919 Boston melas seli (Great Molasses Flood)",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T10:57:10",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 4,
+    "platforms": {}
+  },
+  {
+    "tag": "short-20261104-1307",
+    "title": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi",
+    "topic": "1904 St. Louis Olimpiyat Maratonu: Arabayla \"koşan\" birinci, fare zehriyle kazanan şampiyon",
+    "category": "spor",
+    "template": "retro",
+    "created": "2026-11-04T13:07:12",
+    "status": "yayinlandi",
+    "telegram_message_id": 8,
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "UFpdmPmentg",
+        "url": "https://youtube.com/shorts/UFpdmPmentg"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18127462714925413",
+        "url": "https://www.instagram.com/reel/DfU5Y9xDChS/"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704332834034780181",
+        "draft": true,
+        "note": "Uygulama TikTok incelemesinden geçene kadar video taslak olarak gönderilir: TikTok'taki bildirime dokunup açıklamayı yapıştır ve Paylaş de"
+      }
+    },
+    "publish_at": "2026-11-04T16:33:59+00:00",
+    "decided": "2026-11-04T17:27:09+03:00",
+    "published": "2026-11-04T19:35:04+03:00"
+  },
+  {
+    "tag": "short-20261104-1839",
+    "title": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı",
+    "topic": "Liverpool'un marşı \"You'll Never Walk Alone\": 1945'te Broadway müzikali Carousel için yazılan şarkının 1963'te Gerry and the Pacemakers sayesinde Anfield'a taşınması",
+    "category": "sanat ve müzik",
+    "template": "retro",
+    "created": "2026-11-04T18:39:21",
+    "status": "yayinlandi",
+    "telegram_message_id": 26,
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "KiwsoJf1J3E",
+        "url": "https://youtube.com/shorts/KiwsoJf1J3E"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18130437007845255",
+        "url": "https://www.instagram.com/reel/DfVILPgE9_P/"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704388744408762388",
+        "draft": true,
+        "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
+        "caption": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı #liverpool #fenerbahçe #şampiyonlarligi #bilgi #ilginçbilgiler"
+      }
+    },
+    "publish_at": "2026-11-04T18:42:17+00:00",
+    "schedule": null,
+    "decided": "2026-11-04T21:42:17+03:00",
+    "published": "2026-11-04T21:44:49+03:00"
+  },
+  {
+    "tag": "short-20261104-2023",
+    "title": "GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurtardı",
+    "topic": "GTA serisinin Race'n'Chase adlı bir yarış oyunu olarak başlaması ve polislerin oyuncuya çarpmasına yol açan yazılım hatasının oyunun temeline dönüşmesi",
+    "category": "teknoloji",
+    "template": "minimal",
+    "created": "2026-11-04T20:23:13",
+    "status": "zamanlandi",
+    "telegram_message_id": 44,
+    "platforms": {},
+    "publish_at": "2026-11-05T09:30:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-05T15:00:00+00:00",
+      "instagram": "2026-11-05T09:30:00+00:00",
+      "tiktok": "2026-11-05T16:30:00+00:00"
+    },
+    "decided": "2026-11-04T23:38:40+03:00"
+  },
+  {
+    "tag": "short-20261104-2033",
+    "title": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı",
+    "topic": "30 Ekim 1996: Fenerbahçe'nin Old Trafford'da Elvir Bolić'in sekerek giren golüyle Manchester United'ı 1-0 yenip kulübün Avrupa'da evinde 40 yıllık yenilmezliğini bitirmesi",
+    "category": "spor",
+    "template": "retro",
+    "created": "2026-11-04T20:33:53",
+    "status": "yayinlandi",
+    "telegram_message_id": 46,
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "9zGedhZWxTU",
+        "url": "https://youtube.com/shorts/9zGedhZWxTU"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18113249528221697",
+        "url": "https://www.instagram.com/reel/DfVVZfnjn91/"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704418294937307143",
+        "draft": true,
+        "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
+        "caption": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı #fenerbahçe #manchesterunited #şampiyonlarligi #ilginçbilgiler #keşfet"
+      }
+    },
+    "publish_at": "2026-11-04T20:38:00+00:00",
+    "schedule": null,
+    "decided": "2026-11-04T23:38:00+03:00",
+    "published": "2026-11-04T23:40:30+03:00"
+  },
+  {
+    "tag": "short-20261104-2048",
+    "title": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu",
+    "topic": "Suzanne Collins'in Açlık Oyunları fikrini realite şovla savaş haberleri arasında kanal değiştirirken ve Theseus ile Minotor mitini hatırlayarak bulması",
+    "category": "sanat ve müzik",
+    "template": "retro",
+    "created": "2026-11-04T20:48:24",
+    "status": "zamanlandi",
+    "telegram_message_id": 56,
+    "platforms": {},
+    "publish_at": "2026-11-05T17:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-05T18:00:00+00:00",
+      "instagram": "2026-11-05T17:00:00+00:00",
+      "tiktok": "2026-11-05T19:00:00+00:00"
+    },
+    "decided": "2026-11-04T23:49:08+03:00"
+  },
+  {
+    "tag": "short-20261104-2100",
+    "title": "Galatasaray 100 Günde Avrupa'nın İki Devini Nasıl Devirdi?",
+    "topic": "Galatasaray'ın 2000'de 100 gün arayla Arsenal'i (UEFA Kupası finali, penaltılar 4-1) ve Real Madrid'i (UEFA Süper Kupası, altın golle 2-1) yenmesi",
+    "category": "spor",
+    "template": "retro",
+    "created": "2026-11-04T21:00:44",
+    "status": "zamanlandi",
+    "telegram_message_id": 61,
+    "platforms": {},
+    "publish_at": "2026-11-05T12:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-05T12:00:00+00:00",
+      "instagram": "2026-11-05T14:00:00+00:00",
+      "tiktok": "2026-11-05T14:00:00+00:00"
+    },
+    "decided": "2026-11-05T00:02:53+03:00"
+  },
+  {
+    "tag": "short-20261104-211525",
+    "title": "Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu",
+    "topic": "Anfield'ın aslında Everton'ın stadı olması: 1892'deki kira anlaşmazlığıyla Everton'ın Goodison Park'a taşınması, boş kalan stada John Houlding'in Liverpool FC'yi kurması",
+    "category": "spor",
+    "template": "retro",
+    "created": "2026-11-04T21:15:25",
+    "status": "zamanlandi",
+    "telegram_message_id": 67,
+    "platforms": {},
+    "publish_at": "2026-11-06T09:30:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-06T15:00:00+00:00",
+      "instagram": "2026-11-06T09:30:00+00:00",
+      "tiktok": "2026-11-06T16:30:00+00:00"
+    },
+    "decided": "2026-11-05T00:16:37+03:00"
+  },
+  {
+    "tag": "short-20261104-212900",
+    "title": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi",
+    "topic": "Büyük ihtimalle Tutankamon'un dul eşi Ankhesenamun olan Mısır kraliçesinin Hitit kralı I. Şuppiluliuma'ya yazdığı evlilik mektubu, Prens Zannanza'nın yolda ölmesi ve intikam seferinden dönen esirlerin getirdiği salgının kralı öldürmesi",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T21:29:00",
+    "status": "yayinlandi",
+    "telegram_message_id": 70,
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "pMZcuAmelOE",
+        "url": "https://youtube.com/shorts/pMZcuAmelOE"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18136662547660176",
+        "url": "https://www.instagram.com/reel/DfVbaghjtZ_/"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704432131140831252",
+        "draft": true,
+        "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
+        "caption": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi\n\nTutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kraldan oğullarından birini koca olarak istedi. Sence prens Mısır'a varsaydı ne olurdu?\n\n    \n\n📷 Scan by Pataki Márta (CC BY-SA 3.0), Celpunken (CC BY 3.0), Bernard Gagnon (CC BY-SA 3.0)\n\n#TutankamonHititMektubu #Hititler #Hattuşa #tarih #bilgimakasi"
+      }
+    },
+    "publish_at": "2026-11-04T21:30:56+00:00",
+    "schedule": null,
+    "decided": "2026-11-05T00:30:56+03:00",
+    "published": "2026-11-05T00:32:48+03:00"
+  }
+]

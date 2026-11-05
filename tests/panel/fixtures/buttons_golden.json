@@ -1,0 +1,551 @@
+[
+ {
+  "ad": "ok",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "🎯 Her platform en iyi saatinde",
+         "callback_data": "at:short-20261104-1019:best"
+        },
+        {
+         "text": "⚡ Şimdi",
+         "callback_data": "at:short-20261104-1019:now"
+        }
+       ],
+       [
+        {
+         "text": "🕒 Bugün 12:00",
+         "callback_data": "at:short-20261104-1019:b12"
+        },
+        {
+         "text": "🕒 Bugün 19:00",
+         "callback_data": "at:short-20261104-1019:b19"
+        }
+       ],
+       [
+        {
+         "text": "🕒 Yarın 12:00",
+         "callback_data": "at:short-20261104-1019:y12"
+        },
+        {
+         "text": "🕒 Yarın 19:00",
+         "callback_data": "at:short-20261104-1019:y19"
+        }
+       ],
+       [
+        {
+         "text": "↩️ Geri",
+         "callback_data": "back:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "back",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "✅ Onayla",
+         "callback_data": "ok:short-20261104-1019"
+        },
+        {
+         "text": "❌ Reddet",
+         "callback_data": "no:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "at best",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "🚫 Paylaşımı iptal et",
+         "callback_data": "cancel:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n• Instagram: 6 Kasım Cuma 20:00\n• YouTube: 6 Kasım Cuma 21:00\n• TikTok: 6 Kasım Cuma 22:00\n\nAsıl en iyi saatler şu videolara ayrılmıştı, aynı saate iki video konmadı:\n  - GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurta\n  - Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu\n  - Galatasaray 100 Günde Avrupa'nın İki Devini Nasıl Devirdi?\n  - Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu\nBir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+     "reply_to_message_id": 2
+    }
+   }
+  ],
+  "degisen": {
+   "short-20261104-1019": {
+    "tag": "short-20261104-1019",
+    "title": "Bir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+    "topic": "1919 Büyük Boston Melas Seli: Sızdıran bir tankın yarılmasıyla oluşan ölümcül melas dalgası",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T10:19:49",
+    "status": "zamanlandi",
+    "telegram_message_id": 2,
+    "platforms": {},
+    "publish_at": "2026-11-06T17:00:00+00:00",
+    "schedule": {
+     "youtube": "2026-11-06T18:00:00+00:00",
+     "instagram": "2026-11-06T17:00:00+00:00",
+     "tiktok": "2026-11-06T19:00:00+00:00"
+    },
+    "decided": "2026-11-05T00:45:00+03:00"
+   }
+  }
+ },
+ {
+  "ad": "at now",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "🚫 Paylaşımı iptal et",
+         "callback_data": "cancel:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "✅ Onaylandı. Birkaç dakika içinde paylaşılacak.\nBir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+     "reply_to_message_id": 2
+    }
+   }
+  ],
+  "degisen": {
+   "short-20261104-1019": {
+    "tag": "short-20261104-1019",
+    "title": "Bir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+    "topic": "1919 Büyük Boston Melas Seli: Sızdıran bir tankın yarılmasıyla oluşan ölümcül melas dalgası",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T10:19:49",
+    "status": "zamanlandi",
+    "telegram_message_id": 2,
+    "platforms": {},
+    "publish_at": "2026-11-04T21:45:00+00:00",
+    "schedule": null,
+    "decided": "2026-11-05T00:45:00+03:00"
+   }
+  }
+ },
+ {
+  "ad": "at b19",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "🚫 Paylaşımı iptal et",
+         "callback_data": "cancel:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "✅ Onaylandı. Paylaşım zamanı: 5 Kasım Perşembe 19:00\nBir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+     "reply_to_message_id": 2
+    }
+   }
+  ],
+  "degisen": {
+   "short-20261104-1019": {
+    "tag": "short-20261104-1019",
+    "title": "Bir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+    "topic": "1919 Büyük Boston Melas Seli: Sızdıran bir tankın yarılmasıyla oluşan ölümcül melas dalgası",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T10:19:49",
+    "status": "zamanlandi",
+    "telegram_message_id": 2,
+    "platforms": {},
+    "publish_at": "2026-11-05T16:00:00+00:00",
+    "schedule": null,
+    "decided": "2026-11-05T00:45:00+03:00"
+   }
+  }
+ },
+ {
+  "ad": "at y12",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "🚫 Paylaşımı iptal et",
+         "callback_data": "cancel:short-20261104-1019"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "✅ Onaylandı. Paylaşım zamanı: 6 Kasım Cuma 12:00\nBir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+     "reply_to_message_id": 2
+    }
+   }
+  ],
+  "degisen": {
+   "short-20261104-1019": {
+    "tag": "short-20261104-1019",
+    "title": "Bir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+    "topic": "1919 Büyük Boston Melas Seli: Sızdıran bir tankın yarılmasıyla oluşan ölümcül melas dalgası",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T10:19:49",
+    "status": "zamanlandi",
+    "telegram_message_id": 2,
+    "platforms": {},
+    "publish_at": "2026-11-06T09:00:00+00:00",
+    "schedule": null,
+    "decided": "2026-11-05T00:45:00+03:00"
+   }
+  }
+ },
+ {
+  "ad": "no",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 2,
+     "reply_markup": {
+      "inline_keyboard": []
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "❌ Reddedildi.\nBir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+     "reply_to_message_id": 2
+    }
+   }
+  ],
+  "degisen": {
+   "short-20261104-1019": {
+    "tag": "short-20261104-1019",
+    "title": "Bir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası",
+    "topic": "1919 Büyük Boston Melas Seli: Sızdıran bir tankın yarılmasıyla oluşan ölümcül melas dalgası",
+    "category": "tarih",
+    "template": "kolaj",
+    "created": "2026-11-04T10:19:49",
+    "status": "reddedildi",
+    "telegram_message_id": 2,
+    "platforms": {},
+    "decided": "2026-11-05T00:45:00+03:00"
+   }
+  }
+ },
+ {
+  "ad": "cancel zamanlandi",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 44,
+     "reply_markup": {
+      "inline_keyboard": [
+       [
+        {
+         "text": "✅ Onayla",
+         "callback_data": "ok:short-20261104-2023"
+        },
+        {
+         "text": "❌ Reddet",
+         "callback_data": "no:short-20261104-2023"
+        }
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "Paylaşım iptal edildi, video yeniden onay bekliyor."
+    }
+   }
+  ],
+  "degisen": {
+   "short-20261104-2023": {
+    "tag": "short-20261104-2023",
+    "title": "GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurtardı",
+    "topic": "GTA serisinin Race'n'Chase adlı bir yarış oyunu olarak başlaması ve polislerin oyuncuya çarpmasına yol açan yazılım hatasının oyunun temeline dönüşmesi",
+    "category": "teknoloji",
+    "template": "minimal",
+    "created": "2026-11-04T20:23:13",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 44,
+    "platforms": {},
+    "publish_at": null,
+    "schedule": null,
+    "decided": "2026-11-04T23:38:40+03:00"
+   }
+  }
+ },
+ {
+  "ad": "cancel paylaşılmış",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 8,
+     "reply_markup": {
+      "inline_keyboard": []
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "Bu video zaten paylaşıldı veya paylaşılıyor."
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "rt",
+  "cagrilar": [
+   {
+    "tg": "editMessageReplyMarkup",
+    "data": {
+     "chat_id": "424242",
+     "message_id": 8,
+     "reply_markup": {
+      "inline_keyboard": []
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "Hatalı platformlar birkaç dakika içinde yeniden denenecek."
+    }
+   }
+  ],
+  "degisen": {
+   "short-20261104-1307": {
+    "tag": "short-20261104-1307",
+    "title": "Olimpiyat maratonunu arabayla bitirdi… ama en tuhafı bu değildi",
+    "topic": "1904 St. Louis Olimpiyat Maratonu: Arabayla \"koşan\" birinci, fare zehriyle kazanan şampiyon",
+    "category": "spor",
+    "template": "retro",
+    "created": "2026-11-04T13:07:12",
+    "status": "zamanlandi",
+    "telegram_message_id": 8,
+    "platforms": {
+     "youtube": {
+      "status": "ok",
+      "id": "UFpdmPmentg",
+      "url": "https://youtube.com/shorts/UFpdmPmentg"
+     },
+     "instagram": {
+      "status": "ok",
+      "id": "18127462714925413",
+      "url": "https://www.instagram.com/reel/DfU5Y9xDChS/"
+     },
+     "tiktok": {
+      "status": "ok",
+      "id": "v_inbox_file~v2.7704332834034780181",
+      "draft": true,
+      "note": "Uygulama TikTok incelemesinden geçene kadar video taslak olarak gönderilir: TikTok'taki bildirime dokunup açıklamayı yapıştır ve Paylaş de"
+     }
+    },
+    "publish_at": "2026-11-04T21:45:00+00:00",
+    "decided": "2026-11-04T17:27:09+03:00",
+    "published": "2026-11-04T19:35:04+03:00",
+    "schedule": null
+   }
+  }
+ },
+ {
+  "ad": "tp",
+  "cagrilar": [
+   {
+    "gh": "uret.yml",
+    "json": {
+     "ref": "main",
+     "inputs": {
+      "topic": "'Kasım' adının hikâyesi: Ayın adı 1945'e kadar Teşrinisani'ydi; yeni adı, halk takviminde yılı Hızır (6 Mayıs) ve Kasım (8 Kasım) diye ikiye bölen ve kışın başladığı kabul edilen 'Kasım günü'nden geliyor (kanca: Kasım, 1945'e kadar bir ayın adı bile değildi.; gündem: Kasım başı ve 8 Kasım halk takviminde kışın başladığı 'Kasım günü')"
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "🎬 Üretim başladı: 'Kasım' adının hikâyesi: Ayın adı 1945'e kadar Teşrinisani'ydi; yeni adı, halk takviminde yılı Hızır (6 Mayıs) ve Kasım (8 Kasım) diye ikiye bölen ve kışın başladığı kabul edilen 'Kasım günü'nden geliyor\nYaklaşık 15 dakikada gelir."
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "tp yok",
+  "cagrilar": [
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "Öneri bulunamadı."
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "/durum",
+  "cagrilar": [
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "Toplam video: 10\nOnay bekleyen: 2\n• Bir Mahalleyi Melas Dalgası Yuttu: 1919 Boston Faciası\n• 1919'da Bir Boston Mahallesini Melas Dalgası Yuttu\n\nZamanlanan: 4\n📅 5 Kasım Perşembe\n12:30 📸 Instagram: GTA Aslında Bir Yarış Oyunuydu: Onu Bir…\n15:00 ▶️ YouTube: Galatasaray 100 Günde Avrupa'nın İki…\n17:00 📸 Instagram: Galatasaray 100 Günde Avrupa'nın İki…\n17:00 🎵 TikTok: Galatasaray 100 Günde Avrupa'nın İki…\n18:00 ▶️ YouTube: GTA Aslında Bir Yarış Oyunuydu: Onu Bir…\n19:30 🎵 TikTok: GTA Aslında Bir Yarış Oyunuydu: Onu Bir…\n20:00 📸 Instagram: Açlık Oyunları Fikri Bir Gece Kanal…\n21:00 ▶️ YouTube: Açlık Oyunları Fikri Bir Gece Kanal…\n22:00 🎵 TikTok: Açlık Oyunları Fikri Bir Gece Kanal…\n\n📅 6 Kasım Cuma\n12:30 📸 Instagram: Anfield Aslında Everton'ın Eviydi:…\n18:00 ▶️ YouTube: Anfield Aslında Everton'ın Eviydi:…\n19:30 🎵 TikTok: Anfield Aslında Everton'ın Eviydi:…"
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "/saatler",
+  "cagrilar": [
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "Platformların en iyi paylaşım saatleri (Türkiye):\n• YouTube: 18:00, 21:00 (ek saat: 15:00)\n• Instagram: 12:30, 20:00 (ek saat: 17:00)\n• TikTok: 19:30, 22:00 (ek saat: 17:00)\nEk saat, günün kalan (en az 15 dk sonraki) asıl saatleri başka videolara ayrıldıysa kullanılır.\n\nOnaylarken '🎯 Her platform en iyi saatinde' seçersen her biri kendi saatinde paylaşılır."
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "/uret",
+  "cagrilar": [
+   {
+    "gh": "uret.yml",
+    "json": {
+     "ref": "main",
+     "inputs": {
+      "topic": "kara delikler"
+     }
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "Üretim başlatıldı, birkaç dakika içinde gelir."
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "/oneri",
+  "cagrilar": [
+   {
+    "gh": "oneri.yml",
+    "json": {
+     "ref": "main",
+     "inputs": {}
+    }
+   },
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "🔎 Gündem taranıyor, öneriler 2-3 dakikada gelir."
+    }
+   }
+  ],
+  "degisen": {}
+ },
+ {
+  "ad": "/start",
+  "cagrilar": [
+   {
+    "tg": "sendMessage",
+    "data": {
+     "chat_id": "424242",
+     "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n/oneri: gündemden 5 konu önerisi (butonla üret)\n/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n/durum: bekleyen ve zamanlanan videolar\n/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n/saatler: platformların en iyi paylaşım saatleri\n/yardim: bu liste"
+    }
+   }
+  ],
+  "degisen": {}
+ }
+]

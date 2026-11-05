@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-04",
+  "items": [
+    {
+      "topic": "4 Kasım 1922'de bulunan Tutankamon mezarının Anadolu'yla bağı: Hattuşa'dan çıkan Hitit kayıtlarına göre büyük ihtimalle Tutankamon'un dul eşi Ankhesenamun, Hitit kralı I. Şuppiluliuma'ya 'Bana oğullarından birini gönder, onunla evleneyim' diye mektup yazdı; gönderilen prens Zannanza Mısır'a hiç varamadı",
+      "hook": "Tutankamon'un dul eşi, Anadolu'daki Hitit kralına evlilik mektubu yazdı.",
+      "trend": "Bugün Tutankamon mezarının bulunuşunun 104. yıl dönümü; Büyük Mısır Müzesi ilgisi sürüyor",
+      "scope": "Global",
+      "category": "tarih",
+      "score": 8
+    },
+    {
+      "topic": "'Kasım' adının hikâyesi: Ayın adı 1945'e kadar Teşrinisani'ydi; yeni adı, halk takviminde yılı Hızır (6 Mayıs) ve Kasım (8 Kasım) diye ikiye bölen ve kışın başladığı kabul edilen 'Kasım günü'nden geliyor",
+      "hook": "Kasım, 1945'e kadar bir ayın adı bile değildi.",
+      "trend": "Kasım başı ve 8 Kasım halk takviminde kışın başladığı 'Kasım günü'",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 8
+    },
+    {
+      "topic": "Efsane-gerçek: Kış lastiği kar için değil sıcaklık için var; yaz lastiğinin kauçuğu yaklaşık 7°C'nin altında sertleşip tutunmayı kaybediyor, kış lastiğindeki silika ve yumuşak karışım ise soğukta esnek kalıyor",
+      "hook": "Kış lastiği kar için değil. Asıl sihirli sayı 7 derece.",
+      "trend": "15 Kasım'da başlayan kış lastiği uygulaması gündemde, fiyatlar ve sıralar konuşuluyor",
+      "scope": "TR",
+      "category": "bilim",
+      "score": 7
+    }
+  ]
+}

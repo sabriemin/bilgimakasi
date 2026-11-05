@@ -259,6 +259,66 @@ def _kb(rows: list[list[tuple[str, str]]]) -> str:
     return json.dumps({"inline_keyboard": [[{"text": t, "callback_data": d} for t, d in r] for r in rows]})
 
 
+# ---- Düğmeler ve panel için ortak işlemler (Telegram düğmesi ve panel aynı kodu kullanır) ----
+def _suggestion_topic(it: dict) -> str:
+    return f"{it['topic']} (kanca: {it['hook']}; gündem: {it['trend']})"
+
+
+def _approve(tag: str, code: str, chat: str, mid: int) -> str:
+    """Onay (kod: best|now|b12|b19|y12|y19): saati hesaplar ve kaydeder, video mesajının düğmesini 'iptal' yapar.
+    Telegram'a yazılacak notu döndürür."""
+    if code == "best":
+        sched = _best_schedule(exclude=tag)
+        iso = min(sched.values())
+        note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + _plan_text(tag, sched)
+    else:
+        # düğme gösterildikten sonra saat 15 dk sınırına girmiş olabilir: seçilen saati yine de kullan
+        when = next((t for c, _, t in _slots(all_=True) if c == code), dt.datetime.now(TR))
+        if when < dt.datetime.now(TR):
+            when = dt.datetime.now(TR)
+        iso = when.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+        sched = None
+        note = "✅ Onaylandı. " + ("Birkaç dakika içinde paylaşılacak." if code == "now"
+                                   else f"Paylaşım zamanı: {_fmt(iso)}")
+    _update(tag, status="zamanlandi", publish_at=iso, schedule=sched,
+            decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
+    api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb(
+        [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]])})
+    return note
+
+
+def _cancel(tag: str, chat: str, v: dict) -> str | None:
+    """Zamanlanmış paylaşımı (kalan platformları) iptal eder; video yeniden onay bekler. Zamanlanmış değilse None."""
+    if v["status"] != "zamanlandi":
+        return None
+    _update(tag, status="onay_bekliyor", publish_at=None, schedule=None)
+    api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"], "reply_markup": _kb(
+        [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]])})
+    return "Paylaşım iptal edildi, video yeniden onay bekliyor."
+
+
+def _reject(tag: str, chat: str, v: dict) -> str:
+    _update(tag, status="reddedildi", decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
+    api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"],
+                                        "reply_markup": _kb([])})
+    note = "❌ Reddedildi."
+    seri_file = STATE / "seri.json"
+    if "(1. Bölüm)" in v.get("title", "") and seri_file.exists():  # 1. bölüm reddedilirse 2. bölüm üretilmesin
+        seri = json.loads(seri_file.read_text(encoding="utf-8"))
+        if seri.get("bekleyen", {}).get("title") == v["title"]:
+            seri.pop("bekleyen")
+            seri_file.write_text(json.dumps(seri, ensure_ascii=False, indent=2), encoding="utf-8")
+            note += " Serinin 2. bölümü de iptal edildi."
+    return note
+
+
+def _retry(tag: str) -> str:
+    """Hatalı platformları hemen yeniden dener (publish_due paylaşılmış platformlara tekrar yüklemez)."""
+    _update(tag, status="zamanlandi", schedule=None,
+            publish_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"))
+    return "Hatalı platformlar birkaç dakika içinde yeniden denenecek."
+
+
 def _handle_callback(cq: dict, chat: str) -> None:
     action, _, rest = cq["data"].partition(":")
     tag, _, arg = rest.partition(":")
@@ -279,8 +339,7 @@ def _handle_callback(cq: dict, chat: str) -> None:
             api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Öneri bulunamadı."})
             return
         it = items[i]
-        topic = f"{it['topic']} (kanca: {it['hook']}; gündem: {it['trend']})"
-        ok = _dispatch(topic)
+        ok = _dispatch(_suggestion_topic(it))
         api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Üretim başladı" if ok else "Başlatılamadı"})
         api("sendMessage", data={"chat_id": chat, "text": (f"🎬 Üretim başladı: {it['topic']}\nYaklaşık 15 dakikada gelir."
                                                           if ok else "Üretim başlatılamadı.")})
@@ -313,50 +372,19 @@ def _handle_callback(cq: dict, chat: str) -> None:
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb(
             [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]])})
     elif action == "at":
-        if arg == "best":
-            sched = _best_schedule(exclude=tag)
-            iso = min(sched.values())
-            note = "✅ Onaylandı. Her platform kendi en iyi saatinde paylaşılacak:\n" + _plan_text(tag, sched)
-        else:
-            # düğme gösterildikten sonra saat 15 dk sınırına girmiş olabilir: seçilen saati yine de kullan
-            when = next((t for code, _, t in _slots(all_=True) if code == arg), dt.datetime.now(TR))
-            if when < dt.datetime.now(TR):
-                when = dt.datetime.now(TR)
-            iso = when.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
-            sched = None
-            note = "✅ Onaylandı. " + ("Birkaç dakika içinde paylaşılacak." if arg == "now"
-                                       else f"Paylaşım zamanı: {_fmt(iso)}")
-        _update(tag, status="zamanlandi", publish_at=iso, schedule=sched,
-                decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
-        api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb(
-            [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]])})
+        note = _approve(tag, arg, chat, mid)
         api("sendMessage", data={"chat_id": chat, "text": f"{note}\n{v['title']}", "reply_to_message_id": mid})
     elif action == "cancel":
-        if v["status"] == "zamanlandi":
-            _update(tag, status="onay_bekliyor", publish_at=None, schedule=None)
-            api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb(
-                [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]])})
-            note = "Paylaşım iptal edildi, video yeniden onay bekliyor."
-        else:
+        note = _cancel(tag, chat, v)
+        if note is None:
             note = "Bu video zaten paylaşıldı veya paylaşılıyor."
             if os.environ.get("TG_WEBHOOK") == "1":
                 _restore_kb(tag, chat)
     elif action == "no":
-        _update(tag, status="reddedildi", decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
-        api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb([])})
-        note = "❌ Reddedildi."
-        seri_file = STATE / "seri.json"
-        if "(1. Bölüm)" in v.get("title", "") and seri_file.exists():  # 1. bölüm reddedilirse 2. bölüm üretilmesin
-            seri = json.loads(seri_file.read_text(encoding="utf-8"))
-            if seri.get("bekleyen", {}).get("title") == v["title"]:
-                seri.pop("bekleyen")
-                seri_file.write_text(json.dumps(seri, ensure_ascii=False, indent=2), encoding="utf-8")
-                note += " Serinin 2. bölümü de iptal edildi."
+        note = _reject(tag, chat, v)
         api("sendMessage", data={"chat_id": chat, "text": f"{note}\n{v['title']}", "reply_to_message_id": mid})
     elif action == "rt":  # hatalı platformları yeniden dene
-        _update(tag, status="zamanlandi", schedule=None,
-                publish_at=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"))
-        note = "Hatalı platformlar birkaç dakika içinde yeniden denenecek."
+        note = _retry(tag)
         if os.environ.get("TG_WEBHOOK") == "1":
             api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": cq["message"]["message_id"],
                                                 "reply_markup": _kb([])})
@@ -370,6 +398,7 @@ COMMANDS = [
     {"command": "durum", "description": "Bekleyen ve zamanlanan videolar"},
     {"command": "rapor", "description": "İzlenme, takipçi, beğeni, kaydetme raporu"},
     {"command": "saatler", "description": "Platformların en iyi paylaşım saatleri"},
+    {"command": "panel", "description": "Yönetim paneline giriş bağlantısı"},
     {"command": "yardim", "description": "Komut listesi"},
 ]
 _menu_set = False
@@ -387,15 +416,20 @@ def _put_back(cq: dict, chat: str) -> None:
         print("Klavye geri konamadı:", e)
 
 
+def _kb_rows(tag: str, status: str) -> list:
+    """Videonun durumuna uygun düğmeler."""
+    return {"onay_bekliyor": [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]],
+            "zamanlandi": [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]],
+            "hata": [[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]],
+            "kismen": [[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]]}.get(status, [])
+
+
 def _restore_kb(tag: str, chat: str) -> None:
     """Webhook modunda kapı düğmeyi '⏳ İşleniyor' yaptı; hata olursa videonun durumuna uygun düğmeleri geri koy."""
     v = _find(load(VIDEOS, []), tag)
     if not v or not v.get("telegram_message_id"):
         return
-    rows = {"onay_bekliyor": [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]],
-            "zamanlandi": [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]],
-            "hata": [[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]],
-            "kismen": [[("🔁 Hatalıları tekrar dene", f"rt:{tag}")]]}.get(v["status"], [])
+    rows = _kb_rows(tag, v["status"])
     try:
         api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"],
                                             "reply_markup": _kb(rows)})
@@ -417,7 +451,11 @@ def _webhook_mode() -> bool:
 
 
 def process_update(u: dict, chat: str) -> None:
-    """Tek bir Telegram olayını (düğme veya mesaj) işler. Hem dinleme (getUpdates) hem webhook yolu bunu kullanır."""
+    """Tek bir Telegram olayını (düğme veya mesaj) işler. Hem dinleme (getUpdates) hem webhook yolu bunu kullanır.
+    {"panel": {...}} olayı Telegram'dan değil, panelden gelir (Cloudflare kapısı işle.yml'e iletir)."""
+    if isinstance(u.get("panel"), dict):
+        process_panel(u["panel"], chat)
+        return
     if cq := u.get("callback_query"):
         if str(cq["from"]["id"]) == chat:
             try:
@@ -479,7 +517,148 @@ def process_update(u: dict, chat: str) -> None:
                                      "/durum: bekleyen ve zamanlanan videolar\n"
                                      "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n"
                                      "/saatler: platformların en iyi paylaşım saatleri\n"
+                                     "/panel: yönetim paneline giriş bağlantısı\n"
                                      "/yardim: bu liste"})
+        elif text.startswith("/panel"):  # giriş bağlantısını Cloudflare kapısı verir (PANEL_SECRET orada)
+            api("sendMessage", data={"chat_id": chat, "text": "Panel bağlantısını 7/24 kapı verir; kapı şu an kapalı "
+                                     "görünüyor. GitHub'da 'Telegram kapısını kur' işini çalıştırıp /panel yaz."})
+
+
+# ---- Panel: Cloudflare kapısı (/panel) -> işle.yml -> {"panel": {...}} ----
+SLOT_CODES = ("best", "now", "b12", "b19", "y12", "y19")
+DURUM_ADI = {"onay_bekliyor": "onay bekliyor", "zamanlandi": "zamanlandı", "yayinlaniyor": "paylaşılıyor",
+             "yayinlandi": "paylaşıldı", "kismen": "kısmen paylaşıldı", "hata": "paylaşılamadı",
+             "baglanti_yok": "bağlantı yok", "reddedildi": "reddedildi", "iptal": "iptal"}
+# video işlemleri yalnız bu durumlarda yapılır: çift basış veya eski sayfadan gelen istek hiçbir şeyi değiştirmez
+PANEL_VIDEO_ACTIONS = {"approve": ("onay_bekliyor",), "reject": ("onay_bekliyor",), "cancel": ("zamanlandi",),
+                       "retry": ("hata", "kismen", "baglanti_yok"), "edit": ("onay_bekliyor", "zamanlandi")}
+_TAIL = ("#", "📷", "🎙", "Görseller:", "Kaynaklar:", "Bu videoda yapay zekâ")
+
+
+def _is_tail(par: str) -> bool:
+    """Açıklamanın sonundaki etiket (#...) ve görsel atfı (📷 ...) paragrafları."""
+    lines = [ln.strip() for ln in par.splitlines() if ln.strip()]
+    return bool(lines) and all(ln.startswith(_TAIL) for ln in lines)
+
+
+def _apply_edit(meta: dict, ed: dict | None) -> dict:
+    """Panelde düzenlenen başlık/açıklamayı paylaşım paketine uygular. Yeni açıklamada etiket satırı veya görsel
+    atfı yoksa orijinaldekiler sona eklenir (yalnız bilgi metni düzenlendiyse etiketler ve lisans atfı korunur)."""
+    if not isinstance(ed, dict):
+        return meta
+    import re
+    meta = dict(meta)
+    if ed.get("title"):
+        meta["title"] = ed["title"]
+    desc = (ed.get("description") or "").strip()
+    if desc:
+        new = [x.strip() for x in re.split(r"\n\s*\n", desc) if _is_tail(x)]
+        old = [x.strip() for x in re.split(r"\n\s*\n", meta.get("description") or "") if _is_tail(x)]
+        tags, credit = any(x.startswith("#") for x in new), any(not x.startswith("#") for x in new)
+        keep = [x for x in old if not (tags if x.startswith("#") else credit)]
+        meta["description"] = "\n\n".join([desc] + keep)
+    return meta
+
+
+def _check_edit(p: dict) -> tuple[str, str]:
+    title = " ".join(str(p.get("title") or "").split())
+    desc = "\n".join(ln.rstrip() for ln in str(p.get("description") or "").replace("\r\n", "\n").split("\n")).strip()
+    if not 1 <= len(title) <= 100:
+        raise ValueError("başlık 1-100 karakter olmalı")
+    if not 1 <= len(desc) <= 2000:
+        raise ValueError("açıklama 1-2000 karakter olmalı")
+    return title, desc
+
+
+def _edit_caption(v: dict, chat: str) -> None:
+    """Video mesajındaki başlığı günceller; düğmeler videonun durumuna göre aynı kalır."""
+    import html
+    cap = (f"🎬 <b>{html.escape(v['title'])}</b>\n\nKonu: {html.escape(v.get('topic') or '-')}"
+           f"\nŞablon: {html.escape(v.get('template') or '-')}")
+    try:
+        api("editMessageCaption", data={"chat_id": chat, "message_id": v["telegram_message_id"], "caption": cap[:1000],
+                                        "parse_mode": "HTML", "reply_markup": _kb(_kb_rows(v["tag"], v["status"]))})
+    except Exception as e:  # noqa: BLE001
+        print("Video mesajının başlığı güncellenemedi:", e)
+
+
+def process_panel(p: dict, chat: str) -> None:
+    """Panelden gelen işlem. Telegram düğmeleriyle aynı yardımcıları (_approve, _reject, _cancel, _retry, _dispatch,
+    stats.report) kullanır; sonucu sohbete "🖥 Panelden:" diye yazar ki Telegram konuşması asıl kayıt olarak kalsın."""
+    action, tag = str(p.get("action") or ""), str(p.get("tag") or "")
+    print("Panel işlemi:", action, tag, p.get("rid", ""))
+    v = _find(load(VIDEOS, []), tag) if tag else None
+    mid = (v or {}).get("telegram_message_id")
+
+    def say(text: str) -> None:
+        data = {"chat_id": chat, "text": ("🖥 Panelden: " + text)[:4000]}
+        if mid:
+            data.update(reply_to_message_id=mid, allow_sending_without_reply="true")
+        api("sendMessage", data=data)
+
+    try:
+        if action in PANEL_VIDEO_ACTIONS:
+            if not v:
+                say(f"⚠️ Video bulunamadı: {tag[:40]}")
+                return
+            if v.get("status") not in PANEL_VIDEO_ACTIONS[action]:
+                _restore_kb(tag, chat)  # kapı düğmeyi '⏳ İşleniyor' yapmıştı
+                st = v.get("status", "?")
+                say(f"ℹ️ İşlem yapılmadı: video şu an '{DURUM_ADI.get(st, st)}' durumunda.\n{v['title']}")
+                return
+            if action == "approve":
+                if p.get("code") not in SLOT_CODES:
+                    raise ValueError("geçersiz saat seçimi")
+                say(f"{_approve(tag, p['code'], chat, mid)}\n{v['title']}")
+            elif action == "reject":
+                say(f"{_reject(tag, chat, v)}\n{v['title']}")
+            elif action == "cancel":
+                say(f"{_cancel(tag, chat, v)}\n{v['title']}")
+            elif action == "retry":
+                note = _retry(tag)
+                api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb([])})
+                say(f"🔁 {note}\n{v['title']}")
+            elif action == "edit":
+                title, desc = _check_edit(p)
+                v = _update(tag, title=title, duzenleme={"title": title, "description": desc,
+                                                         "at": dt.datetime.now(TR).isoformat(timespec="seconds")})
+                _edit_caption(v, chat)
+                say(f"✏️ Başlık ve açıklama düzenlendi; paylaşımda bu metin kullanılacak.\n\n{title}\n\n{desc}")
+        elif action == "produce_suggestion":
+            from .trends import load_saved
+            items, i = load_saved(), p.get("index")
+            if type(i) is not int or not 0 <= i < len(items) or (p.get("topic") and items[i].get("topic") != p["topic"]):
+                say("⚠️ Öneri bulunamadı; öneri listesi değişmiş olabilir. Paneli yenileyip tekrar seç.")
+                return
+            ok = _dispatch(_suggestion_topic(items[i]))
+            say(f"🎬 Üretim başladı: {items[i]['topic']}\nYaklaşık 15 dakikada gelir." if ok
+                else "⚠️ Üretim başlatılamadı.")
+        elif action == "produce_topic":
+            topic = " ".join(str(p.get("topic") or "").split())
+            if len(topic) > 300:
+                raise ValueError("konu en fazla 300 karakter olabilir")
+            ok = _dispatch(topic)
+            say(("🎬 Üretim başladı: " + (topic or "konu sıradan veya gündemden seçilecek")
+                 + "\nYaklaşık 15 dakikada gelir.") if ok else "⚠️ Üretim başlatılamadı.")
+        elif action == "refresh_suggestions":
+            ok = _dispatch("", "oneri.yml")
+            say("🔎 Gündem taranıyor, öneriler 2-3 dakikada gelir." if ok else "⚠️ Öneri başlatılamadı.")
+        elif action == "report":
+            from . import stats
+            say("📊 Rapor istendi, hazırlanıyor.")
+            stats.report()
+        elif action == "queue_set":
+            from . import konu_sirasi
+            items = konu_sirasi.clean(p.get("queue"))
+            konu_sirasi.save(items)
+            say(f"📋 Konu sırası kaydedildi ({len(items)} konu)." + (f"\nSıradaki: {items[0]}" if items else ""))
+        else:
+            say(f"⚠️ Bilinmeyen panel işlemi: {action[:40]}")
+    except Exception as e:  # noqa: BLE001
+        print("Panel işlemi yapılamadı:", e)
+        if v:
+            _restore_kb(tag, chat)
+        say(f"⚠️ İşlem yapılamadı: {str(e)[:200]}")
 
 
 def poll(wait: int = 0) -> int:
@@ -591,7 +770,7 @@ def publish_due() -> None:
         try:
             with tempfile.TemporaryDirectory() as d:
                 video, meta = fetch_release(tag, Path(d))
-                res = publish(video, meta, todo)
+                res = publish(video, _apply_edit(meta, v.get("duzenleme")), todo)
         except Exception as e:  # noqa: BLE001
             res = {p: {"status": "hata", "error": f"video indirilemedi: {e}"[:600]} for p in todo}
         stamp = dt.datetime.now(TR).isoformat(timespec="seconds")
