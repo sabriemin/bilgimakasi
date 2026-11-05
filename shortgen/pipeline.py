@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from . import illustrate, images, render, voice
-from .script import STRUCTURES, ShortScript, generate_script, kitap_telif, load_script
+from .script import STRUCTURES, ShortScript, generate_script, kitap_telif, load_script, para_var
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -37,11 +37,10 @@ def template_catalog() -> dict[str, str]:
 
 
 # Kendi kurgu modülü olan şablonlar Claude'a önerilmez, yalnız kendi kuralıyla seçilir (kart: kart_uygun; renderer'ı
-# nasil olanlar: yapi_sablon ya da --template; renderer'ı kitap olanlar: kalıbı (yapi) senaryonun kalıbıyla aynıysa ya da
-# --template). Yeni bir kart/nasil/kitap şablonu (ör. uretim) da kendiliğinden bu gruba girer.
-KENDI_RENDERER = ("kart", "nasil", "kitap")
-# Kalıba kilitli kurgu modülleri ve şablonda "yapi" yazılmamışsa varsayılan kalıpları
-KALIP_RENDERER = {"nasil": "nasil", "kitap": "kitap"}
+# olan diğerleri: yapi_sablon ya da --template). Yeni bir şablon (ör. uretim) "renderer" yazınca kendiliğinden bu gruba
+# girer. kart ve nasil dışındaki kurgu modülleri (ör. kitap) shortgen/<renderer>.py içinde render(...) sunar
+# (bkz. build).
+KENDI_RENDERER = ("kart", "nasil")
 
 
 def _sablon(name: str | None) -> dict:
@@ -51,16 +50,17 @@ def _sablon(name: str | None) -> dict:
 
 
 def sablon_renderer(name: str | None) -> str:
-    """Şablonun kurgu modülü ('kart', 'nasil', 'kitap'; diğerleri ''). Bilinmeyen şablon adı ''."""
+    """Şablonun kurgu modülü ('kart', 'nasil', ...; render.render ile çizilenler ''). Bilinmeyen şablon adı ''."""
     return _sablon(name).get("renderer", "") or ""
 
 
 def sablon_yapisi(name: str | None) -> str:
-    """Kalıba kilitli şablonun (renderer nasil ya da kitap) zorunlu anlatım kalıbı: şablondaki "yapi" (nasil.json ->
-    nasil, uretim.json -> uretim, kitap.json -> kitap; yazılmamışsa renderer'ın varsayılanı). Diğer şablonlarda ''."""
+    """Şablonun zorunlu anlatım kalıbı: kurgu modülü olan şablondaki "yapi" (nasil.json -> nasil, uretim.json -> uretim;
+    renderer nasil olup yazılmamışsa nasil). Kalıba bağlı olmayan şablonlarda ''."""
     t = _sablon(name)
-    varsayilan = KALIP_RENDERER.get(t.get("renderer") or "")
-    return (t.get("yapi") or varsayilan) if varsayilan else ""
+    if not t.get("renderer"):
+        return ""
+    return t.get("yapi") or ("nasil" if t.get("renderer") == "nasil" else "")
 
 
 def yapi_sablonu(structure: str | None) -> str:
@@ -76,8 +76,8 @@ def yapi_sablonu(structure: str | None) -> str:
 
 
 def kendi_secimli() -> set[str]:
-    """Claude'un şablon listesine girmeyen şablonlar: kurgu modülü kart, nasil ya da kitap olanlar."""
-    return {k for k in template_catalog() if sablon_renderer(k) in KENDI_RENDERER}
+    """Claude'un şablon listesine girmeyen şablonlar: kendi kurgu modülü olanlar (kart, nasil, ...)."""
+    return {k for k in template_catalog() if sablon_renderer(k)}
 
 
 def kart_uygun(script: ShortScript, kart: dict) -> bool:
@@ -248,21 +248,18 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         nasil.render_nasil(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
                                                              "title": script.title, "category": script.category,
                                                              "sablon": tcfg})
-    elif renderer == "kitap":
-        from . import kitap
-        for i, (spec, sc) in enumerate(zip(specs, script.scenes)):  # bölüm, sağ sayfa metni, vurgu (kitap.plan okur)
-            spec.card = {"bolum": getattr(sc, "kitap_bolum", "") or "", "sayfa": getattr(sc, "sayfa_metni", "") or "",
-                         "vurgu": getattr(sc, "vurgu", "") or "", "mascot": sc.mascot}
+    elif renderer:
+        # diğer kurgu modülleri (shortgen/<renderer>.py): sahnenin bütün alanları spec.card'da, senaryo meta'da gelir
+        import importlib
+        mod = importlib.import_module(f".{renderer}", __package__)
+        for i, (spec, sc) in enumerate(zip(specs, script.scenes)):
+            spec.card = sc.model_dump()
             if spec.image is not None and i in photo_credit:
                 cd = images.credit_dict(photo_credit[i])
                 spec.card["credit"] = {k: cd.get(k, "") for k in ("author", "license", "source")}
-        bilgi = getattr(script, "kitap", None)  # künye: kapak, ilk cümle (yalnız kamu malı eserde), amblem, renk
-        if hasattr(bilgi, "model_dump"):
-            bilgi = bilgi.model_dump()
-        kitap.render_kitap(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
-                                                             "title": script.title, "category": script.category,
-                                                             "kitap": bilgi if isinstance(bilgi, dict) else None,
-                                                             "sablon": tcfg})
+        mod.render(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
+                                                      "title": script.title, "category": script.category,
+                                                      "sablon": tcfg, "script": script.model_dump()})
     else:
         render.render(specs, words, video, mp3, music, template=template)
 
@@ -288,6 +285,8 @@ def yayin_paketi(script: ShortScript, template: str, credits: list, ai_voice: bo
     }
     if script.alkollu:  # alkollü tarif (script.ALKOLLU_ICECEK açıkken): açıklamaya yaş uyarısı
         meta["alkollu"] = True
+    if script.structure == "olsaydin" and not para_var(script):
+        meta["rakamsiz"] = True  # parasız gün akışı: 'rakamlar yaklaşık, yatırım tavsiyesi değildir' satırı eklenmez
     from .publish import apply_disclaimer, apply_series_tag
     meta = apply_series_tag(meta)  # "Efsane mi, gerçek mi?" gibi format serilerinin etiketi
     return apply_disclaimer(meta)  # Ya sen olsaydın? rakam uyarısı / alkollü tarifin yaş uyarısı
@@ -372,7 +371,9 @@ def main() -> None:
                                  structure=a.structure,
                                  # Adım kartları düzeni (NASIL_RULES / URETIM_RULES) yalnız video renderer'ı nasil
                                  # olan şablonla (nasil, uretim) çizilecekse istenir
-                                 adim_kartlari=sablon_renderer(hedef) == "nasil")
+                                 adim_kartlari=sablon_renderer(hedef) == "nasil",
+                                 # şablonun kendi ek yönergesi (templates/<ad>.json "istem"), ör. ek sahne alanları
+                                 sablon_kurali=str(_sablon(hedef).get("istem") or ""))
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":

@@ -77,8 +77,9 @@ SERİLER:
   aslında kille pişirilmiş grafit'). Süreç üreticilerin ya da güvenilir kaynakların anlatımıyla doğrulanabilsin. Şu
   alanlarda ÖNERME: {URETIM_YASAK}. trend: ürünün neden ilgi çekeceği.
 - olsaydin (Ya sen olsaydın?): izleyiciyi ikinci tekil şahısla somut bir duruma koyan, {YIL} Türkiye'sinin gerçek
-  rakamları ve prosedürleriyle anlatılan bir "olsaydın". Üç tür: (a) bir meslek ya da iş (ör. 'Kuyumcu olsaydın:
-  Kapalıçarşı'da bir kuyumcunun bir günü ve ayda kalan para'); (b) bir para ya da hayat olayı (ör. 'Piyango sana
+  rakamları ve prosedürleriyle anlatılan bir "olsaydın"; her zaman para hesabı değildir. Üç tür: (a) bir meslek ya da
+  iş (ör. 'Kuyumcu olsaydın: Kapalıçarşı'da bir kuyumcunun bir günü ve ayda kalan para' ya da 'Elektrikçi olsaydın
+  günün nasıl geçerdi: sabahtan akşama bir iş günü'); (b) bir para ya da hayat olayı (ör. 'Piyango sana
   çıksaydı: vergiden sonra eline geçen para, neye yettiği ve kazanma olasılığı'); (c) bir hayat durumu (ör. 'Yurt
   dışına taşınsaydın ilk ay kaç lira harcardın', 'Bir köyde yaşamaya başlasaydın'). 3 öneri bu türlere karışık
   dağılsın; topic somut durumu adıyla söylesin. Rakamlar resmî ya da güvenilir kaynaklarla (Resmî Gazete, SGK, TÜİK,

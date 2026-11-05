@@ -143,7 +143,7 @@ def _uyari_mi(satir: str) -> bool:
 def _uyarilar(meta: dict) -> list[tuple[str, str]]:
     """(tür, satır): videonun açıklamasında bulunması gereken uyarılar (seri ya da içerik gerektirmiyorsa boş)."""
     out = []
-    if str(meta.get("structure") or "") == "olsaydin":
+    if str(meta.get("structure") or "") == "olsaydin" and not meta.get("rakamsiz"):  # parasız gün akışında yok
         yil = str(meta.get("created") or "")[:4]
         out.append(("olsaydin", OLSAYDIN_UYARI.format(yil=yil if re.fullmatch(r"\d{4}", yil) else
                                                       time.localtime().tm_year)))

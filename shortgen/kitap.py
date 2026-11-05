@@ -8,6 +8,9 @@ Telif kuralları (kodda da uygulanır):
     70 yıl sürer; Y yılında yazar en geç Y-71'de ölmüşse eser kamu malıdır (kamu_mali). Alıntı kendi kısa çevirimizdir.
     ilk_cumle boşsa ya da yazar bu sınırdan sonra öldüyse (ya da ölüm yılı bilinmiyorsa) ilk sayfa KÜNYE sayfasıdır.
 
+Giriş: pipeline.build kurgu modüllerinin ortak girişini (render) çağırır; render sahnenin bütün alanlarını (kitap_bolum,
+sayfa_metni, vurgu, mascot) ve meta['script']['kitap']'ı aşağıdaki sözleşmeye çevirip render_kitap'a verir.
+
 Senaryo eşlemesi (veri sözleşmesi; alanlar getattr/dict ile okunur, demo JSON'u da çalışır):
   meta["kitap"]: baslik, yazar, yil, tur, ozgun_dil, yazar_olum, ilk_cumle, amblem, kapak_rengi
   spec.card: {"bolum": giris|konu|fikir|bilgi|soru, "sayfa": sağ sayfanın metni, "vurgu": sayfa metninin fosforlu
@@ -50,7 +53,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 from . import kart as K
-from . import render
+from . import render as R  # ortak sahne tipi (render adı bu modülün ortak girişidir)
 from .voice import Word
 
 W, H, FPS, SS = K.W, K.H, K.FPS, K.SS
@@ -2028,9 +2031,35 @@ class KitapVideo:
 
 
 # ---------------------------------------------------------------- ana giriş
-def render_kitap(scenes: list[render.SceneSpec], words: list[Word], out_mp4: Path, voice_mp3: Path | None,
+def render_kitap(scenes: list[R.SceneSpec], words: list[Word], out_mp4: Path, voice_mp3: Path | None,
                  music: Path | None, meta: dict) -> Path:
     """Bir Kitap Bir Dakika şablonuyla videoyu kurar. Kare döngüsü, ses, kuyruk ve marka kapanışı kart şablonuyla
     ortak (kart.render_frames)."""
     return K.render_frames(scenes, words, out_mp4, voice_mp3, music,
                            lambda bcfg: KitapVideo(scenes, words, meta, bcfg), "Kitap")
+
+
+def sozlesme_karti(card) -> dict:
+    """pipeline'ın ortak girişinden gelen sahne kartını (sahnenin bütün alanları: kitap_bolum, sayfa_metni, vurgu,
+    mascot, ...) bu çizicinin sözleşmesine çevirir: {"bolum", "sayfa", "vurgu", "mascot"} (+ "credit"). Zaten sözleşme
+    biçimindeyse aynen döner."""
+    c = card if isinstance(card, dict) else {}
+    if "bolum" in c or "sayfa" in c:
+        return dict(c)
+    out = {"bolum": str(c.get("kitap_bolum") or ""), "sayfa": str(c.get("sayfa_metni") or ""),
+           "vurgu": str(c.get("vurgu") or ""), "mascot": str(c.get("mascot") or "auto")}
+    if c.get("credit"):
+        out["credit"] = c["credit"]
+    return out
+
+
+def render(scenes: list[R.SceneSpec], words: list[Word], out_mp4: Path, voice_mp3: Path | None,
+           music: Path | None, meta: dict) -> Path:
+    """Şablon kurgu modüllerinin ortak girişi (pipeline.build: shortgen/<renderer>.py render). Sahne kartları ve
+    meta['kitap'] (senaryonun kitap alanı, meta['script'] içinden) sözleşmeye çevrilir, video render_kitap ile kurulur."""
+    for s in scenes:
+        s.card = sozlesme_karti(s.card)
+    meta = dict(meta or {})
+    if meta.get("kitap") is None:
+        meta["kitap"] = (meta.get("script") or {}).get("kitap")
+    return render_kitap(scenes, words, out_mp4, voice_mp3, music, meta)
