@@ -231,6 +231,11 @@ def icon(kind: str, theme: str) -> tuple[Image.Image, tuple[int, int]] | None:
 
 
 # ---------------------------------------------------------------- sahne
+# Giriş hareketlerinin nesneyi yerine oturttuğu ilerleme (anim.pose). İlk sahnede bu noktadan başlanır ki
+# ilk kare boş ya da minicik bir çizimle açılmasın: izleyicinin çoğu kaydırıp geçme kararını ilk saniyede verir.
+HOOK_SETTLE = {"zoom_in": 0.56, "drop_in": 0.63, "rise": 0.56, "still": 0.25}
+
+
 @dataclass
 class SceneSpec:
     narration: str
@@ -264,7 +269,7 @@ class SceneRenderer:
             self.pan = (r.uniform(-1, 1), r.uniform(-1, 1))
         elif s.image is not None and s.image_mode == "framed":
             src = tone(Image.open(s.image).convert("RGB"), "paper" if theme == "paper" else theme)
-            src.thumbnail((800, 760), Image.LANCZOS)
+            src.thumbnail((800, max(300, min(760, SUB_Y - 805))), Image.LANCZOS)  # çerçeve altyazının üstünde kalsın
             fr = Image.new("RGBA", (src.width + 32, src.height + 32), WHITE + (255,))
             fr.paste(src, (16, 16))
             shadow = Image.new("RGBA", (fr.width + 60, fr.height + 60), (0, 0, 0, 0))
@@ -288,6 +293,8 @@ class SceneRenderer:
         drawing = self.anim is not None and s.drawn and s.image_mode == "none"
         big = len(lines) == 1 and len(lines[0]) <= 6 and s.image_mode == "none" and not drawing
         size = 330 if big else (140 if drawing else (190 if s.image_mode == "none" else 160))
+        if idx == 0 and not big:  # kanca karesi: başlık bir tık daha büyük (genişliğe sığdırma yine geçerli)
+            size = int(size * 1.15)
         font = fit_font(lines, 960, int(size * HEAD_SCALE))
         self.labels = []
         y = {"full": 1000, "framed": 300}.get(s.image_mode, 300 if drawing else 380)
@@ -333,7 +340,7 @@ class SceneRenderer:
             # çizimi başlığın altına, altyazının üstüne sığdır
             top, bottom = y + 10, SUB_Y - 60
             spr = self.anim.sprite
-            room = max(560, bottom - top)
+            room = max(240, SUB_Y - 940, bottom - top)
             if spr.height > room:
                 k = room / spr.height
                 self.anim.sprite = spr.resize((int(spr.width * k), int(spr.height * k)), Image.LANCZOS)
@@ -360,8 +367,11 @@ class SceneRenderer:
     def frame(self, t: float) -> Image.Image:
         dur = max(0.1, self.s.end - self.s.start)
         p = min(1.0, (t - self.s.start) / dur)
+        lt = t - self.s.start
         if self.photo is not None:
             z = 1.0 + 0.08 * p
+            if self.idx == 0:  # kanca: ilk yarım saniyede hızlı yakınlaşma, kare ilk andan hareketli olsun
+                z += 0.06 * (1 - (1 - min(1.0, lt / 0.5)) ** 3)
             cw, ch = int(W * 1.12 / z), int(H * 1.12 / z)
             mx, my = (self.photo.width - cw) / 2, (self.photo.height - ch) / 2
             cx = mx + self.pan[0] * mx * p
@@ -370,12 +380,18 @@ class SceneRenderer:
         else:
             img = self.base.copy()
         img = img.convert("RGBA") if img.mode != "RGBA" else img
-        lt = t - self.s.start
         if STARS and self.photo is None and sum(THEME_BG[self.s.theme]) < 380:
             from .anim import stars
             stars(img, lt, self.idx)
         if self.anim is not None:
-            self.anim.draw(img, p, lt, dur)
+            pa = p
+            if self.idx == 0:  # kanca: çizim ilk karede (önizleme/kapak) yerinde ve tam boyda görünsün
+                m = self.anim.motion
+                if m in HOOK_SETTLE:
+                    pa = max(p, HOOK_SETTLE[m])
+                elif m.startswith("fly_"):
+                    pa = 0.4 + 0.6 * p
+            self.anim.draw(img, pa, lt, dur)
         for im, (x, y), delay in self.labels:
             if self.idx == 0:  # kanca: ilk karede (önizleme/kapak) başlık hazır görünsün
                 img.alpha_composite(im, (x, y))

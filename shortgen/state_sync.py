@@ -26,6 +26,28 @@ def _show(rev: str, path: str) -> str | None:
     return r.stdout if r.returncode == 0 else None
 
 
+def _keep_published(local: dict, remote: dict) -> dict:
+    """Yerel kayıt kazansa bile uzakta paylaşılmış (ok) platformlar kaybolmaz: aynı video bir platforma iki kez
+    yüklenmesin (ör. düzeltme işi paylaşım sürerken eski kaydı yeniden yazarsa)."""
+    rp, lp = remote.get("platforms") or {}, local.get("platforms") or {}
+    keep = [p for p, r in rp.items() if (r or {}).get("status") == "ok" and (lp.get(p) or {}).get("status") != "ok"]
+    if not keep:
+        return local
+    out = {**local, "platforms": {**lp, **{p: rp[p] for p in keep}}}
+    rs, ls = remote.get("schedule"), local.get("schedule")
+    if isinstance(rs, dict) and isinstance(ls, dict):
+        out["schedule"] = {**ls, **{p: rs[p] for p in keep if p in rs}}
+    # saat planı yoksa (tekrar dene, sabit saatli onay) paylaşım işi ok olmayan her platformu bekleyen sayar
+    sched = out.get("schedule") or dict.fromkeys(("youtube", "instagram", "tiktok"))
+    pending = [p for p in sched if (out["platforms"].get(p) or {}).get("status") != "ok"]
+    if out.get("status") in ("zamanlandi", "onay_bekliyor") and not pending \
+            and remote.get("status") in ("yayinlandi", "kismen", "hata"):
+        out["status"] = remote["status"]  # uzakta paylaşım bitmiş, yerelde bekleyen platform kalmadı
+        if remote.get("published"):
+            out["published"] = remote["published"]
+    return out
+
+
 def _merge(path: str, base: str | None, remote: str | None, local: str | None) -> str | None:
     if local == base:  # bu çalışmada değişmedi: uzaktakini al
         return remote
@@ -37,9 +59,19 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
         r, l = json.loads(remote), json.loads(local)
         b = {v["tag"]: v for v in json.loads(base)} if base else {}
         out = {v["tag"]: v for v in r}
-        for v in l:  # bu çalışmada değişen kayıtlar kazanır
-            if v != b.get(v["tag"]) or v["tag"] not in out:
+        for v in l:  # bu çalışmada değişen kayıtlar kazanır (uzakta paylaşılmış platformlar korunarak)
+            if v["tag"] not in out:
                 out[v["tag"]] = v
+            elif v != b.get(v["tag"]):
+                rv, bv = out[v["tag"]], b.get(v["tag"]) or {}
+                # platforms alanını yalnız paylaşım işi yazar. Uzak kayıt değişmiş ama platforms'u aynıysa bu bir
+                # kullanıcı kararıdır (iptal, ret, yeniden onay, tekrar dene, düzeltme). Bu çalışma paylaşım yaptıysa
+                # kullanıcının kararı geçerli olur, bu çalışmada yapılmış paylaşımlar (ok) yine korunur.
+                if rv != bv and rv.get("platforms") == bv.get("platforms") \
+                        and v.get("platforms") != bv.get("platforms"):
+                    out[v["tag"]] = _keep_published(rv, v)
+                else:
+                    out[v["tag"]] = _keep_published(v, rv)
         order = [v["tag"] for v in r] + [v["tag"] for v in l if v["tag"] not in {x["tag"] for x in r}]
         return json.dumps([out[t] for t in order], ensure_ascii=False, indent=2)
     if path.endswith("yorumlar.json"):

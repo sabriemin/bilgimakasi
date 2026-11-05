@@ -59,8 +59,21 @@ def _clean_desc(text: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", "\n".join(keep)).strip()
 
 
+def _u16(s: str) -> int:
+    return len(s.encode("utf-16-le")) // 2
+
+
+def _fit_caption(head: str, tags: str, limit: int) -> str:
+    """Etiketler her zaman sonda kalsın diye metni kısaltır. TikTok sınırı UTF-16 birimiyle sayar (emoji 2 birim)."""
+    room = limit - (_u16(tags) + 2 if tags else 0)
+    while head and _u16(head) > room:
+        head = head[:-max(1, (_u16(head) - room) // 2)]
+    head = head.rstrip()
+    return "\n\n".join(x for x in (head, tags) if x)
+
+
 def _hashtags(meta: dict, limit: int) -> list[str]:
-    tags = ["#" + re.sub(r"\s+", "", h.lstrip("#")) for h in meta.get("hashtags", [])]
+    tags = ["#" + re.sub(r"\W", "", h) for h in meta.get("hashtags", [])]  # kesme işareti, noktalama etiketi bölmesin
     return [t for t in tags if len(t) > 1][:limit]
 
 
@@ -79,10 +92,12 @@ def youtube(video: Path, meta: dict) -> dict:
     token = _yt_token()
     title = meta["title"].replace("<", "").replace(">", "")
     # #Shorts artık gerekmiyor (dikey ve kısa video otomatik Short sayılır); başlıkta arama kelimesine yer kalsın
-    desc = _clean_desc(meta["description"]).replace("<", "").replace(">", "")[:4900]
+    desc = _clean_desc(meta["description"]).replace("<", "").replace(">", "")
+    # düzeltmeden önce üretilmiş videolarda "#Galatasaray'ın" gibi etiketler kalmış olabilir: kesme işareti etiketi böler
+    desc = re.sub(r"#[^\s#]+", lambda m: "#" + re.sub(r"\W", "", m.group()[1:]), desc)[:4900]
     body = {
         "snippet": {"title": title[:100], "description": desc, "categoryId": "27",  # Eğitim
-                    "tags": [h.lstrip("#") for h in meta.get("hashtags", [])][:15],
+                    "tags": [t for t in (re.sub(r"\W", "", h) for h in meta.get("hashtags", [])) if t][:15],
                     "defaultLanguage": "tr", "defaultAudioLanguage": "tr"},
         "status": {"privacyStatus": os.environ.get("YT_PRIVACY", "public"), "selfDeclaredMadeForKids": False,
                    "containsSyntheticMedia": bool(meta.get("ai_voice"))},
@@ -170,7 +185,7 @@ def _instagram(video: Path, meta: dict) -> dict:
 
     caption = meta["title"] + "\n\n" + _clean_desc(meta["description"])
     tags = _hashtags(meta, 5)  # Instagram en fazla 5 etiket
-    caption = re.sub(r"#\w+", "", caption)  # etiketleri ayıkla, sonda bir kez (en fazla 5) ekle
+    caption = re.sub(r"#[^\s#]+", "", caption)  # etiketleri ayıkla, sonda bir kez (en fazla 5) ekle
     caption = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", caption)).strip()
     caption = (caption[:2150 - len(" ".join(tags))] + "\n\n" + " ".join(tags)).strip()
 
@@ -245,9 +260,10 @@ def tiktok(video: Path, meta: dict) -> dict:
     want = os.environ.get("TIKTOK_PRIVACY", "PUBLIC_TO_EVERYONE")
     privacy = want if want in opts else ("SELF_ONLY" if "SELF_ONLY" in opts else (opts or ["SELF_ONLY"])[0])
     # TikTok aramayı açıklama metninden de okur: başlık + bilgi cümleleri (arama ifadesi burada) + görsel kaynağı + etiketler
-    body = re.sub(r"\n{3,}", "\n\n", re.sub(r"#\w+", "", _clean_desc(meta.get("description", "")))).strip()
+    body = re.sub(r"#[^\s#]+", "", _clean_desc(meta.get("description", "")))
+    body = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+(\n|$)", r"\1", body)).strip()
     tags = " ".join(_hashtags(meta, 5))
-    title = "\n\n".join(x for x in (meta["title"], body, tags) if x)[:2200]
+    title = _fit_caption("\n\n".join(x for x in (meta["title"], body) if x), tags, 2200)
     size = video.stat().st_size
     if size <= 64 * 1024 * 1024:
         chunk, count = size, 1

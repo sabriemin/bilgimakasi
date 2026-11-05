@@ -53,14 +53,23 @@ def series_label(script: ShortScript, history: Path) -> str:
     """İlk sahnenin üstündeki format etiketi: 'EFSANE Mİ, GERÇEK Mİ? #4'. Tanıdık format izleyiciye takip sebebi verir."""
     if script.series_part == 2:
         return "2. BÖLÜM"
-    n = 1
+    try:
+        vids = json.loads((ROOT / "state" / "videos.json").read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        vids = []
+    rejected = {v.get("topic") for v in vids if v.get("status") == "reddedildi"}
+    seen = {script.topic}  # aynı konunun yeniden üretimi iki kez sayılmaz
     if history.exists():
         for line in history.read_text(encoding="utf-8").splitlines():
             try:
-                n += json.loads(line).get("structure") == script.structure
+                h = json.loads(line)
             except Exception:  # noqa: BLE001
-                pass
-    return f"{STRUCTURES.get(script.structure, STRUCTURES['hikaye'])[0]} #{n}"
+                continue
+            if not isinstance(h, dict):
+                continue
+            if h.get("structure") == script.structure and h.get("series_part") != 2 and h.get("topic") not in rejected:
+                seen.add(h.get("topic"))
+    return f"{STRUCTURES.get(script.structure, STRUCTURES['hikaye'])[0]} #{len(seen)}"
 
 
 def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | None,
@@ -141,7 +150,7 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
     # 6) yayın paketi
     desc = "\n\n".join(filter(None, [
         script.description,
-        " ".join("#" + h.lstrip("#").replace(" ", "") for h in script.hashtags),
+        " ".join("#" + t for t in (re.sub(r"\W", "", h) for h in script.hashtags) if t),
         images.credits_text(credits),
     ]))
     meta = {
@@ -208,7 +217,8 @@ def main() -> None:
     video = build(script, out_dir, use_voice=not a.no_voice, music=music, template=template)
     with history.open("a", encoding="utf-8") as f:
         f.write(json.dumps({"date": str(dt.date.today()), "topic": script.topic, "dir": str(out_dir),
-                            "structure": script.structure, "search_phrase": script.search_phrase},
+                            "structure": script.structure, "search_phrase": script.search_phrase,
+                            "series_part": script.series_part},
                            ensure_ascii=False) + "\n")
     pending.unlink(missing_ok=True)
     if script.series_part == 1 and script.next_part_brief:

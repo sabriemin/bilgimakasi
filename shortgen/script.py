@@ -9,6 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import List, Literal
@@ -31,8 +32,8 @@ CATEGORIES = [
 STRUCTURES = {
     "hikaye": ("BİLİNMEYEN HİKÂYE", "MİNİ HİKÂYE: kanca → çok kısa bağlam (yıl, yer, kişi) → gerilim ya da dönüm noktası → "
                "vurucu sonuç."),
-    "efsane": ("EFSANE Mİ, GERÇEK Mİ?", "EFSANE Mİ GERÇEK Mİ: herkesin doğru sandığı yaygın bir inanışla aç → kısa bir "
-               "'aslında' dönüşüyle çürüt (ya da şaşırtıcı biçimde doğrula) → kanıtı ve hikâyesi → doğrusu tek cümlede."),
+    "efsane": ("EFSANE Mİ, GERÇEK Mİ?", "EFSANE Mİ GERÇEK Mİ: ilk cümlede herkesin doğru sandığı yaygın inanışı ve yanlış "
+               "(ya da şaşırtıcı biçimde doğru) olduğunu birlikte söyle → kanıtı ve hikâyesi → doğrusu tek cümlede."),
     "neden": ("NEDEN BÖYLE?", "NEDEN SORUSU: gündelik ya da tanıdık bir şeyin şaşırtıcı nedenini sor ('X neden Y?') → "
               "çoğu kişinin tahmin ettiği yanlış cevabı söyle → gerçek nedeni adım adım aç → sonuç."),
     "sayac": ("3 ŞAŞIRTICI BİLGİ", "3 ŞAŞIRTICI BİLGİ: tek konu hakkında giderek şaşırtıcılaşan 3 bilgi; en şaşırtıcısı en "
@@ -75,7 +76,8 @@ class ShortScript(BaseModel):
         "konunun aranan anahtar kelimelerini doğal biçimde içerir; ikinci cümle izleyiciye yorum yaptıran bir soru. "
         "Kaynak, link, emoji yığını veya etiket YAZMA."))
     hashtags: List[str] = Field(description=(
-        "Tam 5 etiket, # olmadan, Türkçe karakterli olabilir, boşluksuz. Sıra: 1) search_phrase'in boşluksuz hâli, "
+        "Tam 5 etiket, # olmadan, Türkçe karakterli olabilir; yalnız harf ve rakam (boşluk, kesme işareti, noktalama yok). "
+        "Sıra: 1) search_phrase'in bitişik yazılmış hâli (ör. 'titaniknedenbattı'), "
         "2-4) konuya özel ve aranan 3 etiket (kişi/olay/yer/takım adı, alan: 'tarih', 'futbol', 'uzay'), 5) 'bilgimakasi'. "
         "'keşfet', 'fyp', 'viral' gibi genel etiketler ve konuyla ilgisi olmayan trend etiketleri KULLANMA: video yanlış "
         "kitleye test edilir. Instagram en fazla 5 etiket kabul ettiği için 5'i geçme."))
@@ -96,10 +98,21 @@ Biçim: 30-35 saniye. Seslendirme yavaş ve tane tane olduğu için toplam dış
 9-12 sahne, her sahne 2-4 saniye. Kısa videolar sonuna kadar izlenip tekrar izlendiği için daha çok dağıtılır; her saniye hak
 edilmeli, dolgu cümle ve gereksiz bağlam yok. Hikâye bu süreye sığmıyorsa en ilginç tek açıyı anlat.
 Yapı (seçilen anlatım kalıbının gövdesiyle birlikte):
-1) KANCA (ilk sahne, ilk 2 saniye, en önemli kısım): En şaşırtıcı sonucu ya da çelişkiyi doğrudan söyle; giriş, selam,
-   "biliyor muydunuz" veya bağlam cümlesi YOK. İlk cümle en fazla 10 kelime olsun. İlk sahnenin headline'ı tek başına
-   okunduğunda merak uyandıran 2-3 satırlık güçlü bir iddia olsun (videonun kapağı ve önizlemesi bu karedir).
-   Örnek: "Bir mahalleyi tsunami değil, melas yuttu." / "Olimpiyat maratonunu kazanan adam yolun yarısını arabayla gitti."
+1) KANCA (ilk sahne, ilk 3-4 saniye, en önemli kısım; izleyicilerin yarıdan fazlası kaydırıp geçme kararını ilk saniyede
+   verir): En şaşırtıcı sonucu ya da çelişkiyi İLK CÜMLEDE söyle. Dönüşü ikinci cümleye bırakan kurulum cümlesiyle açma
+   (kötü: "Manchester United Avrupa'da evinde 40 yıl yenilmedi. Ta ki..."; iyi: "Manchester United'ın Avrupa'daki
+   40 yıllık serisini bir Türk takımı bitirdi."). Efsane kalıbında ilk cümle inanışı ve yanlış (ya da şaşırtıcı biçimde doğru) olduğunu birlikte
+   söylesin ("Boğalar kırmızıya kızmaz; kırmızıyı ayırt edemezler bile."); neden kalıbında ilk cümle sorunun kendisi olabilir
+   ("Uçaklar neden neredeyse hep beyaz?"); sayaç kalıbında ilk cümle en tuhaf bilgiyi ele vermeden ona işaret eden somut
+   bir iddia olsun, en tuhaf bilgi yine en sonda gelsin. Serinin 2. bölümünde (series_part 2) ilk cümle 1. bölümün
+   kaldığı yeri hatırlatan cümle olarak kalsın; kalıba özel ilk cümle kuralları uygulanmaz. Giriş, selam, "biliyor
+   muydunuz" veya bağlam cümlesi YOK. İlk cümle en fazla 10 kelime olsun; ilk cümleyi bölme, tamamı ilk sahnede olsun.
+   İlk sahnenin headline'ı tek başına okunduğunda kim/ne ve ne olduğunu söyleyen, merak uyandıran 2-3 satırlık güçlü bir
+   iddia olsun; öznesiz bırakma (kötü: "AVRUPA'DA / 40 YIL / YENİLMEDİ"; iyi: "40 YILLIK SERİSİNİ / BİR TÜRK TAKIMI / BİTİRDİ"; neden kalıbında headline sorunun kendisi olabilir).
+   Videonun kapağı ve önizlemesi bu karedir. Konuda Türkiye bağlantısı varsa ilk cümlede ve ilk headline'da geçsin.
+   İlk sahne asla boş bir arka planla açılmasın: güçlü, yakın plan bir fotoğraf (image_mode full) ya da büyük bir çizim
+   kullan; çizimse motion zoom_in, pulse, float ya da none olsun (nesne ilk karede görünmeli, fly_* kullanma).
+   Örnek: "Bir mahalleyi tsunami değil, melas yuttu." / "1904 Olimpiyat maratonunda ilk gelen adam 17 kilometreyi arabayla gitti."
 2) GÖVDE: seçilen anlatım kalıbına uy (bağlam en fazla 1-2 sahne). Videonun yaklaşık yarısında izleyiciyi tutan ikinci bir
    merak anı olsun: somut yeni bir bilgi ya da beklenmedik dönüş (kalıp cümle değil).
 3) MAKAS'IN YORUMU: sonda kanalın kendi sesiyle tek kısa cümlelik bir çıkarım ya da bugüne bağlantı
@@ -122,7 +135,7 @@ DİL VE ANLATIM (en önemli kural): Metin bir TÜRK BELGESEL ANLATICISININ ağz�
 - Çeviri kokan kalıplardan kaçın ("Yerliler ... anlatır", "Peki ... neden ...?" tekrarı, "Ama gerçek başkaydı" gibi klişeler,
   İngilizce söz dizimi). Türkçede doğal duran fiil ve deyimleri seç; zamanlar tutarlı olsun (anlatı için -di'li/-miş'li geçmiş).
 - Ton: sakin, ağırbaşlı, merak uyandıran; abartısız ama canlı. Sayıları okunduğu gibi yaz (sekiz virgül yedi milyon değil, "8,7 milyon").
-- İyi örnek: "15 Ocak 1919'da Boston'ın North End mahallesi sıradan bir kış gününe uyanmıştı. Limanın hemen yanında, içinde 8,7 milyon
+- İyi örnek (gövde dili, kanca değil): "15 Ocak 1919'da Boston'ın North End mahallesi sıradan bir kış gününe uyanmıştı. Limanın hemen yanında, içinde 8,7 milyon
   litre melas bulunan dev bir tank yükseliyordu. Tank ilk günden beri sızdırıyordu; şirket ise sorunu gidermek yerine tankı kahverengiye boyatmayı seçti."
 Sadece doğrulanabilir bilgiler kullan; emin olmadığın tarih, sayı veya alıntıyı kullanma. Tartışmalı siyasi, dinî, sağlıkla ilgili
 iddialardan, yaşayan özel kişileri hedef alan içerikten kaçın.
@@ -276,6 +289,7 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     out = polish_script(checked)
     out.series_part, out.next_part_brief = part, (brief if part == 1 else "")
     out.structure, out.search_phrase = structure, out.search_phrase or phrase
+    out.hashtags = [t for t in (re.sub(r"\W", "", h) for h in out.hashtags) if t]
     return out
 
 
@@ -309,7 +323,13 @@ EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün.
 - YENİ BİLGİ EKLEME, hiçbir olguyu (tarih, sayı, isim) değiştirme ya da çıkarma. Sahne sayısını ve sırasını koru.
 - Toplam dış ses 65-75 kelime arasında kalsın (78'i geçmesin).
 - search_phrase ifadesi ilk iki cümlede geçiyorsa koru, çıkarma.
-- İlk cümle (kanca) en fazla 10 kelime, doğrudan ve şaşırtıcı kalsın; önüne giriş cümlesi ekleme.
+- İlk cümle (kanca) en fazla 10 kelime, doğrudan ve şaşırtıcı kalsın; dönüş ilk cümlede kalsın, önüne giriş cümlesi ekleme.
+- İlk sahnenin headline'ı özneyi ve dönüşü birlikte söylesin (kim/ne + ne oldu); öznesiz bırakma.
+- Senaryonun structure alanına göre: neden ise ilk cümle ve ilk headline soru olarak kalabilir, cevabı öne taşıma;
+  sayac ise en tuhaf bilgiyi öne taşıma (sonda kalsın); efsane ise ilk cümle inanışı ve yanlış (ya da şaşırtıcı biçimde
+  doğru) olduğunu birlikte söylesin, doğrulanmış sonucu tersine çevirme.
+- series_part 2 ise ilk cümle 1. bölümün kaldığı yeri hatırlatan cümle olarak kalsın; kalıba özel ilk cümle kuralını
+  uygulama, 1. bölümü yeniden anlatma.
 - headline satırları, değişen narration'da geçen kelimelerden oluşsun (BÜYÜK HARF, satır başı 1-3 kelime).
 - Görsel alanlarına (theme, image_mode, image_queries, illustration, motion, trail, icon) DOKUNMA.
 Düzeltilmiş tam senaryoyu döndür."""

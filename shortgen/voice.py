@@ -36,15 +36,17 @@ def _words_from_alignment(al: dict) -> list[Word]:
 
 def synthesize(text: str, out_mp3: Path) -> list[Word]:
     """Metni seslendirir, mp3 yazar ve kelime zamanlarını döndürür (tempo ve baştaki sessizlik ayarı uygulanmış)."""
-    return _tighten(_synthesize(text, out_mp3), out_mp3)
+    words, aligned = _synthesize(text, out_mp3)
+    return _tighten(words, out_mp3, trim=aligned)
 
 
-def _tighten(words: list[Word], mp3: Path) -> list[Word]:
+def _tighten(words: list[Word], mp3: Path, trim: bool = True) -> list[Word]:
     """Kısa videoda her saniye önemli: baştaki sessizliği kırpar ve sesi perdesini bozmadan hızlandırır.
     VOICE_TEMPO=1 ile kapatılır (varsayılan 1.08)."""
     import subprocess
     tempo = float(os.environ.get("VOICE_TEMPO", "1.08"))
-    cut = max(0.0, (words[0].start if words else 0.0) - 0.05)
+    # baş kırpma yalnız kelime zamanları gerçekten ölçüldüyse (tahmini zamanla ilk kelimenin başı kesilebilir)
+    cut = max(0.0, words[0].start - 0.05) if (trim and words) else 0.0
     if abs(tempo - 1.0) < 0.01 and cut < 0.1:
         return words
     tmp = mp3.with_name(mp3.stem + "_ham.mp3")
@@ -60,7 +62,7 @@ def _tighten(words: list[Word], mp3: Path) -> list[Word]:
     return [Word(w.text, max(0.0, (w.start - cut) / tempo), max(0.0, (w.end - cut) / tempo)) for w in words]
 
 
-def _synthesize(text: str, out_mp3: Path) -> list[Word]:
+def _synthesize(text: str, out_mp3: Path) -> tuple[list[Word], bool]:
     key = os.environ["ELEVENLABS_API_KEY"]
     voice = os.environ.get("ELEVENLABS_VOICE_ID", "")
     if not voice:
@@ -96,9 +98,9 @@ def _synthesize(text: str, out_mp3: Path) -> list[Word]:
     out_mp3.write_bytes(base64.b64decode(data["audio_base64"]))
     al = data.get("normalized_alignment") or data.get("alignment")
     if al and al.get("characters"):
-        return _words_from_alignment(al)
+        return _words_from_alignment(al), True
     # Zamanlama dönmezse (bazı modeller): kelimeleri gerçek ses süresine göre dağıt
-    return fit_to_duration(estimate(text), _duration(out_mp3))
+    return fit_to_duration(estimate(text), _duration(out_mp3)), False
 
 
 def _duration(path: Path) -> float:

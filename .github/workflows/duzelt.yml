@@ -20,6 +20,13 @@ on:
 permissions:
   contents: write
 
+# Kendi grubunda: 'state' grubuna girerse GitHub'ın grup başına tek bekleyen iş kuralı yüzünden bekleyen bir
+# paylaşım işini (onay.yml) iptal edebilir ya da kendisi sessizce iptal edilebilir. Yarışa karşı koruma kodda:
+# paylaşımı 40 dk'dan yakın videonun saatleri değiştirilmez, state_sync paylaşılmış platformları hiç kaybetmez.
+concurrency:
+  group: duzelt
+  cancel-in-progress: false
+
 jobs:
   duzelt:
     runs-on: ubuntu-latest
