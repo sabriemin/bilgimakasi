@@ -37,8 +37,11 @@ def template_catalog() -> dict[str, str]:
 
 
 # Kendi kurgu modülü olan şablonlar Claude'a önerilmez, yalnız kendi kuralıyla seçilir (kart: kart_uygun; renderer'ı
-# nasil olanlar: yapi_sablon ya da --template). Yeni bir kart/nasil şablonu (ör. uretim) da kendiliğinden bu gruba girer.
-KENDI_RENDERER = ("kart", "nasil")
+# nasil olanlar: yapi_sablon ya da --template; renderer'ı kitap olanlar: kalıbı (yapi) senaryonun kalıbıyla aynıysa ya da
+# --template). Yeni bir kart/nasil/kitap şablonu (ör. uretim) da kendiliğinden bu gruba girer.
+KENDI_RENDERER = ("kart", "nasil", "kitap")
+# Kalıba kilitli kurgu modülleri ve şablonda "yapi" yazılmamışsa varsayılan kalıpları
+KALIP_RENDERER = {"nasil": "nasil", "kitap": "kitap"}
 
 
 def _sablon(name: str | None) -> dict:
@@ -48,19 +51,32 @@ def _sablon(name: str | None) -> dict:
 
 
 def sablon_renderer(name: str | None) -> str:
-    """Şablonun kurgu modülü ('kart', 'nasil'; diğerleri ''). Bilinmeyen şablon adı ''."""
+    """Şablonun kurgu modülü ('kart', 'nasil', 'kitap'; diğerleri ''). Bilinmeyen şablon adı ''."""
     return _sablon(name).get("renderer", "") or ""
 
 
 def sablon_yapisi(name: str | None) -> str:
-    """Adım kartları şablonunun (renderer nasil) zorunlu anlatım kalıbı: şablondaki "yapi" (nasil.json -> nasil,
-    uretim.json -> uretim; yazılmamışsa nasil). Diğer şablonlarda ''."""
+    """Kalıba kilitli şablonun (renderer nasil ya da kitap) zorunlu anlatım kalıbı: şablondaki "yapi" (nasil.json ->
+    nasil, uretim.json -> uretim, kitap.json -> kitap; yazılmamışsa renderer'ın varsayılanı). Diğer şablonlarda ''."""
     t = _sablon(name)
-    return (t.get("yapi") or "nasil") if t.get("renderer") == "nasil" else ""
+    varsayilan = KALIP_RENDERER.get(t.get("renderer") or "")
+    return (t.get("yapi") or varsayilan) if varsayilan else ""
+
+
+def yapi_sablonu(structure: str | None) -> str:
+    """Kalıbın kendi şablonu: renderer'ı kitap olan ve "yapi"sı bu kalıp olan ilk şablon (kitap -> kitap.json); yoksa
+    ''. eslesme.json'daki yapi_sablon önce gelir; bu, orada yazılmamış kitap kalıbının da kendi şablonuna gitmesi
+    içindir (Bir Kitap Bir Dakika başka şablonla çizilemez: kapak, sayfa ve sekme alanları yalnız orada)."""
+    if not structure:
+        return ""
+    for k in template_catalog():
+        if sablon_renderer(k) == "kitap" and sablon_yapisi(k) == structure:
+            return k
+    return ""
 
 
 def kendi_secimli() -> set[str]:
-    """Claude'un şablon listesine girmeyen şablonlar: kurgu modülü kart ya da nasil olanlar."""
+    """Claude'un şablon listesine girmeyen şablonlar: kurgu modülü kart, nasil ya da kitap olanlar."""
     return {k for k in template_catalog() if sablon_renderer(k) in KENDI_RENDERER}
 
 
@@ -83,6 +99,9 @@ def pick_template(script: ShortScript, override: str | None = None) -> str:
     by_structure = (m.get("yapi_sablon") or {}).get(script.structure)
     if by_structure in cat:  # yapıya bağlı şablon (ör. uretim -> uretim, olsaydin -> kart) kategori eşleşmesinden önce
         return by_structure
+    kendi_yapi = yapi_sablonu(script.structure)
+    if kendi_yapi:  # kalıbın kendi şablonu (kitap -> kitap)
+        return kendi_yapi
     kart = m.get("kart") or {}
     if "kart" in cat and kart_uygun(script, kart):
         return "kart"
@@ -123,14 +142,14 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
     cache.mkdir(parents=True, exist_ok=True)
 
     tcfg = render.apply_template(template)  # çizim paleti şablon renklerinden gelsin
-    renderer = tcfg.get("renderer", "")      # kart / nasil kendi kurgu modülünü kullanır, diğerleri render.render
+    renderer = tcfg.get("renderer", "")      # kart / nasil / kitap kendi kurgu modülünü kullanır, diğerleri render.render
     # 1) fotoğraflar (birden çok sorgu, Wikimedia + Openverse, alaka kontrolü)
     credits, used = [], set()
     photos: dict[int, Path] = {}
     photo_credit: dict[int, images.ImageCredit] = {}
     for i, sc in enumerate(script.scenes):
         queries = sc.image_queries or ([sc.image_query] if sc.image_query else [])
-        if sc.image_mode == "none" or not queries:
+        if sc.image_mode == "none" or not queries or renderer == "kitap":  # kitap şablonu fotoğraf kullanmaz
             continue
         if queries[0].startswith("local:"):
             photos[i] = ROOT / queries[0][6:]
@@ -221,6 +240,21 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         nasil.render_nasil(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
                                                              "title": script.title, "category": script.category,
                                                              "sablon": tcfg})
+    elif renderer == "kitap":
+        from . import kitap
+        for i, (spec, sc) in enumerate(zip(specs, script.scenes)):  # bölüm, sağ sayfa metni, vurgu (kitap.plan okur)
+            spec.card = {"bolum": getattr(sc, "kitap_bolum", "") or "", "sayfa": getattr(sc, "sayfa_metni", "") or "",
+                         "vurgu": getattr(sc, "vurgu", "") or "", "mascot": sc.mascot}
+            if spec.image is not None and i in photo_credit:
+                cd = images.credit_dict(photo_credit[i])
+                spec.card["credit"] = {k: cd.get(k, "") for k in ("author", "license", "source")}
+        bilgi = getattr(script, "kitap", None)  # künye: kapak, ilk cümle (yalnız kamu malı eserde), amblem, renk
+        if hasattr(bilgi, "model_dump"):
+            bilgi = bilgi.model_dump()
+        kitap.render_kitap(specs, words, video, mp3, music, {"topic": script.topic, "structure": script.structure,
+                                                             "title": script.title, "category": script.category,
+                                                             "kitap": bilgi if isinstance(bilgi, dict) else None,
+                                                             "sablon": tcfg})
     else:
         render.render(specs, words, video, mp3, music, template=template)
 
@@ -265,8 +299,9 @@ def main() -> None:
     load_env(ROOT / ".env")
     yapi = sablon_yapisi((a.template or "").strip())
     if yapi:
-        # Adım kartları şablonu (nasil, uretim) adım düzenli senaryo ister: yeni senaryo şablonun kalıbıyla ("yapi")
-        # yazılır; başka kalıp verilirse Claude'a gitmeden durur (her sahne bir adım olur, 8-10 adımlık çubuk sığmaz)
+        # Adım kartları şablonu (nasil, uretim) adım düzenli, kitap şablonu bölüm düzenli (kapak, ilk cümle, sayfalar)
+        # senaryo ister: yeni senaryo şablonun kalıbıyla ("yapi") yazılır; başka kalıp verilirse Claude'a gitmeden durur
+        # (her sahne bir adım olur, 8-10 adımlık çubuk sığmaz; kitap alanları olmayan senaryoda kapak çizilemez)
         if a.structure and a.structure != yapi:
             raise SystemExit(f"{a.template.strip()} şablonu yalnız {yapi} kalıbıyla kullanılır "
                              f"(verilen kalıp: {a.structure}).")
@@ -317,7 +352,7 @@ def main() -> None:
         catalog = {k: v for k, v in template_catalog().items() if k not in kendi}  # Claude'a önerilmez
         # yapıya bağlı şablon senaryodan önce bilinir: elle seçilen ya da yapi_sablon (ör. nasil -> kart / nasil,
         # uretim -> uretim, olsaydin -> kart)
-        hedef = a.template or (m.get("yapi_sablon") or {}).get(a.structure or "")
+        hedef = a.template or (m.get("yapi_sablon") or {}).get(a.structure or "") or yapi_sablonu(a.structure)
         script = generate_script(history, topic, catalog if m.get("claude_secsin") else None, allow_series=allow,
                                  # yapıya bağlı kart yönergesi yalnız şablon elle seçilmediyse (--template nasil kartsız)
                                  kart=kart_on or (not a.template and hedef == "kart"),

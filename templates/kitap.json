@@ -1,0 +1,34 @@
+{
+  "name": "Bir Kitap Bir Dakika",
+  "description": "Açılan kitap: koyu yeşil kütüphane rafının önünde kodla çizilmiş bez ciltli kitap. Kapakta başlık, yazar, amblem ve kapak rengi; kapak açılır, ilk cümle (yalnız kamu malı eserde, kendi çevirimiz; değilse künye), konu, ana fikir, bilgi sayfaları sırayla çevrilir, sağ sayfa dış sesle yazılır ve vurgu fosforlu kalemle çizilir; sonda kitap kapanır, arka kapakta soru ve OKUDUN MU? durur. Yalnız Bir Kitap Bir Dakika serisi (kitap kalıbı) için.",
+  "renderer": "kitap",
+  "yapi": "kitap",
+  "seri_adi": "BİR KİTAP BİR DAKİKA",
+  "basliklar": {
+    "konu": "NE ANLATIYOR?",
+    "fikir": "ANA FİKİR",
+    "bilgi": "BİLİYOR MUYDUN?"
+  },
+  "colors": {
+    "accent": [221, 32, 39],
+    "highlight": [252, 213, 33],
+    "dark": [20, 19, 19],
+    "light": [233, 231, 226],
+    "box": [250, 249, 245],
+    "muted": [150, 148, 145]
+  },
+  "fonts": {
+    "headline": "Anton-Regular.ttf",
+    "subtitle": "CourierPrime-Bold.ttf"
+  },
+  "subtitle_size": 40,
+  "subtitle_y": 1400,
+  "headline_scale": 1.0,
+  "grain": true,
+  "label_style": "box",
+  "rotation": 1.8,
+  "text_entry": "pop",
+  "subtitle_box": "torn",
+  "stars": false,
+  "case": "upper"
+}
