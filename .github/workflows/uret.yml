@@ -12,6 +12,9 @@ on:
       template:
         description: "İsteğe bağlı şablon (kolaj, gece, doga)"
         required: false
+      kalip:
+        description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil)"
+        required: false
 
 permissions:
   contents: write
@@ -59,10 +62,13 @@ jobs:
           MUSIC_FILE: ${{ vars.MUSIC_FILE }}
           TOPIC: ${{ github.event.inputs.topic }}
           TEMPLATE: ${{ github.event.inputs.template }}
+          KALIP: ${{ github.event.inputs.kalip }}
         run: |
           ARGS=()
           [ -n "$TOPIC" ] && ARGS+=(--topic "$TOPIC")
           [ -n "$TEMPLATE" ] && ARGS+=(--template "$TEMPLATE")
+          # kalıp yalnız ortam değişkeniyle geçer; geçerliliğini pipeline (--structure seçenekleri) denetler
+          [ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")
           python -m shortgen.pipeline "${ARGS[@]}"
           echo "OUT_DIR=$(ls -td output/*/ | head -1)" >> "$GITHUB_ENV"
           echo "TAG=short-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_ENV"

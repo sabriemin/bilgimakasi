@@ -1,0 +1,113 @@
+{
+  "date": "2026-11-05",
+  "items": [
+    {
+      "topic": "1954 Dünya Kupası elemelerinde Türkiye ile İspanya üç maçta ayrışamayınca turu, Roma'da gözleri bağlanan 14 yaşındaki Luigi Franco Gemma'nın çektiği kura belirledi",
+      "hook": "Türkiye Dünya Kupası'na gözü bağlı bir çocukla gitti.",
+      "trend": "Milli takımın Dünya Kupası play-off maçları yaklaşıyor",
+      "scope": "TR",
+      "category": "spor",
+      "score": 9,
+      "seri": "populer"
+    },
+    {
+      "topic": "Leonid meteor yağmurundaki göktaşlarının atmosfere saniyede 71 kilometreyle girmesi",
+      "hook": "Bu hafta gökten saniyede 71 kilometreyle taş yağacak.",
+      "trend": "Leonid meteor yağmuru 17-18 Kasım gecesi zirve yapacak",
+      "scope": "Global",
+      "category": "uzay",
+      "score": 7,
+      "seri": "populer"
+    },
+    {
+      "topic": "Mevsimin ilk karı: kar tanelerinin neden hep altı köşeli olduğu",
+      "hook": "Hiçbir kar tanesi beş ya da yedi köşeli değildir.",
+      "trend": "Doğu Anadolu'da mevsimin ilk karı yağdı",
+      "scope": "TR",
+      "category": "bilim",
+      "score": 7,
+      "seri": "populer"
+    },
+    {
+      "topic": "'Kahvaltı' kelimesinin 'kahve altı'ndan, yani kahveden önce yenen yemekten gelmesi",
+      "hook": "Kahvaltı aslında kahveden önce yenen yemek demek.",
+      "trend": "Her sabah söylenen bir kelimenin unutulan anlamı",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 8,
+      "seri": "konu"
+    },
+    {
+      "topic": "Ahtapotların üç kalbinin olması ve yüzerken birinin durması",
+      "hook": "Ahtapotun üç kalbi var, biri yüzerken duruyor.",
+      "trend": "Herkesin bildiği bir hayvanın kimsenin bilmediği yanı",
+      "scope": "Global",
+      "category": "doğa ve hayvanlar",
+      "score": 7,
+      "seri": "konu"
+    },
+    {
+      "topic": "Hezarfen Ahmed Çelebi'nin Galata Kulesi'nden uçuşunu anlatan tek kaynağın Evliya Çelebi olması",
+      "hook": "Hezarfen'in uçuşunu anlatan yalnızca bir kaynak var.",
+      "trend": "İstanbul'un en çok merak edilen hikâyelerinden",
+      "scope": "TR",
+      "category": "tarih",
+      "score": 6,
+      "seri": "konu"
+    },
+    {
+      "topic": "Efsane: Japon balıklarının hafızası 3 saniyedir. Gerçek: aylarca hatırlayabilir, deneylerde ses ve renk sinyallerini öğrenebilirler",
+      "hook": "Japon balığı sizi aylar sonra bile hatırlayabilir.",
+      "trend": "Türkiye'de en yaygın hayvan efsanelerinden biri",
+      "scope": "Global",
+      "category": "doğa ve hayvanlar",
+      "score": 8,
+      "seri": "efsane"
+    },
+    {
+      "topic": "Efsane: Çin Seddi uzaydan çıplak gözle görülür. Gerçek: alçak yörüngedeki astronotlar bile göremediğini söylüyor",
+      "hook": "Çin Seddi uzaydan görünmüyor; astronotlar da doğruluyor.",
+      "trend": "Ders kitaplarında bile geçen bir yanlış",
+      "scope": "Global",
+      "category": "uzay",
+      "score": 7,
+      "seri": "efsane"
+    },
+    {
+      "topic": "Efsane: Boğalar kırmızıya kızar. Gerçek: kırmızıyı ayırt edemezler, pelerinin hareketine saldırırlar",
+      "hook": "Boğalar kırmızıya kızmaz; kırmızıyı göremezler bile.",
+      "trend": "Herkesin bildiği ama yanlış olan bir bilgi",
+      "scope": "Global",
+      "category": "doğa ve hayvanlar",
+      "score": 6,
+      "seri": "efsane"
+    },
+    {
+      "topic": "Muzları bir hafta taze tutmak: sapları streç filmle sarıp diğer meyvelerden ayırmak, çünkü olgunlaştıran etilen gazı en çok saptan çıkar",
+      "hook": "Muzun çabuk kararmasının sebebi sapındaki gaz.",
+      "trend": "Etilen gazını durdurmak olgunlaşmayı yavaşlatır",
+      "scope": "TR",
+      "category": "bilim",
+      "score": 8,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Telefonu daha hızlı şarj etmek: kılıfı çıkarmak, uçak modunu açmak ve serin bir yere koymak",
+      "hook": "Telefonun yavaş şarj olmasının sebebi çoğu zaman sıcaklık.",
+      "trend": "Pil ısınınca telefon şarj hızını kendiliğinden düşürür",
+      "scope": "Global",
+      "category": "teknoloji",
+      "score": 7,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Okuduğunu daha kalıcı ezberlemek: tekrar okumak yerine kendini sınamak ve tekrarları günlere yaymak",
+      "hook": "Kendini sınamak, tekrar okumaktan çok daha iyi ezberletir.",
+      "trend": "Sınav dönemine giren öğrencilerin işine yarar",
+      "scope": "TR",
+      "category": "psikoloji",
+      "score": 6,
+      "seri": "nasil"
+    }
+  ]
+}

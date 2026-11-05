@@ -16,10 +16,11 @@ const FONTS = process.env.FONTS;
 const SAAT = process.env.SAAT || "2026-11-05T00:45:00+03:00";
 mkdirSync(OUT, { recursive: true });
 
-// örnek duruma ek: bir sorunlu (kısmen paylaşılmış) video, Sorunlu bölümü de görünsün
-function durumHazirla(sorunlu) {
+// örnek duruma ek: bir sorunlu (kısmen paylaşılmış) video, Sorunlu bölümü de görünsün; seriler: dört serili öneriler
+function durumHazirla(sorunlu, seriler = false) {
   const kok = mkdtempSync(join(tmpdir(), "panel_ekran_"));
   cpSync(FIKSTUR, kok, { recursive: true });
+  if (seriler) cpSync(join(BURASI, "fixtures", "oneriler_seriler.json"), join(kok, "oneriler.json"));
   if (sorunlu) {
     const vs = JSON.parse(readFileSync(join(kok, "videos.json"), "utf8"));
     vs.push({ tag: "short-20261103-150200", title: "Kahve Avrupa'ya Gelince Neden Yasaklandı?", topic: "Kahvenin 1500'lerde Mekke ve İstanbul'da yasaklanması",
@@ -194,6 +195,37 @@ async function main() {
     s2.kill();
   }
   await takvimEkranlari(browser, port + 2, kayit, hatalar);
+  // dört serili öneriler: kalıbı sabit seriler (Efsane, Nasıl yapılır) sıraya eklenmez ve nedenini söyler
+  const s3 = await sunucuBaslat(durumHazirla(false, true), port + 1);
+  try {
+    for (const tema of ["light", "dark"]) {
+      const t = tema === "light" ? "acik" : "koyu";
+      const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: tema,
+        locale: "tr-TR", timezoneId: "Europe/Istanbul" });
+      await yaziTipleri(ctx);
+      const page = await ctx.newPage();
+      page.on("pageerror", (e) => hatalar.push(`seriler/${tema}: ${e.message}`));
+      await page.goto(`http://127.0.0.1:${port + 1}/__giris`);
+      await bekle(page);
+      await page.goto(`http://127.0.0.1:${port + 1}/panel#konular`);
+      await bekle(page);
+      const kartlar = await page.$$eval(".oneri[data-seri]", (ks) => ks.map((k) => ({ seri: k.dataset.seri,
+        sira: [...k.querySelectorAll("button")].some((b) => b.textContent.includes("Sıraya ekle")),
+        not: Boolean(k.querySelector(".oneri-not")) })));
+      if (kartlar.length !== 12) hatalar.push(`seriler/${tema}: ${kartlar.length} öneri kartı (12 bekleniyordu)`);
+      for (const k of kartlar) {
+        const kalipli = ["efsane", "nasil"].includes(k.seri);
+        if (k.sira === kalipli || k.not !== kalipli) hatalar.push(`seriler/${tema}: ${k.seri} kartında sıra düğmesi/notu yanlış`);
+      }
+      const genislik = await page.evaluate(() => document.documentElement.scrollWidth);
+      if (genislik > 390) hatalar.push(`seriler/${tema}: yatay kaydırma (${genislik}px)`);
+      const dosya = join(OUT, `konular_seriler_mobil_${t}.png`);
+      await page.screenshot({ animations: "disabled", path: dosya, fullPage: true }); kayit.push(dosya);
+      await ctx.close();
+    }
+  } finally {
+    s3.kill();
+  }
   await browser.close();
   console.log(kayit.join("\n"));
   if (hatalar.length) { console.error("SORUNLAR:\n" + hatalar.join("\n")); process.exitCode = 1; }

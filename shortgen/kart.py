@@ -2045,7 +2045,7 @@ class Mascot:
 
 
 # ---------------------------------------------------------------- video
-STRUCT_RIGHT = {"efsane": "EFSANE Mİ?", "neden": "NEDEN?"}
+STRUCT_RIGHT = {"efsane": "EFSANE Mİ?", "neden": "NEDEN?", "nasil": "NASIL?"}
 
 
 def short_name(topic: str, max_w: float) -> str:
@@ -2187,6 +2187,10 @@ class KartVideo:
         if self.structure == "sayac":
             k = round(3 * i / max(1, self.n - 1))
             return f"{tr_upper('bilgi')} {k}/3"
+        if self.structure == "nasil":  # adım sahnesinde adım numarası (headline 'ADIM 2' ile başlar)
+            m = re.match(r"ADIM \d+", tr_upper(" ".join((self.scenes[i].headline or [""])[:1])).strip())
+            if m:
+                return m.group(0)
         if self.structure in STRUCT_RIGHT:
             return STRUCT_RIGHT[self.structure]
         kicker = (self.scenes[0].kicker or "").strip()

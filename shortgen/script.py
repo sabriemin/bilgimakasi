@@ -27,6 +27,13 @@ CATEGORIES = [
 ]
 
 
+# Nasıl yapılır? serisinde önerilmeyecek ve senaryoda bulunmayacak alanlar (öneri, senaryo ve doğrulama aynı listeyi kullanır)
+NASIL_YASAK = ("tıbbi ya da sağlık tedavisi, ilaç, tehlikeli ya da yasa dışı işler, finansal/yatırım ya da hukuki tavsiye, "
+               "uzmanlık gerektiren işler, temizlik ürünlerini ya da kimyasalları karıştırma, gıda güvenliği iddiaları "
+               "(bozulmuş yiyeceği kurtarma, pişmiş yemeği saklama ya da yeniden ısıtma, son kullanma tarihi), elektrik, gaz, "
+               "pil, ateş ya da kızgın yağla ilgili püf noktaları, çocuk ya da evcil hayvan bakımı, başkasının konumunu, "
+               "mesajlarını ya da hesabını izleme ve güvenlik önlemlerini aşma")
+
 # Anlatım kalıpları: aynı şablonun tekrarı "seri üretim" gibi görünmesin diye dönüşümlü kullanılır.
 # label: ilk sahnenin üstündeki seri etiketi (ör. "EFSANE Mİ, GERÇEK Mİ? #4"), izleyiciye tanıdık bir format verir.
 STRUCTURES = {
@@ -39,7 +46,14 @@ STRUCTURES = {
     "sayac": ("3 ŞAŞIRTICI BİLGİ", "3 ŞAŞIRTICI BİLGİ: tek konu hakkında giderek şaşırtıcılaşan 3 bilgi; en şaşırtıcısı en "
               "sonda. Kuru sayım ('Birincisi, ikincisi') YAPMA; bilgiler akıcı bir anlatıyla bağlansın ('Üstelik...', "
               "'Ama asıl tuhaf olan...') ve izleyici üç ayrı bilgiyi rahatça seçebilsin. Kanca en tuhaf bilgiye merak uyandırsın."),
+    "nasil": ("NASIL YAPILIR?", "NASIL YAPILIR: ilk cümlede ulaşılacak sonucu ya da çözülen sorunu söyle ('Muzları bir hafta "
+              "taze tutmanın sırrı sapında.') → 3-5 numaralı, somut adım; her adım kısa bir sahne olsun, headline'ın ilk satırı "
+              "'ADIM 1', 'ADIM 2' diye adım numarası, sonraki satır(lar) adımın kendisi (ör. 'ADIM 1' / 'SAPI SAR') → sonda "
+              "sonucu ya da yöntemin neden işe yaradığını (şaşırtıcı ya da bilimsel nedenini) tek cümlede söyle. Adımlar "
+              "evde, güvenle ve özel beceri gerektirmeden yapılabilsin; şu alanlara giren adım YOK: " + NASIL_YASAK + "."),
 }
+# Yalnız açıkça istendiğinde (öneriden üretim: --structure) kullanılan kalıplar: otomatik dönüşüme girmez.
+FORCED_ONLY = {"nasil"}
 
 
 class Scene(BaseModel):
@@ -114,9 +128,11 @@ Yapı (seçilen anlatım kalıbının gövdesiyle birlikte):
    40 yıllık serisini bir Türk takımı bitirdi."). Efsane kalıbında ilk cümle inanışı ve yanlış (ya da şaşırtıcı biçimde doğru) olduğunu birlikte
    söylesin ("Boğalar kırmızıya kızmaz; kırmızıyı ayırt edemezler bile."); neden kalıbında ilk cümle sorunun kendisi olabilir
    ("Uçaklar neden neredeyse hep beyaz?"); sayaç kalıbında ilk cümle en tuhaf bilgiyi ele vermeden ona işaret eden somut
-   bir iddia olsun, en tuhaf bilgi yine en sonda gelsin. Serinin 2. bölümünde (series_part 2) ilk cümle 1. bölümün
-   kaldığı yeri hatırlatan cümle olarak kalsın; kalıba özel ilk cümle kuralları uygulanmaz. Giriş, selam, "biliyor
-   muydunuz" veya bağlam cümlesi YOK. İlk cümle en fazla 10 kelime olsun; ilk cümleyi bölme, tamamı ilk sahnede olsun.
+   bir iddia olsun, en tuhaf bilgi yine en sonda gelsin; nasıl yapılır kalıbında ilk cümle sonucu ya da sorunu ve
+   şaşırtıcı çözüme işaret eden ipucunu söylesin ("Muzları bir hafta taze tutmanın sırrı sapında."). Serinin 2.
+   bölümünde (series_part 2) ilk cümle 1. bölümün kaldığı yeri hatırlatan cümle olarak kalsın; kalıba özel ilk cümle
+   kuralları uygulanmaz. Giriş, selam, "biliyor muydunuz" veya bağlam cümlesi YOK. İlk cümle en fazla 10 kelime olsun;
+   ilk cümleyi bölme, tamamı ilk sahnede olsun.
    İlk sahnenin headline'ı tek başına okunduğunda kim/ne ve ne olduğunu söyleyen, merak uyandıran 2-3 satırlık güçlü bir
    iddia olsun; öznesiz bırakma (kötü: "AVRUPA'DA / 40 YIL / YENİLMEDİ"; iyi: "40 YILLIK SERİSİNİ / BİR TÜRK TAKIMI / BİTİRDİ"; neden kalıbında headline sorunun kendisi olabilir).
    Videonun kapağı ve önizlemesi bu karedir. Konuda Türkiye bağlantısı varsa ilk cümlede ve ilk headline'da geçsin.
@@ -161,8 +177,8 @@ gösteren sahneler (en fazla 3 tane) saf tipografik olabilir.
   uçak/kuş/tren geçiyorsa fly_right veya fly_left, sel/dalga/akıntı ilerliyorsa fly_right veya rise (trail false),
   bir şey düşüyorsa drop_in, ortaya çıkış/keşif anında zoom_in, gezegen için spin veya orbit, kalp/beyin için pulse,
   patlama/deprem/yarılma için shake, balon/astronot/su altı için float. Hareketsiz çizimlerde motion none.
-headline kelimeleri narration içinde geçen en vurucu kelimeler olsun. Temaları çeşitlendir, art arda aynı temayı
-en fazla iki kez kullan. icon sadece gerçekten anlam katıyorsa."""
+headline kelimeleri narration içinde geçen en vurucu kelimeler olsun (nasıl yapılır kalıbının 'ADIM 1' gibi adım
+numaraları hariç). Temaları çeşitlendir, art arda aynı temayı en fazla iki kez kullan. icon sadece gerçekten anlam katıyorsa."""
 
 
 # Yalnız kart şablonu açıkken (ya da elle seçildiğinde) sisteme eklenir: kapalıyken üretim yönergesi değişmez.
@@ -172,6 +188,7 @@ KART_RULES = """KART ALANLARI (yalnız "kart" şablonu kullanır, diğer şablon
 - card "interstitial": videonun ortasındaki ikinci merak anı (headline o anın kendi vurucu kelimeleri; kalıp cümle değil).
 - card "quote": doğrulanmış kısa bir alıntı (card_label alıntı, card_note kim · yıl). card "cta": son soru sahnesi.
 - card_note kartın küçük notu ya da kaynağıdır. mascot çoğunlukla auto.
+- nasil kalıbında adım sahnelerinin card'ı auto (fotoğraf/çizim) kalsın; adım numarasını counter kartına koyma.
 Kart alanları görsel alanların yerine geçmez; her sahnede fotoğraf/çizim kuralı aynen geçerli.
 Kartlardaki sayı, inanış ve alıntılar da doğrulanmış bilgi olmalı."""
 
@@ -266,12 +283,20 @@ def recent_structures(history_file: Path, n: int = 3) -> list[str]:
 
 
 def allowed_structures(history_file: Path) -> list[str]:
-    """Son kullanılan kalıp tekrar edilmez; 'hikaye' son 3 videonun 2'sinde kullanıldıysa o da dışarıda kalır."""
+    """Son kullanılan kalıp tekrar edilmez; 'hikaye' son 3 videonun 2'sinde kullanıldıysa o da dışarıda kalır.
+    FORCED_ONLY kalıpları (nasil) hiçbir zaman dönüşüme girmez."""
     last = recent_structures(history_file)
-    out = [k for k in STRUCTURES if not (last and k == last[-1])]
+    keys = [k for k in STRUCTURES if k not in FORCED_ONLY]
+    out = [k for k in keys if not (last and k == last[-1])]
     if last.count("hikaye") >= 2:
         out = [k for k in out if k != "hikaye"]
-    return out or list(STRUCTURES)
+    return out or keys
+
+
+def forced_ask(key: str) -> str:
+    """Kalıp öneriden geliyorsa (ör. Efsane mi, gerçek mi? serisi) yalnız o kalıp sunulur."""
+    return (f"\nANLATIM KALIBI (SABİT): Bu video '{STRUCTURES[key][0]}' serisinden; 'structure' alanına '{key}' yaz ve "
+            f"gövdeyi bu kalıba göre kur (kanca, Makas'ın yorumu ve kapanış kuralları geçerli):\n- {key}: {STRUCTURES[key][1]}")
 
 
 def structure_ask(keys: list[str]) -> str:
@@ -282,7 +307,10 @@ def structure_ask(keys: list[str]) -> str:
 
 def generate_script(history_file: Path, topic_hint: str | None = None,
                     templates: dict[str, str] | None = None, series_prev: dict | None = None,
-                    allow_series: bool = False, kart: bool = False) -> ShortScript:
+                    allow_series: bool = False, kart: bool = False, structure: str | None = None) -> ShortScript:
+    """structure verilirse (öneriden üretim) kalıp sabittir: yalnız o sunulur, doğrulama ve dil düzeltmesi değiştiremez."""
+    if structure and structure not in STRUCTURES:
+        raise ValueError(f"bilinmeyen anlatım kalıbı: {structure}")
     used = _history(history_file)[-200:]
     if series_prev:
         ask = series_ask(series_prev)
@@ -293,7 +321,7 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
             f"doğrulanabilir bir hikâye bul: {', '.join(CATEGORIES)}. Konuların yaklaşık yarısı Türkiye bağlantılı olmalı; "
             "izleyicinin arkadaşına göndereceği türden bir konu seç (efsane-gerçek, futbol, gündelik hayattan şaşırtıcı nedenler)."
         )
-        ask += structure_ask(allowed_structures(history_file))
+        ask += forced_ask(structure) if structure else structure_ask(allowed_structures(history_file))
         if allow_series:
             ask += SERIES_START
     if templates:
@@ -302,11 +330,21 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     if used and not series_prev:
         ask += "\nDaha önce işlenen konuları tekrar etme:\n- " + "\n- ".join(used)
     script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else ""))
+    forced = None if series_prev else structure
+    serbest = not series_prev and not structure  # kalıp dönüşümden seçilir: FORCED_ONLY (nasil) seçilemez
+    if forced:
+        script.structure = forced
+    elif serbest and script.structure in FORCED_ONLY:  # şema nasil'e izin verir; sunulmadığı hâlde seçildiyse dönüşüme dön
+        script.structure = allowed_structures(history_file)[0]
     part, brief = (2, "") if series_prev else (script.series_part if allow_series else 0, script.next_part_brief)
     phrase = script.search_phrase
-    checked = verify_script(script)
+    checked = verify_script(script, keep_structure=bool(forced))
     # doğrulayıcı kalıbı gerekçeyle değiştirebilir: etiket son metne uysun diye doğrulanmış hâlin kalıbı kullanılır
-    structure = series_prev.get("structure", checked.structure) if series_prev else checked.structure
+    # (sabit kalıpta değiştiremez: seri etiketi ve şablon kalıba bağlı)
+    structure = series_prev.get("structure", checked.structure) if series_prev else (forced or checked.structure)
+    if serbest and structure in FORCED_ONLY:  # doğrulayıcı da serbest kalıpta nasil'e geçemez
+        structure = script.structure  # (seri etiketi, kart şablonu ve #NasılYapılır bu kalıba bağlı)
+    checked.structure = structure
     out = polish_script(checked)
     out.series_part, out.next_part_brief = part, (brief if part == 1 else "")
     out.structure, out.search_phrase = structure, out.search_phrase or phrase
@@ -320,19 +358,27 @@ class Review(BaseModel):
     fixed: ShortScript
 
 
-def verify_script(script: ShortScript) -> ShortScript:
-    """İkinci geçiş: bilgileri web aramasıyla doğrular, hataları düzeltir veya çıkarır."""
+def verify_script(script: ShortScript, keep_structure: bool = False) -> ShortScript:
+    """İkinci geçiş: bilgileri web aramasıyla doğrular, hataları düzeltir veya çıkarır. keep_structure: kalıp seriden
+    geldiği için sabit (doğrulayıcı değiştiremez)."""
+    kalip = ("Anlatım kalıbı (structure) bu video için SABİT; değiştirme, metni bu kalıba uydur. " if keep_structure else
+             "Seçilen anlatım kalıbını (structure) koru; yalnız konu o kalıba gerçekten uymuyorsa değiştir ve structure "
+             "alanını da buna göre güncelle ('nasil' kalıbına geçme: o yalnız Nasıl yapılır? serisinden gelir). ")
+    if script.structure == "nasil":  # doğrulanabilir ama güvensiz bir yöntem de elensin
+        kalip += ("Güvenli olmayan ya da şu alanlara giren adımı çıkar veya güvenli bir adımla değiştir: "
+                  + NASIL_YASAK + ". ")
     review = ask_claude(
         "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
         "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
         "(özellikle toplam dış ses 78 kelimeyi geçmesin, ilk cümle en fazla 10 kelimelik doğrudan bir kanca olsun, search_phrase "
-        "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). Seçilen anlatım kalıbını (structure) koru; yalnız konu o "
-        "kalıba gerçekten uymuyorsa değiştir ve structure alanını da buna göre güncelle. "
+        "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). " + kalip +
         "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
         "alanında döndür.\n\n" + script.model_dump_json(indent=1),
         Review, SYSTEM + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
     if review.problems:
         print("Doğrulama notları:", *review.problems, sep="\n - ")
+    if keep_structure:
+        review.fixed.structure = script.structure
     return review.fixed
 
 
@@ -348,7 +394,8 @@ EDITOR = """Sen deneyimli bir Türk belgesel metin yazarı ve dil editörüsün.
 - İlk sahnenin headline'ı özneyi ve dönüşü birlikte söylesin (kim/ne + ne oldu); öznesiz bırakma.
 - Senaryonun structure alanına göre: neden ise ilk cümle ve ilk headline soru olarak kalabilir, cevabı öne taşıma;
   sayac ise en tuhaf bilgiyi öne taşıma (sonda kalsın); efsane ise ilk cümle inanışı ve yanlış (ya da şaşırtıcı biçimde
-  doğru) olduğunu birlikte söylesin, doğrulanmış sonucu tersine çevirme.
+  doğru) olduğunu birlikte söylesin, doğrulanmış sonucu tersine çevirme; nasil ise adımların sayısını ve sırasını koru,
+  headline'ların ilk satırındaki 'ADIM 1', 'ADIM 2' numaralarını değiştirme.
 - series_part 2 ise ilk cümle 1. bölümün kaldığı yeri hatırlatan cümle olarak kalsın; kalıba özel ilk cümle kuralını
   uygulama, 1. bölümü yeniden anlatma.
 - headline satırları, değişen narration'da geçen kelimelerden oluşsun (BÜYÜK HARF, satır başı 1-3 kelime).

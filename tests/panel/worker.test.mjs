@@ -48,9 +48,10 @@ describe("Telegram webhook davranışı değişmedi", () => {
     for (let i = 0; i < golden.length; i++) {
       const g = golden[i], y = yeni[i];
       if (g.ad === "mesaj /start" || g.ad === "mesaj /yardim") {
-        // tek bilinçli fark: yardım metnine /panel satırı eklendi
+        // bilinçli farklar: yardım metnine /panel satırı eklendi, /oneri dört seriden 12 öneri veriyor
         const eski = g.cagrilar[0].govde.text, yeniMetin = y.cagrilar[0].govde.text;
-        assert.equal(yeniMetin, eski.replace("/yardim: bu liste", "/panel: yönetim paneline giriş bağlantısı\n/yardim: bu liste"));
+        assert.equal(yeniMetin, eski.replace("/yardim: bu liste", "/panel: yönetim paneline giriş bağlantısı\n/yardim: bu liste")
+          .replace("/oneri: gündemden 5 konu önerisi", "/oneri: 4 seriden 12 konu önerisi"));
         assert.deepEqual({ ...y, cagrilar: [] }, { ...g, cagrilar: [] });
         continue;
       }
@@ -583,6 +584,24 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
       }
     });
   }
+
+  test("seri öneriler: durum 'seri' alanını taşır, Üret yalnız sırayı ve konuyu gönderir", async () => {
+    const kok = mkdtempSync(join(tmpdir(), "panel-seri-"));
+    cpSync(FIKSTUR, kok, { recursive: true });
+    const seriler = JSON.parse(readFileSync(join(BURASI, "fixtures", "oneriler_seriler.json"), "utf8")).items;
+    writeFileSync(join(kok, "oneriler.json"), JSON.stringify({ date: "2026-11-05", items: seriler }));
+    saatIlerlet(30000);
+    const { r } = await istek("/panel/api/durum", { cerez: await oturum(17 * 86400), fetchAyar: { kok } });
+    const d = await r.json();
+    assert.deepEqual(d.oneriler.items.map((x) => x.seri), seriler.map((x) => x.seri));
+    const it = seriler[11]; // Nasıl yapılır? serisinin son önerisi
+    const { r: r2, j, cagrilar } = await gonder({ action: "produce_suggestion", index: 11, topic: it.topic }, { fetchAyar: { kok } });
+    assert.equal(r2.status, 202, JSON.stringify(j));
+    const p = panelOlayi(cagrilar);
+    // kalıp kapıdan gelmez: Python tarafı kayıttaki seriden bulur (tarayıcı kalıp seçemez)
+    assert.deepEqual(Object.keys(p).sort(), ["action", "at", "index", "rid", "topic"]);
+    assert.deepEqual([p.action, p.index, p.topic], ["produce_suggestion", 11, it.topic]);
+  });
 
   test("paylaşıma 10 dakikadan az kalan videoda düzenleme reddedilir", async () => {
     const kok = mkdtempSync(join(tmpdir(), "panel-yakin-"));

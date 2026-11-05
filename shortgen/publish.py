@@ -120,7 +120,7 @@ def _fit_caption(head: str, tags: str, limit: int, measure=None) -> str:
 
 # Format serilerinin kendi etiketi: izleyici etikete dokununca serinin bütün videolarını görür. En çok 5 etiket kuralı
 # (Instagram sınırı) korunur: seri etiketi son konu etiketinin yerine, kanal etiketinin (bilgimakasi) önüne girer.
-SERIES_TAGS = {"efsane": "EfsaneMiGerçekMi"}
+SERIES_TAGS = {"efsane": "EfsaneMiGerçekMi", "nasil": "NasılYapılır"}
 
 
 def apply_series_tag(meta: dict) -> dict:

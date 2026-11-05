@@ -1,14 +1,16 @@
-"""Gündem konuları: Türkiye ve dünyada şu an popüler olan konulardan short fikri önerir.
+"""Konu önerileri: dört seride (Popüler, Konular, Efsane mi gerçek mi?, Nasıl yapılır?) short fikri önerir.
 
-Claude web aramasıyla güncel gündemi (Google Trends TR, haber manşetleri, sosyal medya gündemi,
-YouTube'da yükselen konular) tarar ve her birini kanalın tarzına uygun bir "az bilinen bilgi" açısına çevirir.
+Claude tek bir web aramalı çağrıyla güncel gündemi (Google Trends TR, haber manşetleri, sosyal medya gündemi,
+YouTube'da yükselen konular) tarar; her seriden 3 öneri döndürür. Popüler gündeme bağlı "az bilinen bilgi" açısıdır,
+diğer seriler gündemden bağımsızdır.
 
-    python -m shortgen.trends notify   # 5 öneriyi Telegram'a butonlarla gönderir
-    python -m shortgen.trends best     # en iyi öneriyi yazdırır (otomatik üretim için)
+    python -m shortgen.trends notify   # 12 öneriyi seri seri Telegram'a butonlarla gönderir
+    python -m shortgen.trends best     # en iyi öneriyi yazdırır (otomatik üretim için; Nasıl yapılır? hariç)
 """
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import os
 import sys
@@ -17,56 +19,128 @@ from typing import List, Literal
 
 from pydantic import BaseModel, Field
 
-from .script import CATEGORIES, _history, ask_claude
+from .script import CATEGORIES, NASIL_YASAK, _history, allowed_structures, ask_claude
 
 ROOT = Path(__file__).resolve().parent.parent
 STATE = ROOT / "state" / "oneriler.json"
 
-SYSTEM = """Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için gündem editörüsün. Görevin, BUGÜN Türkiye'de ve
-dünyada çok konuşulan, aranan konuları bulmak ve her birini 30-35 saniyelik bir short'a dönüştürecek şaşırtıcı,
-doğrulanabilir bir açı önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa
-gönderilmesi, bu yüzden "bunu görünce birine atarım" dedirten açıları seç.
-Kurallar:
-- Web araması yap: Google Trends Türkiye günlük aramaları, Türkiye ve dünya haber manşetleri, X/Twitter Türkiye
-  gündemi, YouTube'da yükselen konular, yaklaşan önemli günler/yıl dönümleri, vizyondaki film/dizi/oyunlar, spor olayları.
-- Konunun kendisini haber gibi anlatma; ona bağlı az bilinen bir bilgi, tarihçe, bilim veya ilginç bağlantı bul.
+# Seriler (kayıt sırası = Telegram ve paneldeki sıra). "seri" alanı olmayan eski öneriler Popüler sayılır.
+SERILER = {"populer": "Popüler", "konu": "Konular", "efsane": "Efsane mi, gerçek mi?", "nasil": "Nasıl yapılır?"}
+SERI_IKON = {"populer": "🔥", "konu": "📚", "efsane": "🧐", "nasil": "🛠"}
+# öneriden üretimde zorunlu anlatım kalıbı (script.STRUCTURES); listede olmayan seriler normal dönüşümü kullanır
+SERI_KALIP = {"efsane": "efsane", "nasil": "nasil"}
+# otomatik üretimin seçebileceği seriler: Nasıl yapılır? kendi şablonu hazır olana kadar yalnız elle seçilir
+OTOMATIK_SERILER = ("populer", "konu", "efsane")
+SERI_BASI = 3  # her seriden öneri sayısı
+TG_SINIR = 4096  # Telegram mesaj sınırı (UTF-16 birimi)
+
+SYSTEM = f"""Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için konu editörüsün. Görevin, 30-35 saniyelik short'lar için
+DÖRT SERİDE konu önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa gönderilmesi,
+bu yüzden "bunu görünce birine atarım" dedirten açıları seç. Her önerinin 'seri' alanını doldur.
+SERİLER:
+- populer (Popüler): BUGÜN Türkiye'de ve dünyada çok konuşulan, aranan bir konuya bağlı şaşırtıcı, doğrulanabilir bir açı.
+  Web araması yap: Google Trends Türkiye günlük aramaları, Türkiye ve dünya haber manşetleri, X/Twitter Türkiye gündemi,
+  YouTube'da yükselen konular, yaklaşan önemli günler/yıl dönümleri, vizyondaki film/dizi/oyunlar, spor olayları.
+  Konunun kendisini haber gibi anlatma; ona bağlı az bilinen bir bilgi, tarihçe, bilim veya ilginç bağlantı bul.
   Ör. gündem 'Dünya Kupası elemeleri' ise açı: 'Bir maçta kalecinin attığı 3 golün hikâyesi'.
+  trend: bağlı olduğu gündem ve neden şu an popüler.
+- konu (Konular): bugünün gündemine bağlı OLMAYAN, her zaman ilgi çeken şaşırtıcı bir konu. Şu kategorilerden birinden
+  seç: {', '.join(CATEGORIES)}. Ör. gündelik bir şeyin şaşırtıcı nedeni, şehirlerin ve kelimelerin bilinmeyen hikâyeleri,
+  az bilinen bir icat ya da insan hikâyesi. trend: konunun neden ilgi çekeceği (kalıcı merak, mevsim, yaklaşan bir gün).
+- efsane (Efsane mi, gerçek mi?): Türkiye'de yaygın olarak doğru sanılan ama yanlış olan (ya da şaşırtıcı biçimde doğru
+  çıkan) bir inanış. topic inanışı ve doğrusunu birlikte söylesin. Bilim kurumu, ansiklopedi, resmî kurum gibi güvenilir
+  kaynaklarla doğrulanabilsin; sağlık, tedavi ve beslenme inanışlarını seçme. trend: inanışın ne kadar yaygın olduğu ya
+  da neden şimdi konuşulduğu.
+- nasil (Nasıl yapılır?): 3-5 somut adımla 30-35 saniyede gösterilebilen pratik, güvenli ve doğrulanabilir bir "nasıl
+  yapılır"; şaşırtıcı bir püf noktası ya da bilimsel bir nedeni olsun (mutfak, ev, telefon/teknoloji, ders çalışma, seyahat
+  gibi alanlar). topic sonucu ve yöntemi net söylesin (ör. 'Muzları bir hafta taze tutmak: sapı sarıp diğer meyvelerden
+  ayırmak, çünkü etilen gazı sapından çıkar'). Şu alanlarda ÖNERME: {NASIL_YASAK}.
+  trend: yöntemin neden işe yaradığı ya da kimin işine yarayacağı.
+Ortak kurallar:
 - Siyasi kutuplaştırıcı, trajik (ölüm, afet, suç mağdurları), sağlık iddiası ve magazin dedikodusu konularını ÖNERME.
 - Doğrulanabilir olmalı; güvenilir kaynakta geçmeli.
 - Daha önce işlenen konuları tekrar etme.
-- Çeşitlilik: en az 3 öneri Türkiye bağlantılı olsun (Türk kişi, takım, şehir, marka, kelime kökeni, Türkiye'deki yansıması);
-  küresel gündemde de Türkiye bağlantısı varsa onu öne çıkar.
-- Paylaşılan türler: efsane-gerçek (yaygın yanlışı çürütmek), futbol ve spor, gündelik bir şeyin şaşırtıcı nedeni,
-  şehirlerin ve kelimelerin bilinmeyen hikâyeleri.
-- Son işlenen konulara bakıp aynı alanı (ör. art arda futbol) üst üste önerme."""
+- Çeşitlilik: önerilerin en az yarısı ve her seriden en az biri Türkiye bağlantılı olsun (Türk kişi, takım, şehir,
+  marka, kelime kökeni, Türkiye'deki yansıması); küresel konuda da Türkiye bağlantısı varsa onu öne çıkar.
+- Son işlenen konulara bakıp aynı alanı (ör. art arda futbol) üst üste önerme; seriler arasında da aynı konuyu ya da
+  alanı tekrarlama."""
 
 
 class Suggestion(BaseModel):
     topic: str = Field(description="Video konusu, tek cümle, üretim için yeterince net (ör. 'Halley kuyruklu yıldızının 1910'da yarattığı panik')")
     hook: str = Field(description="Videonun açılış kancası, en fazla 12 kelime, merak uyandıran")
-    trend: str = Field(description="Bağlı olduğu gündem ve neden şu an popüler, en fazla 15 kelime")
+    trend: str = Field(description="populer: bağlı olduğu gündem ve neden şu an popüler; diğer seriler: seri tanımındaki "
+                                   "kısa gerekçe. En fazla 15 kelime")
     scope: Literal["TR", "Global"]
     category: str = Field(description=f"Şunlardan biri: {', '.join(CATEGORIES)}")
-    score: int = Field(description="Tahmini izlenme potansiyeli 1-10 (gündem sıcaklığı x merak x arkadaşa gönderilme "
-                                   "ihtimali x Türkiye bağlantısı x görsel zenginlik)")
+    score: int = Field(description="Tahmini izlenme potansiyeli 1-10 (populer'de gündem sıcaklığı x merak x arkadaşa "
+                                   "gönderilme ihtimali x Türkiye bağlantısı x görsel zenginlik)")
+    seri: Literal["populer", "konu", "efsane", "nasil"] = Field(description="Önerinin serisi (sistem yönergesindeki tanımlar)")
 
 
 class Suggestions(BaseModel):
     items: List[Suggestion]
 
 
-def suggest(n: int = 5) -> list[Suggestion]:
+def _alan(it, ad: str, varsayilan=None):
+    """Öneri sözlük (kayıt) ya da Suggestion olabilir."""
+    return it.get(ad, varsayilan) if isinstance(it, dict) else getattr(it, ad, varsayilan)
+
+
+def seri_of(it) -> str:
+    """Önerinin serisi; alanı olmayan ya da tanınmayan eski öneriler Popüler sayılır."""
+    s = _alan(it, "seri")
+    return s if s in SERILER else "populer"
+
+
+def kalip_of(it) -> str:
+    """Öneriden üretimde zorunlu anlatım kalıbı ('' = normal dönüşüm)."""
+    return SERI_KALIP.get(seri_of(it), "")
+
+
+def uretim_konusu(it) -> str:
+    """Üretime (uret.yml topic) giden konu metni. Popüler önerinin gerekçesi gündemdir, diğer serilerinki değil."""
+    etiket = "gündem" if seri_of(it) == "populer" else "neden ilgi çeker"
+    return f"{_alan(it, 'topic')} (kanca: {_alan(it, 'hook')}; {etiket}: {_alan(it, 'trend')})"
+
+
+def sirala(items: list) -> list:
+    """Seri sırasıyla (Popüler, Konular, Efsane, Nasıl yapılır), her seride puana göre; seri başına en çok SERI_BASI."""
+    out = []
+    for s in SERILER:
+        grup = sorted((x for x in items if seri_of(x) == s), key=lambda x: -(_alan(x, "score") or 0))
+        out += grup[:SERI_BASI]
+    return out
+
+
+def suggest(kaydet: bool = True, seriler: tuple = tuple(SERILER)) -> list[Suggestion]:
+    """Tek web aramalı Claude çağrısı: istenen her seriden SERI_BASI öneri. kaydet: sonuç state/oneriler.json'a seri
+    sırasıyla yazılır (Telegram düğmesi ve panel öneriyi bu sıradaki numarasıyla seçer)."""
     used = _history(ROOT / "history.jsonl")[-150:]
     today = dt.date.today().strftime("%d %B %Y")
-    prompt = (f"Bugünün tarihi: {today}. Gündemi araştır ve {n} short konusu öner, en yüksek puanlı önce gelsin.")
+    prompt = (f"Bugünün tarihi: {today}. Gündemi araştır ve şu serilerin her birinden tam {SERI_BASI} short konusu öner "
+              f"(toplam {SERI_BASI * len(seriler)}): {', '.join(seriler)}. Her serinin içinde en yüksek puanlı önce gelsin.")
     if used:
         prompt += "\nDaha önce işlenen konular (tekrar etme):\n- " + "\n- ".join(used)
     res = ask_claude(prompt, Suggestions, SYSTEM, web=True)
-    items = sorted(res.items, key=lambda s: -s.score)[:n]
-    STATE.parent.mkdir(parents=True, exist_ok=True)
-    STATE.write_text(json.dumps({"date": str(dt.date.today()), "items": [s.model_dump() for s in items]},
-                                ensure_ascii=False, indent=2), encoding="utf-8")
+    items = [x for x in sirala(res.items) if seri_of(x) in seriler]
+    if kaydet:
+        STATE.parent.mkdir(parents=True, exist_ok=True)
+        STATE.write_text(json.dumps({"date": str(dt.date.today()), "items": [s.model_dump() for s in items]},
+                                    ensure_ascii=False, indent=2), encoding="utf-8")
     return items
+
+
+def best() -> Suggestion:
+    """Otomatik üretimin konusu: Popüler, Konular ve Efsane serilerinin en yüksek puanlı önerisi (eşitlikte seri sırası).
+    Liste kaydedilmez: sahibin Telegram'da ve panelde seçtiği öneriler değişmesin. Kalıbı şu an dönüşümde olmayan seri
+    seçilmez (ör. son video efsane kalıbındaysa Efsane önerisi): aynı kalıp art arda gelmesin."""
+    izinli = allowed_structures(ROOT / "history.jsonl")
+    adaylar = [s for s in suggest(kaydet=False, seriler=OTOMATIK_SERILER)
+               if seri_of(s) in OTOMATIK_SERILER and (not kalip_of(s) or kalip_of(s) in izinli)]
+    if not adaylar:
+        raise RuntimeError("otomatik üretime uygun öneri çıkmadı")
+    return max(adaylar, key=lambda s: _alan(s, "score") or 0)
 
 
 def load_saved() -> list[dict]:
@@ -87,17 +161,74 @@ def load_saved() -> list[dict]:
     return []
 
 
+# ---- Telegram mesajı ----
+def _kisa(t: str, n: int | None) -> str:
+    """Metni kelime sınırında n karaktere kısaltır (n None ise aynen)."""
+    t = " ".join(str(t or "").split())
+    if n is None or len(t) <= n:
+        return t
+    k = t[:n - 1]
+    return (k[:k.rfind(" ")] if k.rfind(" ") > n * 0.6 else k).rstrip(" ,;:") + "…"
+
+
+def gruplar(items: list[dict]) -> list[tuple[str, list[tuple[int, dict]]]]:
+    """Önerileri seri sırasıyla gruplar (boş seri yok); her öğe kayıttaki sırasını taşır (düğme numarası,
+    tp:<damga>:<sıra>)."""
+    out = []
+    for s in SERILER:
+        g = [(i, it) for i, it in enumerate(items) if seri_of(it) == s]
+        if g:
+            out.append((s, g))
+    return out
+
+
+def _mesaj_metni(gr: list, n: int | None, ayrinti: bool) -> str:
+    lines = ["🗂 Bugünün konu önerileri"]
+    for s, g in gr:
+        lines.append(f"\n{SERI_IKON[s]} {SERILER[s]}")
+        for i, it in g:
+            flag = "🇹🇷" if _alan(it, "scope") == "TR" else "🌍"
+            lines.append(f"{i + 1}. {flag} {_kisa(_alan(it, 'topic'), n)}")
+            puan = f"(puan {_alan(it, 'score')}/10)"
+            if ayrinti:
+                ikon = "📈" if s == "populer" else "💡"
+                lines.append(f"   🎣 {_kisa(_alan(it, 'hook'), n)}\n   {ikon} {_kisa(_alan(it, 'trend'), n)} {puan}")
+            else:
+                lines.append(f"   🎣 {_kisa(_alan(it, 'hook'), n)} {puan}")
+    lines.append("\nÜretmek istediğin konunun numarasına bas.")
+    return "\n".join(lines)
+
+
+def damga(items: list) -> str:
+    """Öneri listesinin kısa damgası. Telegram düğmesi (tp:<damga>:<sıra>) liste yenilendikten sonra eski mesajdan
+    basılırsa aynı numara başka konuyu gösterir; damga tutmazsa üretim başlamaz."""
+    konular = "\n".join(str(_alan(x, "topic") or "") for x in items)
+    return hashlib.sha256(konular.encode("utf-8")).hexdigest()[:8]
+
+
+def mesaj(items: list[dict]) -> tuple[str, list[list[tuple[str, str]]]]:
+    """/oneri mesajı ve klavyesi: seri başlıklarıyla gruplu, 1'den başlayan kesintisiz numaralar, her seri bir düğme
+    satırı. Telegram sınırına sığmazsa önce uzun metinler kısalır, sonra gerekçe satırları düşer."""
+    from .telegram_bot import _cut16
+    gr, d = gruplar(items), damga(items)
+    rows = [[(f"🎬 {i + 1}", f"tp:{d}:{i}") for i, _ in g] for _, g in gr]
+    metin = ""
+    for n, ayrinti in ((None, True), (220, True), (150, True), (110, False), (80, False), (50, False)):
+        metin = _mesaj_metni(gr, n, ayrinti)
+        if len(metin.encode("utf-16-le")) // 2 <= TG_SINIR:
+            break
+    return _cut16(metin, TG_SINIR), rows
+
+
 def notify() -> None:
     from .telegram_bot import _kb, api
-    items = suggest()
+    items = [s.model_dump() for s in suggest()]
     chat = os.environ["TELEGRAM_CHAT_ID"]
-    lines = ["🔥 Gündemden konu önerileri:"]
-    for i, s in enumerate(items, 1):
-        flag = "🇹🇷" if s.scope == "TR" else "🌍"
-        lines.append(f"\n{i}. {flag} {s.topic}\n   🎣 {s.hook}\n   📈 {s.trend} (puan {s.score}/10)")
-    lines.append("\nÜretmek istediğin konunun numarasına bas.")
-    rows = [[(f"🎬 {i}", f"tp:_:{i - 1}") for i in range(1, len(items) + 1)]]
-    api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines), "reply_markup": _kb(rows),
+    if not items:
+        api("sendMessage", data={"chat_id": chat, "text": "Bugün öneri çıkmadı; /oneri ile yeniden dene."})
+        return
+    text, rows = mesaj(items)
+    api("sendMessage", data={"chat_id": chat, "text": text, "reply_markup": _kb(rows),
                              "disable_web_page_preview": "true"})
 
 
@@ -107,5 +238,5 @@ if __name__ == "__main__":
     if sys.argv[1] == "notify":
         notify()
     elif sys.argv[1] == "best":
-        s = suggest(3)[0]
-        print(f"{s.topic} (kanca: {s.hook}; gündem: {s.trend})")
+        s = best()
+        print(uretim_konusu(s))

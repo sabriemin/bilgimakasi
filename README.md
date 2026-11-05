@@ -39,7 +39,18 @@ Claude, anlatılan şey doğal olarak hareket ediyorsa sahneye bir nesne animasy
 `fly_up` (roket, mekik), `fly_right` / `fly_left` (uçak, kuş, tren), `drop_in`, `zoom_in`, `float`, `spin`, `orbit`, `pulse`, `shake`.
 Nesne Wikimedia'da önce şeffaf PNG olarak aranır; bulunamazsa fotoğrafın arka planı `rembg` ile silinir. Uçan nesnelerin arkasında duman izi oluşur.
 `templates/eslesme.json` hangi kategorinin hangi şablonu kullanacağını belirler. `claude_secsin: true` yapılırsa Claude her konu için şablonu kendisi önerir.
+`yapi_sablon` anlatım kalıbına göre şablon seçer ve kategori eşleşmesinden önce gelir (şimdilik `nasil` → `kart`).
 Elle seçmek için: `python -m shortgen.pipeline --template gece`
+
+## Konu önerileri
+`/oneri` (ya da paneldeki "Yeni öneriler iste") tek bir web aramalı Claude çağrısıyla dört seriden üçer öneri getirir:
+🔥 Popüler (bugünün gündemine bağlı şaşırtıcı açı), 📚 Konular (gündemden bağımsız şaşırtıcı konu),
+🧐 Efsane mi, gerçek mi? (Türkiye'de yaygın yanlış inanış) ve 🛠 Nasıl yapılır? (3-5 adımlık güvenli, pratik yöntem).
+Öneriden üretimde serinin kalıbı sabitlenir: efsane → `efsane`, nasıl yapılır → `nasil` (`--structure`).
+Otomatik üretim yalnız ilk üç seriden seçer (son video efsane kalıbındaysa Efsane önerisini atlar), kendi önerilerini
+kaydetmez; `nasil` kalıbı otomatik dönüşüme girmez. Konu sırası yalnız metni tuttuğu için Efsane ve Nasıl yapılır?
+önerileri sıraya eklenmez, yalnız "Üret" ile üretilir. Telegram düğmeleri listenin damgasını taşır: liste yenilendikten
+sonra eski mesajdan basılan düğme başka bir konuyu üretmez.
 
 ## GitHub Actions ve Telegram
 - `uret.yml`: her gün 09:00 ve 18:00'de (Türkiye saati) video üretir, GitHub Releases'a koyar ve Telegram'a Onayla / Reddet düğmeleriyle gönderir.

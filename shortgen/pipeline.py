@@ -52,6 +52,9 @@ def pick_template(script: ShortScript, override: str | None = None) -> str:
             raise SystemExit(f"Şablon yok: {override}. Mevcut: {', '.join(cat)}")
         return override
     m = json.loads((ROOT / "templates" / "eslesme.json").read_text(encoding="utf-8"))
+    by_structure = (m.get("yapi_sablon") or {}).get(script.structure)
+    if by_structure in cat:  # yapıya bağlı şablon (ör. nasil) kategori eşleşmesinden önce gelir
+        return by_structure
     kart = m.get("kart") or {}
     if "kart" in cat and kart_uygun(script, kart):
         return "kart"
@@ -207,6 +210,8 @@ def main() -> None:
     ap.add_argument("--no-voice", action="store_true", help="ElevenLabs olmadan sessiz deneme")
     ap.add_argument("--music", type=Path, help="Telifsiz müzik dosyası (mp3)")
     ap.add_argument("--template", help="Şablonu elle seç (templates/ klasöründeki ad)")
+    ap.add_argument("--structure", choices=list(STRUCTURES),
+                    help="Anlatım kalıbını sabitle (öneri serisinden üretim, ör. efsane, nasil)")
     ap.add_argument("--out", type=Path, default=ROOT / "output")
     a = ap.parse_args()
     load_env(ROOT / ".env")
@@ -237,17 +242,22 @@ def main() -> None:
             print("Konu sırasından alınan konu:", queued)
         topic = a.topic or queued
         if not topic and os.environ.get("AUTO_TREND", "1") != "0":
-            try:  # konu verilmediyse gündemden en yüksek puanlı öneriyi seç
-                from .trends import suggest
-                s0 = suggest(3)[0]
-                topic = f"{s0.topic} (kanca: {s0.hook}; gündem: {s0.trend})"
+            try:  # konu verilmediyse önerilerin en yüksek puanlısını seç (Nasıl yapılır? serisi otomatik seçilmez)
+                from . import trends
+                s0 = trends.best()
+                topic = trends.uretim_konusu(s0)
+                a.structure = a.structure or trends.kalip_of(s0) or None  # efsane önerisi efsane kalıbıyla
                 print("Gündemden seçilen konu:", topic)
             except Exception as e:  # noqa: BLE001
                 print("Gündem önerisi alınamadı, serbest konu seçilecek:", e)
-        allow = os.environ.get("SERIES", "1") != "0" and not open_part
+        if a.structure:
+            print("Sabit anlatım kalıbı:", a.structure)
+        # seri formatı (sabit kalıp) videoları tek bölümlük: iki bölümlük seri yalnız serbest kalıpta
+        allow = os.environ.get("SERIES", "1") != "0" and not open_part and not a.structure
         catalog = {k: v for k, v in template_catalog().items() if k != "kart"}  # kart Claude'a önerilmez
         script = generate_script(history, topic, catalog if m.get("claude_secsin") else None, allow_series=allow,
-                                 kart=kart_on)
+                                 kart=kart_on or (m.get("yapi_sablon") or {}).get(a.structure or "") == "kart",
+                                 structure=a.structure)
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":

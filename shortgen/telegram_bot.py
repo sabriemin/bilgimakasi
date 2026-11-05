@@ -335,7 +335,14 @@ def _kb(rows: list[list[tuple[str, str]]]) -> str:
 
 # ---- Düğmeler ve panel için ortak işlemler (Telegram düğmesi ve panel aynı kodu kullanır) ----
 def _suggestion_topic(it: dict) -> str:
-    return f"{it['topic']} (kanca: {it['hook']}; gündem: {it['trend']})"
+    from .trends import uretim_konusu
+    return uretim_konusu(it)
+
+
+def _produce_suggestion(it: dict) -> bool:
+    """Öneriden üretim: serinin kalıbı (Efsane mi, gerçek mi? -> efsane, Nasıl yapılır? -> nasil) üretimde sabitlenir."""
+    from .trends import kalip_of
+    return _dispatch(_suggestion_topic(it), kalip=kalip_of(it))
 
 
 def _approve(tag: str, code: str, chat: str, mid: int) -> str:
@@ -406,15 +413,21 @@ def _handle_callback(cq: dict, chat: str) -> None:
         else:
             api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": note[:190]})
         return
-    if action == "tp":  # gündem önerisinden üretim
-        from .trends import load_saved
+    if action == "tp":  # öneriden üretim: tp:<liste damgası>:<sıra> ("_": damgasız eski mesaj)
+        from .trends import damga, load_saved
         items = load_saved()
         i = int(arg) if arg.isdigit() else -1
         if not 0 <= i < len(items):
             api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Öneri bulunamadı."})
             return
+        if tag != "_" and tag != damga(items):  # kayıtlı liste bu mesajınki değil: aynı numara başka konu olabilir
+            api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": ""})  # açıklama tek mesajda
+            api("sendMessage", data={"chat_id": chat, "text": "⚠️ Bu mesajın öneri listesi kayıtlı listeyle aynı değil "
+                                     "(liste yenilenmiş ya da yenisi henüz kaydediliyor). Bir dakika sonra tekrar dene "
+                                     "ya da panelin Konular sekmesinden seç."})
+            return
         it = items[i]
-        ok = _dispatch(_suggestion_topic(it))
+        ok = _produce_suggestion(it)
         api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Üretim başladı" if ok else "Başlatılamadı"})
         api("sendMessage", data={"chat_id": chat, "text": (f"🎬 Üretim başladı: {it['topic']}\nYaklaşık 15 dakikada gelir."
                                                           if ok else "Üretim başlatılamadı.")})
@@ -476,7 +489,7 @@ def _handle_callback(cq: dict, chat: str) -> None:
 
 
 COMMANDS = [
-    {"command": "oneri", "description": "Türkiye ve dünya gündeminden 5 konu önerisi"},
+    {"command": "oneri", "description": "Gündem, konu, efsane ve nasıl yapılır serilerinden 12 öneri"},
     {"command": "uret", "description": "Hemen yeni video üret (ör. /uret kara delikler)"},
     {"command": "durum", "description": "Bekleyen ve zamanlanan videolar"},
     {"command": "rapor", "description": "İzlenme, takipçi, beğeni, kaydetme raporu"},
@@ -613,7 +626,7 @@ def process_update(u: dict, chat: str) -> None:
             api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
         elif text.startswith("/start") or text.startswith("/yardim"):
             api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
-                                     "/oneri: gündemden 5 konu önerisi (butonla üret)\n"
+                                     "/oneri: 4 seriden 12 konu önerisi (butonla üret)\n"
                                      "/uret [konu]: hemen yeni video üret (konu isteğe bağlı)\n"
                                      "/durum: bekleyen ve zamanlanan videolar\n"
                                      "/rapor: izlenme, takipçi, beğeni, kaydetme raporu\n"
@@ -933,7 +946,7 @@ def process_panel(p: dict, chat: str) -> None:
             if type(i) is not int or not 0 <= i < len(items) or (p.get("topic") and items[i].get("topic") != p["topic"]):
                 say("⚠️ Öneri bulunamadı; öneri listesi değişmiş olabilir. Paneli yenileyip tekrar seç.")
                 return
-            ok = _dispatch(_suggestion_topic(items[i]))
+            ok = _produce_suggestion(items[i])
             say(f"🎬 Üretim başladı: {items[i]['topic']}\nYaklaşık 15 dakikada gelir." if ok
                 else "⚠️ Üretim başlatılamadı.")
         elif action == "produce_topic":
@@ -1085,7 +1098,7 @@ def dispatch_if_due() -> bool:
         if runs is not None and _due_covered(runs, due, now):
             continue
         inputs = _due_inputs(due, now)
-        ok = _dispatch("", "onay.yml", inputs)
+        ok = _dispatch("", "onay.yml", inputs=inputs)
         print("Paylaşım işi başlatıldı:", ok, inputs["hedef"], "dakika:", inputs["dakika"])
         return ok
     print("Bu saatler için paylaşım işi zaten var:", ", ".join(_due_inputs(d, now)["hedef"] for d in dues))
@@ -1225,12 +1238,20 @@ def _redact_safe(text) -> str:
     return _redact(text or "")
 
 
-def _dispatch(topic: str, workflow: str = "uret.yml", inputs: dict | None = None) -> bool:
+def _dispatch(topic: str, workflow: str = "uret.yml", kalip: str = "", inputs: dict | None = None) -> bool:
+    """kalip: üretimde sabitlenecek anlatım kalıbı (script.STRUCTURES); boşsa uret.yml'e hiç gönderilmez.
+    inputs: iş akışı girdileri (verilirse topic/kalip yerine bunlar gönderilir, ör. onay.yml dakika/hedef)."""
+    if kalip:
+        from .script import STRUCTURES
+        if kalip not in STRUCTURES:
+            raise ValueError("geçersiz anlatım kalıbı")
     repo, token = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN")
     if not (repo and token):
         return False
     if inputs is None:
         inputs = {"topic": topic} if workflow == "uret.yml" else {}
+        if kalip and workflow == "uret.yml":
+            inputs["kalip"] = kalip
     r = requests.post(f"https://api.github.com/repos/{repo}/actions/workflows/{workflow}/dispatches",
                       headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
                       json={"ref": os.environ.get("GITHUB_REF_NAME", "main"), "inputs": inputs}, timeout=30)

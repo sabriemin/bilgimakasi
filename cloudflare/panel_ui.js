@@ -408,6 +408,18 @@ textarea.alan{min-height:180px;resize:vertical;width:100%;display:block}
 .oneri .kanca{margin:0;font:14px/1.4 var(--type);overflow-wrap:anywhere}
 .oneri .gundem{margin:0;font:12.5px/1.4 var(--mono);color:var(--muted);overflow-wrap:anywhere}
 .oneri .dugmeler .btn{flex:0 1 auto}
+.oneri-no{font:500 12px/1 var(--mono);color:var(--text)}
+.oneri-not{flex:1 1 150px;min-width:0;align-self:center;font:12.5px/1.35 var(--mono);color:var(--muted)}
+.cipler{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}
+.cip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--text);font:500 13px/1 var(--mono)}
+.cip small{font:500 11px/1 var(--mono);color:var(--muted)}
+.cip[aria-pressed=true]{background:var(--btn-dark);color:var(--btn-dark-text);border-color:var(--btn-dark)}
+.cip[aria-pressed=true] small{color:inherit;opacity:.72}
+.seri-baslik{display:flex;align-items:center;gap:8px;margin:18px 0 8px;font:400 18px/1.1 var(--display);
+  letter-spacing:.03em;text-transform:uppercase}
+.seri-baslik small{font:500 12px/1 var(--mono);color:var(--muted);letter-spacing:0}
+.seri-baslik::after{content:"";flex:1;height:1px;background:var(--line-strong)}
 .kuyruk{list-style:none;margin:0 0 12px;padding:0;counter-reset:k}
 .kuyruk li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:6px 8px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
 .kuyruk .ara{grid-column:2;justify-content:flex-end}
@@ -2020,6 +2032,36 @@ function uygulama(AYAR) {
     return (k.slice(0, k.lastIndexOf(" ") > n * 0.6 ? k.lastIndexOf(" ") : k.length)).trim() + "…";
   }
 
+  // öneri serileri (trends.SERILER ile aynı sıra): [anahtar, süzgeç adı, başlık, simge]
+  const ONERI_SERILERI = [["populer", "Popüler", "Popüler", "🔥"], ["konu", "Konular", "Konular", "📚"],
+    ["efsane", "Efsane", "Efsane mi, gerçek mi?", "🧐"], ["nasil", "Nasıl yapılır", "Nasıl yapılır?", "🛠"]];
+  // "seri" alanı olmayan (eski) ya da tanınmayan öneriler Popüler sayılır
+  const oneriSerisi = (it) => (ONERI_SERILERI.some(([k]) => k === it.seri) ? it.seri : "populer");
+  // üretimde serinin kalıbı sabitlenir (telegram_bot._produce_suggestion); onay penceresinde söylenir
+  const SERI_NOTU = { efsane: "“Efsane mi, gerçek mi?” kalıbıyla üretilir. ",
+    nasil: "“Nasıl yapılır?” kalıbıyla üretilir; kendi şablonu hazır olana kadar kart şablonu kullanılır. " };
+
+  function oneriKarti(it, i, seri, siraKilit) {
+    const sirada = (S.kuyruk || []).includes(kisalt(it.topic, 300));
+    // konu sırası yalnız konu metnini tutar: kalıbı sabit seri (SERI_NOTU = trends.SERI_KALIP) sıradan kalıpsız üretilirdi
+    const sira = SERI_NOTU[seri]
+      ? h("span", { class: "oneri-not" }, "Bu seri sıraya eklenmez; kendi kalıbıyla yalnız Üret ile üretilir.")
+      : h("button", { class: "btn btn-cizgi btn-kucuk", disabled: siraKilit || sirada || (S.kuyruk || []).length >= 30,
+        onclick: () => { kuyrugaEkle(kisalt(it.topic, 300)); } }, sirada ? "Sırada ✓" : "Sıraya ekle");
+    return h("article", { class: "oneri", "data-seri": seri },
+      h("div", { class: "oneri-ust" }, h("b", { class: "oneri-no" }, `${i + 1}.`),
+        h("span", null, it.scope === "TR" ? "🇹🇷 Türkiye" : "🌍 Dünya"),
+        it.category ? h("span", null, "· " + it.category) : null, h("span", { class: "puan" }, `${it.score}/10`)),
+      h("h4", null, it.topic),
+      it.hook ? h("p", { class: "kanca" }, "🎣 " + it.hook) : null,
+      it.trend ? h("p", { class: "gundem" }, (seri === "populer" ? "📈 " : "💡 ") + it.trend) : null,
+      h("div", { class: "dugmeler" },
+        dugme("produce_suggestion:" + i, "Üret", "btn-ana btn-kucuk", () => onayla({ baslik: "Bu öneri üretilsin mi?", alt: it.topic,
+          metin: (SERI_NOTU[seri] || "") + "Video yaklaşık 15 dakikada hazır olur ve onaya gelir.", evet: "Üret",
+          sonra: () => islem("produce_suggestion:" + i, { action: "produce_suggestion", index: i, topic: it.topic }, it.topic) })),
+        sira));
+  }
+
   function konular() {
     const kap = h("div", { class: "ikili" });
     const sol = h("div"), sag = h("div");
@@ -2041,28 +2083,26 @@ function uygulama(AYAR) {
       h("form", { class: "giris-satir", onsubmit: (e) => { e.preventDefault(); uret(); } }, giris,
         dugme("produce_topic", "Şimdi üret", "btn-ana", null, { type: "submit" }))));
 
-    // öneriler
+    // öneriler: seri seri; süzgeç yalnız görünümü değiştirir, düğmeler kayıttaki sırayı (index) gönderir
     const o = S.D.oneriler || {};
     const items = o.items || [];
     const tarih = ms(o.date ? o.date + "T12:00:00+03:00" : null);
-    sol.append(bolumBasligi("oneriler", "Gündem önerileri", items.length || null, tarih ? gunAdi(tarih) : null));
+    sol.append(bolumBasligi("oneriler", "Konu önerileri", items.length || null, tarih ? gunAdi(tarih) : null));
     if (!items.length) sol.append(h("div", { class: "bos" }, "Öneri yok. Aşağıdan yeni öneriler iste."));
     const siraKilit = S.bekleyen.has("queue_set"); // kayıt sürerken sıra değiştirilmez (kayıt görülünce açılır)
-    sol.append(h("div", { class: "oneriler" }, items.map((it, i) => {
-      const sirada = (S.kuyruk || []).includes(kisalt(it.topic, 300));
-      return h("article", { class: "oneri" },
-        h("div", { class: "oneri-ust" }, h("span", null, it.scope === "TR" ? "🇹🇷 Türkiye" : "🌍 Dünya"),
-          it.category ? h("span", null, "· " + it.category) : null, h("span", { class: "puan" }, `${it.score}/10`)),
-        h("h4", null, it.topic),
-        it.hook ? h("p", { class: "kanca" }, "🎣 " + it.hook) : null,
-        it.trend ? h("p", { class: "gundem" }, "📈 " + it.trend) : null,
-        h("div", { class: "dugmeler" },
-          dugme("produce_suggestion:" + i, "Üret", "btn-ana btn-kucuk", () => onayla({ baslik: "Bu öneri üretilsin mi?", alt: it.topic,
-            metin: "Video yaklaşık 15 dakikada hazır olur ve onaya gelir.", evet: "Üret",
-            sonra: () => islem("produce_suggestion:" + i, { action: "produce_suggestion", index: i, topic: it.topic }, it.topic) })),
-          h("button", { class: "btn btn-cizgi btn-kucuk", disabled: siraKilit || sirada || (S.kuyruk || []).length >= 30,
-            onclick: () => { kuyrugaEkle(kisalt(it.topic, 300)); } }, sirada ? "Sırada ✓" : "Sıraya ekle")));
-    })));
+    const gruplar = ONERI_SERILERI.map(([k, kisa, ad, ik]) => ({ k, kisa, ad, ik,
+      liste: items.map((it, i) => [it, i]).filter(([it]) => oneriSerisi(it) === k) })).filter((g) => g.liste.length);
+    const secili = gruplar.some((g) => g.k === S.oneriSeri) ? S.oneriSeri : "tumu";
+    if (gruplar.length > 1) {
+      sol.append(h("div", { class: "cipler", role: "group", "aria-label": "Öneri serisi" },
+        [{ k: "tumu", kisa: "Tümü", liste: items }, ...gruplar].map((g) => h("button", { class: "cip", "data-seri": g.k,
+          "aria-pressed": secili === g.k ? "true" : "false", onclick: () => { S.oneriSeri = g.k; ciz(true); } },
+          g.kisa, h("small", null, g.liste.length)))));
+    }
+    for (const g of gruplar.filter((x) => secili === "tumu" || secili === x.k)) {
+      sol.append(h("h3", { class: "seri-baslik" }, h("span", null, `${g.ik} ${g.ad}`), h("small", null, g.liste.length)),
+        h("div", { class: "oneriler" }, g.liste.map(([it, i]) => oneriKarti(it, i, g.k, siraKilit))));
+    }
     sol.append(h("div", { style: "margin-top:12px" }, dugme("refresh_suggestions", "Yeni öneriler iste", "btn-koyu", () =>
       islem("refresh_suggestions", { action: "refresh_suggestions" }, "öneriler"), { style: "width:100%" })));
 
