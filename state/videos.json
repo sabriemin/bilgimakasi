@@ -447,9 +447,16 @@
     "category": "sanat ve müzik",
     "template": "kart",
     "created": "2026-11-05T17:51:45",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 159,
     "aciklama_message_id": 160,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-07T17:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-07T18:00:00+00:00",
+      "instagram": "2026-11-07T17:00:00+00:00",
+      "tiktok": "2026-11-07T19:00:00+00:00"
+    },
+    "decided": "2026-11-05T20:55:14+03:00"
   }
 ]
