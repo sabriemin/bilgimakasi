@@ -188,6 +188,15 @@ describe("giriş ve oturum", () => {
     assert.equal((await istek("/panel/giris?t=" + t)).r.status, 403);
   });
 
+  test("giriş bağlantısı HEAD ile yoklanınca harcanmaz", async () => {
+    const t = await giris();
+    const h = await istek("/panel/giris?t=" + t, { method: "HEAD" });
+    assert.equal(h.r.status, 200);
+    assert.equal(h.cagrilar.length, 0, "HEAD Telegram'a gitmez");
+    assert.equal(h.r.headers.get("set-cookie"), null);
+    assert.equal((await istek("/panel/giris?t=" + t)).r.status, 302, "ardından gelen GET yine giriş yapar");
+  });
+
   test("API çerezsiz, bozuk, süresi dolmuş veya giriş imzalı çerezle 401", async () => {
     const iyi = await oturum();
     const kotu = [null, "x", iyi.slice(0, -2) + "zz", await oturumImza(SN() - 5), await imza("giris", SN() + 300),
@@ -297,6 +306,27 @@ describe("okuma API", () => {
       assert.equal(x.basliklar.authorization, `Bearer ${ORTAM.GH_PAT}`);
     }
     assert.ok(!JSON.stringify(d).includes(ORTAM.GH_PAT));
+  });
+
+  test("durum: hata/not alanlarındaki anahtarlar maskelenir, başlık ve konu olduğu gibi kalır", async () => {
+    saatIlerlet(30000);
+    const kok = mkdtempSync(join(tmpdir(), "panel-gizle-"));
+    cpSync(FIKSTUR, kok, { recursive: true });
+    const vs = JSON.parse(readFileSync(join(FIKSTUR, "videos.json"), "utf8"));
+    vs[0].title = "Şifre code=gizlidegil ve OAuth yetkilendirmesi";
+    vs[0].platforms = { instagram: { status: "hata",
+      error: "HTTPSConnectionPool: /v21.0/me?access_token=EAAGm0PX4ZCpsBAKexampleexample123 gizli-deger-12345" },
+    tiktok: { status: "ok", note: "Bearer abcdefgh12345678 ile" } };
+    writeFileSync(join(kok, "videos.json"), JSON.stringify(vs));
+    const { r } = await istek("/panel/api/durum", { cerez: await oturum(19 * 86400), fetchAyar: { kok },
+      env: { ...ORTAM, GH_PAT: "gizli-deger-12345" } });
+    const d = await r.json();
+    const v = d.videos.find((x) => x.tag === vs[0].tag);
+    assert.equal(v.title, vs[0].title, "sıradan metin maskelenmez");
+    assert.equal(v.platforms.instagram.error, "HTTPSConnectionPool: /v21.0/me?access_token=*** ***");
+    assert.equal(v.platforms.tiktok.note, "Bearer *** ile");
+    assert.ok(!JSON.stringify(d).includes("EAAGm0PX4ZCps"));
+    saatIlerlet(30000);
   });
 
   test("durum ~20 sn önbellekte; oturuma özel", async () => {

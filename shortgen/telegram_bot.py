@@ -590,6 +590,12 @@ def _apply_edit(meta: dict, ed: dict | None) -> dict:
             if lines:
                 keep.append("\n".join(lines))
         meta["description"] = "\n\n".join([desc] + keep)
+        if own_tags:  # kendi etiketleri Instagram, TikTok ve YouTube etiket alanında da kullanılır
+            tags = [re.sub(r"\W", "", t) for x in pars if _is_tail(x) for ln in x.splitlines()
+                    if ln.strip().startswith("#") for t in re.findall(r"#[^\s#]+", ln)]
+            tags = list(dict.fromkeys(t for t in tags if t))
+            if tags:
+                meta["hashtags"] = tags
     return meta
 
 

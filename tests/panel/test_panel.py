@@ -363,6 +363,12 @@ class PanelIslemleri(Ortak):
         self.panel(action="approve", tag=T, code="now")
         m = self._paylas(self.META)
         self.assertEqual(m["description"], "Bilgi.\n\n#yeni #etiket\n\n📷 John Doe (CC BY-SA 4.0)")
+        # Instagram/TikTok etiketleri ve YouTube etiket alanı da kullanıcının etiketlerini kullanır
+        self.assertEqual(m["hashtags"], ["yeni", "etiket"])
+
+    def test_duzenlemede_etiket_yoksa_orijinal_etiketler_kalir(self):
+        m = self.tb._apply_edit(self.META, {"title": "T", "description": "Yeni bilgi."})
+        self.assertEqual(m["hashtags"], self.META["hashtags"])
 
     def test_duzenleme_yoksa_meta_aynen(self):
         self.panel(action="approve", tag=T, code="now")
@@ -800,8 +806,12 @@ class Birlestirme(unittest.TestCase):
         out = json.loads(self.ss._merge("state/videos.json", d(b), d(r), d(l)))[0]
         self.assertEqual((out["title"], out["duzenleme"]["title"]), ("Yeni", "Yeni"))
         self.assertEqual(out["platforms"]["youtube"]["status"], "ok")
-        # panel kullanılmadıysa yerel kayıt aynen kazanır
+        # panel kullanılmadıysa: uzaktaki kullanıcı kararı (durum değişti, platforms aynı) geçerli olur,
+        # bu çalışmanın paylaşımı (ok) korunur
         out = json.loads(self.ss._merge("state/videos.json", d(b), d({**b, "status": "x"}), d(l)))[0]
+        self.assertEqual(out, {**b, "status": "x", "platforms": {"youtube": {"status": "ok"}}})
+        # uzakta yalnız durum dışı bir alan değişmediyse (ör. yalnız panel düzenlemesi) yerel kayıt kazanır
+        out = json.loads(self.ss._merge("state/videos.json", d(b), d(b), d(l)))[0]
         self.assertEqual(out, l)
 
     def test_birlestirme_panel_kayit_numarasini_korur(self):

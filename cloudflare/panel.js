@@ -182,12 +182,17 @@ export function gizle(metin, env = {}) {
   return s;
 }
 
-function gizliTemizle(x, env) {
-  if (typeof x === "string") return gizle(x, env);
-  if (Array.isArray(x)) return x.map((y) => gizliTemizle(y, env));
+// Hata metinleri yalnız bu alanlarda durur (platforms.*.error/note, stats platforms.*.error/note). Yalnız bunları
+// taramak hem başlık/konu gibi sıradan metnin yanlışlıkla maskelenmesini önler hem de video sayısı arttıkça
+// işlemci süresini düşük tutar (Workers ücretsiz planı istek başına 10 ms işlemci süresi verir).
+const GIZLI_ALANLAR = new Set(["error", "note", "hata", "mesaj", "detay", "yanit"]);
+
+function gizliTemizle(x, env, alanda = false) {
+  if (typeof x === "string") return alanda ? gizle(x, env) : x;
+  if (Array.isArray(x)) return x.map((y) => gizliTemizle(y, env, alanda));
   if (x && typeof x === "object") {
     const o = {};
-    for (const [k, v] of Object.entries(x)) o[k] = gizliTemizle(v, env);
+    for (const [k, v] of Object.entries(x)) o[k] = gizliTemizle(v, env, alanda || GIZLI_ALANLAR.has(k));
     return o;
   }
   return x;
@@ -573,6 +578,8 @@ async function giris(req, env, url, ctx) {
   const g = await girisCoz(env, t);
   const ek = { "referrer-policy": "no-referrer" };
   if (!g) return sayfa(403, girisHataSayfasi(), ek);
+  // bağlantı tarayıcılar/ön yükleyiciler HEAD ile yoklarsa harcanmasın; yalnız gerçek GET bağlantıyı kullanır
+  if (req.method !== "GET") return new Response(null, { status: req.method === "HEAD" ? 200 : 405, headers: { ...ek } });
   // tek kullanım: bağlantı mesajı sabit metne çevrilir; zaten o metindeyse Telegram "not modified" der
   let r, aciklama = "";
   try {
