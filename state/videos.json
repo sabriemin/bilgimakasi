@@ -733,5 +733,37 @@
     },
     "decided": "2026-11-06T06:58:53+03:00",
     "otomatik_bolum": true
+  },
+  {
+    "tag": "short-20261106-042045",
+    "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2",
+    "topic": "Bir kedinin yaşam döngüsü",
+    "category": "doğa ve hayvanlar",
+    "template": "belgesel",
+    "structure": "belgesel",
+    "created": "2026-11-06T04:20:45",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 258,
+    "aciklama_message_id": 259,
+    "seri_id": "202611060415-bir-kedinin-yasam-dongusu",
+    "bolum": 1,
+    "bolum_sayisi": 2,
+    "platforms": {}
+  },
+  {
+    "tag": "short-20261106-042433",
+    "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 2/2",
+    "topic": "Bir kedinin yaşam döngüsü",
+    "category": "doğa ve hayvanlar",
+    "template": "belgesel",
+    "structure": "belgesel",
+    "created": "2026-11-06T04:24:33",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 260,
+    "aciklama_message_id": 261,
+    "seri_id": "202611060415-bir-kedinin-yasam-dongusu",
+    "bolum": 2,
+    "bolum_sayisi": 2,
+    "platforms": {}
   }
 ]
