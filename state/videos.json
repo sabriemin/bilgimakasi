@@ -686,5 +686,37 @@
       "tiktok": "2026-11-07T16:30:00+00:00"
     },
     "decided": "2026-11-06T05:18:15+03:00"
+  },
+  {
+    "tag": "short-20261106-035745",
+    "title": "Kanın temizlik yolculuğu: 6 durak | Bölüm 1/2",
+    "topic": "Kanın temizlenmesi",
+    "category": "insan vücudu",
+    "template": "belgesel",
+    "structure": "belgesel",
+    "created": "2026-11-06T03:53:13",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 245,
+    "aciklama_message_id": 246,
+    "seri_id": "202611060348-kanin-temizlenmesi",
+    "bolum": 1,
+    "bolum_sayisi": 2,
+    "platforms": {}
+  },
+  {
+    "tag": "short-20261106-035746",
+    "title": "Kanın temizlik yolculuğu: 6 durak | Bölüm 2/2",
+    "topic": "Kanın temizlenmesi",
+    "category": "insan vücudu",
+    "template": "belgesel",
+    "structure": "belgesel",
+    "created": "2026-11-06T03:57:45",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 247,
+    "aciklama_message_id": 248,
+    "seri_id": "202611060348-kanin-temizlenmesi",
+    "bolum": 2,
+    "bolum_sayisi": 2,
+    "platforms": {}
   }
 ]
