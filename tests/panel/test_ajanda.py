@@ -726,9 +726,9 @@ class Secim(unittest.TestCase):
         self.assertEqual(P.sablon_yapisi("ajanda"), "olsaydin")
         self.assertIn("ajanda", P.kendi_secimli(), "Claude'un şablon listesine girmez")
         m = json.loads((REPO / "templates/eslesme.json").read_text(encoding="utf-8"))
-        self.assertEqual(m["yapi_sablon"]["olsaydin"], "kart", "otomatik seçim değişmez")
+        self.assertEqual(m["yapi_sablon"]["olsaydin"], "ajanda", "Sabri v2 Tesla örneğini onayladı")
         s = load_script(DEMO["kuyumcu"])
-        self.assertEqual(P.pick_template(s), "kart")
+        self.assertEqual(P.pick_template(s), "ajanda")
         self.assertEqual(P.pick_template(s, "ajanda"), "ajanda")
 
     def test_uctan_uca(self):

@@ -1260,7 +1260,7 @@ describe("yayın planı: /panel/api/plan", () => {
     assert.equal(seriOf({ template: "ajanda" }, p), "olsaydin");
     assert.equal(seriOf({ template: "kolaj", structure: "hikaye" }, p), "genel");
     assert.equal(seriOf({ template: "kart", structure: null }, p), "genel");
-    assert.deepEqual(p.seriler.map((s) => s.durum), ["yayında", "yayında", "yayında", "yayında", "kuruluyor", "yayında", "kuruluyor"]);
+    assert.deepEqual(p.seriler.map((s) => s.durum), ["yayında", "yayında", "yayında", "yayında", "yayında", "yayında", "kuruluyor"]);
   });
 
   test("eşleşme: serinin videosu ±90 dk, başka serinin videosu yalnız tam saatte; paylaşılmış video da görünür", () => {

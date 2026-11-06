@@ -2285,7 +2285,7 @@ class OneriSerileri(Ortak):
         import shortgen.script as sc
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
         self.assertEqual(m["yapi_sablon"]["nasil"], "nasil")
-        self.assertEqual((m["yapi_sablon"]["uretim"], m["yapi_sablon"]["olsaydin"]), ("isemri", "kart"))
+        self.assertEqual((m["yapi_sablon"]["uretim"], m["yapi_sablon"]["olsaydin"]), ("isemri", "ajanda"))
         self.assertEqual(m["yapi_sablon"]["kitap"], "kitap")
         self.assertTrue(m["yapi_sablon"]["_aciklama"])
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
@@ -2295,7 +2295,7 @@ class OneriSerileri(Ortak):
         self.assertEqual(pl.pick_template(demo.model_copy(update={"structure": "hikaye", "category": "uzay"})), "gece")
         self.assertEqual(pl.series_label(nasil, self.root / "history.jsonl"), "NASIL YAPILIR? #1")
         olsaydin = demo.model_copy(update={"structure": "olsaydin", "category": "uzay"})
-        self.assertEqual(pl.pick_template(olsaydin), "kart", "olsaydin kart şablonunda (sayaç ve hesap fişi)")
+        self.assertEqual(pl.pick_template(olsaydin), "ajanda", "olsaydin Ajanda şablonunda")
         self.assertEqual(pl.series_label(olsaydin, self.root / "history.jsonl"),
                          sc.STRUCTURES["olsaydin"][0] + " #1")
         uretim = demo.model_copy(update={"structure": "uretim", "category": "uzay"})
@@ -2580,7 +2580,7 @@ class NasilSablonu(unittest.TestCase):
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
         self.assertEqual(m["yapi_sablon"]["nasil"], "nasil", "Sabri onayladı: nasil kalıbı kendi şablonunda")
         self.assertEqual({k: v for k, v in m["yapi_sablon"].items() if not k.startswith("_")},
-                         {"nasil": "nasil", "uretim": "isemri", "olsaydin": "kart", "efsane": "dosya", "kitap": "kitap"})
+                         {"nasil": "nasil", "uretim": "isemri", "olsaydin": "ajanda", "efsane": "dosya", "kitap": "kitap"})
         s = self.cay
         self.assertEqual(pl.pick_template(s, "nasil"), "nasil")
         self.assertEqual(pl.pick_template(s), "nasil")
@@ -3268,7 +3268,7 @@ class YeniSeriler(unittest.TestCase):
                                (["--topic", "kalem", "--structure", "uretim"], ("uretim", "isemri", True, acik)),
                                (["--topic", "kalem", "--template", "uretim", "--structure", "uretim"],
                                 ("uretim", "uretim", True, acik)),
-                               (["--topic", "kuyumcu", "--structure", "olsaydin"], ("olsaydin", "kart", False, True)),
+                               (["--topic", "kuyumcu", "--structure", "olsaydin"], ("olsaydin", "ajanda", False, True)),
                                (["--topic", "çay", "--structure", "nasil"], ("nasil", "nasil", True, True))):
             cagri.clear()
             calistir(*argv)

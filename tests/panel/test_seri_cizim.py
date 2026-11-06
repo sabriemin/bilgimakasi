@@ -625,7 +625,7 @@ class Birlesim(unittest.TestCase):
             self.assertIn("NasılÜretiliyor", cap["metadata"]["hashtags"])
 
     def test_olsaydin_hesap_fisi(self):
-        script, template, cap = self.kur("olsaydin")
+        script, template, cap = self.kur("olsaydin", "kart")  # --template kart (eslesme artık ajanda'yı seçer)
         self.assertEqual((script.structure, template), ("olsaydin", "kart"))
         self.assertEqual(S.fis_sorunlari(script), [])
         turler = [s.card["type"] for s in cap["specs"]]
