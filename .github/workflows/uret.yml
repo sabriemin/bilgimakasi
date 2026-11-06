@@ -10,10 +10,10 @@ on:
         description: "İsteğe bağlı konu önerisi"
         required: false
       template:
-        description: "İsteğe bağlı şablon (ör. kolaj, gece, doga, kart, nasil, uretim, kitap; nasil, uretim ve kitap kendi kalıbıyla yazılır)"
+        description: "İsteğe bağlı şablon (ör. kolaj, gece, doga, kart, nasil, uretim, kitap, belgesel; nasil, uretim, kitap ve belgesel kendi kalıbıyla yazılır)"
         required: false
       kalip:
-        description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil, uretim, olsaydin, kitap)"
+        description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil, uretim, olsaydin, kitap, belgesel; belgesel iki bölümlük iki video üretir)"
         required: false
       yeniden:
         description: "Var olan bir videonun etiketi (ör. short-20261105-213747): senaryosu yeniden yazılmadan, verilen şablonla yeniden çizilir"
@@ -89,22 +89,33 @@ jobs:
             [ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")
           fi
           python -m shortgen.pipeline "${ARGS[@]}"
-          echo "OUT_DIR=$(ls -td output/*/ | head -1)" >> "$GITHUB_ENV"
-          echo "TAG=short-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_ENV"
+          # üretilen video klasörleri (Mini Belgesel: iki bölüm, iki klasör); her biri ayrı etiketle (1 sn arayla) saklanır
+          if [ -s output/uretilen.txt ]; then mapfile -t DIRS < output/uretilen.txt; else DIRS=("$(ls -td output/*/ | head -1)"); fi
+          BASE=$(date -u +%s); : > output/etiketler.tsv
+          for i in "${!DIRS[@]}"; do
+            echo "short-$(date -u -d "@$((BASE + i))" +%Y%m%d-%H%M%S) ${DIRS[$i]}" >> output/etiketler.tsv
+          done
+          echo "OUT_DIR=${DIRS[0]}" >> "$GITHUB_ENV"
+          echo "TAG=$(head -1 output/etiketler.tsv | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          # 2. bölümün etiketi birinciyle çakışmasın: sonraki iş en az bir saniye sonra başlasın
+          sleep "${#DIRS[@]}"
       - name: Videoyu sakla (GitHub Release)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TITLE=$(python -c "import json;print(json.load(open('${OUT_DIR}metadata.json'))['title'])")
-          gh release create "$TAG" "${OUT_DIR}video.mp4" "${OUT_DIR}metadata.json" "${OUT_DIR}script.json" \
-            --title "$TITLE" --notes "Onay bekliyor" --prerelease
+          while read -r T D; do
+            TITLE=$(python -c "import json,sys;print(json.load(open(sys.argv[1]))['title'])" "${D}metadata.json")
+            gh release create "$T" "${D}video.mp4" "${D}metadata.json" "${D}script.json" \
+              --title "$TITLE" --notes "Onay bekliyor" --prerelease
+          done < output/etiketler.tsv
       - name: Telegram'a gönder
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, bildirim atlandı."; exit 0; fi
-          python -m shortgen.telegram_bot notify "$OUT_DIR" "$TAG"
+          # Mini Belgesel'in iki bölümü sırayla gönderilir (videos.json'da seri_id ve bölüm numarasıyla bağlı)
+          while read -r T D; do python -m shortgen.telegram_bot notify "$D" "$T"; done < output/etiketler.tsv
           # videoyu hemen kaydet: Telegram'da düğmeye basıldığında işle.yml onu bulabilsin
           git config user.name "shortgen-bot"
           git config user.email "shortgen-bot@users.noreply.github.com"
@@ -150,7 +161,9 @@ jobs:
         if: failure()
         run: |
           S=$(ls -td output/*/ 2>/dev/null | head -1)
-          [ -n "$S" ] && [ -f "${S}script.json" ] && cp "${S}script.json" state/bekleyen_senaryo.json
+          # iki bölümlük Mini Belgesel'de bölüm senaryosu yerine iki bölümü birlikte tutan tam senaryo saklanır
+          if [ -n "$S" ] && [ -f "${S}tam_senaryo.json" ]; then cp "${S}tam_senaryo.json" state/bekleyen_senaryo.json
+          elif [ -n "$S" ] && [ -f "${S}script.json" ]; then cp "${S}script.json" state/bekleyen_senaryo.json; fi
           git config user.name "shortgen-bot"
           git config user.email "shortgen-bot@users.noreply.github.com"
           python -m shortgen.state_sync "Yarım kalan üretim: senaryo saklandı"

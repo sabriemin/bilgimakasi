@@ -1,0 +1,35 @@
+{
+  "name": "Mini Belgesel",
+  "description": "İki bölümlük Mini Belgesel: bir üretim iki video (Bölüm 1/2 ve 2/2) verir. İki görünüm: YAŞAM ÇİZGİSİ (cizgi; kâğıt zeminde üstte evre zaman çizgisi, makas kırmızı dolguyu ilerletir, büyük fotoğraf + evre etiketi, başlık ve açıklama; sayı ve karşılaştırma sahneleri) ve KAN HATTI (hat; koyu zeminde vücut silueti üstünde metro hattı, duraklar senaryodan, madde tren; B1 kırmızı, B2 sarı hat, bilet biçimli bölüm etiketi, durak tabelası ve mini hat haritası, SONRAKİ DURAK kalkış panosu). Her karede BÖLÜM n /2 etiketi; Bölüm 1 'DEVAMI BÖLÜM 2'DE' ile biter, Bölüm 2 'BÖLÜM 1'DE...' özeti ve 'ŞİMDİ:' ile açılır. Yalnız belgesel kalıbı için.",
+  "renderer": "belgesel",
+  "yapi": "belgesel",
+  "seri_adi": "MİNİ BELGESEL",
+  "gorunum": "",
+  "_gorunum_notu": "Görünüm seçimi: boşsa yazar her konu için senaryonun belgesel.gorunum alanına 'cizgi' (genel konular: hayvan, doğa, insan, yaşam döngüsü) ya da 'hat' (insan bedeni: bir maddenin organlardan geçişi) yazar. Burada 'cizgi' ya da 'hat' yazılırsa bütün belgeseller o görünümle yazılır ve çizilir (senaryodaki değerin önüne geçer).",
+  "_ses_notu": "ses_tempo anlatıcının temposu (varsayılan 1.08 ile aynı), sahne_arasi sahne sınırlarındaki kısa duraklama (sn), son_bekleme son sözden sonra ekranın kalma süresi (sn). Bölüm başına 180-200 kelime ≈ 85-95 sn.",
+  "ses_tempo": 1.08,
+  "sahne_arasi": 0.25,
+  "son_bekleme": 1.2,
+  "colors": {
+    "accent": [221, 32, 39],
+    "highlight": [252, 213, 33],
+    "dark": [20, 19, 19],
+    "light": [233, 231, 226],
+    "box": [250, 249, 245],
+    "muted": [150, 148, 145]
+  },
+  "fonts": {
+    "headline": "Anton-Regular.ttf",
+    "subtitle": "CourierPrime-Bold.ttf"
+  },
+  "subtitle_size": 40,
+  "subtitle_y": 1400,
+  "headline_scale": 1.0,
+  "grain": true,
+  "label_style": "box",
+  "rotation": 1.8,
+  "text_entry": "pop",
+  "subtitle_box": "torn",
+  "stars": false,
+  "case": "upper"
+}

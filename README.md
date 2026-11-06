@@ -71,6 +71,21 @@ kalırsa video üretilmez. Seri sahibi örnek videoyu onaylayana kadar yalnız e
 
     python -m shortgen.pipeline --script demo/kitap/ornek_donusum.json --template kitap --no-voice   # anahtarsız deneme
 
+## Mini Belgesel (belgesel şablonu)
+`templates/belgesel.json` (çizici `shortgen/belgesel.py`, kalıp `belgesel`): tek senaryo iki bölümü birlikte taşır
+(`belgesel` alanı: görünüm, 4-6 evre/durak, `bolum1_son`; sahnelerde `belgesel`: bölüm, tür, evre, başlık, metin).
+Her bölüm 180-200 kelime (~85-95 sn). Bölüm 1 kancayla açılır, "Devamı Bölüm 2'de." ile biter; Bölüm 2 "Bölüm 1'de…"
+özetiyle açılır, "Yorumlara yaz." ile biter. Kurallar `script.belgesel_sorunlari` ile denetlenir.
+İki görünüm: YAŞAM ÇİZGİSİ (`cizgi`, açık kâğıt, evre çizgisi, büyük fotoğraf; hayvan, doğa, insan konuları) ve KAN
+HATTI (`hat`, koyu zemin, gövde üstünde metro hattı, B1 kırmızı / B2 sarı hat, durak tabelası, SONRAKİ DURAK panosu;
+vücut konuları). Seçim: şablonda `gorunum` doluysa o, değilse yazarın `belgesel.gorunum`'u, o da yoksa `cizgi`.
+Pipeline senaryoyu iki videoya ayırır (`<klasör>-b1`, `-b2`; başlık "… | Bölüm n/2", ortak `seri_id`); uret.yml iki
+videoyu ayrı etiketlerle saklar ve Telegram'a gönderir. 1. bölüm onaylanınca (düğme ya da panel) onay bekleyen 2. bölüm
+1. bölümden sonraki ilk belgesel saatine kendiliğinden zamanlanır; 1. bölüm reddedilirse 2. bölüm de reddedilir,
+iptal edilirse kendiliğinden zamanlanan 2. bölüm de yeniden onay bekler.
+
+    python -m shortgen.pipeline --script demo/belgesel/kedi_yasam_dongusu.json --template belgesel --no-voice
+
 ## Animasyonlar
 Claude, anlatılan şey doğal olarak hareket ediyorsa sahneye bir nesne animasyonu ekler (`shortgen/anim.py`):
 `fly_up` (roket, mekik), `fly_right` / `fly_left` (uçak, kuş, tren), `drop_in`, `zoom_in`, `float`, `spin`, `orbit`, `pulse`, `shake`.
@@ -81,17 +96,18 @@ Nesne Wikimedia'da önce şeffaf PNG olarak aranır; bulunamazsa fotoğrafın ar
 Elle seçmek için: `python -m shortgen.pipeline --template gece`
 
 ## Konu önerileri
-`/oneri` (ya da paneldeki "Yeni öneriler iste") tek bir web aramalı Claude çağrısıyla yedi seriden üçer, toplam 21
-öneri getirir (Telegram'da üçer serilik mesajlar, Bir Kitap Bir Dakika üçüncü mesajda): 🔥 Popüler (bugünün
+`/oneri` (ya da paneldeki "Yeni öneriler iste") tek bir web aramalı Claude çağrısıyla sekiz seriden üçer, toplam 24
+öneri getirir (Telegram'da üçer serilik mesajlar, Bir Kitap Bir Dakika ve Mini Belgesel üçüncü mesajda): 🔥 Popüler (bugünün
 gündemine bağlı şaşırtıcı açı), 📚 Konular (gündemden bağımsız şaşırtıcı konu), 🧐 Efsane mi, gerçek mi? (Türkiye'de
 yaygın yanlış inanış), 🛠 Nasıl yapılır? (3-5 adımlık güvenli, pratik yöntem), 🏭 Nasıl üretiliyor? (gündelik bir
 ürünün hammaddeden bitmiş ürüne 3-5 aşamada üretimi), 💭 `olsaydin` serisi (izleyiciyi bir mesleğe, para olayına ya da
 hayat durumuna koyan, güncel Türkiye rakamlarıyla "olsaydın ne olurdu" hesabı; serinin adı geçicidir: ekran etiketi
 `script.STRUCTURES`, liste adı `trends.SERILER`, panel adı `cloudflare/panel_ui.js` `ONERI_SERILERI`, seri etiketi
 `publish.SERIES_TAGS` içindedir) ve 📖 Bir Kitap Bir Dakika (tek kitabın konusu ve ana fikri, sürprizsiz; gündeme
-bağlanabilir: yıl dönümü, uyarlama, ödül).
+bağlanabilir: yıl dönümü, uyarlama, ödül) ve 🎞 Mini Belgesel (doğa, hayvan, insan ya da vücut konusunda 4-6 evreli,
+iki bölümlük yolculuk).
 Öneriden üretimde serinin kalıbı sabitlenir: efsane → `efsane`, nasıl yapılır → `nasil`, nasıl üretiliyor → `uretim`,
-`olsaydin` → `olsaydin`, Bir Kitap Bir Dakika → `kitap` (`--structure`).
+`olsaydin` → `olsaydin`, Bir Kitap Bir Dakika → `kitap`, Mini Belgesel → `belgesel` (`--structure`).
 Otomatik üretim yalnız ilk üç seriden seçer (son video efsane kalıbındaysa Efsane önerisini atlar), kendi önerilerini
 kaydetmez; `nasil`, `uretim`, `olsaydin` ve `kitap` kalıpları otomatik dönüşüme girmez. Konu sırası yalnız metni
 tuttuğu için Efsane, Nasıl yapılır?, Nasıl üretiliyor?, `olsaydin` ve Bir Kitap Bir Dakika önerileri sıraya eklenmez,

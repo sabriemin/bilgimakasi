@@ -1,11 +1,11 @@
-"""Konu önerileri: yedi seride (Popüler, Konular, Efsane mi gerçek mi?, Nasıl yapılır?, Nasıl üretiliyor?, Ya sen
-olsaydın?, Bir Kitap Bir Dakika) short fikri önerir.
+"""Konu önerileri: sekiz seride (Popüler, Konular, Efsane mi gerçek mi?, Nasıl yapılır?, Nasıl üretiliyor?, Ya sen
+olsaydın?, Bir Kitap Bir Dakika, Mini Belgesel) short fikri önerir.
 
 Claude tek bir web aramalı çağrıyla güncel gündemi (Google Trends TR, haber manşetleri, sosyal medya gündemi,
 YouTube'da yükselen konular) tarar; her seriden 3 öneri döndürür. Popüler gündeme bağlı "az bilinen bilgi" açısıdır,
 Bir Kitap Bir Dakika gündeme bağlanabilir (yıl dönümü, uyarlama, ödül); diğer seriler gündemden bağımsızdır.
 
-    python -m shortgen.trends notify   # 21 öneriyi seri seri Telegram'a butonlarla gönderir (en çok üç serilik mesajlar)
+    python -m shortgen.trends notify   # 24 öneriyi seri seri Telegram'a butonlarla gönderir (en çok üç serilik mesajlar)
     python -m shortgen.trends best     # en iyi öneriyi yazdırır (otomatik üretim için; yalnız OTOMATIK_SERILER)
 """
 from __future__ import annotations
@@ -31,24 +31,26 @@ STATE = ROOT / "state" / "oneriler.json"
 NASIL_ALANLARI = "; ".join(f"({i}) {a}" for i, a in enumerate(nasil_alanlari(), 1))
 # Seriler (kayıt sırası = Telegram ve paneldeki sıra). "seri" alanı olmayan eski öneriler Popüler sayılır.
 SERILER = {"populer": "Popüler", "konu": "Konular", "efsane": "Efsane mi, gerçek mi?", "nasil": "Nasıl yapılır?",
-           "uretim": "Nasıl üretiliyor?", "olsaydin": "Ya sen olsaydın?", "kitap": "Bir Kitap Bir Dakika"}
-# simgeler ayrı olsun: Konular 📚, Bir Kitap Bir Dakika 📖
+           "uretim": "Nasıl üretiliyor?", "olsaydin": "Ya sen olsaydın?", "kitap": "Bir Kitap Bir Dakika",
+           "belgesel": "Mini Belgesel"}
+# simgeler ayrı olsun: Konular 📚, Bir Kitap Bir Dakika 📖, Mini Belgesel 🎞
 SERI_IKON = {"populer": "🔥", "konu": "📚", "efsane": "🧐", "nasil": "🛠", "uretim": "🏭", "olsaydin": "💭",
-             "kitap": "📖"}
+             "kitap": "📖", "belgesel": "🎞"}
 # öneriden üretimde zorunlu anlatım kalıbı (script.STRUCTURES); listede olmayan seriler normal dönüşümü kullanır
-SERI_KALIP = {"efsane": "efsane", "nasil": "nasil", "uretim": "uretim", "olsaydin": "olsaydin", "kitap": "kitap"}
-# otomatik üretimin seçebileceği seriler: Nasıl yapılır?, Nasıl üretiliyor?, Ya sen olsaydın? ve Bir Kitap Bir Dakika
-# yalnız elle seçilir
+SERI_KALIP = {"efsane": "efsane", "nasil": "nasil", "uretim": "uretim", "olsaydin": "olsaydin", "kitap": "kitap",
+              "belgesel": "belgesel"}
+# otomatik üretimin seçebileceği seriler: Nasıl yapılır?, Nasıl üretiliyor?, Ya sen olsaydın?, Bir Kitap Bir Dakika ve
+# Mini Belgesel yalnız elle seçilir
 OTOMATIK_SERILER = ("populer", "konu", "efsane")
 SERI_BASI = 3  # her seriden öneri sayısı
 TG_SINIR = 4096  # Telegram mesaj sınırı (UTF-16 birimi)
-# /oneri mesajı başına seri: 21 öneri ayrıntısıyla tek mesaja sığmaz. Seriler kayıt sırasıyla üçerli mesajlara bölünür
-# (Popüler, Konular, Efsane | Nasıl yapılır, Nasıl üretiliyor, Ya sen olsaydın | Bir Kitap Bir Dakika); bir serinin yeri
-# hep aynı mesajdır.
+# /oneri mesajı başına seri: 24 öneri ayrıntısıyla tek mesaja sığmaz. Seriler kayıt sırasıyla üçerli mesajlara bölünür
+# (Popüler, Konular, Efsane | Nasıl yapılır, Nasıl üretiliyor, Ya sen olsaydın | Bir Kitap Bir Dakika, Mini Belgesel);
+# bir serinin yeri hep aynı mesajdır.
 MESAJ_SERI = 3
 
-SYSTEM = f"""Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için konu editörüsün. Görevin, 30-35 saniyelik short'lar için
-YEDİ SERİDE konu önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa gönderilmesi,
+SYSTEM = f"""Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için konu editörüsün. Görevin, short videolar için
+SEKİZ SERİDE konu önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa gönderilmesi,
 bu yüzden "bunu görünce birine atarım" dedirten açıları seç. Her önerinin 'seri' alanını doldur.
 SERİLER:
 - populer (Popüler): BUGÜN Türkiye'de ve dünyada çok konuşulan, aranan bir konuya bağlı şaşırtıcı, doğrulanabilir bir açı.
@@ -96,6 +98,13 @@ SERİLER:
   önerilebilir ama videoda alıntı olmaz, kitap yalnız anlatılır. 3 öneriden en az biri kamu malı olsun. Kitabın sonunu
   ya da büyük sürprizini ele veren topic ve hook yazma. Şu alanlarda ÖNERME: {KITAP_YASAK}.
   trend: bağlandığı gündem (yıl dönümü, uyarlama, ödül, okuma listesi) ya da kitabın neden şimdi ilgi çekeceği.
+- belgesel (Mini Belgesel): iki bölümlük (her biri ~90 saniye) belgesel; konu 4-6 net evreden ya da duraktan geçen bir
+  yolculuk olsun. Yalnız şu alanlardan: doğa (bir doğa olayının, ekosistemin ya da mevsimin evreleri), hayvan (bir
+  hayvanın yaşam döngüsü ya da göçü), insan (insanlığın bir dönüm noktası, bir şehrin ya da yapının hikâyesi), vücut
+  (bir maddenin vücuttaki yolculuğu, bir organın işi). 3 öneri bu alanlardan en az ikisine dağılsın. topic yolculuğu
+  ve evreleri net söylesin (ör. 'Kedinin yaşam döngüsü: doğumdan yaşlılığa 6 evre', 'Kanın temizlenmesi: kalpten
+  böbreğe 6 durak'). Ansiklopedi, üniversite ve bilim kurumu kaynaklarıyla doğrulanabilsin; hastalık, tedavi ve
+  beslenme iddiası, kan ve yaralanma ayrıntısı, avlanma sahnesi içermesin. trend: konunun neden merak edildiği.
 Ortak kurallar:
 - Siyasi kutuplaştırıcı, trajik (ölüm, afet, suç mağdurları), sağlık iddiası ve magazin dedikodusu konularını ÖNERME.
 - Doğrulanabilir olmalı; güvenilir kaynakta geçmeli.
@@ -115,7 +124,7 @@ class Suggestion(BaseModel):
     category: str = Field(description=f"Şunlardan biri: {', '.join(CATEGORIES)}")
     score: int = Field(description="Tahmini izlenme potansiyeli 1-10 (populer'de gündem sıcaklığı x merak x arkadaşa "
                                    "gönderilme ihtimali x Türkiye bağlantısı x görsel zenginlik)")
-    seri: Literal["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap"] = Field(
+    seri: Literal["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel"] = Field(
         description="Önerinin serisi (sistem yönergesindeki tanımlar)")
 
 
@@ -145,7 +154,8 @@ def kalip_of(it) -> str:
 # seçilir ("kitap: Kürk Mantolu Madonna"): kitap adı tek başına tahmin edilmez.
 _SERI_ONEK = {"genel": "", "serbest": "", "efsane": "efsane", "efsane mi gercek mi": "efsane", "nasil": "nasil",
               "nasil yapilir": "nasil", "uretim": "uretim", "nasil uretiliyor": "uretim", "olsaydin": "olsaydin",
-              "ya sen olsaydin": "olsaydin", "kitap": "kitap", "bir kitap bir dakika": "kitap"}
+              "ya sen olsaydin": "olsaydin", "kitap": "kitap", "bir kitap bir dakika": "kitap",
+              "belgesel": "belgesel", "mini belgesel": "belgesel"}
 _NASIL_FIIL = ("yapılır|hazırlanır|demlenir|pişirilir|temizlenir|yıkanır|ütülenir|katlanır|dikilir|takılır|sökülür|"
                "değiştirilir|kullanılır|bağlanır|kurulur|saklanır|çıkarılır|onarılır|giderilir|ayıklanır|doğranır|"
                "soyulur|haşlanır|kızartılır|kaynatılır|boyanır|asılır|sıkılır|ayarlanır|açılır|tamir edilir")

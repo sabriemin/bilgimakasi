@@ -103,6 +103,12 @@ KITAP_YASAK = ("kutsal kitaplar ve dinî metinler, siyasi ya da ideolojik propag
                "tedavi iddiası taşıyan kitaplar, yaşayan yazarlar hakkında magazin ve dedikodu, kitabın sonunu ya da "
                "büyük sürprizini ele veren açılar")
 
+# Mini Belgesel serisinde önerilmeyecek ve senaryoda bulunmayacak alanlar (öneri, senaryo ve doğrulama aynı listeyi
+# kullanır)
+BELGESEL_YASAK = ("hastalık teşhisi, tedavi, ilaç ya da beslenme tavsiyesi, kanlı ya da ürkütücü ayrıntı (av anı, "
+                  "ameliyat, yaralanma), evcil hayvan bakımında veteriner tavsiyesi yerine geçecek talimat, "
+                  "tartışmalı bilimsel iddiayı kesin bilgi gibi sunma, siyasi ya da dinî açılar")
+
 # Kitap telif koruması (FSEK: yazarın ölümünü izleyen yıldan başlayarak 70 yıl): Y yılında yazarı Y-71 ya da daha önce
 # ölmüş kitap kamu malıdır (2026'da 1955 ve öncesi). Yalnız kamu malı kitabın ilk cümlesi (kendi çevirimizle) ekrana
 # yazılır; diğer kitaplarda alıntı yok, ilk sayfa künyedir. Kural kodda da uygulanır (normalize_kitap, kitap_alintilari).
@@ -230,12 +236,20 @@ STRUCTURES = {
               "yazarı hakkında şaşırtıcı ve doğrulanmış tek bir bilgi → son cümle 'Okudun mu? Yorumlara yaz.' Kitabın "
               "sonu, büyük sürprizi ve ilk perdeden sonraki dönüşleri anlatılmaz. Şu alanlara giren kitap ve açı YOK: "
               + KITAP_YASAK + "."),
+    "belgesel": ("MİNİ BELGESEL", "MİNİ BELGESEL: iki bölümlük (her biri ~1,5 dakika) belgesel; tek bir doğa, hayvan, "
+                 "insan ya da insan bedeni konusunu açıkça adlandırılmış 4-6 evre ya da durak boyunca anlatır (bir "
+                 "canlının yaşam döngüsü, zaman içinde bir süreç, vücutta bir maddenin yolculuğu). Bölüm 1 ilk "
+                 "evreleri anlatır, kanca cümlesiyle açılır ve 'Devamı Bölüm 2'de.' ile biter; Bölüm 2 'Bölüm 1'de...' "
+                 "diye kısa bir özetle açılır, kalan evreleri anlatır ve soru + 'Yorumlara yaz.' ile biter. Belgesel "
+                 "tonu: sakin, merak uyandıran; her bilgi doğrulanmış. Şu alanlara giren konu ve açı YOK: "
+                 + BELGESEL_YASAK + "."),
 }
 # Yalnız açıkça istendiğinde (öneriden üretim: --structure) kullanılan kalıplar: otomatik dönüşüme girmez.
 # kitap (Bir Kitap Bir Dakika) sahibi örnek videoyu onaylayana kadar yalnız elle seçilir.
-FORCED_ONLY = {"nasil", "uretim", "olsaydin", "kitap"}
+# belgesel (Mini Belgesel) iki bölümlük üretimdir: yalnız kendi serisinden (öneri, kalıp ya da şablon) gelir.
+FORCED_ONLY = {"nasil", "uretim", "olsaydin", "kitap", "belgesel"}
 # Senaryosu web aramasıyla araştırılarak yazılan kalıplar (süreç bilgileri, güncel rakamlar, kitabın künyesi)
-WEB_KALIPLARI = {"uretim", "olsaydin", "kitap"}
+WEB_KALIPLARI = {"uretim", "olsaydin", "kitap", "belgesel"}
 # Adım kartlarıyla (nasil kurgu modülü) çizilen kalıplar ve başlıktaki numaranın kelimesi ('ADIM 2' / 'AŞAMA 2')
 ADIM_KELIMESI = {"nasil": "ADIM", "uretim": "AŞAMA"}
 
@@ -319,6 +333,76 @@ class CizgiSahne(BaseModel):
         "sonra yalnız 1-2 dönüm anında; özel kartlı (gercek, ipucu, ab) sahnede ve çoğu sahnede boş."))
 
 
+# ---------------------------------------------------------------- Mini Belgesel (iki bölüm, iki görünüm)
+# Yalnız belgesel kalıbı (shortgen/belgesel.py) okur. Bir üretim iki bölümü birlikte yazar: her sahne hangi bölüme ait
+# olduğunu (bolum 1/2) ve ekranda ne çizileceğini (tur) taşır; pipeline bölümleri iki ayrı video olarak kurar.
+BELGESEL_GORUNUMLER = ("cizgi", "hat")
+BELGESEL_TURLER = ("kanca", "durak", "sayi", "karsilastirma", "devam", "ozet", "kapanis")
+# Bölüm başına toplam dış ses (normal tempo, ~2,15 kelime/sn, sahne aralarında kısa duraklama): ≈ 85-95 sn
+BELGESEL_KELIME = (180, 200)
+BELGESEL_KELIME_UST = 212
+BELGESEL_SAHNE = (7, 12)          # bölüm başına sahne
+BELGESEL_DURAK = (4, 6)           # evre / durak sayısı
+BELGESEL_DEVAM = "Devamı Bölüm 2'de."
+BELGESEL_KAPANIS = "Yorumlara yaz."
+BELGESEL_DURAK_AD = 12            # durak adı en çok bu kadar karakter (zaman çizgisi ve tabela sığsın)
+BELGESEL_METIN = 16               # ekrandaki açıklama en çok bu kadar kelime
+
+
+class BelgeselDurak(BaseModel):
+    ad: str = Field(description=(
+        f"Evrenin ya da durağın adı, BÜYÜK HARF, 1-2 kelime, en çok {BELGESEL_DURAK_AD} karakter (ör. 'YAVRU', "
+        "'KARACİĞER')."))
+    ust: str = Field(default="", description=(
+        "Yalnız cizgi görünümü: düğümün üstündeki kısa ölçek, en çok 7 karakter (ör. '0', '2 hf', '6 ay', '3 yıl'). "
+        "hat görünümünde boş."))
+
+
+class BelgeselBilgi(BaseModel):
+    """Mini Belgesel'in iki bölümüne ortak bilgiler: görünüm, evre/durak listesi ve bölümlerin ayrıldığı yer."""
+    gorunum: Literal[BELGESEL_GORUNUMLER] = Field(description=(  # type: ignore[valid-type]
+        "cizgi (YAŞAM ÇİZGİSİ: kâğıt zeminde zaman çizgisi; hayvanlar, doğa, insanlar, yaşam döngüleri, zamanla "
+        "ilerleyen süreçler) ya da hat (KAN HATTI: koyu zeminde vücut silueti üstünde metro hattı; bir maddenin "
+        "vücutta organlardan geçerek yolculuğu, insan bedeninde akış ve süreçler)."))
+    alt_baslik: str = Field(description=(
+        "Üst sıradaki küçük konu satırı, küçük harf, en çok 24 karakter (ör. 'kedi · yaşam döngüsü', "
+        "'kan · temizlik hattı')."))
+    baslik: List[str] = Field(description=(
+        "Bölüm 1 kanca ekranının dev başlığı: 2 satır, BÜYÜK HARF, satır başı en çok 14 karakter (ör. ['BİR "
+        "KEDİNİN', '15 YILI'], ['KANIN', 'TEMİZLİK YOLU'])."))
+    duraklar: List[BelgeselDurak] = Field(description=(
+        f"Evreler (cizgi) ya da duraklar (hat), gerçek sırasıyla, {BELGESEL_DURAK[0]}-{BELGESEL_DURAK[1]} tane."))
+    bolum1_son: int = Field(description=(
+        "Bölüm 1'in anlattığı son evrenin/durağın sırası (0'dan). Bölüm 2 bir sonrakinden başlar; iki bölümde de en az "
+        "iki evre kalsın."))
+    seri_id: str = Field(default="", description="Boş bırak (kod doldurur: iki bölümü birbirine bağlar).")
+
+
+class BelgeselSahne(BaseModel):
+    """Mini Belgesel sahnesinin ekranı (iki görünüm de aynı alanları okur)."""
+    bolum: int = Field(ge=1, le=2, description="Sahnenin bölümü: 1 ya da 2.")
+    tur: Literal[BELGESEL_TURLER] = Field(description=(  # type: ignore[valid-type]
+        "kanca (Bölüm 1'in ilk sahnesi: dev başlık), durak (bir evre/durak: büyük fotoğraf + başlık + açıklama), sayi "
+        "(tek büyük sayı), karsilastirma (iki değerin çubuk karşılaştırması), devam (Bölüm 1'in son sahnesi: DEVAMI "
+        "BÖLÜM 2'DE), ozet (Bölüm 2'nin ilk sahnesi: BÖLÜM 1'DE... + ŞİMDİ: sıradaki evre), kapanis (Bölüm 2'nin son "
+        "sahnesi: soru)."))  # noqa: E501
+    durak: int = Field(default=0, ge=0, description=(
+        "Sahnenin evresi/durağı (duraklar listesindeki sıra, 0'dan). Zaman çizgisi ve hat bu durağa ilerler."))
+    baslik: str = Field(default="", description=(
+        "Ekrandaki başlık etiketi, BÜYÜK HARF, en çok 18 karakter (ör. 'GÖZLER AÇILIYOR'); kapanista kısa soru "
+        "(en çok 28 karakter)."))
+    metin: str = Field(default="", description=(
+        f"Ekrandaki kısa açıklama, düz cümle, en çok {BELGESEL_METIN} kelime; dış sesin özü (aynısı olmak zorunda değil)."))
+    foto_etiketi: str = Field(default="", description=(
+        "Fotoğrafın köşesindeki kısa etiket, en çok 12 karakter (ör. '2. HAFTA', 'ALYUVARLAR'); gerekmiyorsa boş."))
+    sayi: str = Field(default="", description="Yalnız sayi: büyük sayı birimiyle, en çok 10 karakter (ör. '180 L').")
+    sayi_etiketi: str = Field(default="", description="Yalnız sayi: sayının etiketi, en çok 24 karakter (ör. 'GÜNDE SÜZÜLEN KAN').")
+    kalemler: List[str] = Field(default_factory=list, description=(
+        "ozet: Bölüm 1'den 2-3 kısa madde (her biri en çok 6 kelime, düz cümle); devam: sıradaki 2-3 evre/merak "
+        "(her biri en çok 4 kelime); karsilastirma: tam 2 satır 'ETİKET|DEĞER' (ör. 'KEDİNİN 1. YILI|1', 'İNSAN "
+        "KARŞILIĞI|15'); diğerlerinde boş."))
+
+
 class Scene(BaseModel):
     narration: str = Field(description=(
         "Bu sahnede okunacak metin parçası: bir cümle ya da uzun bir cümlenin bir bölümü. Tüm sahnelerin narration'ları "
@@ -385,6 +469,10 @@ class Scene(BaseModel):
         "Yalnız Çizgi Roman şablonu (Karar Senin hikâye serisi): bu sahnenin çizgi roman sayfası (paneller, mekân, "
         "karakterler, konuşma balonu, özel kart). Diğer şablonlarda null."))
 
+    # --- belgesel şablonu ---
+    belgesel: BelgeselSahne | None = Field(default=None, description=(
+        "Yalnız Mini Belgesel (belgesel kalıbı): sahnenin bölümü ve ekranı. Diğer kalıplarda null."))
+
 
 class KitapBilgi(BaseModel):
     """Bir Kitap Bir Dakika videosunun kitabı: kod çizilen kapak (başlık, yazar, amblem, renk) ve künye sayfası bu
@@ -445,6 +533,10 @@ class ShortScript(BaseModel):
     hukum: Literal["", "EFSANE", "GERÇEK", "KISMEN DOĞRU"] = Field(default="", description=(
         "Yalnız efsane kalıbı (Dava Dosyası şablonu): inanışın hükmü; inanış yanlışsa EFSANE, doğruysa GERÇEK, bir "
         "kısmı doğruysa KISMEN DOĞRU. Diğer kalıplarda boş."))
+    # --- belgesel şablonu ---
+    belgesel: BelgeselBilgi | None = Field(default=None, description=(
+        "Yalnız belgesel kalıbı (Mini Belgesel): görünüm, evreler/duraklar ve bölümlerin ayrıldığı yer. Diğer "
+        "kalıplarda null."))
 
 
 SYSTEM = """Sen Türkçe kısa video (YouTube Shorts / Reels / TikTok) senaristisin.
@@ -683,6 +775,50 @@ sekmeli sayfalar; her sahne bu kitabın bir sayfa anıdır):
 - Şu alanlara giren kitap ve açı YOK: """ + KITAP_YASAK + "."
 
 
+# Yalnız 'belgesel' kalıbında sisteme eklenir (Mini Belgesel serisi, "belgesel" şablonu: Yaşam Çizgisi ya da Kan Hattı).
+# Bir senaryo iki bölümü birlikte taşır; pipeline bölümleri iki video olarak kurar (belgesel_bolumleri).
+BELGESEL_RULES = f"""MİNİ BELGESEL DÜZENİ (yalnız 'belgesel' kalıbı; tek senaryo İKİ BÖLÜMÜ birlikte taşır, her bölüm ayrı bir video
+olur ve art arda yayınlanır):
+- SÜRE: her bölüm yaklaşık 85-95 saniye: her bölümün toplam dış sesi {BELGESEL_KELIME[0]}-{BELGESEL_KELIME[1]} kelime,
+  {BELGESEL_KELIME_UST}'yi GEÇMESİN (genel kuraldaki 65-75 kelime / 78 sınırı ve 9-12 sahne kuralı bu kalıpta geçerli
+  değil). Her bölüm {BELGESEL_SAHNE[0]}-{BELGESEL_SAHNE[1]} sahne; her sahnenin narration'ı tam cümle(ler)le başlayıp biter
+  (cümle sahneler arasında bölünmez), sahne başına ~15-30 kelime.
+- EVRELER / DURAKLAR (belgesel alanı): konu {BELGESEL_DURAK[0]}-{BELGESEL_DURAK[1]} açıkça adlandırılmış evreye ya da durağa
+  bölünür, gerçek sırasıyla (duraklar: ad BÜYÜK HARF, en çok {BELGESEL_DURAK_AD} karakter). bolum1_son Bölüm 1'in son evresi;
+  her bölümde en az iki evre olur. Ekrandaki zaman çizgisi ve hat haritası bu listeden çizilir: listeye yazmadığın
+  evre ekranda olmaz, adlar dış seste de geçsin.
+- GÖRÜNÜM (belgesel.gorunum): "cizgi" (YAŞAM ÇİZGİSİ) genel konular içindir: hayvanlar, doğa, insanlar, yaşam
+  döngüleri, zamanla ilerleyen süreçler; evrelerin üstüne kısa ölçek yaz (ust: '0', '2 hf', '6 ay'). "hat" (KAN HATTI)
+  insan bedeni konuları içindir: bir maddenin (kan, besin, hava, ilaç değil) organlardan geçerek yolculuğu; organlar
+  durak, madde tren; ust boş. Durak adları senaryodan gelir.
+- SAHNELER: her sahnenin 'belgesel' alanı dolu: bolum (1/2), tur, durak (sahnenin evresi, 0'dan), baslik, metin.
+  Sıra: Bölüm 1 = kanca → (durak | sayi | karsilastirma)... → devam; Bölüm 2 = ozet → (durak | sayi | karsilastirma)...
+  → kapanis. Önce Bölüm 1'in bütün sahneleri, sonra Bölüm 2'ninkiler. Her evrenin en az bir 'durak' sahnesi olur;
+  evreler sırayla ilerler, geri dönülmez. Bölüm başına en çok 3 sayi/karsilastirma sahnesi.
+  1) kanca (Bölüm 1'in ilk sahnesi, durak 0): ilk cümle en çok 10 kelimelik doğrudan, şaşırtıcı bir kanca; sonra konuyu
+     ve yolculuğu tanıt. Ekranda belgesel.baslik'taki iki satırlık dev başlık ve bir fotoğraf durur; sahnenin baslik
+     alanı boş kalabilir.
+  2) durak: o evrenin en çarpıcı, doğrulanmış bilgisi. image_mode framed, image_queries 2-3 İngilizce sorgu (Wikimedia
+     Commons'ta açık lisanslı karşılığı olan: hayvanın o yaştaki fotoğrafı, organ, mikroskop görüntüsü, doğa), ayrıca
+     yedek 'illustration'. baslik 1-3 kelimelik vurucu etiket ('GÖZLER AÇILIYOR'), metin ekrandaki kısa açıklama.
+  3) sayi: tek büyük sayı (sayi + sayi_etiketi), image_mode none. karsilastirma: iki değer (kalemler: 'ETİKET|DEĞER' x2,
+     DEĞER sayı), image_mode none. Sayılar dış seste aynen geçer.
+  4) devam (Bölüm 1'in son sahnesi, durak = bolum1_son): bu bölümün kısa bağlayıcı cümlesi, ardından Bölüm 2'de ne
+     olacağını söyleyen merak cümlesi (cevabı vermeden) ve son cümle tam olarak "{BELGESEL_DEVAM}" kalemler: sıradaki 2-3
+     evre ya da merak (en çok 4 kelime). Fotoğrafı sıradaki evreyi gösterebilir (ekranda karartılır).
+  5) ozet (Bölüm 2'nin ilk sahnesi, durak = bolum1_son + 1): ilk cümle "Bölüm 1'de" ile başlar ve Bölüm 1'i 2-3 kısa
+     bilgiyle hatırlatır (kalemler: aynı 2-3 bilgi, her biri en çok 6 kelime), sonra "Şimdi sırada ..." diye yeni evreye
+     geçer. Bölüm 2 tek başına izlense de anlaşılır olsun.
+  6) kapanis (Bölüm 2'nin son sahnesi, durak = son evre): Makas'ın yorumu tek cümle, kısa açık uçlu bir soru ve son
+     cümle "{BELGESEL_KAPANIS}"; baslik kısa soru (en çok 28 karakter).
+- DİL: belgesel anlatıcısı: sakin, merak uyandıran, abartısız; şimdiki ya da geniş zaman ('Yavrular kör doğar.').
+  Her bölümün ortasında ikinci bir merak anı olsun.
+- DOĞRULUK: yaş, süre, miktar ve sayılar güvenilir kaynaklarla (ansiklopedi, üniversite, veteriner/hekim kuruluşları,
+  bilim dergileri) doğrulanmış olsun; yaklaşık değerse 'yaklaşık' de; kaynaklar sources alanına. Sağlık tavsiyesi verme.
+- title: iki bölüme ortak başlık (en çok 56 karakter; 'Bölüm 1/2' etiketini kod ekler). description iki bölüme ortak.
+- Şu alanlara giren konu ve açı YOK: """ + BELGESEL_YASAK + "."
+
+
 def kalip_kurallari(yapi: str | None, adim_kartlari: bool) -> str:
     """Kalıba özel ek yönerge (sistem istemine eklenir): nasil ve uretim yalnız Adım kartlarıyla çizilecekse ekran
     düzenini (NASIL_RULES / URETIM_RULES), olsaydin ve kitap her zaman kendi düzenini (OLSAYDIN_RULES / KITAP_RULES)
@@ -691,6 +827,8 @@ def kalip_kurallari(yapi: str | None, adim_kartlari: bool) -> str:
         return "\n" + OLSAYDIN_RULES
     if yapi == "kitap":
         return "\n" + KITAP_RULES
+    if yapi == "belgesel":
+        return "\n" + BELGESEL_RULES
     if adim_kartlari and yapi == "nasil":
         return "\n" + NASIL_RULES
     if adim_kartlari and yapi == "uretim":
@@ -1185,6 +1323,201 @@ def kitap_sorunlari(script, year: int | None = None) -> list[str]:
     return out
 
 
+# ---------------------------------------------------------------- Mini Belgesel: denetim, düzeltme, bölümleme
+_DEVAM_RE = re.compile(r"\s*devam[ıi]\s+(?:ikinci\s+bölümde|bölüm\s*2['’]?de)\s*[.!…]*\s*$", re.IGNORECASE)
+_BOLUM1DE_RE = re.compile(r"^\s*(?:bölüm\s*1['’]?de|ilk\s+bölümde|birinci\s+bölümde)\b", re.IGNORECASE)
+
+
+def _bsahne(sc):
+    return getattr(sc, "belgesel", None)
+
+
+def belgesel_bolum_sahneleri(script) -> dict[int, list]:
+    """{1: [...], 2: [...]}: belgesel alanı dolu sahnelerin bölümlere göre listesi (sırası korunur)."""
+    out: dict[int, list] = {1: [], 2: []}
+    for sc in script.scenes:
+        b = _bsahne(sc)
+        if b is not None and b.bolum in out:
+            out[b.bolum].append(sc)
+    return out
+
+
+def belgesel_sorunlari(script) -> list[str]:
+    """Mini Belgesel senaryosunun kural denetimi (doğrulayıcıya düzeltmesi için verilir, üretim sonunda günlüğe yazılır;
+    kitap_sorunlari'nın karşılığı): belgesel alanı, görünüm, evre sayısı ve adları, bölüm ayrımı, her bölümün sahne ve
+    kelime sayısı, sahne sırası (kanca ... devam | ozet ... kapanis), evrelerin sırası ve kapsanması, açıklama
+    uzunlukları, sayi/karsilastirma alanları, 'Devamı Bölüm 2'de.' ve 'Bölüm 1'de' cümleleri, kapanış çağrısı."""
+    if getattr(script, "structure", "") != "belgesel":
+        return []
+    out: list[str] = []
+    bb = getattr(script, "belgesel", None)
+    if bb is None:
+        return ["belgesel alanı (görünüm, evreler, bolum1_son) boş"]
+    n = len(bb.duraklar)
+    if not BELGESEL_DURAK[0] <= n <= BELGESEL_DURAK[1]:
+        out.append(f"{n} evre/durak var ({BELGESEL_DURAK[0]}-{BELGESEL_DURAK[1]} olmalı)")
+    for d in bb.duraklar:
+        if not d.ad.strip() or len(d.ad.strip()) > BELGESEL_DURAK_AD:
+            out.append(f"durak adı boş ya da {BELGESEL_DURAK_AD} karakterden uzun: {d.ad!r}")
+        if len(d.ust) > 7:
+            out.append(f"durak ölçeği 7 karakterden uzun: {d.ust!r}")
+    if not 1 <= bb.bolum1_son <= n - 3:
+        out.append(f"bolum1_son {bb.bolum1_son}: iki bölümde de en az iki evre kalmalı (1..{max(1, n - 3)})")
+    if len(bb.baslik) != 2 or any(len(x) > 16 for x in bb.baslik):
+        out.append("belgesel.baslik 2 satır olmalı, satır başı en çok 14 karakter")
+    if any(_bsahne(sc) is None for sc in script.scenes):
+        out.append("belgesel alanı boş sahne var: her sahnenin bölümü ve türü yazılmalı")
+    bol = [(_bsahne(sc).bolum if _bsahne(sc) else 0) for sc in script.scenes]
+    if bol != sorted(bol):
+        out.append("sahne sırası bozuk: önce Bölüm 1'in bütün sahneleri, sonra Bölüm 2'ninkiler")
+    gruplar = belgesel_bolum_sahneleri(script)
+    for no, scs in gruplar.items():
+        if not scs:
+            out.append(f"Bölüm {no}'de sahne yok")
+            continue
+        if not BELGESEL_SAHNE[0] <= len(scs) <= BELGESEL_SAHNE[1]:
+            out.append(f"Bölüm {no}: {len(scs)} sahne ({BELGESEL_SAHNE[0]}-{BELGESEL_SAHNE[1]} olmalı)")
+        kelime = sum(len(sc.narration.split()) for sc in scs)
+        if not BELGESEL_KELIME[0] <= kelime <= BELGESEL_KELIME_UST:
+            out.append(f"Bölüm {no}: toplam dış ses {kelime} kelime ({BELGESEL_KELIME[0]}-{BELGESEL_KELIME[1]} olmalı, "
+                       f"en çok {BELGESEL_KELIME_UST})")
+        ilk, son = ("kanca", "devam") if no == 1 else ("ozet", "kapanis")
+        turler = [_bsahne(sc).tur for sc in scs]
+        if turler[0] != ilk:
+            out.append(f"Bölüm {no}'in ilk sahnesi '{ilk}' olmalı (şu an '{turler[0]}')")
+        if turler[-1] != son:
+            out.append(f"Bölüm {no}'in son sahnesi '{son}' olmalı (şu an '{turler[-1]}')")
+        yanlis = [t for t in turler[1:-1] if t not in ("durak", "sayi", "karsilastirma")]
+        if yanlis:
+            out.append(f"Bölüm {no}: ara sahnelerde yalnız durak, sayi, karsilastirma olur ({', '.join(yanlis)})")
+        if sum(t in ("sayi", "karsilastirma") for t in turler) > 3:
+            out.append(f"Bölüm {no}: en çok 3 sayi/karsilastirma sahnesi")
+        aralik = range(0, bb.bolum1_son + 1) if no == 1 else range(bb.bolum1_son + 1, n)
+        duraklar = [_bsahne(sc).durak for sc in scs]
+        if duraklar != sorted(duraklar):
+            out.append(f"Bölüm {no}: evreler sırayla ilerlemeli ({duraklar})")
+        if any(d not in aralik for d in duraklar):
+            out.append(f"Bölüm {no}: sahnelerin evresi {aralik.start}-{aralik.stop - 1} arasında olmalı ({duraklar})")
+        eksik = [bb.duraklar[d].ad for d in aralik if d < n and not any(
+            _bsahne(sc).durak == d and _bsahne(sc).tur == "durak" for sc in scs)]
+        if eksik:
+            out.append(f"Bölüm {no}: şu evrelerin 'durak' sahnesi yok: {', '.join(eksik)}")
+    for i, sc in enumerate(script.scenes, 1):
+        b = _bsahne(sc)
+        if b is None:
+            continue
+        if len(b.metin.split()) > BELGESEL_METIN:
+            out.append(f"{i}. sahnenin metni {len(b.metin.split())} kelime (en çok {BELGESEL_METIN})")
+        if len(b.baslik) > (28 if b.tur == "kapanis" else 18):
+            out.append(f"{i}. sahnenin başlığı çok uzun: {b.baslik!r}")
+        if b.tur == "durak" and not (sc.image_queries or sc.image_query or sc.illustration):
+            out.append(f"{i}. sahne (durak) fotoğraf sorgusu ya da çizim tarifi olmadan")
+        if b.tur == "sayi" and not b.sayi.strip():
+            out.append(f"{i}. sahne (sayi) sayı alanı boş")
+        if b.tur == "karsilastirma":
+            satir = [k.partition("|") for k in b.kalemler]
+            if len(satir) != 2 or not all(a.strip() and ay and _sayilar(d) for a, ay, d in satir):
+                out.append(f"{i}. sahne (karsilastirma) kalemler tam 2 'ETİKET|DEĞER' satırı olmalı")
+        if b.tur == "ozet" and not 2 <= len(b.kalemler) <= 3:
+            out.append(f"{i}. sahne (ozet) 2-3 madde olmalı")
+    if gruplar[1] and not _DEVAM_RE.search(gruplar[1][-1].narration):
+        out.append(f"Bölüm 1'in son cümlesi '{BELGESEL_DEVAM}' değil")
+    if gruplar[2] and not _BOLUM1DE_RE.search(gruplar[2][0].narration):
+        out.append("Bölüm 2'nin ilk cümlesi 'Bölüm 1'de' ile başlamıyor")
+    if gruplar[2] and not _duz(gruplar[2][-1].narration).endswith(_duz(BELGESEL_KAPANIS)):
+        out.append(f"Bölüm 2'nin son cümlesi '{BELGESEL_KAPANIS}' değil")
+    return out
+
+
+def normalize_belgesel(script: ShortScript) -> ShortScript:
+    """Mini Belgesel senaryosunu sağlamlaştırır (yerinde; başka kalıba dokunmaz): durak sırası sınırlara çekilir,
+    bolum1_son geçerli aralığa, Bölüm 1'in son sahnesi 'devam' (dış sesi 'Devamı Bölüm 2'de.' ile biter), Bölüm 2'nin
+    ilk sahnesi 'ozet', son sahnesi 'kapanis' olur; durak adları BÜYÜK HARF."""
+    bb = getattr(script, "belgesel", None)
+    if script.structure != "belgesel" or bb is None or not script.scenes:
+        return script
+    n = max(1, len(bb.duraklar))
+    bb.bolum1_son = min(max(0, bb.bolum1_son), max(0, n - 2))
+    for d in bb.duraklar:
+        d.ad = _tr_upper(" ".join(d.ad.split()))
+    bb.baslik = [_tr_upper(x.strip()) for x in bb.baslik if x.strip()][:2]
+    for sc in script.scenes:
+        b = _bsahne(sc)
+        if b is not None:
+            b.durak = min(max(0, b.durak), n - 1)
+    g = belgesel_bolum_sahneleri(script)
+    if g[1]:
+        son = g[1][-1]
+        _bsahne(son).tur = "devam"
+        govde = _DEVAM_RE.sub("", son.narration).strip()
+        son.narration = f"{govde} {BELGESEL_DEVAM}".strip()
+        _bsahne(g[1][0]).tur = "kanca" if len(g[1]) > 1 else _bsahne(g[1][0]).tur
+    if g[2]:
+        _bsahne(g[2][0]).tur = "ozet"
+        if len(g[2]) > 1:
+            _bsahne(g[2][-1]).tur = "kapanis"
+    return script
+
+
+def belgesel_geri_yukle(eski: ShortScript, yeni: ShortScript) -> None:
+    """Doğrulayıcı ya da editör belgesel alanlarını düşürdüyse yazarınkileri geri koyar (senaryo alanı her zaman; sahne
+    alanları sahne sayısı aynıysa sırayla, değiştiyse dış sesi en çok benzeyen eski sahneden)."""
+    if yeni.belgesel is None and eski.belgesel is not None:
+        yeni.belgesel = eski.belgesel.model_copy(deep=True)
+    if all(_bsahne(sc) is not None for sc in yeni.scenes):
+        return
+    if len(yeni.scenes) == len(eski.scenes):
+        for a, b in zip(eski.scenes, yeni.scenes):
+            if b.belgesel is None and a.belgesel is not None:
+                b.belgesel = a.belgesel.model_copy(deep=True)
+        return
+    import difflib
+    for b in yeni.scenes:
+        if b.belgesel is not None:
+            continue
+        aday = [(difflib.SequenceMatcher(None, a.narration.lower(), b.narration.lower()).ratio(), i)
+                for i, a in enumerate(eski.scenes) if a.belgesel is not None]
+        if aday:
+            b.belgesel = eski.scenes[max(aday)[1]].belgesel.model_copy(deep=True)
+
+
+def belgesel_bolumleri(script: ShortScript) -> list[ShortScript]:
+    """İki bölümlük Mini Belgesel senaryosunu iki videonun senaryosuna ayırır: her biri yalnız kendi sahneleriyle,
+    series_part 1/2, başlığın sonunda ' | Bölüm n/2', açıklamanın başında 'Mini Belgesel · Bölüm n/2' satırı. Bölüm
+    alanı tek bölümü gösteren (ör. yeniden çizilen tek bölüm) ya da belgesel olmayan senaryo tek elemanlı listede aynen
+    döner."""
+    g = belgesel_bolum_sahneleri(script)
+    if script.structure != "belgesel" or script.belgesel is None or not (g[1] and g[2]):
+        return [script]
+    out = []
+    for no in (1, 2):
+        p = script.model_copy(deep=True)
+        p.scenes = [sc for sc in p.scenes if _bsahne(sc) is not None and _bsahne(sc).bolum == no]
+        p.series_part, p.next_part_brief = no, ""
+        p.title = bolum_basligi(script.title, no)
+        p.description = bolum_aciklamasi(script.description, no)
+        out.append(p)
+    return out
+
+
+_BOLUM_EK_RE = re.compile(r"\s*[|·(\-–—]*\s*bölüm\s*[12]\s*/\s*2\s*\)?\s*$", re.IGNORECASE)
+
+
+def bolum_basligi(title: str, no: int, n: int = 2, sinir: int = 70) -> str:
+    """'Kedinin 15 yılı' -> 'Kedinin 15 yılı | Bölüm 1/2' (başlık sınırı aşılırsa kelime sınırında kısaltılır)."""
+    govde = _BOLUM_EK_RE.sub("", " ".join(str(title or "").split())).strip()
+    ek = f" | Bölüm {no}/{n}"
+    if len(govde) + len(ek) > sinir:
+        govde = govde[:sinir - len(ek) - 1].rsplit(" ", 1)[0].rstrip(" ,;:-") + "…"
+    return govde + ek
+
+
+def bolum_aciklamasi(desc: str, no: int, n: int = 2) -> str:
+    satir = f"Mini Belgesel · Bölüm {no}/{n}" + (" (devamı bir sonraki videoda)" if no < n else "")
+    govde = "\n".join(x for x in str(desc or "").splitlines() if not x.startswith("Mini Belgesel · Bölüm"))
+    return f"{satir}\n{govde.strip()}".strip()
+
+
 def _history(path: Path) -> list[str]:
     if path.exists():
         return [json.loads(l)["topic"] for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
@@ -1245,6 +1578,8 @@ def _claude_env() -> dict:
 # Çizgi Roman sahne tarifi (Scene.cizgi) şemaya yalnız Çizgi Roman senaryosu yazılırken ve denetlenirken girer: diğer
 # şablonların istemi büyümez, Claude onlarda cizgi doldurmaz (bkz. _cizgi_semasi, sema_json)
 _CIZGI_SEMA = False
+# Mini Belgesel alanları (ShortScript.belgesel, Scene.belgesel) da şemaya yalnız belgesel senaryosunda girer
+_BELGESEL_SEMA = False
 
 
 class _cizgi_semasi:
@@ -1264,21 +1599,44 @@ class _cizgi_semasi:
         return False
 
 
-def sema_json(schema: type[BaseModel]) -> dict:
-    """Claude'a giden JSON şeması. Çizgi Roman kapalıyken Scene.cizgi ve Cizgi* tanımları çıkarılır (şema bu alan
-    eklenmeden önceki hâliyle aynı kalır)."""
-    sema = schema.model_json_schema()
-    if _CIZGI_SEMA:
-        return sema
+class _belgesel_semasi:
+    """with _belgesel_semasi(acik): bu blokta ask_claude'a giden şema Mini Belgesel alanlarını içerir (acik ise)."""
+
+    def __init__(self, acik: bool):
+        self.acik, self.eski = bool(acik), False
+
+    def __enter__(self):
+        global _BELGESEL_SEMA
+        self.eski, _BELGESEL_SEMA = _BELGESEL_SEMA, self.acik
+        return self
+
+    def __exit__(self, *a):
+        global _BELGESEL_SEMA
+        _BELGESEL_SEMA = self.eski
+        return False
+
+
+def _alan_cikar(sema: dict, onek: str, alan: str) -> None:
     defs = sema.get("$defs") or {}
-    for ad in [k for k in defs if k.startswith("Cizgi")]:
+    for ad in [k for k in defs if k.startswith(onek)]:
         del defs[ad]
-    for d in defs.values():
+    for d in [sema, *defs.values()]:
         props = d.get("properties") or {}
-        if "cizgi" in props:
-            del props["cizgi"]
-            if "cizgi" in d.get("required", []):
-                d["required"].remove("cizgi")
+        if alan in props:
+            del props[alan]
+            if alan in d.get("required", []):
+                d["required"].remove(alan)
+
+
+def sema_json(schema: type[BaseModel]) -> dict:
+    """Claude'a giden JSON şeması. Çizgi Roman kapalıyken Scene.cizgi ve Cizgi* tanımları, Mini Belgesel kapalıyken
+    ShortScript.belgesel, Scene.belgesel ve Belgesel* tanımları çıkarılır (şema bu alanlar eklenmeden önceki hâliyle
+    aynı kalır)."""
+    sema = schema.model_json_schema()
+    if not _CIZGI_SEMA:
+        _alan_cikar(sema, "Cizgi", "cizgi")
+    if not _BELGESEL_SEMA:
+        _alan_cikar(sema, "Belgesel", "belgesel")
     return sema
 
 
@@ -1375,7 +1733,8 @@ def structure_ask(keys: list[str]) -> str:
 def generate_script(history_file: Path, topic_hint: str | None = None,
                     templates: dict[str, str] | None = None, series_prev: dict | None = None,
                     allow_series: bool = False, kart: bool = False, structure: str | None = None,
-                    adim_kartlari: bool = False, sablon_kurali: str = "", cizgi: bool = False) -> ShortScript:
+                    adim_kartlari: bool = False, sablon_kurali: str = "", cizgi: bool = False,
+                    belgesel_gorunum: str = "") -> ShortScript:
     """structure verilirse (öneriden üretim) kalıp sabittir: yalnız o sunulur, doğrulama ve dil düzeltmesi değiştiremez.
     adim_kartlari: video "Adım kartları" (renderer'ı nasil olan şablon: nasil, uretim) ile çizilecek; nasil ve uretim
     kalıplarında ekran düzeni (NASIL_RULES / URETIM_RULES) yalnız o zaman istenir. Kart şablonuna giden nasil
@@ -1411,13 +1770,20 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     web = yapi in WEB_KALIPLARI
     if web:
         ask += arastirma_ask(yapi)
-    kart = kart and yapi != "kitap"  # kitap videosu kendi şablonuyla çizilir: kart alanları istenmez
-    with _cizgi_semasi(cizgi):
+    if yapi == "belgesel" and belgesel_gorunum:  # şablon görünümü sabitlediyse (templates/belgesel.json "gorunum")
+        ask += f"\nGÖRÜNÜM SABİT: belgesel.gorunum alanına '{belgesel_gorunum}' yaz."
+    kart = kart and yapi not in ("kitap", "belgesel")  # kendi şablonuyla çizilenler: kart alanları istenmez
+    belgesel = yapi == "belgesel"
+    with _cizgi_semasi(cizgi), _belgesel_semasi(belgesel):
         script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + kalip_kurallari(yapi, nasil)
                             + ("\n" + sablon_kurali.strip() if sablon_kurali.strip() else ""), web=web)
     if not cizgi:
         for sc in script.scenes:
             sc.cizgi = None
+    if not belgesel:
+        script.belgesel = None
+        for sc in script.scenes:
+            sc.belgesel = None
     forced = None if series_prev else structure
     serbest = not series_prev and not structure  # kalıp dönüşümden seçilir: FORCED_ONLY (nasil, uretim, olsaydin) seçilemez
     if forced:
@@ -1454,12 +1820,21 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
             raise KitapTelifHatasi(alinti, out.topic)
         for p in kitap_sorunlari(out):  # doğrulayıcı düzeltemediyse günlükte görünsün (onaydan önce bakılır)
             print("UYARI kitap:", p)
+    if structure == "belgesel":
+        belgesel_geri_yukle(script, out)
+        normalize_belgesel(out)
+        for p in belgesel_sorunlari(out):  # doğrulayıcı düzeltemediyse günlükte görünsün (onaydan önce bakılır)
+            print("UYARI belgesel:", p)
     return normalize_nasil(out)
 
 
 def arastirma_ask(yapi: str) -> str:
     """Senaryosu web aramasıyla yazılan kalıpların (WEB_KALIPLARI) araştırma yönergesi."""
     bugun = dt.date.today().strftime("%d.%m.%Y")
+    if yapi == "belgesel":
+        return (f"\nBugünün tarihi: {bugun}. Yazmadan önce konuyu web aramasıyla araştır (ansiklopediler, üniversite ve "
+                "müze sayfaları, veteriner ve hekim kuruluşları, bilim dergileri): evrelerin sırası ve adları, yaş, süre, "
+                "miktar ve sayılar bu kaynaklara dayansın; kaynakları 'sources' alanına URL olarak yaz.")
     if yapi == "kitap":
         return (f"\nBugünün tarihi: {bugun}. Yazmadan önce kitabı ve yazarını web aramasıyla araştır (ansiklopediler, "
                 "kütüphane kayıtları, edebiyat tarihleri, güvenilir haber kaynakları): ilk yayım yılı, özgün dili, "
@@ -1602,6 +1977,18 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         kalip += ("Sahnelerin 'delil' alanını koru; delil sahnesi çıkarır ya da birleştirirsen kalan delilleri 1'den "
                   "başlayarak sırayla yeniden numarala (aynı delili sürdüren sahneler aynı numara; kanca, compare, ara, "
                   "sonuç ve soru sahnelerinde 0). ")
+    if yapi == "belgesel":
+        kalip += ("Bu senaryo İKİ BÖLÜMLÜK bir Mini Belgesel: belgesel alanlarını (senaryonun belgesel alanı: görünüm, "
+                  "evreler, bolum1_son; sahnelerin belgesel alanı: bolum, tur, durak, baslik, metin, kalemler, sayi) koru; "
+                  "dış sesi değiştirdiğin sahnenin metin, sayi ve kalemler alanlarını da uydur. Her evrenin sırasını, "
+                  "yaşları, süreleri ve sayıları güvenilir kaynaklarla doğrula; doğrulanamayanı düzelt ya da çıkar. "
+                  f"Her bölümün toplam dış sesi {BELGESEL_KELIME[0]}-{BELGESEL_KELIME[1]} kelime, "
+                  f"{BELGESEL_KELIME_UST}'yi geçmez (78 kelime sınırı yerine); Bölüm 1 '{BELGESEL_DEVAM}' ile biter, "
+                  f"Bölüm 2 'Bölüm 1'de' ile başlar ve '{BELGESEL_KAPANIS}' ile biter. Sağlık tavsiyesi ve şu alanlara "
+                  "giren açıyı çıkar: " + BELGESEL_YASAK + ". ")
+        sorun = belgesel_sorunlari(script)
+        if sorun:
+            kalip += "Mini Belgesel kurallarında bulunan sorunlar (düzelt): " + "; ".join(sorun) + ". "
     cizgili = any(sc.cizgi is not None for sc in script.scenes)
     if cizgili:  # Çizgi Roman: uzunluk kuralı genel 78 kelime sınırının yerine geçer
         kalip += CIZGI_UZUNLUK + " "
@@ -1613,8 +2000,9 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
                    "düzenini koru; adım çıkarırsan kalanları yeniden numarala. ") if yapi == "nasil" else
                   ("Kanca, numaralı aşama sahneleri (step 1, 2, 3...; başlığın ilk satırı 'AŞAMA n') ve son ölçek "
                    "sahnesi düzenini koru; aşama çıkarırsan kalanları yeniden numarala. "))
-    sinir = (f"toplam dış ses {CIZGI_KELIME_UST} kelimeyi" if cizgili else "toplam dış ses 78 kelimeyi")
-    with _cizgi_semasi(cizgili):
+    sinir = (f"toplam dış ses {CIZGI_KELIME_UST} kelimeyi" if cizgili else
+             f"her bölümün dış sesi {BELGESEL_KELIME_UST} kelimeyi" if yapi == "belgesel" else "toplam dış ses 78 kelimeyi")
+    with _cizgi_semasi(cizgili), _belgesel_semasi(yapi == "belgesel"):
         review = ask_claude(
             "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
             "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
@@ -1638,6 +2026,9 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         _kitap_alanlarini_tamamla(script, review.fixed)
     if cizgili:  # Çizgi Roman: paneller ve balonlar yazarın tarifinde kalır
         cizgi_geri_yukle(script, review.fixed)
+    if yapi == "belgesel":  # Mini Belgesel: bölüm ve ekran alanları düşmesin
+        belgesel_geri_yukle(script, review.fixed)
+        normalize_belgesel(review.fixed)
     if yapi == "uretim":  # İş Emri: son sahnenin üretim sayacı kartı (counter) doğrulamada düşmesin
         sayac_karti_geri_yukle(script, review.fixed)
     return normalize_kitap(normalize_nasil(review.fixed))
@@ -1670,10 +2061,14 @@ def _senaryo_json(script: ShortScript) -> str:
     yalnız dolu olduğunda yazılır: diğer kalıpların istemleri bu alanlar eklenmeden önceki hâliyle aynı kalır."""
     # Çizgi Roman sahne tarifi (cizgi) yalnız dolu olan senaryoda yazılır: diğer senaryoların istemi aynı kalır
     cizgisiz = set() if any(sc.cizgi is not None for sc in script.scenes) else {"cizgi"}
+    # Mini Belgesel alanları yalnız belgesel senaryosunda yazılır
+    belgeselsiz = set() if script.structure == "belgesel" else {"belgesel"}
     if script.structure == "kitap":
-        return script.model_dump_json(indent=1, exclude={"scenes": {"__all__": cizgisiz}} if cizgisiz else None)
-    return script.model_dump_json(indent=1, exclude={"kitap": True,
-                                                     "scenes": {"__all__": _KITAP_SAHNE_ALANLARI | cizgisiz}})
+        return script.model_dump_json(indent=1, exclude={"belgesel": True,
+                                                         "scenes": {"__all__": cizgisiz | belgeselsiz}})
+    ust = {"kitap": True, **({"belgesel": True} if belgeselsiz else {})}
+    return script.model_dump_json(indent=1, exclude={**ust, "scenes": {"__all__": _KITAP_SAHNE_ALANLARI | cizgisiz
+                                                                      | belgeselsiz}})
 
 
 def _kitap_alanlarini_tamamla(once: ShortScript, sonra: ShortScript) -> None:
@@ -1794,8 +2189,15 @@ EDITOR_CIZGI = f"""
 ve içindeki sözü koru. Son sahnedeki 'A: ...' ve 'B: ...' seçeneklerini, '{CIZGI_KARAR}' sözünü ve '{CIZGI_OY_CAGRI}'
 çağrısını değiştirme."""
 
+# Yalnız belgesel kalıbında editöre eklenir (Mini Belgesel).
+EDITOR_BELGESEL = f"""
+MİNİ BELGESEL: bu senaryo iki bölümlük; her bölümün toplam dış sesi {BELGESEL_KELIME[0]}-{BELGESEL_KELIME[1]} kelime,
+{BELGESEL_KELIME_UST}'yi geçmesin (65-75 kelime kuralı yerine). Sahnelerin belgesel alanlarına (bolum, tur, durak, baslik,
+metin, kalemler, sayi) ve senaryonun belgesel alanına DOKUNMA. Bölüm 1'in son cümlesi '{BELGESEL_DEVAM}' olarak kalsın;
+Bölüm 2'nin ilk cümlesi 'Bölüm 1'de' ile başlasın, son cümlesi '{BELGESEL_KAPANIS}' olsun. Sayıları değiştirme."""
+
 # Dil düzeltmesinde rakamları korunan kalıplar: editör bir sahnenin sayılarını değiştirirse o sahnenin metni geri alınır.
-SAYI_KORUNAN = {"uretim", "olsaydin", "kitap"}
+SAYI_KORUNAN = {"uretim", "olsaydin", "kitap", "belgesel"}
 
 
 def _sayilar(metin: str) -> list[str]:
@@ -1817,8 +2219,8 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
     cizgili = any(sc.cizgi is not None for sc in script.scenes)
     ek = ((EDITOR_NASIL if duzen else "") + (EDITOR_URETIM if yapi == "uretim" else "")
           + (EDITOR_OLSAYDIN if yapi == "olsaydin" else "") + (EDITOR_KITAP if yapi == "kitap" else "")
-          + (EDITOR_CIZGI if cizgili else ""))
-    with _cizgi_semasi(cizgili):
+          + (EDITOR_CIZGI if cizgili else "") + (EDITOR_BELGESEL if yapi == "belgesel" else ""))
+    with _cizgi_semasi(cizgili), _belgesel_semasi(yapi == "belgesel"):
         res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + _senaryo_json(script), Polished, EDITOR + ek)
     if res.notes:
         print("Dil düzeltmeleri:", *res.notes[:12], sep="\n - ")
@@ -1828,7 +2230,7 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
     korunan = [f for f in ("theme", "image_mode", "image_query", "image_queries", "illustration", "motion", "trail", "icon",
                            "anim_query", "card", "card_value", "card_label", "card_myth", "card_fact", "card_note",
                            "card_lines", "mascot", "step", "callouts", "kitap_bolum", "sayfa_metni", "vurgu", "delil",
-                           "cizgi")
+                           "cizgi", "belgesel")
                if f in Scene.model_fields]
     for i, (a, b) in enumerate(zip(script.scenes, fixed.scenes)):  # görsel alanları kesin olarak koru
         for f in korunan:
@@ -1843,6 +2245,7 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
     fixed.alkollu = script.alkollu
     fixed.kitap = script.kitap.model_copy(deep=True) if script.kitap is not None else None
     fixed.hukum = script.hukum  # Dava Dosyası hükmü: dil editörü değiştiremez
+    fixed.belgesel = script.belgesel.model_copy(deep=True) if script.belgesel is not None else None
     return fixed
 
 

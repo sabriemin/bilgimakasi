@@ -1,0 +1,512 @@
+{
+ "topic": "Kanın temizlenmesi",
+ "category": "insan vücudu",
+ "template": "belgesel",
+ "title": "Kanın temizlik yolculuğu: 6 durak",
+ "description": "Vücudundaki kan her dakika bir tur atar ve yolda temizlenir. Sence en çalışkan organ hangisi?",
+ "hashtags": [
+  "kanıntemizlenmesi",
+  "insanvücudu",
+  "böbrek",
+  "karaciğer",
+  "bilgimakasi"
+ ],
+ "search_phrase": "kan nasıl temizlenir",
+ "structure": "belgesel",
+ "sources": [
+  "https://www.ncbi.nlm.nih.gov/books/NBK279012/",
+  "https://www.niddk.nih.gov/health-information/kidney-disease/kidneys-how-they-work",
+  "https://www.ncbi.nlm.nih.gov/books/NBK482385/"
+ ],
+ "belgesel": {
+  "gorunum": "hat",
+  "alt_baslik": "kan · temizlik hattı",
+  "baslik": [
+   "KANIN",
+   "TEMİZLİK YOLU"
+  ],
+  "bolum1_son": 2,
+  "duraklar": [
+   {
+    "ad": "KALP"
+   },
+   {
+    "ad": "DOKULAR"
+   },
+   {
+    "ad": "AKCİĞER"
+   },
+   {
+    "ad": "KARACİĞER"
+   },
+   {
+    "ad": "BÖBREK"
+   },
+   {
+    "ad": "MESANE"
+   }
+  ]
+ },
+ "scenes": [
+  {
+   "narration": "Vücudundaki bütün kan her dakika bir tur atıyor. Yetişkin bir insanda yaklaşık beş litre kan bulunur ve kalp dinlenirken bile dakikada aşağı yukarı beş litre kan pompalar. Bu iki bölümde kanın temizlik yolculuğunu durak durak izleyeceğiz.",
+   "kicker": "",
+   "headline": [],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "kanca",
+    "durak": 0,
+    "baslik": "",
+    "metin": "Kirlenir, temizlenir: 6 durak, 2 bölüm.",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "İlk durak kalp. Yumruk büyüklüğündeki bu kas günde yaklaşık yüz bin kez kasılır ve kanı bütün vücuda gönderir. Yolculuk her seferinde buradan başlar.",
+   "kicker": "",
+   "headline": [
+    "YUMRUK KADAR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "human heart anatomy",
+    "heart anatomy illustration"
+   ],
+   "icon": "none",
+   "illustration": "a stylized human heart",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "durak",
+    "durak": 0,
+    "baslik": "YUMRUK KADAR",
+    "metin": "Günde yaklaşık 100 bin kez kasılır.",
+    "foto_etiketi": "KALP",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Kalpten çıkan kan, uzunluğu yaklaşık yüz bin kilometre olarak hesaplanan bir damar ağına dağılır. Bu, Dünya'nın çevresini iki kezden fazla dolaşmaya yeter.",
+   "kicker": "",
+   "headline": [
+    "DAMAR AĞI"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "sayi",
+    "durak": 0,
+    "baslik": "DAMAR AĞI",
+    "metin": "Dünya'nın çevresinin iki katından uzun.",
+    "foto_etiketi": "",
+    "sayi": "100.000 KM",
+    "sayi_etiketi": "DAMARLARIN UZUNLUĞU",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "İkinci durak dokular. Alyuvarlar burada taşıdıkları oksijeni hücrelere bırakır. Dönüşte ise hücrelerin ürettiği atıkları, en çok da karbondioksidi toplayarak yola devam ederler.",
+   "kicker": "",
+   "headline": [
+    "TESLİMAT VE ATIK"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "red blood cells scanning electron microscope",
+    "erythrocytes"
+   ],
+   "icon": "none",
+   "illustration": "red blood cells",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "durak",
+    "durak": 1,
+    "baslik": "TESLİMAT VE ATIK",
+    "metin": "Oksijeni bırakır, karbondioksidi toplar.",
+    "foto_etiketi": "ALYUVARLAR",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Bu işi yapan bir alyuvar yaklaşık yüz yirmi gün yaşar ve bu kısa ömründe vücudu on binlerce kez dolaşır. Yıpranan alyuvarlar ise dalakta ayıklanır.",
+   "kicker": "",
+   "headline": [
+    "KISA BİR ÖMÜR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "sayi",
+    "durak": 1,
+    "baslik": "KISA BİR ÖMÜR",
+    "metin": "Bir alyuvar vücudu on binlerce kez dolaşır.",
+    "foto_etiketi": "",
+    "sayi": "120 GÜN",
+    "sayi_etiketi": "BİR ALYUVARIN ÖMRÜ",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Kirlenen kan önce kalbe döner, oradan da akciğerlere gönderilir. Akciğerlerdeki yüz milyonlarca minik hava kesesinde karbondioksit bırakılır, yerine taze oksijen alınır.",
+   "kicker": "",
+   "headline": [
+    "HAVA DEĞİŞİMİ"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "lung alveoli",
+    "pulmonary alveolus diagram"
+   ],
+   "icon": "none",
+   "illustration": "lungs with tiny air sacs",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "durak",
+    "durak": 2,
+    "baslik": "HAVA DEĞİŞİMİ",
+    "metin": "Hava keselerinde karbondioksit çıkar, oksijen girer.",
+    "foto_etiketi": "HAVA KESELERİ",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Bu hava keselerinin toplam yüzeyi yaklaşık yetmiş metrekareyi bulur. Yani her nefeste küçük bir dairenin tabanı kadar bir yüzey çalışır.",
+   "kicker": "",
+   "headline": [
+    "DEV BİR YÜZEY"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "sayi",
+    "durak": 2,
+    "baslik": "DEV BİR YÜZEY",
+    "metin": "Hava keselerinin toplam yüzeyi yaklaşık 70 metrekare.",
+    "foto_etiketi": "",
+    "sayi": "70 M2",
+    "sayi_etiketi": "HAVA KESESİ YÜZEYİ",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Karbondioksit gitti ama kanda hâlâ başka atıklar var: özellikle proteinler parçalanırken açığa çıkan zehirli amonyak. Onu kim temizleyecek? Devamı Bölüm 2'de.",
+   "kicker": "",
+   "headline": [],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "human liver anatomy",
+    "liver illustration"
+   ],
+   "icon": "none",
+   "illustration": "a human liver",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "devam",
+    "durak": 2,
+    "baslik": "",
+    "metin": "Sırada amonyak var. Karaciğer ve böbrekler onu nasıl temizler?",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": [
+     "karaciğer",
+     "böbrek"
+    ]
+   }
+  },
+  {
+   "narration": "Bölüm 1'de kalbin kanı her dakika vücuda gönderdiğini, kanın dokulardan atık topladığını ve akciğerlerde karbondioksitten kurtulduğunu gördük. Şimdi sırada karaciğer var.",
+   "kicker": "",
+   "headline": [],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "ozet",
+    "durak": 3,
+    "baslik": "",
+    "metin": "",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": [
+     "Kalp kanı her dakika döndürdü.",
+     "Kan dokulardan atık topladı.",
+     "Akciğer karbondioksidi attı."
+    ]
+   }
+  },
+  {
+   "narration": "Karaciğer vücudun kimya fabrikasıdır. Dakikada yaklaşık bir buçuk litre kan bu organdan geçer ve her damlası tek tek elden geçirilir.",
+   "kicker": "",
+   "headline": [
+    "KİMYA FABRİKASI"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "human liver anatomy",
+    "liver lobules histology"
+   ],
+   "icon": "none",
+   "illustration": "a human liver",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "durak",
+    "durak": 3,
+    "baslik": "KİMYA FABRİKASI",
+    "metin": "Dakikada yaklaşık 1,5 litre kan karaciğerden geçer.",
+    "foto_etiketi": "KARACİĞER",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Proteinler parçalanırken açığa çıkan amonyak, burada üre döngüsü denen bir dizi tepkimeyle çok daha zararsız olan üreye çevrilir. Üre yeniden kana karışır ve böbreklere doğru yola çıkar.",
+   "kicker": "",
+   "headline": [
+    "ÜRE DÖNGÜSÜ"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "urea cycle diagram",
+    "urea molecule"
+   ],
+   "icon": "none",
+   "illustration": "a chemistry diagram of urea",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "durak",
+    "durak": 3,
+    "baslik": "ÜRE DÖNGÜSÜ",
+    "metin": "Zehirli amonyak, zararsız üreye dönüşür.",
+    "foto_etiketi": "ÜRE",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Sıradaki durak böbrekler. Fasulye biçimli bu iki organın her birinde, süzgeç gibi çalışan yaklaşık bir milyon nefron bulunur.",
+   "kicker": "",
+   "headline": [
+    "MİLYON SÜZGEÇ"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "kidney anatomy",
+    "nephron diagram"
+   ],
+   "icon": "none",
+   "illustration": "a human kidney",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "durak",
+    "durak": 4,
+    "baslik": "MİLYON SÜZGEÇ",
+    "metin": "Her böbrekte yaklaşık 1 milyon nefron.",
+    "foto_etiketi": "NEFRONLAR",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Böbrekler her gün yaklaşık yüz seksen litre sıvıyı süzer. Ama bunun yüzde doksan dokuzundan fazlası geri emilerek kana döner.",
+   "kicker": "",
+   "headline": [
+    "GÜNLÜK SÜZME"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "sayi",
+    "durak": 4,
+    "baslik": "GÜNLÜK SÜZME",
+    "metin": "Süzülenin %99'dan fazlası kana geri döner.",
+    "foto_etiketi": "",
+    "sayi": "180 L",
+    "sayi_etiketi": "GÜNDE SÜZÜLEN SIVI",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Geriye kalan yaklaşık bir buçuk litre ise üre ve fazla tuzlarla birlikte idrara dönüşür. Yani böbrekler süzdüklerinin çok küçük bir kısmını dışarı atar.",
+   "kicker": "",
+   "headline": [
+    "180'DEN 1,5'E"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "karsilastirma",
+    "durak": 4,
+    "baslik": "180'DEN 1,5'E",
+    "metin": "Süzülen 180 litrenin yalnız 1,5 litresi idrar olur.",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": [
+     "SÜZÜLEN (LİTRE)|180",
+     "İDRAR (LİTRE)|1,5"
+    ]
+   }
+  },
+  {
+   "narration": "Son durak mesane. Esneyebilen bu kese yaklaşık dört yüz ile altı yüz mililitre idrar tutabilir ve dolmaya başladığında beyne sinyal gönderir. Böylece temizlenen kan yeniden kalbe, atıklar ise dışarıya yol alır.",
+   "kicker": "",
+   "headline": [
+    "SON DURAK"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "urinary bladder anatomy",
+    "urinary system diagram"
+   ],
+   "icon": "none",
+   "illustration": "a urinary bladder",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "durak",
+    "durak": 5,
+    "baslik": "SON DURAK",
+    "metin": "Yaklaşık 400-600 mililitre tutar.",
+    "foto_etiketi": "MESANE",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Yani sen hiçbir şey yapmadan otururken bile kanın bu yolculuğu her gün yüzlerce kez tamamlanıyor. Sence en çalışkan organ hangisi? Yorumlara yaz.",
+   "kicker": "",
+   "headline": [
+    "EN ÇALIŞKAN ORGAN HANGİSİ?"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "kapanis",
+    "durak": 5,
+    "baslik": "EN ÇALIŞKAN ORGAN HANGİSİ?",
+    "metin": "Kan bu yolculuğu her gün yüzlerce kez tamamlar.",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  }
+ ]
+}

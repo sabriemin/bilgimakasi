@@ -1,0 +1,558 @@
+{
+ "topic": "Bir kedinin yaşam döngüsü",
+ "category": "doğa ve hayvanlar",
+ "template": "belgesel",
+ "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa",
+ "description": "Bir kedi kör ve sağır doğar; ilk yılı on beş insan yılına denk gelir. Senin kedin hangi evrede?",
+ "hashtags": [
+  "kedininyaşamdöngüsü",
+  "kedi",
+  "kediler",
+  "belgesel",
+  "bilgimakasi"
+ ],
+ "search_phrase": "kedinin yaşam döngüsü",
+ "structure": "belgesel",
+ "sources": [
+  "https://catvets.com/guidelines/practice-guidelines/life-stage-guidelines",
+  "https://icatcare.org/advice/how-to-tell-your-cats-age-in-human-years/",
+  "https://www.guinnessworldrecords.com/world-records/oldest-cat-ever"
+ ],
+ "belgesel": {
+  "gorunum": "cizgi",
+  "alt_baslik": "kedi · yaşam döngüsü",
+  "baslik": [
+   "BİR KEDİNİN",
+   "15 YILI"
+  ],
+  "bolum1_son": 2,
+  "duraklar": [
+   {
+    "ad": "DOĞUM",
+    "ust": "0"
+   },
+   {
+    "ad": "YAVRU",
+    "ust": "2 hf"
+   },
+   {
+    "ad": "GENÇ",
+    "ust": "6 ay"
+   },
+   {
+    "ad": "YETİŞKİN",
+    "ust": "3 yıl"
+   },
+   {
+    "ad": "OLGUN",
+    "ust": "7 yıl"
+   },
+   {
+    "ad": "YAŞLI",
+    "ust": "11 yıl"
+   }
+  ]
+ },
+ "scenes": [
+  {
+   "narration": "Bir kedi doğduğunda ne görebilir ne de duyabilir. Yalnızca yüz gram kadar gelir. Bu iki bölümlük belgeselde bir kedinin hayatını altı evrede, doğumdan yaşlılığa kadar izleyeceğiz.",
+   "kicker": "",
+   "headline": [],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "newborn kittens",
+    "newborn kitten sleeping"
+   ],
+   "icon": "none",
+   "illustration": "a tiny newborn orange kitten curled up asleep",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "kanca",
+    "durak": 0,
+    "baslik": "",
+    "metin": "Doğumdan yaşlılığa, 6 evre, 2 bölüm.",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Yavrular genellikle dört ile altı kardeşle birlikte doğar. Gözleri ve kulak kanalları kapalıdır; annelerini ve sütü kokusundan, sıcaklığından bulurlar.",
+   "kicker": "",
+   "headline": [
+    "KOKUYLA BULUR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "kittens nursing mother cat",
+    "cat nursing kittens"
+   ],
+   "icon": "none",
+   "illustration": "a mother cat nursing four kittens",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "durak",
+    "durak": 0,
+    "baslik": "KOKUYLA BULUR",
+    "metin": "Gözler ve kulaklar kapalı: yavru anneyi kokusundan bulur.",
+    "foto_etiketi": "1. GÜN",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "İlk günlerini neredeyse yalnızca uyuyarak ve emerek geçirirler. Bu sayede hızla büyürler: bir yavru, doğum ağırlığını yaklaşık iki haftada ikiye katlar.",
+   "kicker": "",
+   "headline": [
+    "HIZLI BÜYÜME"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "sayi",
+    "durak": 0,
+    "baslik": "HIZLI BÜYÜME",
+    "metin": "Doğum ağırlığı yaklaşık iki haftada ikiye katlanır.",
+    "foto_etiketi": "",
+    "sayi": "2 KAT",
+    "sayi_etiketi": "İKİ HAFTADA AĞIRLIK",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "İkinci haftaya doğru gözler açılır. Bütün yavruların gözleri önce mavidir; asıl renk ancak birkaç hafta içinde ortaya çıkar. Üçüncü haftada ise titrek ilk adımlar atılır.",
+   "kicker": "",
+   "headline": [
+    "GÖZLER AÇILIYOR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "two week old kitten blue eyes",
+    "kitten blue eyes"
+   ],
+   "icon": "none",
+   "illustration": "a small kitten with big blue eyes",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "durak",
+    "durak": 1,
+    "baslik": "GÖZLER AÇILIYOR",
+    "metin": "Gözler 7-14. günde açılır ve önce hep mavidir.",
+    "foto_etiketi": "2. HAFTA",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "İkinci ile yedinci haftalar arası, kedinin karakterinin şekillendiği en kritik dönemdir. Bu haftalarda insanlarla, seslerle ve başka hayvanlarla tanışan yavru, ileride çok daha rahat bir kedi olur.",
+   "kicker": "",
+   "headline": [
+    "KRİTİK HAFTALAR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "kittens playing",
+    "kitten playing with toy"
+   ],
+   "icon": "none",
+   "illustration": "two kittens playing with a ball of yarn",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "durak",
+    "durak": 1,
+    "baslik": "KRİTİK HAFTALAR",
+    "metin": "2-7. haftada tanıdığı insan ve sesler karakterini biçimlendirir.",
+    "foto_etiketi": "2-7. HAFTA",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Altı aya gelindiğinde yavru artık genç bir kedidir. Dört ile yedi ay arasında yirmi altı süt dişi dökülür, yerine otuz kalıcı diş çıkar. Genç kedi bu dönemde avlanmayı ve tırmanmayı da oyunla öğrenir.",
+   "kicker": "",
+   "headline": [
+    "DİŞLER DEĞİŞİYOR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "young cat six months old",
+    "juvenile domestic cat"
+   ],
+   "icon": "none",
+   "illustration": "a lanky young tabby cat",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "durak",
+    "durak": 2,
+    "baslik": "DİŞLER DEĞİŞİYOR",
+    "metin": "26 süt dişi dökülür, yerine 30 kalıcı diş çıkar.",
+    "foto_etiketi": "6. AY",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Peki bir kedi yılı kaç insan yılı eder? Veteriner kılavuzlarına göre bir kedinin ilk yılı, bir insanın yaklaşık on beş yılına denk gelir. Yani bir yaşındaki kedi, ergenliğini çoktan bitirmiştir.",
+   "kicker": "",
+   "headline": [
+    "1 KEDİ YILI = ?"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "karsilastirma",
+    "durak": 2,
+    "baslik": "1 KEDİ YILI = ?",
+    "metin": "İlk yıl, yaklaşık 15 insan yılına denk gelir.",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": [
+     "KEDİNİN İLK YILI|1",
+     "İNSAN KARŞILIĞI|15"
+    ]
+   }
+  },
+  {
+   "narration": "Genç kedi artık sınırlarını tanıyor. Peki yetişkinlik onu nasıl değiştirecek, yaşlılık neler getirecek? Devamı Bölüm 2'de.",
+   "kicker": "",
+   "headline": [],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "old cat portrait",
+    "senior cat"
+   ],
+   "icon": "none",
+   "illustration": "an old grey cat",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 1,
+    "tur": "devam",
+    "durak": 2,
+    "baslik": "",
+    "metin": "Sırada yetişkinlik, olgunluk ve yaşlılık var.",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": [
+     "yetişkinlik",
+     "olgunluk",
+     "yaşlılık"
+    ]
+   }
+  },
+  {
+   "narration": "Bölüm 1'de yavruların kör doğduğunu, gözlerin ikinci haftada açıldığını ve ilk yılın yaklaşık on beş insan yılı ettiğini gördük. Şimdi sırada yetişkinlik var.",
+   "kicker": "",
+   "headline": [],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "ozet",
+    "durak": 3,
+    "baslik": "",
+    "metin": "",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": [
+     "Kör ve sağır doğdu.",
+     "Gözleri 2. haftada açıldı.",
+     "İlk yıl ≈ 15 insan yılı."
+    ]
+   }
+  },
+  {
+   "narration": "Üç yaşından itibaren kedi hayatının en güçlü dönemindedir. Kasları ve refleksleri zirvededir; sağlıklı bir yetişkin kedi, kendi boyunun yaklaşık beş katı yüksekliğe sıçrayabilir.",
+   "kicker": "",
+   "headline": [
+    "EN GÜÇLÜ YILLAR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "cat jumping",
+    "cat leaping"
+   ],
+   "icon": "none",
+   "illustration": "an adult cat leaping in the air",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "durak",
+    "durak": 3,
+    "baslik": "EN GÜÇLÜ YILLAR",
+    "metin": "Kendi boyunun yaklaşık beş katı yüksekliğe sıçrar.",
+    "foto_etiketi": "3 YAŞ",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Yine de günün büyük bölümünü uykuda geçirir. Yetişkin bir kedi günde ortalama on iki ile on altı saat uyur.",
+   "kicker": "",
+   "headline": [
+    "UYKU USTASI"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "sayi",
+    "durak": 3,
+    "baslik": "UYKU USTASI",
+    "metin": "Günün yarısından fazlası uykuyla geçer.",
+    "foto_etiketi": "",
+    "sayi": "12-16",
+    "sayi_etiketi": "SAAT UYKU · GÜNDE",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Kediler aslında alacakaranlık hayvanlarıdır: en hareketli oldukları saatler şafak ve gün batımıdır. Bu yüzden ev kedileri de sabahın erken saatlerinde evi birbirine katabilir.",
+   "kicker": "",
+   "headline": [
+    "ŞAFAK AVCISI"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "cat at dawn",
+    "cat hunting"
+   ],
+   "icon": "none",
+   "illustration": "a cat silhouette at dawn",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "durak",
+    "durak": 3,
+    "baslik": "ŞAFAK AVCISI",
+    "metin": "En hareketli saatler: şafak ve gün batımı.",
+    "foto_etiketi": "ŞAFAK",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Yedi yaşından sonra kedi olgunluk dönemine girer. Hareketleri yavaşlar, oyunları kısalır ve kilo almaya daha yatkın hâle gelir.",
+   "kicker": "",
+   "headline": [
+    "YAVAŞLAMA"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "middle aged cat resting",
+    "cat lying on sofa"
+   ],
+   "icon": "none",
+   "illustration": "a calm cat resting on a sofa",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "durak",
+    "durak": 4,
+    "baslik": "YAVAŞLAMA",
+    "metin": "Oyunlar kısalır, kilo almak kolaylaşır.",
+    "foto_etiketi": "7 YAŞ",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Bu noktada hesap da değişir: ikinci yıldan sonra her kedi yılı yaklaşık dört insan yılına denk gelir. Yedi yaşındaki bir kedi, kırk dört yaşında bir insan sayılır.",
+   "kicker": "",
+   "headline": [
+    "7 YAŞ = ?"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "karsilastirma",
+    "durak": 4,
+    "baslik": "7 YAŞ = ?",
+    "metin": "2. yıldan sonra her yıl ≈ 4 insan yılı.",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": [
+     "KEDİ YAŞI|7",
+     "İNSAN KARŞILIĞI|44"
+    ]
+   }
+  },
+  {
+   "narration": "On bir yaşından itibaren kedi yaşlı sayılır. Daha çok uyur, sıcak köşeleri arar ve sıçrayışları kısalır.",
+   "kicker": "",
+   "headline": [
+    "SICAK KÖŞELER"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "old cat sleeping",
+    "elderly cat"
+   ],
+   "icon": "none",
+   "illustration": "an old cat sleeping in the sun",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "durak",
+    "durak": 5,
+    "baslik": "SICAK KÖŞELER",
+    "metin": "Daha çok uyur, sıcak köşeleri arar.",
+    "foto_etiketi": "11 YAŞ",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "İyi bakılan ev kedileri çoğunlukla on iki ile on sekiz yıl yaşar. Kayıtlara geçen en yaşlı kedi Creme Puff ise tam otuz sekiz yıl yaşadı.",
+   "kicker": "",
+   "headline": [
+    "REKOR ÖMÜR"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "none",
+   "image_queries": [],
+   "icon": "none",
+   "illustration": "",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "sayi",
+    "durak": 5,
+    "baslik": "REKOR ÖMÜR",
+    "metin": "Ev kedileri çoğunlukla 12-18 yıl yaşar.",
+    "foto_etiketi": "",
+    "sayi": "38 YIL",
+    "sayi_etiketi": "EN UZUN KEDİ ÖMRÜ",
+    "kalemler": []
+   }
+  },
+  {
+   "narration": "Yani bir kedinin hayatı, bizimkinin hızlandırılmış bir özeti gibidir. Senin kedin hangi evrede? Yorumlara yaz.",
+   "kicker": "",
+   "headline": [
+    "SENİN KEDİN HANGİ EVREDE?"
+   ],
+   "highlight_line": -1,
+   "strike": [],
+   "theme": "paper",
+   "image_mode": "framed",
+   "image_queries": [
+    "cat portrait",
+    "domestic cat face"
+   ],
+   "icon": "none",
+   "illustration": "a cat looking at the viewer",
+   "motion": "none",
+   "mascot": "auto",
+   "belgesel": {
+    "bolum": 2,
+    "tur": "kapanis",
+    "durak": 5,
+    "baslik": "SENİN KEDİN HANGİ EVREDE?",
+    "metin": "Bir kedi hayatı: bizimkinin hızlı özeti.",
+    "foto_etiketi": "",
+    "sayi": "",
+    "sayi_etiketi": "",
+    "kalemler": []
+   }
+  }
+ ]
+}

@@ -33,7 +33,7 @@ const VIDEO_ISLEM = {
 };
 const KILITLI = ["approve", "reject", "cancel", "retry", "schedule"]; // Telegram'daki düğme de "⏳ İşleniyor" olur
 const DIGER_ISLEM = ["produce_suggestion", "produce_topic", "refresh_suggestions", "report", "queue_set"];
-// öneri sırasının kaba üst sınırı: yedi seri × 3 = 21 öneri (0-20); asıl denetim kayıtlı listedeki sıra ve konu
+// öneri sırasının kaba üst sınırı: sekiz seri × 3 = 24 öneri (0-23); asıl denetim kayıtlı listedeki sıra ve konu
 const ONERI_SIRA_SINIRI = 40;
 // shortgen/telegram_bot.py BEST_TIMES / EXTRA_TIMES varsayılanlarıyla aynı (test karşılaştırır)
 export const BEST_TIMES = { youtube: ["18:00", "21:00"], instagram: ["12:30", "20:00"], tiktok: ["19:30", "22:00"] };

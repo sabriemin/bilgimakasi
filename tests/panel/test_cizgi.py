@@ -135,7 +135,7 @@ class Senaryo(unittest.TestCase):
         self.assertEqual(sema["CizgiPanel"]["properties"]["mekan"]["enum"], list(CZ.MEKANLAR))
         self.assertEqual(sema["CizgiKarakter"]["properties"]["id"]["enum"], list(CZ.KARAKTERLER))
         # alan sınıfın sonunda ve şablon başlığının altında
-        self.assertEqual(list(S.Scene.model_fields)[-1], "cizgi")
+        self.assertEqual(list(S.Scene.model_fields)[-2:], ["cizgi", "belgesel"])
         kaynak = (REPO / "shortgen" / "script.py").read_text(encoding="utf-8")
         self.assertIn("    # --- cizgi şablonu ---\n    cizgi: CizgiSahne | None", kaynak)
 
@@ -267,8 +267,10 @@ class Senaryo(unittest.TestCase):
         kisa = S.sema_json(S.ShortScript)
         self.assertNotIn("cizgi", json.dumps(kisa))
         self.assertLess(len(json.dumps(kisa)), len(json.dumps(tam)) * 0.75)
-        with S._cizgi_semasi(True):
+        with S._cizgi_semasi(True), S._belgesel_semasi(True):
             self.assertEqual(S.sema_json(S.ShortScript), tam)
+        with S._cizgi_semasi(True):
+            self.assertNotIn("Belgesel", json.dumps(S.sema_json(S.ShortScript)))
         self.assertNotIn("cizgi", json.dumps(S.sema_json(S.ShortScript)))
         # yazar cizgi şablonu dışında tarif doldurursa boşaltılır
         dolu = demo()
