@@ -358,13 +358,14 @@ def _produce_suggestion(it: dict) -> bool:
     """Öneriden üretim: serinin kalıbı (trends.SERI_KALIP: Efsane mi, gerçek mi? -> efsane, Nasıl yapılır? -> nasil,
     Nasıl üretiliyor? -> uretim, Ya sen olsaydın? -> olsaydin, Bir Kitap Bir Dakika -> kitap, Mini Belgesel -> belgesel,
     Kelimenin kökeni -> koken) üretimde sabitlenir. Üretilen öneri listede işaretlenir (bir daha gösterilmez ve
-    üretilmez); serinin önerisi kalmadıysa yeni öneriler istenir."""
+    üretilmez); serinin önerisi azaldıysa (trends.YENILE_ESIK) o serinin yeni önerileri istenir."""
     from .trends import kalip_of, uretildi_isaretle
     ok = _dispatch(_suggestion_topic(it), kalip=kalip_of(it))
     if ok:
         try:
-            if uretildi_isaretle(str(it.get("topic") or "")):
-                _dispatch("", "oneri.yml")
+            seri = uretildi_isaretle(str(it.get("topic") or ""))
+            if seri:  # serinin önerisi azaldı: yalnız o seri yeniden doldurulur
+                _dispatch("", "oneri.yml", inputs={"seri": seri})
         except Exception as e:  # noqa: BLE001  işaret konamasa da üretim başladı
             print("öneri işaretlenemedi:", e)
     return ok

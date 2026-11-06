@@ -670,11 +670,11 @@ class KitapIcerik(unittest.TestCase):
         ortak = dict(hook="kanca", trend="neden", scope="TR", category="dil ve kültür", score=5)
         items = [dict(topic=f"{s} {i}", seri=s, **ortak) for s in tr.SERILER for i in range(3)]
         msj = tr.mesajlar(items)
-        self.assertEqual(len(msj), 3)
-        self.assertTrue(msj[2][0].startswith("🗂 Bugünün konu önerileri (3/3)\n\n📖 Bir Kitap Bir Dakika\n19. "))
+        self.assertEqual(len(msj), 9)
+        self.assertTrue(msj[6][0].startswith("🗂 Bugünün konu önerileri (7/9)\n\n📖 Bir Kitap Bir Dakika\n19. "))
         d = tr.damga(items)
-        self.assertEqual(msj[2][1][0], [("🎬 19", f"tp:{d}:18"), ("🎬 20", f"tp:{d}:19"), ("🎬 21", f"tp:{d}:20")])
-        self.assertIn("\n🎞 Mini Belgesel\n22. ", msj[2][0])
+        self.assertEqual(msj[6][1][0], [("🎬 19", f"tp:{d}:18"), ("🎬 20", f"tp:{d}:19"), ("🎬 21", f"tp:{d}:20")])
+        self.assertIn("\n🎞 Mini Belgesel\n22. ", msj[7][0])
 
     def test_seri_etiketi_ve_aciklama(self):
         P, pl = self.P, self.pl

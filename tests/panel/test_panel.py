@@ -1901,7 +1901,7 @@ class KonuSirasiUretim(Ortak):
         h = self.root / "history.jsonl"
         cagri, _ = self._main([], oneri=oneri)
         # nasil en yüksek puanlı olsa da seçilmez; otomatik üretim sahibin öneri listesini değiştirmez
-        self.assertEqual(istek, [{"kaydet": False, "seriler": tr.OTOMATIK_SERILER}])
+        self.assertEqual(istek, [{"kaydet": False, "seriler": tr.OTOMATIK_SERILER, "adet": tr.OTOMATIK_BASI}])
         self.assertEqual(cagri["topic"], "Efsane konusu (kanca: kanca; neden ilgi çeker: neden)")
         self.assertEqual(cagri["structure"], "efsane", "efsane önerisi efsane kalıbıyla üretilir")
         self.assertFalse(cagri["allow_series"])
@@ -1941,37 +1941,37 @@ class OneriSerileri(Ortak):
 
     def test_telegram_mesaji_seri_seri_ve_kesintisiz_numara(self):
         msjlar = self.tr.mesajlar(self.SERILI)
-        self.assertEqual(len(msjlar), 3, "21 öneri: üçer serilik mesajlar, Bir Kitap Bir Dakika üçüncü mesajda")
+        basliklar = [b for g in self.BASLIKLAR for b in g]
+        self.assertEqual(len(msjlar), 7, "21 öneri: her seri kendi mesajında (seri başına 10 öneriyle)")
         d = self.tr.damga(self.SERILI)
         self.assertRegex(d, r"^[0-9a-f]{8}$")
-        for k, ((metin, rows), basliklar) in enumerate(zip(msjlar, self.BASLIKLAR)):
-            self.assertTrue(metin.startswith(f"🗂 Bugünün konu önerileri ({k + 1}/3)\n\n" + basliklar[0] + "\n"))
-            konum = [metin.index("\n" + b + "\n") for b in basliklar]
-            self.assertEqual(konum, sorted(konum))
+        for k, ((metin, rows), b) in enumerate(zip(msjlar, basliklar)):
+            self.assertTrue(metin.startswith(f"🗂 Bugünün konu önerileri ({k + 1}/7)\n\n" + b + "\n"))
             numaralar = [int(x) for x in re.findall(r"^(\d+)\. ", metin, re.M)]
-            self.assertEqual(numaralar, list(range(9 * k + 1, 9 * k + 1 + 3 * len(basliklar))),
-                             "numaralar mesajlar boyunca kesintisiz")
-            # her numara kendi serisinin başlığı altında
-            for j, b in enumerate(basliklar):
-                ilk = metin.index(f"\n{9 * k + 3 * j + 1}. ")
-                self.assertLess(konum[j], ilk, b)
-                if j + 1 < len(basliklar):
-                    self.assertLess(metin.index(f"\n{9 * k + 3 * j + 3}. "), konum[j + 1], b)
+            self.assertEqual(numaralar, list(range(3 * k + 1, 3 * k + 4)), "numaralar mesajlar boyunca kesintisiz")
             # düğmeler kayıttaki sırayı gösterir: tp:<damga>:<sıra>
-            self.assertEqual(rows, [[(f"🎬 {i}", f"tp:{d}:{i - 1}") for i in range(n, n + 3)]
-                                    for n in range(9 * k + 1, 9 * k + 1 + 3 * len(basliklar), 3)])
+            self.assertEqual(rows, [[(f"🎬 {i}", f"tp:{d}:{i - 1}") for i in range(3 * k + 1, 3 * k + 4)]])
             self.assertLessEqual(self.uzunluk16(metin), 4096)
             self.assertTrue(metin.endswith("Üretmek istediğin konunun numarasına bas."))
         self.assertLessEqual(max(len(c.encode()) for _, r in msjlar for row in r for _, c in row), 64,
                              "Telegram callback_data sınırı")
         for i, it in enumerate(self.SERILI):  # her düğme kendi önerisinin konusunu taşıyan satırda
-            metin = msjlar[i // 9][0]
+            metin = msjlar[i // 3][0]
             self.assertIn(f"\n{i + 1}. ", metin)
             self.assertIn(it["topic"][:40], metin.split(f"\n{i + 1}. ", 1)[1].split("\n", 1)[0])
         self.assertIn("📈 Milli takımın", msjlar[0][0])  # Popüler'in gerekçesi gündem
-        self.assertIn("💡 Etilen gazını", msjlar[1][0])
-        self.assertIn("💡 Altın fiyatları", msjlar[1][0])
-        self.assertIn("💡 Yeni sinema uyarlamasıyla", msjlar[2][0])
+        tum = "".join(m for m, _ in msjlar)
+        for parca in ("💡 Etilen gazını", "💡 Altın fiyatları", "💡 Yeni sinema uyarlamasıyla"):
+            self.assertIn(parca, tum)
+
+    def test_on_oneri_bes_dugmelik_satirlar_ve_tek_seri_mesaji(self):
+        ortak = dict(hook="kanca", trend="neden", scope="TR", category="bilim", score=7)
+        items = [dict(topic=f"{s} {i}", seri=s, **ortak) for s in ("populer", "nasil") for i in range(10)]
+        msjlar = self.tr.mesajlar(items)
+        self.assertEqual([[len(r) for r in rows] for _, rows in msjlar], [[5, 5], [5, 5]])
+        yalniz = self.tr.mesajlar(items, ("nasil",))  # seri yenilenince yalnız o serinin mesajı gider
+        self.assertEqual(len(yalniz), 1)
+        self.assertIn("🛠 Nasıl yapılır?\n11. ", yalniz[0][0])
 
     def test_uzun_oneriler_sinira_zarifce_sigar(self):
         uzun = [{**it, "topic": it["topic"] + " ayrıntı" * 80, "hook": it["hook"] + " 😀" * 40,
@@ -2003,35 +2003,36 @@ class OneriSerileri(Ortak):
         self.assertEqual([self.tr.seri_of(x) for x in self.tr.sirala(karisik)],
                          ["populer", "populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap"])
         self.assertEqual(self.tr.sirala(karisik)[0]["score"], 9)
-        # eski 12 önerilik liste (dört seri): Nasıl yapılır? ikinci mesajda, numarası 10'dan sürer
+        # eski 12 önerilik liste (dört seri): her seri kendi mesajında, Nasıl yapılır? numarası 10'dan sürer
         eski = self.tr.mesajlar(self.SERILI[:12])
-        self.assertEqual([len(r) for _, r in eski], [3, 1])
-        self.assertTrue(eski[1][0].startswith("🗂 Bugünün konu önerileri (2/2)\n\n🛠 Nasıl yapılır?\n10. "))
-        # eski 18 önerilik liste (altı seri): iki mesaj, üçüncü mesaj yok
-        alti = self.tr.mesajlar(self.SERILI[:18])
-        self.assertEqual([len(r) for _, r in alti], [3, 3])
-        self.assertTrue(alti[1][0].startswith("🗂 Bugünün konu önerileri (2/2)\n\n🛠 Nasıl yapılır?\n10. "))
+        self.assertEqual(len(eski), 4)
+        self.assertTrue(eski[3][0].startswith("🗂 Bugünün konu önerileri (4/4)\n\n🛠 Nasıl yapılır?\n10. "))
 
     def test_notify_seri_mesajlari_ve_klavye(self):
         oneriler = [self.tr.Suggestion(**x) for x in reversed(self.SERILI)]
-        eski, self.tr.suggest = self.tr.suggest, lambda: self.tr.sirala(oneriler)
+        sirali = self.tr.sirala(oneriler)
+
+        def sahte(seriler=None):
+            self.tr.STATE.write_text(json.dumps({"date": "x", "items": [o.model_dump() for o in sirali]},
+                                                ensure_ascii=False), encoding="utf-8")
+            return sirali
+        eski, self.tr.suggest = self.tr.suggest, sahte
         try:
             with contextlib.redirect_stdout(io.StringIO()):
                 self.tr.notify()
         finally:
             self.tr.suggest = eski
         g = self.tg(self.req.cagrilar, "sendMessage")
-        self.assertEqual(len(g), 3, "üçer serilik mesajlar: 3 + 3 + 1 seri")
-        d = self.tr.damga([x.model_dump() for x in self.tr.sirala(oneriler)])  # damga kayıttaki sıradan
+        self.assertEqual(len(g), 7, "her seri kendi mesajında")
+        d = self.tr.damga([x.model_dump() for x in sirali])  # damga kayıttaki sıradan
         for k, m in enumerate(g):
             kb = m["data"]["reply_markup"]["inline_keyboard"]
-            self.assertEqual([[b["callback_data"] for b in r] for r in kb],
-                             [[f"tp:{d}:{i}" for i in range(n, n + 3)] for n in range(9 * k, min(9 * k + 9, 21), 3)])
+            self.assertEqual([[b["callback_data"] for b in r] for r in kb], [[f"tp:{d}:{i}" for i in range(3 * k, 3 * k + 3)]])
             self.assertLessEqual(self.uzunluk16(m["data"]["text"]), 4096)
-        self.assertTrue(g[0]["data"]["text"].startswith("🗂 Bugünün konu önerileri (1/3)\n\n🔥 Popüler\n1. 🇹🇷 1954"))
-        self.assertTrue(g[1]["data"]["text"].startswith("🗂 Bugünün konu önerileri (2/3)\n\n🛠 Nasıl yapılır?\n10. "))
-        self.assertIn("\n💭 Ya sen olsaydın?\n16. 🇹🇷 Kuyumcu olsaydın", g[1]["data"]["text"])
-        self.assertTrue(g[2]["data"]["text"].startswith("🗂 Bugünün konu önerileri (3/3)\n\n📖 Bir Kitap Bir Dakika\n"
+        self.assertTrue(g[0]["data"]["text"].startswith("🗂 Bugünün konu önerileri (1/7)\n\n🔥 Popüler\n1. 🇹🇷 1954"))
+        self.assertTrue(g[3]["data"]["text"].startswith("🗂 Bugünün konu önerileri (4/7)\n\n🛠 Nasıl yapılır?\n10. "))
+        self.assertIn("\n💭 Ya sen olsaydın?\n16. 🇹🇷 Kuyumcu olsaydın", g[5]["data"]["text"])
+        self.assertTrue(g[6]["data"]["text"].startswith("🗂 Bugünün konu önerileri (7/7)\n\n📖 Bir Kitap Bir Dakika\n"
                                                         "19. 🇹🇷 Sabahattin Ali, Kürk Mantolu Madonna"))
 
     def test_otomatik_oneri_kaydedilmez_ve_nasil_istenmez(self):
@@ -2045,12 +2046,14 @@ class OneriSerileri(Ortak):
             return tr.Suggestions(items=[tr.Suggestion(topic=f"{s} konusu", score=5, seri=s, **ortak) for s in tr.SERILER])
         eski, tr.ask_claude = tr.ask_claude, ask
         try:
-            items = tr.suggest(kaydet=False, seriler=tr.OTOMATIK_SERILER)
+            items = tr.suggest(kaydet=False, seriler=tr.OTOMATIK_SERILER, adet=tr.OTOMATIK_BASI)
             self.assertEqual(tr.STATE.read_text(encoding="utf-8"), once, "otomatik üretim listeyi değiştirmez")
             self.assertEqual([tr.seri_of(x) for x in items], ["populer", "konu", "efsane"])
             self.assertIn("(toplam 9): populer, konu, efsane.", istekler[0])
-            tr.suggest()  # /oneri: sekiz seri istenir ve liste kaydedilir
-            self.assertIn("(toplam 27): populer, konu, efsane, nasil, uretim, olsaydin, kitap, belgesel, koken.", istekler[1])
+            tr.suggest()  # /oneri: dokuz seri, üçerli üç çağrıda, seri başına 10 öneri istenir ve liste kaydedilir
+            self.assertIn("tam 10 short konusu öner (toplam 30): populer, konu, efsane.", istekler[1])
+            self.assertIn("(toplam 30): nasil, uretim, olsaydin.", istekler[2])
+            self.assertIn("(toplam 30): kitap, belgesel, koken.", istekler[3])
             self.assertEqual(len(json.loads(tr.STATE.read_text(encoding="utf-8"))["items"]), 9)
             # otomatik üretim (best) yalnız OTOMATIK_SERILER'i ister; nasil, uretim, olsaydin, kitap hiç seçilmez
             self.assertEqual(tr.OTOMATIK_SERILER, ("populer", "konu", "efsane"))

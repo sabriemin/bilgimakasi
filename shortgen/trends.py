@@ -42,12 +42,16 @@ SERI_KALIP = {"efsane": "efsane", "nasil": "nasil", "uretim": "uretim", "olsaydi
 # otomatik üretimin seçebileceği seriler: Nasıl yapılır?, Nasıl üretiliyor?, Ya sen olsaydın?, Bir Kitap Bir Dakika ve
 # Mini Belgesel yalnız elle seçilir
 OTOMATIK_SERILER = ("populer", "konu", "efsane")
-SERI_BASI = 3  # her seriden öneri sayısı
+SERI_BASI = 10  # her seriden öneri sayısı (Sabri 6 Kasım: her seride en az 10 öneri)
+OTOMATIK_BASI = 3  # otomatik üretimin (best) seri başına istediği öneri
+YENILE_ESIK = 3  # bir serinin üretilmemiş önerisi bu sayıya inince yalnız o seri yeniden doldurulur
+CAGRI_SERI = 3  # tek Claude çağrısında istenen seri sayısı (10'ar öneriyle yanıt uzun olmasın)
 TG_SINIR = 4096  # Telegram mesaj sınırı (UTF-16 birimi)
 # /oneri mesajı başına seri: 24 öneri ayrıntısıyla tek mesaja sığmaz. Seriler kayıt sırasıyla üçerli mesajlara bölünür
 # (Popüler, Konular, Efsane | Nasıl yapılır, Nasıl üretiliyor, Ya sen olsaydın | Bir Kitap Bir Dakika, Mini Belgesel);
-# bir serinin yeri hep aynı mesajdır.
-MESAJ_SERI = 3
+# bir serinin yeri hep aynı mesajdır. Seri başına 10 öneriyle her seri kendi mesajındadır.
+MESAJ_SERI = 1
+DUGME_SATIR = 5  # bir düğme satırında en çok bu kadar düğme (Telegram satır başına 8'e izin verir)
 
 SYSTEM = f"""Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için konu editörüsün. Görevin, short videolar için
 DOKUZ SERİDE konu önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa gönderilmesi,
@@ -118,7 +122,13 @@ Ortak kurallar:
 - Çeşitlilik: önerilerin en az yarısı ve her seriden en az biri Türkiye bağlantılı olsun (Türk kişi, takım, şehir,
   marka, kelime kökeni, Türkiye'deki yansıması); küresel konuda da Türkiye bağlantısı varsa onu öne çıkar.
 - Son işlenen konulara bakıp aynı alanı (ör. art arda futbol) üst üste önerme; seriler arasında da aynı konuyu ya da
-  alanı tekrarlama."""
+  alanı tekrarlama.
+- POPÜLER BAŞLIKLAR: her öneri geniş kitlenin tanıdığı bir şeye bağlansın: herkesin bildiği kişi, takım, marka, ürün,
+  kelime, film/dizi/oyun, şehir ya da gündelik nesne. Kanalın verisi: Türk takımlı futbol hikâyeleri (Fenerbahçe,
+  Galatasaray, Beşiktaş, Milli Takım, Avrupa geceleri) ve gündelik bir şeyin şaşırtıcı kökeni en çok izlenenler; antik
+  tarih, yabancı ve uzak konular en az izlenenler. Niş, akademik, uzak konular ÖNERME. 'Bunu kim bilmez ki' denen bir
+  konunun 'bunu bilmiyordum' dedirten açısını bul. Puanı 7'nin altında kalacak öneriyi yazma, yerine daha bilinen bir
+  konu bul."""
 
 
 class Suggestion(BaseModel):
@@ -210,30 +220,48 @@ def uretim_konusu(it) -> str:
     return f"{_alan(it, 'topic')} (kanca: {_alan(it, 'hook')}; {etiket}: {_alan(it, 'trend')})"
 
 
-def sirala(items: list) -> list:
+def sirala(items: list, adet: int = SERI_BASI) -> list:
     """Seri sırasıyla (SERILER: Popüler ... Bir Kitap Bir Dakika), her seride puana göre; seri başına en çok SERI_BASI."""
     out = []
     for s in SERILER:
         grup = sorted((x for x in items if seri_of(x) == s), key=lambda x: -(_alan(x, "score") or 0))
-        out += grup[:SERI_BASI]
+        out += grup[:adet]
     return out
 
 
-def suggest(kaydet: bool = True, seriler: tuple = tuple(SERILER)) -> list[Suggestion]:
-    """Tek web aramalı Claude çağrısı: istenen her seriden SERI_BASI öneri. kaydet: sonuç state/oneriler.json'a seri
-    sırasıyla yazılır (Telegram düğmesi ve panel öneriyi bu sıradaki numarasıyla seçer)."""
-    used = _history(ROOT / "history.jsonl")[-150:]
+def _iste(seriler: tuple, adet: int, used: list[str]) -> list:
     today = dt.date.today().strftime("%d %B %Y")
-    prompt = (f"Bugünün tarihi: {today}. Gündemi araştır ve şu serilerin her birinden tam {SERI_BASI} short konusu öner "
-              f"(toplam {SERI_BASI * len(seriler)}): {', '.join(seriler)}. Her serinin içinde en yüksek puanlı önce gelsin.")
+    prompt = (f"Bugünün tarihi: {today}. Gündemi araştır ve şu serilerin her birinden tam {adet} short konusu öner "
+              f"(toplam {adet * len(seriler)}): {', '.join(seriler)}. Her serinin içinde en yüksek puanlı önce gelsin.")
     if used:
-        prompt += "\nDaha önce işlenen konular (tekrar etme):\n- " + "\n- ".join(used)
+        prompt += "\nDaha önce işlenen ya da listede duran konular (tekrar etme):\n- " + "\n- ".join(used)
     res = ask_claude(prompt, Suggestions, SYSTEM, web=True)
-    items = [x for x in sirala(res.items) if seri_of(x) in seriler]
-    if kaydet:
+    return [x for x in res.items if seri_of(x) in seriler]
+
+
+def suggest(kaydet: bool = True, seriler: tuple = tuple(SERILER), adet: int = SERI_BASI) -> list[Suggestion]:
+    """Web aramalı Claude çağrıları (en çok CAGRI_SERI seri bir çağrıda): istenen her seriden `adet` öneri.
+    kaydet: sonuç state/oneriler.json'a seri sırasıyla yazılır (Telegram düğmesi ve panel öneriyi bu sıradaki
+    numarasıyla seçer). Yalnız bazı seriler istenirse (seri yenileme) kayıtlı listenin diğer serileri olduğu gibi kalır;
+    istenen serilerin eski önerileri yenileriyle değişir."""
+    used = _history(ROOT / "history.jsonl")[-150:]
+    eski = load_saved() if kaydet and set(seriler) != set(SERILER) else []
+    kalan = [x for x in eski if seri_of(x) not in seriler]
+    used += [str(_alan(x, "topic")) for x in kalan if not uretildi_mi(x)][:60]
+    gelen: list = []
+    for i in range(0, len(seriler), CAGRI_SERI):
+        parca = seriler[i:i + CAGRI_SERI]
+        try:
+            gelen += _iste(parca, adet, used)
+        except Exception as e:  # noqa: BLE001  bir grup düşerse diğerleri yine kaydedilir
+            print("öneri alınamadı:", parca, e, file=sys.stderr)
+    items = sirala(gelen, adet)
+    if kaydet and items:
+        tum = [*kalan, *(s.model_dump() for s in items)]
+        tum = [x for s in SERILER for x in tum if seri_of(x) == s]
         STATE.parent.mkdir(parents=True, exist_ok=True)
-        STATE.write_text(json.dumps({"date": str(dt.date.today()), "items": [s.model_dump() for s in items]},
-                                    ensure_ascii=False, indent=2), encoding="utf-8")
+        STATE.write_text(json.dumps({"date": str(dt.date.today()), "items": tum}, ensure_ascii=False, indent=2),
+                         encoding="utf-8")
     return items
 
 
@@ -243,7 +271,7 @@ def best() -> Suggestion:
     Liste kaydedilmez: sahibin Telegram'da ve panelde seçtiği öneriler değişmesin. Kalıbı şu an dönüşümde olmayan seri
     seçilmez (ör. son video efsane kalıbındaysa Efsane önerisi): aynı kalıp art arda gelmesin."""
     izinli = allowed_structures(ROOT / "history.jsonl")
-    adaylar = [s for s in suggest(kaydet=False, seriler=OTOMATIK_SERILER)
+    adaylar = [s for s in suggest(kaydet=False, seriler=OTOMATIK_SERILER, adet=OTOMATIK_BASI)
                if seri_of(s) in OTOMATIK_SERILER and (not kalip_of(s) or kalip_of(s) in izinli)]
     if not adaylar:
         raise RuntimeError("otomatik üretime uygun öneri çıkmadı")
@@ -285,7 +313,8 @@ def uretildi_mi(it) -> bool:
 
 def uretildi_isaretle(topic: str) -> str | None:
     """Kayıtlı listede bu konulu öneriyi üretildi diye işaretler (sıra ve damga değişmez: düğmeler doğru kalır).
-    İşaretlenen önerinin serisinde üretilmemiş öneri kalmadıysa o serinin adını döndürür (yeni öneri istenir)."""
+    İşaretlenen önerinin serisinde üretilmemiş öneri YENILE_ESIK'e indiyse o serinin adını döndürür (yalnız o seri
+    yeniden doldurulur)."""
     if not STATE.exists():
         return None
     d = json.loads(STATE.read_text(encoding="utf-8"))
@@ -296,7 +325,10 @@ def uretildi_isaretle(topic: str) -> str | None:
     hedef["uretildi"] = dt.datetime.now(dt.timezone(dt.timedelta(hours=3))).isoformat(timespec="minutes")
     STATE.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
     seri = seri_of(hedef)
-    return None if any(seri_of(x) == seri and not uretildi_mi(x) for x in items) else seri
+    grup = [x for x in items if seri_of(x) == seri]
+    kalan = sum(1 for x in grup if not uretildi_mi(x))
+    # seri boşaldıysa ya da (en az YENILE_ESIK'ten fazla öneriyle başlamış) seri YENILE_ESIK'e indiyse yenilenir
+    return seri if kalan == 0 or (len(grup) > YENILE_ESIK >= kalan) else None
 
 
 def gruplar(items: list[dict]) -> list[tuple[str, list[tuple[int, dict]]]]:
@@ -334,7 +366,11 @@ def damga(items: list) -> str:
     return hashlib.sha256(konular.encode("utf-8")).hexdigest()[:8]
 
 
-def mesajlar(items: list[dict]) -> list[tuple[str, list[list[tuple[str, str]]]]]:
+def load_saved_local() -> list[dict]:
+    return json.loads(STATE.read_text(encoding="utf-8")).get("items", []) if STATE.exists() else []
+
+
+def mesajlar(items: list[dict], seriler: tuple = tuple(SERILER)) -> list[tuple[str, list[list[tuple[str, str]]]]]:
     """/oneri mesajları ve klavyeleri: seriler kayıt sırasıyla MESAJ_SERI'lik gruplara bölünür (her serinin mesajı
     sabit: SERILER'deki sırası // MESAJ_SERI); birden çok mesajda başlık "(1/2)" diye numaralanır. Numaralar mesajlar
     boyunca 1'den kesintisiz; her seri kendi mesajında bir düğme satırı (tp:<damga>:<kayıttaki sıra>). Bir mesaj
@@ -344,10 +380,13 @@ def mesajlar(items: list[dict]) -> list[tuple[str, list[list[tuple[str, str]]]]]
     sira = list(SERILER)
     parcalar: dict[int, list] = {}
     for s, g in gr:
+        if s not in seriler:
+            continue
         parcalar.setdefault(sira.index(s) // MESAJ_SERI, []).append((s, g))
     out = []
     for no, pr in enumerate(parcalar.values(), 1):
-        rows = [[(f"🎬 {i + 1}", f"tp:{d}:{i}") for i, _ in g] for _, g in pr]
+        rows = [[(f"🎬 {i + 1}", f"tp:{d}:{i}") for i, _ in g[k:k + DUGME_SATIR]]
+                for _, g in pr for k in range(0, len(g), DUGME_SATIR)]
         baslik = "🗂 Bugünün konu önerileri" + (f" ({no}/{len(parcalar)})" if len(parcalar) > 1 else "")
         metin = ""
         for n, ayrinti in ((None, True), (220, True), (150, True), (110, False), (80, False), (50, False)):
@@ -358,14 +397,16 @@ def mesajlar(items: list[dict]) -> list[tuple[str, list[list[tuple[str, str]]]]]
     return out
 
 
-def notify() -> None:
+def notify(seriler: tuple = tuple(SERILER)) -> None:
+    """Öneri ister, kaydeder ve Telegram'a gönderir. Yalnız bazı seriler yenilendiyse yalnız onların mesajı gider."""
     from .telegram_bot import _kb, api
-    items = [s.model_dump() for s in suggest()]
+    yeni = suggest(seriler=seriler)
     chat = os.environ["TELEGRAM_CHAT_ID"]
-    if not items:
+    if not yeni:
         api("sendMessage", data={"chat_id": chat, "text": "Bugün öneri çıkmadı; /oneri ile yeniden dene."})
         return
-    for text, rows in mesajlar(items):  # seriler en çok üçerli mesajlarda; her mesaj kendi serilerinin düğmeleriyle
+    items = load_saved_local()
+    for text, rows in mesajlar(items, seriler):  # seriler en çok üçerli mesajlarda; her mesaj kendi serilerinin düğmeleriyle
         api("sendMessage", data={"chat_id": chat, "text": text, "reply_markup": _kb(rows),
                                  "disable_web_page_preview": "true"})
 
@@ -374,7 +415,8 @@ if __name__ == "__main__":
     from .pipeline import load_env
     load_env(ROOT / ".env")
     if sys.argv[1] == "notify":
-        notify()
+        secili = tuple(x for x in (sys.argv[2] if len(sys.argv) > 2 else "").replace(",", " ").split() if x in SERILER)
+        notify(secili or tuple(SERILER))
     elif sys.argv[1] == "best":
         s = best()
         print(uretim_konusu(s))
