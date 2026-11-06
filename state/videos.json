@@ -890,5 +890,18 @@
     "telegram_message_id": 287,
     "aciklama_message_id": 288,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261106-204604",
+    "title": "Lale Hollanda çiçeği mi? İstanbul'dan gitti, adı bile Türkçeden",
+    "topic": "'Lale Hollanda çiçeğidir' inanışı yanlış: Lale Avrupa'ya 16. yüzyılda Osmanlı'dan geçti, İngilizce 'tulip' kelimesi de Türkçe 'tülbent'ten gelir",
+    "category": "dil ve kültür",
+    "template": "dosya",
+    "structure": "efsane",
+    "created": "2026-11-06T20:46:04",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 289,
+    "aciklama_message_id": 290,
+    "platforms": {}
   }
 ]
