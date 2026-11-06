@@ -1134,9 +1134,16 @@
     "template": "kitap",
     "structure": "kitap",
     "created": "2026-11-06T21:39:20",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 359,
     "aciklama_message_id": 360,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-10T18:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-10T18:00:00+00:00",
+      "instagram": "2026-11-10T18:00:00+00:00",
+      "tiktok": "2026-11-10T18:00:00+00:00"
+    },
+    "decided": "2026-11-07T00:48:09+03:00"
   }
 ]
