@@ -17,7 +17,8 @@ Kapak (ilk sahne, küçük resim): üst bant yerine büyük seri logosu (siyah v
 KURGU sağ üstte), panel 438'den başlar; panelin alt kenarına binen manşet (tarifin 'manset' satırları, boşsa sahnenin
 headline'ı) ve anlatıcı kutusunun bütün kelimeleri ilk kareden mürekkep. Sonraki sahnelerde de tarifte manşet varsa
 panel 1004'te biter, manşet altına biner (dönüm anları). Sıradaki kelimeler sarı kâğıtta ≈4:1 karşıtlıkla (GHOST).
-Son sahne (ab): soru etiketi, A | B panelleri (makas oluktan keser), seçenek kartları, çağrı ve alt satır.
+Son sahne (ab): soru etiketi, A | B panelleri (makas oluktan keser), seçenek kartları, "Karar senin!" sözüyle
+büyük KARAR SENİN! damgası (panellerin alt kısmında, yüzlerin altında), çağrı ve alt satır.
 
 Senaryo eşlemesi: sahnenin tarifi Scene.cizgi (script.CizgiSahne; spec.card["cizgi"]). Tarifsiz sahne düz zeminli tek
 panel olur. Seri adı ve bölüm numarası ilk sahnenin tarifinden gelir (boşsa KARAR SENİN, numarasız).
@@ -45,7 +46,7 @@ from .cizgi_motor import (CYAN, CYAN_DK, INK, OFF, PAPER, RED, SS, WHITE, YELLOW
                           etiket_olcu, sar, sigdir, tw, up)
 from .nasil import Mascot, ease_pop
 from .render import SceneSpec
-from .voice import Word
+from .voice import Word, tirnak_ici  # noqa: F401  (tırnak içi: ses parçalarıyla aynı kural)
 
 W, H, FPS = K.W, K.H, K.FPS
 SAFE = K.SAFE                              # (0, 170, 935, 1540)
@@ -266,24 +267,6 @@ class SozBalonu:
 
 
 # ---------------------------------------------------------------- dış ses: anlatıcı ve balon kelimeleri
-def tirnak_ici(texts: list[str]) -> list[bool]:
-    """Her kelimenin tırnak içinde olup olmadığı (tırnak işareti kelimeye bitişik yazılır)."""
-    out, ic = [], False
-    for t in texts:
-        acar = bool(t) and t[0] in QUOTE
-        if acar and not ic:
-            ic = True
-            kapar = len(t) > 1 and t.rstrip(".,!?;:…")[-1:] in QUOTE
-            out.append(True)
-            if kapar:
-                ic = False
-            continue
-        out.append(ic)
-        if ic and t.rstrip(".,!?;:…")[-1:] in QUOTE:
-            ic = False
-    return out
-
-
 def temiz(t: str) -> str:
     return t.strip(QUOTE).replace("\"", "")
 
@@ -745,8 +728,30 @@ class CizgiVideo:
         pen.text(X0 + 18, yb + 50, alt, "courier", asz, OFF)
         P["alt"] = (pen.done(), 0, yb - size - 10)
         P["alt_y1"] = yb + 62
+        # KARAR SENİN! damgası: seri logosunun renkleri (siyah KARAR, kırmızı SENİN!), A | B panellerinin ortasında
+        ilk, son = CZ.KARAR_DAMGA
+        size = KARAR_BOY
+        while size > 60 and etiket_olcu(ilk, size)[0] + etiket_olcu(son, size)[0] + 18 > X1 - X0 - 30:
+            size -= 4
+        w1, h1 = etiket_olcu(ilk, size)
+        w2, h2 = etiket_olcu(son, size)
+        x0 = (X0 + X1) / 2 - (w1 + 18 + w2) / 2
+        pen = K.Pen(0, KARAR_CY - h1 - 40, SAFE[2], KARAR_CY + h1 + 40)
+        etiket(pen, ilk, size, OFF, INK, 141, x0 + w1 / 2, KARAR_CY - 6, rot=-4.0, shadow=(10, 12, 0, 0.9))
+        etiket(pen, son, size, OFF, RED, 142, x0 + w1 + 18 + w2 / 2, KARAR_CY + 10, rot=2.5, shadow=(10, 12, 0, 0.9))
+        P["karar"] = (pen.done(), 0, KARAR_CY - h1 - 40)
         self._c[key] = P
         return P
+
+    def karar_zamani(self, S: Sahne) -> float | None:
+        """Son sahnede 'Karar senin!' sözünün başladığı an (sözün son geçişi); yoksa None."""
+        t = None
+        for i in range(S.a, S.b - 1):
+            a = temiz(self.words[i].text).strip(".,!?;:").lower()
+            b = temiz(self.words[i + 1].text).strip(".,!?;:").replace("İ", "i").lower()
+            if a == "karar" and b == "senin":
+                t = self.words[i].start
+        return t
 
     def cta_ab(self, pen: K.Pen, x, y, size):
         """[A] YA DA [B] YAZ. : sarı yırtık etikette mürekkep yazı; A kırmızı yuvarlak rozette beyaz, B camgöbeği kare
@@ -825,6 +830,13 @@ class CizgiVideo:
         a = K.clamp((lt - tc) / 0.3)       # çağrıyla birlikte (çağrıdan önce altında boşluk kalmaz)
         if a > 0:
             K.put(img, im, x, y, alpha=a, clip=CLIP)
+        tk = self.karar_zamani(S)
+        if tk is not None and lt >= tk - S.start:
+            # KARAR SENİN! sözle birlikte büyük damga: iri gelir, yerine oturur
+            d = lt - (tk - S.start)
+            im, x, y = P["karar"]
+            k = ease_pop(d / 0.35, 1.35) if d < 0.35 else 1.0
+            K.put(img, im, x, y, k=k, clip=CLIP, anchor=(0.5, 0.5))
 
     # ------------------------------------------------------------ anlatıcı kutusu
     def anlatici_katmani(self, S: Sahne, pi: int, n: int, tam: bool = False):
@@ -1042,6 +1054,8 @@ class CizgiVideo:
 AB_Y0, AB_Y1 = 456, 930
 AB_CUT = 0.75
 AB_MASKOT = (846, 1290, 0.40)               # y çağrının ikinci satırına göre
+KARAR_CY = 828                              # KARAR SENİN! damgasının merkezi (A | B panellerinin altı, yüzlerin altında)
+KARAR_BOY = 124
 
 
 # ---------------------------------------------------------------- ana giriş
@@ -1049,5 +1063,6 @@ def render(scenes: list[SceneSpec], words: list[Word], out_mp4: Path, voice_mp3:
            music: Path | None, meta: dict) -> Path:
     """Çizgi Roman şablonuyla videoyu kurar (pipeline.build: shortgen/<renderer>.py render). Kare döngüsü, ses,
     kuyruk ve marka kapanışı kart şablonuyla ortak (kart.render_frames)."""
+    son = ((meta or {}).get("sablon") or {}).get("son_bekleme")
     return K.render_frames(scenes, words, out_mp4, voice_mp3, music,
-                           lambda bcfg: CizgiVideo(scenes, words, meta, bcfg), "Cizgi")
+                           lambda bcfg: CizgiVideo(scenes, words, meta, bcfg), "Cizgi", son_bekleme=son)

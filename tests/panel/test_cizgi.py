@@ -5,10 +5,11 @@ Ağ yok, ses yok (kelime süreleri voice.estimate ile, pipeline'ın --no-voice y
 - senaryo modeli: Scene.cizgi isteğe bağlı (eski JSON yüklenir), doğrulama ve dil düzeltmesi tarifi korur, tarifsiz
   senaryoların istem metni değişmez,
 - şablon kaydı: yalnız --template ile seçilir (eslesme.json değişmez), kalıp sabitlemez,
-- pilot senaryo: 10 sahne (en çok CIZGI_SAHNE), 110-135 kelime, dış ses birebir, başlık, açıklama, kategori ve kalıp,
+- pilot senaryo: 17 sahne (CIZGI_SAHNE), 170-200 kelime (≈ 85-95 sn), dış ses birebir, başlık, açıklama, kategori ve
+  kalıp, her balonun konuşanının sesi var, son sahne seçeneklerden sonra 'Karar senin!' ve oy çağrısıyla biter,
 - karakterler ve mekânlar: her anahtar çizilir, çıktı belirlenimci,
 - yerleşim: her sahnenin her anında içerik güvenli alanda; balon konuşanın başına, anlatıcı kutusu Makas'a binmez;
-  uzun Türkçe kelimeler, 6 ve 18 sahne; son sahnenin parçaları üst üste binmez,
+  uzun Türkçe kelimeler, 6 ve 22 sahne; son sahnenin parçaları üst üste binmez, KARAR SENİN! damgası sözle gelir,
 - uçtan uca: python -m shortgen.pipeline --script demo/cizgi/kuzey_1.json --no-voice --template cizgi (geçici
   kökte; depoya yazmaz).
 
@@ -35,7 +36,7 @@ import numpy as np  # noqa: E402
 
 from shortgen import cizgi as C, cizgi_karakter as CK, cizgi_mekan as CM, cizgi_sabit as CZ  # noqa: E402
 from shortgen import kart as K, pipeline as PL, render, script as S  # noqa: E402
-from shortgen.voice import estimate  # noqa: E402
+from shortgen.voice import estimate, tahmin  # noqa: E402
 
 DEMO = REPO / "demo" / "cizgi" / "kuzey_1.json"
 KART_DEMO = REPO / "demo" / "kart" / "ornek_cin_seddi.json"
@@ -49,13 +50,20 @@ ANLATIM = [
     "On beş yaşındaki Kuzey'in cebinde iki kulübün kartviziti var.",
     "Sinop'ta sabahları babasıyla ağ topluyor, akşamları Sinopspor'un gençlerinde top koşturuyor.",
     "Türkiye'nin en kuzey ucu İnceburun da Sinop'ta; Kuzey adını oradan alıyor.",
-    "Bu yaz bölge turnuvasında altı maçta dokuz gol atıyor.",
+    "Bu yaz bölge turnuvasında altı maçta dokuz gol atıyor, hepsi sol ayakla.",
+    "Yılmaz Hoca kenardan bağırıyor: \"Sol ayağın altın, Kuzey!\"",
     "Tribündeki iki gözcüden biri Galatasaray'dan Selim Bey: İstanbul'da altyapı, yatılı yer ve okul.",
-    "Ama orada onun gibi onlarca yetenek var. Samsunspor'dan Orhan Bey ise net: \"Bizde bir yılda A takımla çalışırsın.\"",
-    "Babası Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım.\" Annesi Nermin'in tek şartı: okul yarım kalmayacak.",
+    "Selim Bey kartvizitini uzatıyor: \"İstanbul'da seni büyük sahneler bekliyor.\"",
+    "Ama orada onun gibi onlarca yetenek forma sırası bekliyor.",
+    "Samsunspor'dan Orhan Bey ise net: \"Bizde bir yılda A takımla çalışırsın.\"",
+    "Babası Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım oğlum.\"",
+    "Annesi Nermin'in tek şartı var: \"Okul yarım kalmayacak, söz ver.\"",
+    "Kız kardeşi Elif ise çoktan karar vermiş: \"Abim İstanbul'da forma giyecek!\"",
+    "Gece iskelede iki kartvizite bakıyor: \"Ben hangisine hazırım?\"",
     "Kuzey bilmiyor ama Selim Bey aynı turnuvadan bir golcüye daha teklif yaptı.",
-    "Samsun eve yakın; İstanbul'un kapısı ikinci kez çalmayabilir. Cevap bu gece verilecek.",
-    "Kuzey ne yapsın? A: İstanbul'a, Galatasaray'a gitsin. B: Samsunspor'da şansını denesin. Yorumlara A ya da B yaz.",
+    "Samsun eve yakın; İstanbul'un kapısı ikinci kez çalmayabilir.",
+    "Saat ilerliyor; cevap bu gece verilecek.",
+    "Kuzey ne yapsın? A: İstanbul'a, Galatasaray'a gitsin. B: Samsunspor'da şansını denesin. Karar senin! Yorumlara A ya da B yaz.",
 ]
 
 
@@ -140,7 +148,7 @@ class Senaryo(unittest.TestCase):
         self.assertTrue(s.description.endswith("Kurgusal bir hikâyedir."))
         self.assertEqual(len(s.hashtags), 5)
         kelime = sum(len(sc.narration.split()) for sc in s.scenes)
-        self.assertTrue(S.CIZGI_KELIME[0] <= kelime <= S.CIZGI_KELIME_UST, kelime)   # ≈ 50-60 sn
+        self.assertTrue(S.CIZGI_KELIME[0] <= kelime <= S.CIZGI_KELIME_UST, kelime)   # ≈ 85-95 sn
         self.assertTrue(S.CIZGI_SAHNE[0] <= len(s.scenes) <= S.CIZGI_SAHNE[1], len(s.scenes))
         self.assertEqual(S.cizgi_sorunlari(s), [])
         for sc in s.scenes:
@@ -153,7 +161,16 @@ class Senaryo(unittest.TestCase):
         self.assertEqual(kartlar[-1], "ab")
         ab = s.scenes[-1].cizgi.kart
         self.assertEqual((ab.a, ab.b), ("İSTANBUL'A, GALATASARAY'A", "SAMSUNSPOR'DA ŞANSINI DENESİN"))
-        self.assertEqual(s.scenes[7].cizgi.kart.baslik, "SEN BİLİYORSUN, KUZEY BİLMİYOR")
+        self.assertEqual(s.scenes[13].cizgi.kart.baslik, "SEN BİLİYORSUN, KUZEY BİLMİYOR")
+        # son sahne: seçenekler, sonra 'Karar senin!' ve oy çağrısı (kod da normalleştirir: değişiklik yok)
+        self.assertTrue(s.scenes[-1].narration.endswith(f" {S.CIZGI_KARAR} {S.CIZGI_OY_CAGRI}"))
+        self.assertLess(s.scenes[-1].narration.index("B:"), s.scenes[-1].narration.index(S.CIZGI_KARAR))
+        self.assertFalse(S.karar_kapanisi(s.model_copy(deep=True)))
+        # karakter anları: en az beş farklı karakter konuşur, her birinin sesi şablonda
+        sesler = json.loads((REPO / "templates" / "cizgi.json").read_text(encoding="utf-8"))["sesler"]
+        konusanlar = [sc.cizgi.balon.konusan for sc in s.scenes if sc.cizgi.balon]
+        self.assertGreaterEqual(len(set(konusanlar)), 5)
+        self.assertLessEqual(set(konusanlar), set(sesler))
         # balon metni dış sesteki tırnak içiyle aynı
         for sc in s.scenes:
             if sc.cizgi.balon:
@@ -209,7 +226,8 @@ class Senaryo(unittest.TestCase):
         """Çizgi Roman bölümü için 65-75 kelime kuralı yerine CIZGI_KELIME: yazarın istemi (şablon), doğrulayıcı ve
         dil editörü aynı sayıları görür; tarifsiz senaryolarda istemler eskisi gibi kalır."""
         istem = json.loads((REPO / "templates" / "cizgi.json").read_text(encoding="utf-8"))["istem"]
-        for x in (f"{S.CIZGI_KELIME[0]}-{S.CIZGI_KELIME[1]} kelime", f"{S.CIZGI_KELIME_UST}'i",
+        for x in (f"{S.CIZGI_KELIME[0]}-{S.CIZGI_KELIME[1]} kelime", f"{S.CIZGI_KELIME_UST}'ü", "85-95 saniye",
+                  "Karar senin!",
                   f"{S.CIZGI_SAHNE[0]}-{S.CIZGI_SAHNE[1]} sahne"):
             self.assertIn(x, istem)
         cagrilar = []
@@ -272,11 +290,47 @@ class Senaryo(unittest.TestCase):
             self.assertIsNotNone(out.scenes[0].cizgi)
             self.assertIn("CizgiSahne", cagri[-1])
 
+    def test_karar_kapanisi(self):
+        """Son sahne (ab kartı) seçeneklerden sonra 'Karar senin!' ve 'Yorumlara A ya da B yaz.' ile biter: eksik,
+        yer değiştirmiş ya da tekrarlanmış kapanış kodla düzelir; ab kartı olmayan senaryoya dokunulmaz."""
+        kapanis = f" {S.CIZGI_KARAR} {S.CIZGI_OY_CAGRI}"
+        for eski in ("Kuzey ne yapsın? A: İstanbul. B: Samsun. Yorumlara A ya da B yaz.",
+                     "Kuzey ne yapsın? A: İstanbul. B: Samsun.",
+                     "Kuzey ne yapsın? A: İstanbul. B: Samsun. Yorumlara A ya da B yaz. KARAR SENİN!",
+                     "Kuzey ne yapsın? A: İstanbul. B: Samsun. Karar senin. Karar senin! yorumlara a ya da b yaz"):
+            s = demo()
+            s.scenes[-1].narration = eski
+            self.assertTrue(S.karar_kapanisi(s))
+            self.assertEqual(s.scenes[-1].narration, "Kuzey ne yapsın? A: İstanbul. B: Samsun." + kapanis)
+        s = demo()
+        s.scenes[-1].cizgi.kart = None
+        s.scenes[-1].narration = "Kuzey ne yapsın?"
+        self.assertFalse(S.karar_kapanisi(s))
+        k = S.load_script(KART_DEMO)
+        once = [sc.narration for sc in k.scenes]
+        self.assertFalse(S.karar_kapanisi(k))
+        self.assertEqual([sc.narration for sc in k.scenes], once)
+        # yazar kuralı ve editör kuralı kapanışı söyler; üretimde yazılan senaryo normalleşir
+        self.assertIn(S.CIZGI_KARAR, S.CIZGI_UZUNLUK)
+        self.assertIn(S.CIZGI_KARAR, S.EDITOR_CIZGI)
+
+    def test_uretimde_kapanis_normallesir(self):
+        dolu = demo()
+        dolu.scenes[-1].narration = "Kuzey ne yapsın? A: İstanbul'a, Galatasaray'a gitsin. B: Samsunspor'da şansını denesin. Yorumlara A ya da B yaz."
+        with mock.patch.object(S, "ask_claude", lambda *a, **k: dolu.model_copy(deep=True)), \
+                mock.patch.object(S, "verify_script", lambda x, **k: x), \
+                mock.patch.object(S, "polish_script", lambda x, **k: x), mock.patch("builtins.print"), \
+                tempfile.TemporaryDirectory() as tmp:
+            h = Path(tmp) / "history.jsonl"
+            h.write_text("", encoding="utf-8")
+            out = S.generate_script(h, "Karar Senin", structure="hikaye", cizgi=True)
+        self.assertEqual(out.scenes[-1].narration, ANLATIM[-1])
+
     def test_uzunluk_sorunlari(self):
         s = demo()
         self.assertEqual(S.cizgi_sorunlari(s), [])
         uzun = s.model_copy(deep=True)
-        uzun.scenes = uzun.scenes + [x.model_copy(deep=True) for x in uzun.scenes[1:4]]
+        uzun.scenes = uzun.scenes + [x.model_copy(deep=True) for x in uzun.scenes[1:7]]
         self.assertEqual(len(S.cizgi_sorunlari(uzun)), 2)
         self.assertEqual(S.cizgi_sorunlari(S.load_script(KART_DEMO)), [])
 
@@ -425,6 +479,33 @@ class Yerlesim(unittest.TestCase):
         son = v.frame(self.specs[-1].end - 0.05)
         guvenli(self, son, "son kare")
 
+    def test_karar_senin_damgasi(self):
+        """'Karar senin!' sözünden önce damga yok, sözle birlikte KARAR SENİN! damgası A | B panellerinin üstünde;
+        yüzlere binmez (panellerin alt kısmı), seçenek kartlarına ve çağrıya taşmaz."""
+        v = self.v
+        S_ = v.hazirla(len(self.specs) - 1)
+        tk = v.karar_zamani(S_)
+        self.assertIsNotNone(tk)
+        self.assertEqual(v.words[[w.start for w in v.words].index(tk)].text, "Karar")
+        tc = v.word_time(S_.a, S_.b, lambda w: w.strip().lower().startswith("yorumlara"))
+        self.assertLess(tk, tc)
+        P = v.ab_parcalar(S_)
+        im, x, y = P["karar"]
+        bb = alfa_kutu(im)
+        damga = (x + bb[0], y + bb[1], x + bb[2], y + bb[3])
+        self.assertGreaterEqual(damga[0], 0)
+        self.assertLessEqual(damga[2], SAFE[2])
+        self.assertGreater(damga[1], C.AB_Y0 + 200, "yüzlerin altında")
+        for h in ("a", "b"):
+            ki, kx, ky = P["kart_" + h]
+            kb = alfa_kutu(ki)
+            self.assertFalse(kesisir(damga, (kx + kb[0], ky + kb[1] + 20, kx + kb[2], ky + kb[3])), h)
+        once = np.asarray(v.frame(tk - 0.05).convert("RGB"), dtype=int)
+        sonra = np.asarray(v.frame(tk + 0.6).convert("RGB"), dtype=int)
+        bolge = (slice(int(damga[1]), int(damga[3])), slice(int(damga[0]), int(damga[2])))
+        self.assertGreater((np.abs(sonra[bolge] - once[bolge]).sum(-1) > 30).mean(), 0.3, "damga sözle gelir")
+        self.assertEqual(" ".join(CZ.KARAR_DAMGA), "KARAR SENİN!")
+
     def test_kapak_karesi_tam(self):
         """t=0 kapak: panel, anlatıcı kutusu ve üst bant görünür."""
         im = self.v.frame(0.0)
@@ -477,7 +558,7 @@ class UzunVeSayilar(unittest.TestCase):
         return s
 
     def test_alti_ve_on_sekiz_sahne(self):
-        for n in (6, 18):
+        for n in (6, 22):
             s = self.senaryo(n)
             self.assertEqual(len(s.scenes), n)
             v, specs = video(s)
@@ -486,7 +567,7 @@ class UzunVeSayilar(unittest.TestCase):
 
     def test_uzun_turkce_kelimeler(self):
         s = demo()
-        s.scenes = [s.scenes[i].model_copy(deep=True) for i in (0, 2, 5, 7, 9)]
+        s.scenes = [s.scenes[i].model_copy(deep=True) for i in (0, 2, 8, 13, 16)]
         s.scenes[0].narration = f"{UZUN2} {UZUN2} Kuzey'in cebinde iki kartvizit var."
         s.scenes[0].cizgi.seri = "KARAR SENİN ÇEKOSLOVAKYALILAŞTIRAMADIKLARIMIZDAN"
         s.scenes[1].cizgi.kart.metin = f"{UZUN2} {UZUN2} İnceburun Sinop'tadır."
@@ -534,9 +615,12 @@ class UctanUca(unittest.TestCase):
             info = json.loads(pr.stdout)
             self.assertEqual((info["streams"][0]["width"], info["streams"][0]["height"]), (1080, 1920))
             sure = float(info["format"]["duration"])
-            words = estimate(" ".join(ANLATIM))
-            self.assertAlmostEqual(sure, words[-1].end + 0.35, delta=0.6)
-            self.assertGreater(sure, 45)
+            # sessiz denemede süre: yavaş anlatıcının tahmini, sahne araları ve son bekleyiş (≈ 85-95 sn)
+            t = json.loads((REPO / "templates" / "cizgi.json").read_text(encoding="utf-8"))
+            words = tahmin(" ".join(ANLATIM), t["ses_tempo"])
+            beklenen = words[-1].end + (len(ANLATIM) - 1) * t["sahne_arasi"] + t["son_bekleme"]
+            self.assertAlmostEqual(sure, beklenen, delta=0.6)
+            self.assertTrue(85 <= sure <= 95, sure)
             meta = json.loads(next((kok / "out").glob("*/metadata.json")).read_text(encoding="utf-8"))
             self.assertEqual(meta["template"], "cizgi")
             self.assertIn("Kurgusal bir hikâyedir.", meta["description"])
