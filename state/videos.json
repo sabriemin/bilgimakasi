@@ -964,5 +964,18 @@
     },
     "publish_at": "2026-11-07T19:00:00+00:00",
     "decided": "2026-11-07T00:05:24+03:00"
+  },
+  {
+    "tag": "short-20261106-210533",
+    "title": "Duvara dübel nasıl takılır? Tozu yere düşürmeden",
+    "topic": "Duvara matkapla dübel takmak: dübel çapında uç seçmek, uca bantla derinlik işareti koymak, deliğin altına katlanmış yapışkan not kâğıdı yapıştırıp tozu toplamak ve dübeli çekiçle hizalamak",
+    "category": "teknoloji",
+    "template": "nasil",
+    "structure": "nasil",
+    "created": "2026-11-06T21:05:33",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 319,
+    "aciklama_message_id": 320,
+    "platforms": {}
   }
 ]
