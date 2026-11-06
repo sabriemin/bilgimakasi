@@ -1087,13 +1087,20 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T21:16:27",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 348,
     "aciklama_message_id": 349,
     "seri_id": "202611062108-sonbaharda-bir-yapragin-yolculug",
     "bolum": 1,
     "bolum_sayisi": 2,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-16T18:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-16T18:00:00+00:00",
+      "instagram": "2026-11-16T18:00:00+00:00",
+      "tiktok": "2026-11-16T18:00:00+00:00"
+    },
+    "decided": "2026-11-07T00:31:19+03:00"
   },
   {
     "tag": "short-20261106-212432",
@@ -1103,12 +1110,20 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T21:24:31",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 350,
     "aciklama_message_id": 351,
     "seri_id": "202611062108-sonbaharda-bir-yapragin-yolculug",
     "bolum": 2,
     "bolum_sayisi": 2,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-18T18:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-18T18:00:00+00:00",
+      "instagram": "2026-11-18T18:00:00+00:00",
+      "tiktok": "2026-11-18T18:00:00+00:00"
+    },
+    "decided": "2026-11-07T00:31:19+03:00",
+    "otomatik_bolum": true
   }
 ]
