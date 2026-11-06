@@ -899,9 +899,16 @@
     "template": "dosya",
     "structure": "efsane",
     "created": "2026-11-06T20:46:04",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 289,
     "aciklama_message_id": 290,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-17T10:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-17T10:00:00+00:00",
+      "instagram": "2026-11-17T10:00:00+00:00",
+      "tiktok": "2026-11-17T10:00:00+00:00"
+    },
+    "decided": "2026-11-06T23:48:49+03:00"
   }
 ]
