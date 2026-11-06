@@ -993,10 +993,17 @@
     "template": "retro",
     "structure": "hikaye",
     "created": "2026-11-06T21:08:34",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 324,
     "aciklama_message_id": 325,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-16T15:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-16T15:00:00+00:00",
+      "instagram": "2026-11-16T15:00:00+00:00",
+      "tiktok": "2026-11-16T15:00:00+00:00"
+    },
+    "decided": "2026-11-07T00:10:18+03:00"
   },
   {
     "tag": "short-20261106-210923",
