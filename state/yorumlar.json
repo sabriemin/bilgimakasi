@@ -2,7 +2,8 @@
  "seen": [
   "ig:18105929234280447",
   "ig:18200339638382906",
-  "yt:Ugxk8OL9Sw2X_AH9Wz14AaABAg"
+  "yt:Ugxk8OL9Sw2X_AH9Wz14AaABAg",
+  "yt:UgzNhgAOun5e5WZXmIV4AaABAg"
  ],
  "pending": {
   "3": {
@@ -16,6 +17,18 @@
    "reply": "O 100 gün gerçekten çok özeldi, tekrarı kolay değil. Sence o sürecin en unutulmaz anı hangisiydi? ⚽",
    "message_id": 128,
    "created": "2026-11-05T15:09:34"
+  },
+  "4": {
+   "id": "yt:UgzNhgAOun5e5WZXmIV4AaABAg",
+   "platform": "youtube",
+   "parent": "UgzNhgAOun5e5WZXmIV4AaABAg",
+   "tag": "short-20261105-221556",
+   "video": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında",
+   "author": "@kaynrrazer",
+   "text": "Hayır pirinci yikamaniza bile gerek yok sadece iyi kavurun hepsi bu",
+   "reply": "Kavurmak da çok işe yarıyor, taneleri yağla kaplayıp yapışmayı azaltıyor. Yıkamak ise yüzeydeki fazla nişastayı alıyor; ikisi birlikte daha garanti olur. Siz hangi pirinci kullanıyorsunuz?",
+   "message_id": 270,
+   "created": "2026-11-06T13:32:12"
   }
  }
 }
