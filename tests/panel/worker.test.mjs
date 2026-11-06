@@ -1281,9 +1281,9 @@ describe("yayın planı: /panel/api/plan", () => {
   test("depodaki plan: shortgen/takvim.py ile aynı 20 saat; seri tahmini takvim.seri_of gibi", () => {
     const p = PLAN();
     const kisa = p.hafta.map((g) => g.map((x) => `${x.saat} ${x.seri}`).join(", "));
-    assert.deepEqual(kisa, ["11:30 nasil, 18:00 genel, 21:00 belgesel", "13:00 efsane, 18:00 genel, 22:00 kitap",
-      "16:30 uretim, 18:00 genel, 21:00 belgesel", "13:00 koken, 18:00 genel, 19:30 olsaydin", "11:30 nasil, 18:00 genel, 21:00 belgesel",
-      "13:00 efsane, 19:30 olsaydin", "13:00 koken, 16:30 uretim, 22:00 kitap"]);
+    assert.deepEqual(kisa, ["12:00 nasil, 17:00 genel, 21:00 belgesel", "12:00 efsane, 17:00 genel, 21:00 kitap",
+      "12:00 uretim, 17:00 genel, 21:00 belgesel", "12:00 koken, 17:00 genel, 21:00 olsaydin", "12:00 nasil, 17:00 genel, 21:00 belgesel",
+      "11:30 efsane, 15:30 olsaydin", "11:30 koken, 15:30 uretim, 20:30 kitap"]);
     assert.equal(seriOf({ structure: "nasil", template: "kart" }, p), "nasil");
     assert.equal(seriOf({ template: "uretim" }, p), "uretim");
     assert.equal(seriOf({ template: "ajanda" }, p), "olsaydin");
@@ -1297,25 +1297,25 @@ describe("yayın planı: /panel/api/plan", () => {
     const simdi = Date.parse("2026-11-06T01:00:00+03:00"); // Cuma
     const v = (tag, an, ek = {}) => ({ tag, title: tag, status: "zamanlandi", publish_at: an, template: "kolaj", ...ek });
     const vs = [
-      v("short-20261105-100000", "2026-11-06T12:15:00+03:00", { template: "nasil" }), // Cuma 11:30 nasil (+45 dk)
-      v("short-20261105-100100", "2026-11-07T13:10:00+03:00"), // Cmt 13:00 efsane saatinde Genel video
-      v("short-20261105-100200", "2026-11-07T15:00:00+03:00"), // plan dışı
+      v("short-20261105-100000", "2026-11-06T12:45:00+03:00", { template: "nasil" }), // Cuma 12:00 nasil (+45 dk)
+      v("short-20261105-100100", "2026-11-07T11:40:00+03:00"), // Cmt 11:30 efsane saatinde Genel video
+      v("short-20261105-100200", "2026-11-07T14:00:00+03:00"), // plan dışı
       { tag: "short-20261101-100300", title: "eski", status: "yayinlandi", template: "kart", structure: "efsane",
-        platforms: { youtube: { status: "ok", at: "2026-11-06T18:01:00+03:00", url: "https://youtube.com/shorts/x" } } },
-      { tag: "short-20261105-100400", title: "red", status: "reddedildi", publish_at: "2026-11-06T18:00:00+03:00" },
+        platforms: { youtube: { status: "ok", at: "2026-11-06T17:01:00+03:00", url: "https://youtube.com/shorts/x" } } },
+      { tag: "short-20261105-100400", title: "red", status: "reddedildi", publish_at: "2026-11-06T17:00:00+03:00" },
     ];
     const t = yayinTakvimi(p, vs, simdi);
     const cum = t[0].ogeler, cmt = t[1].ogeler;
-    assert.equal(cum.find((o) => o.saat === "11:30").video.tag, "short-20261105-100000");
-    const genel = cum.find((o) => o.saat === "18:00");
+    assert.equal(cum.find((o) => o.saat === "12:00").video.tag, "short-20261105-100000");
+    const genel = cum.find((o) => o.saat === "17:00");
     assert.equal(genel.video.tag, "short-20261101-100300", "paylaşılmış (başka seri) video tam saatte");
     assert.equal(genel.video.seri_farkli, true);
     assert.deepEqual(genel.video.linkler, { youtube: "https://youtube.com/shorts/x" });
-    const efs = cmt.find((o) => o.saat === "13:00");
+    const efs = cmt.find((o) => o.saat === "11:30");
     assert.equal(efs.video.tag, "short-20261105-100100");
-    assert.ok(cmt.some((o) => !o.plan && o.video.tag === "short-20261105-100200" && o.saat === "15:00"));
+    assert.ok(cmt.some((o) => !o.plan && o.video.tag === "short-20261105-100200" && o.saat === "14:00"));
     assert.ok(!JSON.stringify(t).includes("short-20261105-100400"), "reddedilen video takvimde yok");
-    assert.equal(cum.find((o) => o.saat === "11:30").gecti, false);
+    assert.equal(cum.find((o) => o.saat === "12:00").gecti, false);
     const oz = seriOzetleri(p, vs, t, Date.parse("2026-11-06T20:00:00+03:00"));
     assert.equal(oz.find((s) => s.key === "efsane").son_video.tag, "short-20261101-100300");
   });

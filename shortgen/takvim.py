@@ -1,4 +1,4 @@
-"""Haftalık yayın takvimi: her serinin sabit günü ve saati (Sabri 5 Kasım 2026'da onayladı, haftada 20 video; Kelimenin Kökeni 6 Kasım 2026).
+"""Haftalık yayın takvimi: her serinin sabit günü ve saati (Sabri 5 Kasım 2026'da onayladı, haftada 20 video; Kelimenin Kökeni ve yeni saatler 6 Kasım 2026: hafta içi 12:00/17:00/21:00, hafta sonu 11:30/15:30/20:30).
 
 Onayda '🎯' seçilirse video kendi serisinin bir sonraki boş saatine konur ve üç platformda aynı anda paylaşılır.
 Saatler Türkiye saatidir.
@@ -20,17 +20,17 @@ SERI_ADI = {"genel": "Genel", "nasil": "Nasıl yapılır?", "uretim": "Nasıl Ü
 
 # Pazartesi = 0
 HAFTA: dict[int, list[tuple[str, str]]] = {
-    0: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
-    1: [("13:00", "efsane"), ("18:00", "genel"), ("22:00", "kitap")],
-    2: [("16:30", "uretim"), ("18:00", "genel"), ("21:00", "belgesel")],
-    3: [("13:00", "koken"), ("18:00", "genel"), ("19:30", "olsaydin")],
-    4: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
-    5: [("13:00", "efsane"), ("19:30", "olsaydin")],
-    6: [("13:00", "koken"), ("16:30", "uretim"), ("22:00", "kitap")],
+    0: [("12:00", "nasil"), ("17:00", "genel"), ("21:00", "belgesel")],
+    1: [("12:00", "efsane"), ("17:00", "genel"), ("21:00", "kitap")],
+    2: [("12:00", "uretim"), ("17:00", "genel"), ("21:00", "belgesel")],
+    3: [("12:00", "koken"), ("17:00", "genel"), ("21:00", "olsaydin")],
+    4: [("12:00", "nasil"), ("17:00", "genel"), ("21:00", "belgesel")],
+    5: [("11:30", "efsane"), ("15:30", "olsaydin")],
+    6: [("11:30", "koken"), ("15:30", "uretim"), ("20:30", "kitap")],
 }
 
 # Kullanılmayacak saatler (TR, "YYYY-AA-GG SS:DD"): 10 Kasım akşamı Atatürk'ü anma günü
-KAPALI = {"2026-11-10 18:00"}
+KAPALI = {"2026-11-10 17:00"}
 
 _SABLON_SERI = {"nasil": "nasil", "uretim": "uretim", "isemri": "uretim", "ajanda": "olsaydin", "dosya": "efsane",
                 "kitap": "kitap", "belgesel": "belgesel"}

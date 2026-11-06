@@ -22,29 +22,29 @@ class Takvim(unittest.TestCase):
 
     def test_sonraki_bos_saat(self):
         now = dt.datetime(2026, 11, 5, 23, 0, tzinfo=TR)  # Perşembe gecesi
-        self.assertEqual(tk.sonraki_saat("nasil", [], now), dt.datetime(2026, 11, 6, 11, 30, tzinfo=TR))
-        dolu = [dt.datetime(2026, 11, 6, 11, 30, tzinfo=TR)]
-        self.assertEqual(tk.sonraki_saat("nasil", dolu, now), dt.datetime(2026, 11, 9, 11, 30, tzinfo=TR))
-        self.assertEqual(tk.sonraki_saat("uretim", [], now), dt.datetime(2026, 11, 8, 16, 30, tzinfo=TR))
+        self.assertEqual(tk.sonraki_saat("nasil", [], now), dt.datetime(2026, 11, 6, 12, 0, tzinfo=TR))
+        dolu = [dt.datetime(2026, 11, 6, 12, 0, tzinfo=TR)]
+        self.assertEqual(tk.sonraki_saat("nasil", dolu, now), dt.datetime(2026, 11, 9, 12, 0, tzinfo=TR))
+        self.assertEqual(tk.sonraki_saat("uretim", [], now), dt.datetime(2026, 11, 8, 15, 30, tzinfo=TR))
 
     def test_kapali_saat_atlanir(self):
         now = dt.datetime(2026, 11, 10, 9, 0, tzinfo=TR)  # 10 Kasım akşamı Genel yok
-        self.assertEqual(tk.sonraki_saat("genel", [], now), dt.datetime(2026, 11, 11, 18, 0, tzinfo=TR))
+        self.assertEqual(tk.sonraki_saat("genel", [], now), dt.datetime(2026, 11, 11, 17, 0, tzinfo=TR))
 
     def test_plan_dosyasi_tek_kaynak(self):
         # state/yayin_plani.json okunuyor ve koddaki yedek sabitlerle aynı haftayı veriyor
         p = tk.plan_oku()
         self.assertIsNotNone(p)
-        yedek = {0: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
-                 1: [("13:00", "efsane"), ("18:00", "genel"), ("22:00", "kitap")],
-                 2: [("16:30", "uretim"), ("18:00", "genel"), ("21:00", "belgesel")],
-                 3: [("13:00", "koken"), ("18:00", "genel"), ("19:30", "olsaydin")],
-                 4: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
-                 5: [("13:00", "efsane"), ("19:30", "olsaydin")],
-                 6: [("13:00", "koken"), ("16:30", "uretim"), ("22:00", "kitap")]}
+        yedek = {0: [("12:00", "nasil"), ("17:00", "genel"), ("21:00", "belgesel")],
+                 1: [("12:00", "efsane"), ("17:00", "genel"), ("21:00", "kitap")],
+                 2: [("12:00", "uretim"), ("17:00", "genel"), ("21:00", "belgesel")],
+                 3: [("12:00", "koken"), ("17:00", "genel"), ("21:00", "olsaydin")],
+                 4: [("12:00", "nasil"), ("17:00", "genel"), ("21:00", "belgesel")],
+                 5: [("11:30", "efsane"), ("15:30", "olsaydin")],
+                 6: [("11:30", "koken"), ("15:30", "uretim"), ("20:30", "kitap")]}
         self.assertEqual(p["hafta"], yedek)
         self.assertEqual(tk.HAFTA, yedek)
-        self.assertIn("2026-11-10 18:00", p["kapali"])
+        self.assertIn("2026-11-10 17:00", p["kapali"])
         self.assertEqual(set(p["seri_adi"]), {"genel", "nasil", "efsane", "uretim", "olsaydin", "kitap", "belgesel", "koken"})
         self.assertEqual(p["sablon_seri"]["belgesel"], "belgesel")
         self.assertNotIn("cizgi", p["sablon_seri"])

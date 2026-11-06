@@ -1,5 +1,5 @@
 {
- "_aciklama": "Haftalık yayın planı: tek kaynak. shortgen/takvim.py (Telegram'daki 🎯 düğmesi) ve panel (Takvim, Seriler) buradan okur. Saatler Türkiye saatidir (Europe/Istanbul, UTC+3). Haftada 20 video.",
+ "_aciklama": "Haftalık yayın planı: tek kaynak. shortgen/takvim.py (Telegram'daki 🎯 düğmesi) ve panel (Takvim, Seriler) buradan okur. Saatler Türkiye saatidir (Europe/Istanbul, UTC+3). Haftada 20 video. Saatler 6 Kasım 2026: hafta içi 12:00 / 17:00 / 21:00, hafta sonu 11:30 / 15:30 / 20:30 (Instagram için iki paylaşım arası en az 4 saat).",
  "saat_dilimi": "Europe/Istanbul",
  "guncelleme": "2026-11-06",
  "seriler": [
@@ -90,11 +90,11 @@
    "gun": "Pazartesi",
    "slotlar": [
     {
-     "saat": "11:30",
+     "saat": "12:00",
      "seri": "nasil"
     },
     {
-     "saat": "18:00",
+     "saat": "17:00",
      "seri": "genel"
     },
     {
@@ -107,15 +107,15 @@
    "gun": "Salı",
    "slotlar": [
     {
-     "saat": "13:00",
+     "saat": "12:00",
      "seri": "efsane"
     },
     {
-     "saat": "18:00",
+     "saat": "17:00",
      "seri": "genel"
     },
     {
-     "saat": "22:00",
+     "saat": "21:00",
      "seri": "kitap"
     }
    ]
@@ -124,11 +124,11 @@
    "gun": "Çarşamba",
    "slotlar": [
     {
-     "saat": "16:30",
+     "saat": "12:00",
      "seri": "uretim"
     },
     {
-     "saat": "18:00",
+     "saat": "17:00",
      "seri": "genel"
     },
     {
@@ -141,15 +141,15 @@
    "gun": "Perşembe",
    "slotlar": [
     {
-     "saat": "13:00",
+     "saat": "12:00",
      "seri": "koken"
     },
     {
-     "saat": "18:00",
+     "saat": "17:00",
      "seri": "genel"
     },
     {
-     "saat": "19:30",
+     "saat": "21:00",
      "seri": "olsaydin"
     }
    ]
@@ -158,11 +158,11 @@
    "gun": "Cuma",
    "slotlar": [
     {
-     "saat": "11:30",
+     "saat": "12:00",
      "seri": "nasil"
     },
     {
-     "saat": "18:00",
+     "saat": "17:00",
      "seri": "genel"
     },
     {
@@ -175,11 +175,11 @@
    "gun": "Cumartesi",
    "slotlar": [
     {
-     "saat": "13:00",
+     "saat": "11:30",
      "seri": "efsane"
     },
     {
-     "saat": "19:30",
+     "saat": "15:30",
      "seri": "olsaydin"
     }
    ]
@@ -188,15 +188,15 @@
    "gun": "Pazar",
    "slotlar": [
     {
-     "saat": "13:00",
+     "saat": "11:30",
      "seri": "koken"
     },
     {
-     "saat": "16:30",
+     "saat": "15:30",
      "seri": "uretim"
     },
     {
-     "saat": "22:00",
+     "saat": "20:30",
      "seri": "kitap"
     }
    ]
@@ -204,7 +204,7 @@
  ],
  "istisnalar": [
   {
-   "zaman": "2026-11-10 18:00",
+   "zaman": "2026-11-10 17:00",
    "seri": "genel",
    "neden": "Atatürk'ü anma günü: 10 Kasım akşamı Genel video yok."
   }
