@@ -119,15 +119,23 @@ KITAP_KAPANIS = "Okudun mu? Yorumlara yaz."
 # Kitap kalıbında toplam dış ses (yavaş seslendirmede ~2,15 kelime/sn: 30-38 sn): hedef aralık ve üst sınır
 KITAP_KELIME = (125, 140)  # Sabri 6 Kas: kitap videoları 1 dakika
 KITAP_KELIME_UST = 145
-# Çizgi Roman ("Karar Senin") bölümü: genel 65-75 kelime / 9-12 sahne kuralı yerine ≈ 50-60 sn (paneller okunsun,
-# orta kısım sarkmasın); templates/cizgi.json "istem" aynı sayıları yazar (testler denetler)
-CIZGI_KELIME = (110, 130)
-CIZGI_KELIME_UST = 135
-CIZGI_SAHNE = (8, 10)
-CIZGI_UZUNLUK = (f"SÜRE (Çizgi Roman): toplam dış ses {CIZGI_KELIME[0]}-{CIZGI_KELIME[1]} kelime, {CIZGI_KELIME_UST}'i "
-                 f"GEÇMESİN (genel kuraldaki 65-75 kelime / 78 sınırı yerine); {CIZGI_SAHNE[0]}-{CIZGI_SAHNE[1]} sahne "
-                 "(9-12 yerine), her sahne bir çizgi roman sayfası. Tek satırlık ara sahne yazma: kısa iki olayı tek "
-                 "sahnede iki panelle (ust_alt, yan_yana, uc) anlat. Sahnelerin 'cizgi' alanını koru.")
+# Çizgi Roman ("Karar Senin") bölümü: genel 65-75 kelime / 9-12 sahne kuralı yerine ≈ 85-95 sn (Sabri 6 Kas: pilot çok
+# hızlıydı; bölüm 1,5 dakika). Anlatıcı daha yavaş (templates/cizgi.json ses_tempo) ve sahne aralarında kısa duraklama
+# var; templates/cizgi.json "istem" aynı sayıları yazar (testler denetler)
+CIZGI_KELIME = (170, 190)
+CIZGI_KELIME_UST = 200
+CIZGI_SAHNE = (16, 22)
+# Son sahnenin kapanışı (kodla kurulur, yazar ve editör değiştiremez): seçeneklerden sonra "Karar senin!", ardından
+# oy çağrısı. Ekranda KARAR SENİN! damgası bu sözle gelir.
+CIZGI_KARAR = "Karar senin!"
+CIZGI_OY_CAGRI = "Yorumlara A ya da B yaz."
+CIZGI_UZUNLUK = (f"SÜRE (Çizgi Roman): bölüm yaklaşık 85-95 saniye; toplam dış ses {CIZGI_KELIME[0]}-{CIZGI_KELIME[1]} "
+                 f"kelime, {CIZGI_KELIME_UST}'ü GEÇMESİN (genel kuraldaki 65-75 kelime / 78 sınırı yerine); "
+                 f"{CIZGI_SAHNE[0]}-{CIZGI_SAHNE[1]} sahne (9-12 yerine), her sahne bir çizgi roman sayfası. Tek "
+                 "satırlık ara sahne yazma: kısa iki olayı tek sahnede iki panelle (ust_alt, yan_yana, uc) anlat. "
+                 "Karakterlere söz ver: 4-7 sahnede tırnak içinde kısa bir replik ve balonu olsun (balondaki söz "
+                 "karakterin kendi sesiyle okunur). Son sahne: soru, 'A: ...', 'B: ...', sonra "
+                 f"'{CIZGI_KARAR}' ve '{CIZGI_OY_CAGRI}' (bu iki cümleyi kod da yazar). Sahnelerin 'cizgi' alanını koru.")
 
 
 def cizgi_sorunlari(script) -> list[str]:
@@ -143,6 +151,28 @@ def cizgi_sorunlari(script) -> list[str]:
         out.append(f"toplam dış ses {kelime} kelime ({CIZGI_KELIME[0]}-{CIZGI_KELIME[1]} olmalı, en çok "
                    f"{CIZGI_KELIME_UST})")
     return out
+
+
+_KAPANIS_RE = re.compile(r"\s*(karar\s+sen[iİ]n\s*[!.]*|yorumlara\s+a\s+ya\s+da\s+b\s+yaz\s*[!.]*)\s*",
+                         re.IGNORECASE)
+
+
+def karar_kapanisi(script) -> bool:
+    """Karar Senin: A/B kartlı son sahnenin dış sesi seçeneklerden sonra 'Karar senin!' ve 'Yorumlara A ya da B
+    yaz.' ile biter (sırası ve yazılışı kodla). Yazarın eksik, yer değiştirmiş ya da tekrarlanmış kapanışı
+    temizlenip yeniden yazılır. Son sahnesi ab kartı olmayan senaryoya dokunmaz. Değiştiyse True."""
+    if not script.scenes:
+        return False
+    son = script.scenes[-1]
+    c = getattr(son, "cizgi", None)
+    if c is None or c.kart is None or c.kart.tur != "ab":
+        return False
+    govde = _KAPANIS_RE.sub(" ", son.narration).strip()
+    yeni = f"{govde} {CIZGI_KARAR} {CIZGI_OY_CAGRI}".strip()
+    if yeni == son.narration:
+        return False
+    son.narration = yeni
+    return True
 
 
 def kamu_mali(yazar_olum: int | None, yil: int | None = None) -> bool:
@@ -1404,6 +1434,8 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
         structure = script.structure  # (seri etiketi, kart şablonu ve #NasılYapılır bu kalıba bağlı)
     checked.structure = structure
     out = polish_script(checked, adim_kartlari=nasil)
+    if cizgi:  # Karar Senin: son sahne seçeneklerden sonra "Karar senin!" ve oy çağrısıyla biter (kodla)
+        karar_kapanisi(out)
     out.series_part, out.next_part_brief = part, (brief if part == 1 else "")
     out.structure, out.search_phrase = structure, out.search_phrase or phrase
     out.hashtags = [t for t in (re.sub(r"\W", "", h) for h in out.hashtags) if t]
@@ -1757,9 +1789,10 @@ alıntı ekleme; aktarmalar dolaylı kalsın. Yılları ve sayıları değiştir
 
 # Yalnız Çizgi Roman senaryosunda (sahnelerde cizgi tarifi varsa) editöre eklenir.
 EDITOR_CIZGI = f"""
-ÇİZGİ ROMAN (Karar Senin): bu bölümde toplam dış ses {CIZGI_KELIME[0]}-{CIZGI_KELIME[1]} kelime, {CIZGI_KELIME_UST}'i geçmesin
-(65-75 kelime kuralı yerine). Tırnak içindeki sözler konuşma balonuna yazılır: tırnakları ve içindeki sözü koru. Son sahnedeki
-'A: ...' ve 'B: ...' seçeneklerini ve 'Yorumlara A ya da B yaz.' çağrısını değiştirme."""
+ÇİZGİ ROMAN (Karar Senin): bu bölümde toplam dış ses {CIZGI_KELIME[0]}-{CIZGI_KELIME[1]} kelime, {CIZGI_KELIME_UST}'ü geçmesin
+(65-75 kelime kuralı yerine). Tırnak içindeki sözler konuşma balonuna yazılır ve karakterin kendi sesiyle okunur: tırnakları
+ve içindeki sözü koru. Son sahnedeki 'A: ...' ve 'B: ...' seçeneklerini, '{CIZGI_KARAR}' sözünü ve '{CIZGI_OY_CAGRI}'
+çağrısını değiştirme."""
 
 # Dil düzeltmesinde rakamları korunan kalıplar: editör bir sahnenin sayılarını değiştirirse o sahnenin metni geri alınır.
 SAYI_KORUNAN = {"uretim", "olsaydin", "kitap"}

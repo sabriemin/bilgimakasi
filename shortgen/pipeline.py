@@ -9,7 +9,8 @@ import re
 from pathlib import Path
 
 from . import illustrate, images, render, voice
-from .script import STRUCTURES, KitapTelifHatasi, ShortScript, generate_script, kitap_telif, load_script, para_var
+from .script import (STRUCTURES, KitapTelifHatasi, ShortScript, generate_script, karar_kapanisi, kitap_telif,
+                     load_script, para_var)
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -169,6 +170,50 @@ def series_label(script: ShortScript, history: Path) -> str:
     return f"{STRUCTURES.get(script.structure, STRUCTURES['hikaye'])[0]} #{len(seen)}"
 
 
+def ses_sahneleri(script: ShortScript) -> list[tuple[str, str, str]]:
+    """Çok sesli seslendirmenin girdisi: her sahne için (dış ses, konuşan kimliği, balon metni). Konuşan, sahnenin
+    konuşma balonundan (Çizgi Roman tarifi) gelir; balonsuz sahne anlatıcıda kalır."""
+    out = []
+    for sc in script.scenes:
+        bal = sc.cizgi.balon if getattr(sc, "cizgi", None) is not None else None
+        out.append((sc.narration.strip(), bal.konusan if bal else "", bal.metin if bal else ""))
+    return out
+
+
+def sahne_sayilari(script: ShortScript, words: list) -> list[int]:
+    """Her sahneye düşen kelime sayısı; hizalama farklı bölündüyse oranla."""
+    counts = [len(sc.narration.split()) for sc in script.scenes]
+    if sum(counts) != len(words):
+        scale = len(words) / max(1, sum(counts))
+        counts = [max(1, round(c * scale)) for c in counts]
+        counts[-1] = max(1, len(words) - sum(counts[:-1]))
+    return counts
+
+
+def seslendir(script: ShortScript, tcfg: dict, mp3: Path, use_voice: bool) -> tuple[list, Path | None]:
+    """Dış sesi seslendirir (use_voice değilse süreleri tahmin eder): (kelimeler, mp3 ya da None).
+    Şablonun ses ayarı (ör. cizgi): "sesler" karakter kimliği -> ses kimliği (balondaki söz o karakterin sesiyle,
+    geri kalanı anlatıcıyla), "ses_tempo" anlatıcının temposu (VOICE_TEMPO yerine), "sahne_arasi" sahne sınırlarında
+    sessizlik (sn). Ayarı olmayan şablonlarda ses eskisi gibi tek istekte, anlatıcıyla: voice.synthesize(metin, mp3)."""
+    text = " ".join(sc.narration.strip() for sc in script.scenes)
+    sesler = {k: v for k, v in (tcfg.get("sesler") or {}).items() if isinstance(v, str) and v.strip()}
+    tempo = tcfg.get("ses_tempo")
+    if use_voice and sesler:
+        words = voice.synthesize_parcali(voice.parcala(ses_sahneleri(script), sesler), mp3, sesler, tempo=tempo)
+    elif use_voice:
+        words = voice.synthesize(text, mp3) if tempo is None else voice.synthesize(text, mp3, tempo=tempo)
+    else:
+        words, mp3 = voice.tahmin(text, tempo), None
+    ara = float(tcfg.get("sahne_arasi") or 0)
+    if ara > 0:  # sahne aralarında nefes: paneller daha uzun kalır, ses ve zamanlar birlikte kayar
+        sinir, k = [], 0
+        for c in sahne_sayilari(script, words)[:-1]:
+            k += c
+            sinir.append(k)
+        words = voice.duraklat(words, mp3, sinir, ara)
+    return words, mp3
+
+
 def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | None,
           template: str = "kolaj", use_drawings: bool = True) -> Path:
     if script.structure == "kitap":
@@ -178,6 +223,9 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         alinti = kitap_telif(script)
         if alinti:
             raise KitapTelifHatasi(alinti, script.topic, "video üretilmedi")
+    if sablon_renderer(template) == "cizgi" and karar_kapanisi(script):
+        # Karar Senin: hazır ya da bekleyen senaryo da son sahnede "Karar senin!" ve oy çağrısıyla biter
+        print("Son sahnenin kapanışı düzenlendi:", script.scenes[-1].narration)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "script.json").write_text(script.model_dump_json(indent=2), encoding="utf-8")
     cache = ROOT / "cache" / "images"
@@ -235,19 +283,10 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
             sprite=sprite, motion=motion if sprite else "none", trail=sc.trail, drawn=True))
 
     # 3) ses ve kelime zamanları
-    text = " ".join(sc.narration.strip() for sc in script.scenes)
-    mp3 = out_dir / "voice.mp3"
-    if use_voice:
-        words = voice.synthesize(text, mp3)
-    else:
-        words, mp3 = voice.estimate(text), None
+    words, mp3 = seslendir(script, tcfg, out_dir / "voice.mp3", use_voice)
 
     # 4) kelimeleri sahnelere dağıt
-    counts = [len(sc.narration.split()) for sc in script.scenes]
-    if sum(counts) != len(words):  # hizalama farklı bölündüyse oranla
-        scale = len(words) / max(1, sum(counts))
-        counts = [max(1, round(c * scale)) for c in counts]
-        counts[-1] = max(1, len(words) - sum(counts[:-1]))
+    counts = sahne_sayilari(script, words)
     i = 0
     for spec, c in zip(specs, counts):
         spec.words = words[i:i + c]

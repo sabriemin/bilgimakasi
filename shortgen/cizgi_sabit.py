@@ -91,6 +91,7 @@ BALON_TURLERI = ("konus", "dusun", "bagir")
 SERI_ADI = "KARAR SENİN"
 KURGU_ETIKETI = "KURGU"
 AB_CAGRI = "YORUMLARA A YA DA B YAZ"
+KARAR_DAMGA = ("KARAR", "SENİN!")     # son sahnede "Karar senin!" sözüyle gelen büyük damga
 AB_ALT = "Oylama 24 saat açık · Kurgusal hikâye"
 AB_SONRAKI = "En çok oy alan yol {sonraki}. bölüm olur."
 AB_SONRAKI_NUMARASIZ = "En çok oy alan yol sonraki bölüm olur."

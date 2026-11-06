@@ -3,7 +3,7 @@
   "category": "spor",
   "template": "cizgi",
   "title": "Karar Senin · 1. Bölüm: İki Kartvizit",
-  "description": "Sinoplu genç golcü Kuzey'in cebinde iki kulübün kartviziti var: İstanbul mu, Samsun mu? Sen olsan hangisini seçerdin? Kurgusal bir hikâyedir.",
+  "description": "Sinoplu genç golcü Kuzey'in cebinde iki kulübün kartviziti var: İstanbul mu, Samsun mu? Hocası, babası, annesi ve kız kardeşi de söz söylüyor. Karar senin! Kurgusal bir hikâyedir.",
   "hashtags": [
     "kararsenin",
     "futbol",
@@ -135,7 +135,7 @@
       }
     },
     {
-      "narration": "Bu yaz bölge turnuvasında altı maçta dokuz gol atıyor.",
+      "narration": "Bu yaz bölge turnuvasında altı maçta dokuz gol atıyor, hepsi sol ayakla.",
       "kicker": "",
       "headline": [
         "6 MAÇ 9 GOL"
@@ -168,6 +168,58 @@
             ]
           }
         ]
+      }
+    },
+    {
+      "narration": "Yılmaz Hoca kenardan bağırıyor: \"Sol ayağın altın, Kuzey!\"",
+      "kicker": "",
+      "headline": [
+        "SOL AYAK",
+        "ALTIN"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "saha_aksam",
+            "karakterler": [
+              {
+                "id": "yilmaz",
+                "poz": "isaret",
+                "ifade": "mutlu",
+                "konum": "sol",
+                "cerceve": "bust"
+              },
+              {
+                "id": "kuzey",
+                "poz": "top",
+                "ifade": "gulumse",
+                "konum": "sag",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "balon": {
+          "konusan": "yilmaz",
+          "metin": "Sol ayağın altın, Kuzey!",
+          "tur": "bagir",
+          "panel": 0
+        },
+        "kart": null,
+        "seri": "",
+        "bolum": 0,
+        "manset": []
       }
     },
     {
@@ -236,7 +288,99 @@
       }
     },
     {
-      "narration": "Ama orada onun gibi onlarca yetenek var. Samsunspor'dan Orhan Bey ise net: \"Bizde bir yılda A takımla çalışırsın.\"",
+      "narration": "Selim Bey kartvizitini uzatıyor: \"İstanbul'da seni büyük sahneler bekliyor.\"",
+      "kicker": "",
+      "headline": [
+        "BÜYÜK",
+        "SAHNELER"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "tribun",
+            "karakterler": [
+              {
+                "id": "selim",
+                "poz": "kartvizit",
+                "ifade": "gulumse",
+                "konum": "sol",
+                "cerceve": "bust"
+              },
+              {
+                "id": "kuzey",
+                "poz": "dur",
+                "ifade": "saskin",
+                "konum": "sag",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "balon": {
+          "konusan": "selim",
+          "metin": "İstanbul'da seni büyük sahneler bekliyor.",
+          "tur": "konus",
+          "panel": 0
+        },
+        "kart": null,
+        "seri": "",
+        "bolum": 0,
+        "manset": []
+      }
+    },
+    {
+      "narration": "Ama orada onun gibi onlarca yetenek forma sırası bekliyor.",
+      "kicker": "",
+      "headline": [
+        "ONLARCA",
+        "YETENEK"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "soyunma",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "dur",
+                "ifade": "endiseli",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "balon": null,
+        "kart": null,
+        "seri": "",
+        "bolum": 0,
+        "manset": []
+      }
+    },
+    {
+      "narration": "Samsunspor'dan Orhan Bey ise net: \"Bizde bir yılda A takımla çalışırsın.\"",
       "kicker": "",
       "headline": [
         "ORHAN BEY"
@@ -250,14 +394,8 @@
       "illustration": "",
       "motion": "none",
       "cizgi": {
-        "duzen": "ust_alt",
+        "duzen": "tek",
         "paneller": [
-          {
-            "mekan": "soyunma",
-            "karakterler": [],
-            "ses": "",
-            "yazi": []
-          },
           {
             "mekan": "saha_aksam",
             "karakterler": [
@@ -284,15 +422,19 @@
           "konusan": "orhan",
           "metin": "Bizde bir yılda A takımla çalışırsın.",
           "tur": "konus",
-          "panel": 1
-        }
+          "panel": 0
+        },
+        "kart": null,
+        "seri": "",
+        "bolum": 0,
+        "manset": []
       }
     },
     {
-      "narration": "Babası Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım.\" Annesi Nermin'in tek şartı: okul yarım kalmayacak.",
+      "narration": "Babası Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım oğlum.\"",
       "kicker": "",
       "headline": [
-        "BABA VE ANNE"
+        "HASAN REİS"
       ],
       "highlight_line": -1,
       "strike": [],
@@ -303,7 +445,7 @@
       "illustration": "",
       "motion": "none",
       "cizgi": {
-        "duzen": "ust_alt",
+        "duzen": "tek",
         "paneller": [
           {
             "mekan": "liman",
@@ -325,7 +467,37 @@
             ],
             "ses": "",
             "yazi": []
-          },
+          }
+        ],
+        "balon": {
+          "konusan": "hasan",
+          "metin": "Kararın neyse arkandayım oğlum.",
+          "tur": "konus",
+          "panel": 0
+        },
+        "kart": null,
+        "seri": "",
+        "bolum": 0,
+        "manset": []
+      }
+    },
+    {
+      "narration": "Annesi Nermin'in tek şartı var: \"Okul yarım kalmayacak, söz ver.\"",
+      "kicker": "",
+      "headline": [
+        "TEK ŞART"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
           {
             "mekan": "mutfak",
             "karakterler": [
@@ -342,11 +514,112 @@
           }
         ],
         "balon": {
-          "konusan": "hasan",
-          "metin": "Kararın neyse arkandayım.",
+          "konusan": "nermin",
+          "metin": "Okul yarım kalmayacak, söz ver.",
           "tur": "konus",
           "panel": 0
-        }
+        },
+        "kart": null,
+        "seri": "",
+        "bolum": 0,
+        "manset": []
+      }
+    },
+    {
+      "narration": "Kız kardeşi Elif ise çoktan karar vermiş: \"Abim İstanbul'da forma giyecek!\"",
+      "kicker": "",
+      "headline": [
+        "ELİF",
+        "KARARLI"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "bos",
+            "karakterler": [
+              {
+                "id": "elif",
+                "poz": "sevinc",
+                "ifade": "mutlu",
+                "konum": "sol",
+                "cerceve": "bust"
+              },
+              {
+                "id": "kuzey",
+                "poz": "dur",
+                "ifade": "gulumse",
+                "konum": "sag",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "balon": {
+          "konusan": "elif",
+          "metin": "Abim İstanbul'da forma giyecek!",
+          "tur": "konus",
+          "panel": 0
+        },
+        "kart": null,
+        "seri": "",
+        "bolum": 0,
+        "manset": []
+      }
+    },
+    {
+      "narration": "Gece iskelede iki kartvizite bakıyor: \"Ben hangisine hazırım?\"",
+      "kicker": "",
+      "headline": [
+        "HANGİSİNE",
+        "HAZIRIM?"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "iskele_gece",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "kartvizit",
+                "ifade": "dusunceli",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          }
+        ],
+        "balon": {
+          "konusan": "kuzey",
+          "metin": "Ben hangisine hazırım?",
+          "tur": "dusun",
+          "panel": 0
+        },
+        "kart": null,
+        "seri": "",
+        "bolum": 0,
+        "manset": []
       }
     },
     {
@@ -391,9 +664,49 @@
       }
     },
     {
-      "narration": "Samsun eve yakın; İstanbul'un kapısı ikinci kez çalmayabilir. Cevap bu gece verilecek.",
+      "narration": "Samsun eve yakın; İstanbul'un kapısı ikinci kez çalmayabilir.",
       "kicker": "",
       "headline": [
+        "EV Mİ,",
+        "İSTANBUL MU?"
+      ],
+      "highlight_line": -1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "cizgi": {
+        "duzen": "tek",
+        "paneller": [
+          {
+            "mekan": "yol_tabelasi",
+            "karakterler": [
+              {
+                "id": "kuzey",
+                "poz": "cene",
+                "ifade": "dusunceli",
+                "konum": "orta",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": [
+              "İSTANBUL",
+              "SAMSUN"
+            ]
+          }
+        ],
+        "manset": []
+      }
+    },
+    {
+      "narration": "Saat ilerliyor; cevap bu gece verilecek.",
+      "kicker": "",
+      "headline": [
+        "CEVAP",
         "BU GECE"
       ],
       "highlight_line": -1,
@@ -405,17 +718,8 @@
       "illustration": "",
       "motion": "none",
       "cizgi": {
-        "duzen": "yan_yana",
+        "duzen": "tek",
         "paneller": [
-          {
-            "mekan": "yol_tabelasi",
-            "karakterler": [],
-            "ses": "",
-            "yazi": [
-              "İSTANBUL",
-              "SAMSUN"
-            ]
-          },
           {
             "mekan": "saat_bilet",
             "karakterler": [],
@@ -433,7 +737,7 @@
       }
     },
     {
-      "narration": "Kuzey ne yapsın? A: İstanbul'a, Galatasaray'a gitsin. B: Samsunspor'da şansını denesin. Yorumlara A ya da B yaz.",
+      "narration": "Kuzey ne yapsın? A: İstanbul'a, Galatasaray'a gitsin. B: Samsunspor'da şansını denesin. Karar senin! Yorumlara A ya da B yaz.",
       "kicker": "",
       "headline": [
         "A MI B Mİ?"

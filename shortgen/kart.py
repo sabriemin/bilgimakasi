@@ -2892,16 +2892,19 @@ def render_kart(scenes: list[render.SceneSpec], words: list[Word], out_mp4: Path
 
 
 def render_frames(scenes: list[render.SceneSpec], words: list[Word], out_mp4: Path, voice_mp3: Path | None,
-                  music: Path | None, make_video, name: str) -> Path:
+                  music: Path | None, make_video, name: str, son_bekleme: float | None = None) -> Path:
     """Kart ve nasil şablonlarının ortak kare döngüsü: make_video(bcfg) .frame(t) veren nesneyi kurar; içerik son
     sözden sonra brand.json'daki end_tail_seconds kadar (kapanış kartı açıksa 0,7 sn) sürer, ardından marka kapanış
-    kartı (outro_seconds) gelir. Kareler ffmpeg'e yazılır, ses render.mux ile eklenir."""
+    kartı (outro_seconds) gelir. Kareler ffmpeg'e yazılır, ses render.mux ile eklenir. son_bekleme: şablonun kendi
+    son bekleyişi (ör. cizgi: A/B ekranı okunsun), end_tail_seconds'tan uzunsa onun yerine geçer."""
     from .brand import Brand, load_config
     t_begin = time.perf_counter()
     bcfg = load_config()
     brand = Brand(bcfg, {})
     outro = bcfg.get("outro_seconds", 0.0) if brand.on else 0.0
     tail = bcfg.get("end_tail_seconds", 1.6)
+    if son_bekleme is not None:
+        tail = max(tail, float(son_bekleme))
     content_end = (words[-1].end if words else scenes[-1].end) + (0.7 if outro else tail)
     total = content_end + outro
     scenes[-1].end = content_end
