@@ -8,7 +8,7 @@ import os
 import re
 from pathlib import Path
 
-from . import illustrate, images, render, voice
+from . import gorsel_denetim, illustrate, images, render, voice
 from .script import (STRUCTURES, KitapTelifHatasi, ShortScript, belgesel_bolumleri, belgesel_sorunlari,
                      generate_script, karar_kapanisi, kitap_telif, load_script, normalize_belgesel, para_var)
 
@@ -258,11 +258,28 @@ def build(script: ShortScript, out_dir: Path, use_voice: bool, music: Path | Non
         else:
             print(f"Sahne {i}: uygun fotoğraf bulunamadı ({queries})")
 
+    # 1b) görsel denetimi: fotoğraf sahnenin anlattığını göstermiyorsa (ör. kedi yerine insan) atılır, sahne çizilir
+    reddedilen: set[int] = set()
+    if use_drawings and photos:
+        adaylar = {i: (p, " · ".join(x for x in (script.scenes[i].headline, script.scenes[i].narration,
+                                                  ", ".join(script.scenes[i].image_queries or [script.scenes[i].image_query]))
+                                      if x)) for i, p in photos.items() if p.parent == cache}
+        for i in gorsel_denetim.denetle(adaylar, script.topic, out_dir / "denetim"):
+            cr = photo_credit.pop(i, None)
+            if cr in credits:
+                credits.remove(cr)
+            photos.pop(i, None)
+            reddedilen.add(i)
+
     # 2) çizimler: animasyonlu sahneler + fotoğrafı bulunamayan veya fotoğrafsız sahneler
+    #    (fotoğrafı denetimde reddedilen sahnede çizim tarifi yoksa sahnenin konusu çizilir)
     want: dict[int, str] = {}
     local: dict[int, Path] = {}
     for i, sc in enumerate(script.scenes):
         desc = sc.illustration.strip() or (sc.anim_query.strip() if sc.motion != "none" else "")
+        if not desc and i in reddedilen:
+            desc = (f"{script.topic}: {sc.headline or ''} — {(sc.image_queries or [sc.image_query])[0]}. "
+                    "Konunun öznesini (ör. hayvanı) açıkça çiz.")
         if desc and (sc.motion != "none" or i not in photos):
             path = (ROOT / desc[6:]).resolve() if desc.startswith("local:") else None
             if path and path.is_relative_to(ROOT.resolve()) and path.is_file():

@@ -1640,7 +1640,8 @@ def sema_json(schema: type[BaseModel]) -> dict:
     return sema
 
 
-def ask_claude(prompt: str, schema: type[BaseModel], system: str, web: bool = False) -> BaseModel:
+def ask_claude(prompt: str, schema: type[BaseModel], system: str, web: bool = False,
+               tools: list[str] | None = None) -> BaseModel:
     """Claude Code'u başsız (-p) çalıştırır, şemaya uygun JSON döndürür."""
     left = _check_budget()
     cmd = ["claude", "-p", prompt, "--model", MODEL, "--output-format", "json",
@@ -1649,6 +1650,8 @@ def ask_claude(prompt: str, schema: type[BaseModel], system: str, web: bool = Fa
            "--effort", "high"]
     if web:
         cmd += ["--tools", "WebSearch,WebFetch", "--allowedTools", "WebSearch", "WebFetch"]
+    elif tools:  # ör. görsel denetimi: Read ile önizleme dosyalarına bakar
+        cmd += ["--tools", ",".join(tools), "--allowedTools", *tools]
     else:
         cmd += ["--tools", ""]
     global _api_key_ok
