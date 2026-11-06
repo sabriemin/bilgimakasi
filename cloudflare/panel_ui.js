@@ -690,7 +690,8 @@ export const ONERI_SERILERI = [["populer", "Popüler", "Popüler", "🔥"], ["ko
   ["efsane", "Efsane", "Efsane mi, gerçek mi?", "🧐"], ["nasil", "Nasıl yapılır", "Nasıl yapılır?", "🛠"],
   ["uretim", "Üretim", "Nasıl üretiliyor?", "🏭"],
   ["olsaydin", "Olsaydın", "Ya sen olsaydın?", "💭"],
-  ["kitap", "Kitap", "Bir Kitap Bir Dakika", "📖"]];
+  ["kitap", "Kitap", "Bir Kitap Bir Dakika", "📖"],
+  ["belgesel", "Belgesel", "Mini Belgesel", "🎞"]];
 const SERI_ADI = Object.fromEntries(ONERI_SERILERI.map(([k, , ad]) => [k, ad]));
 // Kalıbı sabit seriler (anahtarlar = trends.SERI_KALIP): üretimde serinin kalıbı sabitlenir (telegram_bot._produce_suggestion),
 // onay penceresinde söylenir; konu sırası yalnız konu metnini tutar, bu seriler sıradan kalıpsız üretilirdi: sıraya eklenmez
@@ -700,6 +701,7 @@ export const SERI_NOTU = {
   uretim: `“${SERI_ADI.uretim}” kalıbıyla, aşama kartları şablonuyla üretilir. `,
   olsaydin: `“${SERI_ADI.olsaydin}” kalıbıyla, kart şablonunda sayaç ve hesap fişi kartlarıyla üretilir. `,
   kitap: `“${SERI_ADI.kitap}” kalıbıyla, kodla çizilen kitap kapağı ve sayfalarıyla üretilir; kamu malı olmayan kitapta alıntı yerine künye sayfası olur. `,
+  belgesel: `“${SERI_ADI.belgesel}” kalıbıyla iki bölüm (her biri ~90 sn) üretilir; 1. bölüm onaylanınca 2. bölüm sıradaki belgesel saatine kendiliğinden zamanlanır. `,
 };
 
 // ------------------------------------------------------------------ tarayıcı uygulaması

@@ -9,14 +9,14 @@ on:
         description: "Hazır senaryo dosyası (depodaki yol, ör. demo/kart/ornek_cin_seddi.json). Boşsa konu kullanılır."
         required: false
       konu:
-        description: "Senaryo yoksa Claude'un yazacağı konu"
+        description: "Senaryo yoksa Claude'un yazacağı konu (Mini Belgesel için kalip ya da sablon belgesel: iki bölüm, iki video)"
         required: false
       sablon:
-        description: "Şablon (ör. kart, nasil, uretim, isemri, ajanda, dosya, kitap, cizgi). cizgi: Karar Senin çizgi roman; sahnelerinde cizgi tarifi olan senaryo (ör. demo/cizgi/kuzey_1.json) her zaman cizgi şablonuyla çizilir. nasil, uretim, isemri (Nasıl Üretiliyor? iş emri), ajanda (Ya Sen Olsaydın?), dosya (Efsane mi, Gerçek mi?) ve kitap şablonlarında konuyla üretim şablonun kalıbıyla (nasil / uretim / olsaydin / efsane / kitap) yazılır."
+        description: "Şablon (ör. kart, nasil, uretim, isemri, ajanda, dosya, kitap, cizgi, belgesel). cizgi: Karar Senin çizgi roman; sahnelerinde cizgi tarifi olan senaryo (ör. demo/cizgi/kuzey_1.json) her zaman cizgi şablonuyla çizilir. nasil, uretim, isemri (Nasıl Üretiliyor? iş emri), ajanda (Ya Sen Olsaydın?), dosya (Efsane mi, Gerçek mi?), kitap ve belgesel (Mini Belgesel, iki bölüm) şablonlarında konuyla üretim şablonun kalıbıyla (nasil / uretim / olsaydin / efsane / kitap / belgesel) yazılır."
         required: false
         default: "kart"
       kalip:
-        description: "İsteğe bağlı sabit anlatım kalıbı, yalnız konuyla üretimde (ör. efsane, nasil, uretim, olsaydin, kitap). nasil, uretim, isemri (uretim), ajanda (olsaydin), dosya (efsane) ve kitap şablonları yalnız kendi kalıbıyla; başka kalıp verilirse üretim durur."
+        description: "İsteğe bağlı sabit anlatım kalıbı, yalnız konuyla üretimde (ör. efsane, nasil, uretim, olsaydin, kitap, belgesel). nasil, uretim, isemri (uretim), ajanda (olsaydin), dosya (efsane), kitap ve belgesel şablonları yalnız kendi kalıbıyla; başka kalıp verilirse üretim durur."
         required: false
       not:
         description: "Telegram mesajına eklenecek kısa not"
@@ -86,15 +86,17 @@ jobs:
           [ -z "$SENARYO" ] && [ -n "$KALIP" ] && ARGS+=(--structure "$KALIP")
           python -m shortgen.pipeline "${ARGS[@]}"
           echo "OUT_DIR=$(ls -td "$RUNNER_TEMP"/ornek/*/ | head -1)" >> "$GITHUB_ENV"
+          # Mini Belgesel iki klasör (iki bölüm) üretir: hepsi uretilen.txt'de
+          [ -s "$RUNNER_TEMP/ornek/uretilen.txt" ] || ls -td "$RUNNER_TEMP"/ornek/*/ | head -1 > "$RUNNER_TEMP/ornek/uretilen.txt"
       - name: Videoyu iş çıktısı olarak sakla
         if: always() && env.OUT_DIR != ''
         uses: actions/upload-artifact@v4
         with:
           name: ornek-video
           path: |
-            ${{ env.OUT_DIR }}video.mp4
-            ${{ env.OUT_DIR }}metadata.json
-            ${{ env.OUT_DIR }}script.json
+            ${{ runner.temp }}/ornek/*/video.mp4
+            ${{ runner.temp }}/ornek/*/metadata.json
+            ${{ runner.temp }}/ornek/*/script.json
           retention-days: 14
       - name: Telegram'a gönder (onaysız, kayıtsız)
         env:
@@ -103,4 +105,4 @@ jobs:
           NOT: ${{ github.event.inputs.not }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, gönderim atlandı."; exit 0; fi
-          python -m shortgen.telegram_bot preview "$OUT_DIR" "$NOT"
+          while read -r D; do python -m shortgen.telegram_bot preview "$D" "$NOT"; done < "$RUNNER_TEMP/ornek/uretilen.txt"

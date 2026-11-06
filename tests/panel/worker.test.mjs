@@ -51,10 +51,10 @@ describe("Telegram webhook davranışı değişmedi", () => {
       const g = JSON.parse(JSON.stringify(golden[i]).replaceAll("🎯 Her platform en iyi saatinde", "🎯 Serinin takvim saatinde")),
         y = yeni[i];
       if (g.ad === "mesaj /start" || g.ad === "mesaj /yardim") {
-        // bilinçli farklar: yardım metnine /panel satırı eklendi, /oneri yedi seriden 21 öneri veriyor
+        // bilinçli farklar: yardım metnine /panel satırı eklendi, /oneri sekiz seriden 24 öneri veriyor
         const eski = g.cagrilar[0].govde.text, yeniMetin = y.cagrilar[0].govde.text;
         assert.equal(yeniMetin, eski.replace("/yardim: bu liste", "/panel: yönetim paneline giriş bağlantısı\n/yardim: bu liste")
-          .replace("/oneri: gündemden 5 konu önerisi", "/oneri: 7 seriden 21 konu önerisi"));
+          .replace("/oneri: gündemden 5 konu önerisi", "/oneri: 8 seriden 24 konu önerisi"));
         assert.deepEqual({ ...y, cagrilar: [] }, { ...g, cagrilar: [] });
         continue;
       }
@@ -998,14 +998,15 @@ let chromium = null;
 try {
   ({ chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT || "/opt/node22/lib/node_modules/playwright"));
 } catch { /* yok */ }
-const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin", "kitap"]; // kalıbı sabit seriler: sıraya eklenmez
+const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel"]; // kalıbı sabit seriler: sıraya eklenmez
 
 describe("Konular: öneri serileri", () => {
   const DEPO = join(BURASI, "..", "..");
 
-  test("yedi seri trends.SERILER sırasıyla; kalıbı sabit beş serinin notu var", () => {
-    assert.deepEqual(ONERI_SERILERI.map(([k]) => k), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap"]);
+  test("sekiz seri trends.SERILER sırasıyla; kalıbı sabit altı serinin notu var", () => {
+    assert.deepEqual(ONERI_SERILERI.map(([k]) => k), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel"]);
     assert.deepEqual(ONERI_SERILERI[6], ["kitap", "Kitap", "Bir Kitap Bir Dakika", "📖"]);
+    assert.deepEqual(ONERI_SERILERI[7], ["belgesel", "Belgesel", "Mini Belgesel", "🎞"]);
     assert.equal(new Set(ONERI_SERILERI.map(([, , , ik]) => ik)).size, ONERI_SERILERI.length, "simgeler ayrı (Konular 📚)");
     // olsaydin'in adı geçici (sahibi seçiyor): yalnız simgesi sabit; adı Python'la karşılaştırılır (sonraki test)
     assert.deepEqual(ONERI_SERILERI[4], ["uretim", "Üretim", "Nasıl üretiliyor?", "🏭"]);
@@ -1022,12 +1023,13 @@ describe("Konular: öneri serileri", () => {
     assert.match(SERI_NOTU.olsaydin, /kart şablonunda sayaç ve hesap fişi kartlarıyla/);
     assert.match(SERI_NOTU.kitap, /kitap kapağı ve sayfalarıyla/);
     assert.match(SERI_NOTU.kitap, /kamu malı olmayan kitapta alıntı yerine künye sayfası/);
+    assert.match(SERI_NOTU.belgesel, /iki bölüm/);
     // uygulama listeyi ve notları kapıdan (AYAR) alır: tarayıcıdaki kopya aynı
     assert.ok(UYGULAMA_JS.includes(JSON.stringify(ONERI_SERILERI)) && UYGULAMA_JS.includes(JSON.stringify(SERI_NOTU)));
   });
 
   test("Python'daki seriler panelde aynı sıra, ad ve simgeyle var; kalıbı sabit her serinin notu var", () => {
-    // trends.py birleşince yedi seri olur; panel önden giderse fazlası zararsızdır (o seriden öneri gelmez)
+    // trends.py birleşince sekiz seri olur; panel önden giderse fazlası zararsızdır (o seriden öneri gelmez)
     const tr = readFileSync(join(DEPO, "shortgen", "trends.py"), "utf8");
     const sozluk = (ad) => {
       const m = new RegExp(`^${ad} = \\{([^}]*)\\}`, "m").exec(tr);
@@ -1092,8 +1094,11 @@ describe("Konular: öneri serileri", () => {
             [...k.querySelectorAll("button")].map((b) => b.textContent), (k.querySelector(".oneri-not") || {}).textContent || ""]),
         }));
         let o = await ozet();
-        assert.deepEqual(o.basliklar, ONERI_SERILERI.map(([, , ad, ik]) => `${ik} ${ad}`));
-        assert.deepEqual(o.cipler, [["tumu", "Tümü", "21", "true"], ...ONERI_SERILERI.map(([k, kisa]) => [k, kisa, "3", "false"])]);
+        // önerisi olmayan seri (YEDI_SERI'de Mini Belgesel yok) başlıksız kalır
+        assert.deepEqual(o.basliklar, ONERI_SERILERI.filter(([k]) => YEDI_SERI.items.some((x) => x.seri === k))
+          .map(([, , ad, ik]) => `${ik} ${ad}`));
+        assert.deepEqual(o.cipler, [["tumu", "Tümü", "21", "true"], ...ONERI_SERILERI
+          .filter(([k]) => YEDI_SERI.items.some((x) => x.seri === k)).map(([k, kisa]) => [k, kisa, "3", "false"])]);
         assert.deepEqual(o.kartlar.map(([s, no]) => [s, no]), YEDI_SERI.items.map((it, i) => [it.seri, `${i + 1}.`]));
         for (const [seri, , dugmeler, not] of o.kartlar) {
           assert.equal(dugmeler.includes("Sıraya ekle"), !KALIPLI.includes(seri), seri);

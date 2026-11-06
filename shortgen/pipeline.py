@@ -9,8 +9,8 @@ import re
 from pathlib import Path
 
 from . import illustrate, images, render, voice
-from .script import (STRUCTURES, KitapTelifHatasi, ShortScript, generate_script, karar_kapanisi, kitap_telif,
-                     load_script, para_var)
+from .script import (STRUCTURES, KitapTelifHatasi, ShortScript, belgesel_bolumleri, belgesel_sorunlari,
+                     generate_script, karar_kapanisi, kitap_telif, load_script, normalize_belgesel, para_var)
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -64,14 +64,19 @@ def sablon_yapisi(name: str | None) -> str:
     return t.get("yapi") or ("nasil" if t.get("renderer") == "nasil" else "")
 
 
+# Senaryosu yalnız kendi kurgu modülüyle çizilebilen kalıpların modülleri (kitap: kapak ve sayfalar; belgesel: iki bölüm,
+# zaman çizgisi ya da hat haritası)
+KENDI_KALIPLI = ("kitap", "belgesel")
+
+
 def yapi_sablonu(structure: str | None) -> str:
-    """Kalıbın kendi şablonu: renderer'ı kitap olan ve "yapi"sı bu kalıp olan ilk şablon (kitap -> kitap.json); yoksa
-    ''. eslesme.json'daki yapi_sablon önce gelir; bu, orada yazılmamış kitap kalıbının da kendi şablonuna gitmesi
-    içindir (Bir Kitap Bir Dakika başka şablonla çizilemez: kapak, sayfa ve sekme alanları yalnız orada)."""
+    """Kalıbın kendi şablonu: renderer'ı KENDI_KALIPLI'dan olan ve "yapi"sı bu kalıp olan ilk şablon (kitap ->
+    kitap.json, belgesel -> belgesel.json); yoksa ''. eslesme.json'daki yapi_sablon önce gelir; bu, orada yazılmamış
+    kalıbın da kendi şablonuna gitmesi içindir (Bir Kitap Bir Dakika ve Mini Belgesel başka şablonla çizilemez)."""
     if not structure:
         return ""
     for k in template_catalog():
-        if sablon_renderer(k) == "kitap" and sablon_yapisi(k) == structure:
+        if sablon_renderer(k) in KENDI_KALIPLI and sablon_yapisi(k) == structure:
             return k
     return ""
 
@@ -356,6 +361,9 @@ def yayin_paketi(script: ShortScript, template: str, credits: list, ai_voice: bo
         "series_part": script.series_part, "structure": script.structure, "search_phrase": script.search_phrase,
         "status": "onay_bekliyor", "created": dt.datetime.now().isoformat(timespec="seconds"),
     }
+    if script.structure == "belgesel" and script.belgesel is not None and script.series_part in (1, 2):
+        # Mini Belgesel: iki bölüm iki ayrı videodur; seri_id ikisini bağlar (onayda 2. bölüm sıradaki saate konur)
+        meta.update(seri_id=script.belgesel.seri_id, bolum=script.series_part, bolum_sayisi=2)
     if script.alkollu:  # alkollü tarif (script.ALKOLLU_ICECEK açıkken): açıklamaya yaş uyarısı
         meta["alkollu"] = True
     if script.structure == "olsaydin" and not para_var(script):
@@ -453,7 +461,10 @@ def main() -> None:
                                  # şablonun kendi ek yönergesi (templates/<ad>.json "istem"), ör. ek sahne alanları
                                  sablon_kurali=str(_sablon(hedef).get("istem") or ""),
                                  # Çizgi Roman sahne tarifi (Scene.cizgi) şemaya yalnız cizgi şablonunda girer
-                                 **({"cizgi": True} if sablon_renderer(hedef) == "cizgi" else {}))
+                                 **({"cizgi": True} if sablon_renderer(hedef) == "cizgi" else {}),
+                                 # Mini Belgesel: şablon görünümü sabitlediyse ("gorunum": cizgi | hat) yazar onu kullanır
+                                 **({"belgesel_gorunum": str(_sablon(hedef).get("gorunum") or "")}
+                                    if (a.structure == "belgesel" and _sablon(hedef).get("gorunum")) else {}))
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":
@@ -468,14 +479,29 @@ def main() -> None:
         raise SystemExit(f"{template} şablonu yalnız {yapi} kalıbındaki senaryoyla kullanılır "
                          f"(senaryo: {script.structure}).")
     music = a.music or (Path(os.environ["MUSIC_FILE"]) if os.environ.get("MUSIC_FILE") else None)
-    out_dir = a.out / f"{dt.datetime.now():%Y-%m-%d_%H%M}_{slugify(script.topic)}"
-    video = build(script, out_dir, use_voice=not a.no_voice, music=music, template=template)
-    with history.open("a", encoding="utf-8") as f:
-        f.write(json.dumps({"date": str(dt.date.today()), "topic": script.topic, "dir": str(out_dir),
-                            "structure": script.structure, "search_phrase": script.search_phrase,
-                            "series_part": script.series_part},
-                           ensure_ascii=False) + "\n")
+    stamp = dt.datetime.now()
+    out_dir = a.out / f"{stamp:%Y-%m-%d_%H%M}_{slugify(script.topic)}"
+    parcalar = belgesel_hazirla(script, stamp)
+    uretilen: list[Path] = []
+    for parca in parcalar:
+        # Mini Belgesel: bir üretim iki video (…-b1, …-b2); diğer kalıplarda tek video
+        d = out_dir if len(parcalar) == 1 else out_dir.with_name(f"{out_dir.name}-b{parca.series_part}")
+        video = build(parca, d, use_voice=not a.no_voice, music=music, template=template)
+        if len(parcalar) > 1:  # yarıda kalırsa iki bölüm birlikte yeniden üretilsin (uret.yml bunu saklar)
+            (d / "tam_senaryo.json").write_text(script.model_dump_json(indent=2), encoding="utf-8")
+        uretilen.append(d)
+        with history.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"date": str(dt.date.today()), "topic": parca.topic, "dir": str(d),
+                                "structure": parca.structure, "search_phrase": parca.search_phrase,
+                                "series_part": parca.series_part},
+                               ensure_ascii=False) + "\n")
+        print(f"Hazır: {video}")
+    # üretilen video klasörleri (sırayla): uret.yml / ornek.yml her biri için ayrı Release ve Telegram mesajı açar
+    a.out.mkdir(parents=True, exist_ok=True)
+    (a.out / "uretilen.txt").write_text("".join(f"{d}/\n" for d in uretilen), encoding="utf-8")
     pending.unlink(missing_ok=True)
+    if script.structure == "belgesel":
+        return  # iki bölüm aynı üretimde: eski "2. bölüm 12 saat sonra" serisine (seri.json) dokunulmaz
     if script.series_part == 1 and script.next_part_brief:
         seri["bekleyen"] = {"title": script.title, "topic": script.topic, "brief": script.next_part_brief,
                             "narration": " ".join(sc.narration for sc in script.scenes),
@@ -487,7 +513,26 @@ def main() -> None:
     if script.series_part:
         seri_file.parent.mkdir(exist_ok=True)
         seri_file.write_text(json.dumps(seri, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Hazır: {video}")
+
+
+def belgesel_hazirla(script: ShortScript, stamp: dt.datetime | None = None) -> list[ShortScript]:
+    """Mini Belgesel senaryosu iki videoya ayrılır (script.belgesel_bolumleri): ortak seri kimliği (seri_id) yoksa
+    verilir, ilk sahnenin format etiketi ('MİNİ BELGESEL #3') iki bölümde de aynıdır. Diğer senaryolar tek elemanlı
+    listede aynen döner."""
+    if script.structure != "belgesel" or script.belgesel is None:
+        return [script]
+    normalize_belgesel(script)
+    if not script.belgesel.seri_id:
+        script.belgesel.seri_id = f"{(stamp or dt.datetime.now()):%Y%m%d%H%M}-{slugify(script.topic)[:32]}"
+    for p in belgesel_sorunlari(script):
+        print("UYARI belgesel:", p)
+    parcalar = belgesel_bolumleri(script)
+    etiket = script.scenes[0].kicker if script.scenes else ""
+    for p in parcalar:
+        if p.scenes and etiket and p.series_part == 2:
+            p.scenes[0].kicker = etiket
+    print("Mini Belgesel:", ", ".join(f"Bölüm {p.series_part}: {len(p.scenes)} sahne" for p in parcalar))
+    return parcalar
 
 
 def _telif_durdu_yaz(e: KitapTelifHatasi) -> None:

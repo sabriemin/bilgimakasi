@@ -636,10 +636,12 @@ class KitapIcerik(unittest.TestCase):
                 self.assertNotIn(alan, metin, k)
             beklenen = json.loads(d.model_dump_json())
             beklenen.pop("kitap")
+            beklenen.pop("belgesel")  # Mini Belgesel alanları yalnız belgesel kalıbında yazılır
             for x in beklenen["scenes"]:
                 for alan in ("kitap_bolum", "sayfa_metni", "vurgu"):
                     x.pop(alan)
                 x.pop("cizgi")  # Çizgi Roman tarifi yalnız dolu olduğunda yazılır
+                x.pop("belgesel")
             self.assertEqual(json.loads(metin), beklenen, k)
             _, cagri, _ = self.uret(d, konu="muz", structure=k)
             for c in cagri:
@@ -650,28 +652,29 @@ class KitapIcerik(unittest.TestCase):
     # ------------------------------------------------------------ seri bağlantıları
     def test_trends_kitap_serisi(self):
         tr, sc = self.tr, self.sc
-        self.assertEqual(list(tr.SERILER)[-1], "kitap")
+        self.assertEqual(list(tr.SERILER)[-2:], ["kitap", "belgesel"])
         self.assertEqual(tr.SERILER["kitap"], "Bir Kitap Bir Dakika")
         self.assertEqual(tr.SERI_IKON["kitap"], "📖")
         self.assertEqual(len(set(tr.SERI_IKON.values())), len(tr.SERI_IKON), "her serinin simgesi ayrı")
         self.assertEqual(tr.SERI_KALIP["kitap"], "kitap")
         self.assertEqual(tr.kalip_of({"seri": "kitap"}), "kitap")
         self.assertEqual(tr.Suggestion.model_json_schema()["properties"]["seri"]["enum"], list(tr.SERILER))
-        self.assertIn("YEDİ SERİDE", tr.SYSTEM)
+        self.assertIn("SEKİZ SERİDE", tr.SYSTEM)
         self.assertNotIn("ALTI SERİDE", tr.SYSTEM)
         for parca in ("- kitap (Bir Kitap Bir Dakika):", "yıl dönümü", "uyarlaması", "edebiyat ödülü",
                       "okul okuma listeleri", "en az biri Türk edebiyatından", f"yazarı {sc.YIL - 71}", "kamu malıdır",
                       "videoda alıntı olmaz", "Kafka yayıncısından kapağa böceğin çizilmemesini istedi", sc.KITAP_YASAK,
                       "sonunu\n  ya da büyük sürprizini"):
             self.assertIn(parca, tr.SYSTEM)
-        # /oneri: yedi seri, kitap üçüncü mesajda tek başına
+        # /oneri: sekiz seri, kitap ve Mini Belgesel üçüncü mesajda
         ortak = dict(hook="kanca", trend="neden", scope="TR", category="dil ve kültür", score=5)
         items = [dict(topic=f"{s} {i}", seri=s, **ortak) for s in tr.SERILER for i in range(3)]
         msj = tr.mesajlar(items)
         self.assertEqual(len(msj), 3)
         self.assertTrue(msj[2][0].startswith("🗂 Bugünün konu önerileri (3/3)\n\n📖 Bir Kitap Bir Dakika\n19. "))
         d = tr.damga(items)
-        self.assertEqual(msj[2][1], [[("🎬 19", f"tp:{d}:18"), ("🎬 20", f"tp:{d}:19"), ("🎬 21", f"tp:{d}:20")]])
+        self.assertEqual(msj[2][1][0], [("🎬 19", f"tp:{d}:18"), ("🎬 20", f"tp:{d}:19"), ("🎬 21", f"tp:{d}:20")])
+        self.assertIn("\n🎞 Mini Belgesel\n22. ", msj[2][0])
 
     def test_seri_etiketi_ve_aciklama(self):
         P, pl = self.P, self.pl

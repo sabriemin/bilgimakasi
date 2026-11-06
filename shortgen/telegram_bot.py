@@ -128,7 +128,8 @@ def notify(out_dir: Path, tag: str) -> None:
                    "template": meta.get("template"), "structure": meta.get("structure"),
                    "created": meta["created"], "status": "onay_bekliyor",
                    "telegram_message_id": msg["message_id"],
-                   **({"aciklama_message_id": desc_id} if desc_id else {}), "platforms": {}})
+                   **({"aciklama_message_id": desc_id} if desc_id else {}),
+                   **{k: meta[k] for k in ("seri_id", "bolum", "bolum_sayisi") if meta.get(k)}, "platforms": {}})
     save(VIDEOS, videos)
 
 
@@ -344,18 +345,72 @@ def _suggestion_topic(it: dict) -> str:
 
 def _produce_suggestion(it: dict) -> bool:
     """Öneriden üretim: serinin kalıbı (trends.SERI_KALIP: Efsane mi, gerçek mi? -> efsane, Nasıl yapılır? -> nasil,
-    Nasıl üretiliyor? -> uretim, Ya sen olsaydın? -> olsaydin, Bir Kitap Bir Dakika -> kitap) üretimde sabitlenir."""
+    Nasıl üretiliyor? -> uretim, Ya sen olsaydın? -> olsaydin, Bir Kitap Bir Dakika -> kitap, Mini Belgesel -> belgesel) üretimde sabitlenir."""
     from .trends import kalip_of
     return _dispatch(_suggestion_topic(it), kalip=kalip_of(it))
 
 
-def _seri_saati(tag: str) -> dt.datetime | None:
-    """Videonun serisinin haftalık takvimdeki sıradaki boş saati (dolu: başka videolara ayrılmış ya da paylaşılmış)."""
+def _seri_saati(tag: str, now: dt.datetime | None = None) -> dt.datetime | None:
+    """Videonun serisinin haftalık takvimdeki sıradaki boş saati (dolu: başka videolara ayrılmış ya da paylaşılmış).
+    İki bölümlü Mini Belgesel'in 2. bölümü, 1. bölüm zamanlanmışsa ondan sonraki ilk boş saate düşer."""
     v = _find(load(VIDEOS, []), tag)
     if not v:
         return None
     dolu = [t for ts in _busy(tag).values() for t in ts]
-    return takvim.sonraki_saat(takvim.seri_of(v), dolu)
+    b1 = _bolum_kardesi(v, 1) if v.get("bolum") == 2 else None
+    if b1 and b1.get("status") == "zamanlandi" and b1.get("publish_at"):
+        t1 = max(dt.datetime.fromisoformat(t) for t in _sched_of(b1).values() if t)
+        now = max(now or dt.datetime.now(TR), t1)
+    return takvim.sonraki_saat(takvim.seri_of(v), dolu, now)
+
+
+# ---------------------------------------------------------------- iki bölümlü seri (Mini Belgesel)
+def _bolum_kardesi(v: dict, bolum: int) -> dict | None:
+    """Aynı seri_id'li videonun istenen bölümü (yoksa None). Bölümler ayrı etiketlerle (ayrı video kaydı) gelir."""
+    sid = v.get("seri_id")
+    if not sid:
+        return None
+    return next((x for x in load(VIDEOS, []) if x.get("seri_id") == sid and x.get("bolum") == bolum
+                 and x.get("tag") != v.get("tag")), None)
+
+
+def _bolum2_zamanla(tag: str, chat: str) -> str:
+    """1. bölüm zamanlanınca onay bekleyen 2. bölüm kendiliğinden serinin 1. bölümden sonraki ilk boş takvim saatine
+    zamanlanır (üç platform aynı anda) ve mesajının düğmesi 'iptal' olur. Nota eklenecek satırı döndürür ('' : yok)."""
+    v = _find(load(VIDEOS, []), tag)
+    if not v or v.get("bolum") != 1 or v.get("status") != "zamanlandi":
+        return ""
+    b2 = _bolum_kardesi(v, 2)
+    if not b2 or b2.get("status") != "onay_bekliyor":
+        return ""
+    t = _seri_saati(b2["tag"])
+    if t is None:
+        return "\nℹ️ 2. bölüm için takvimde boş saat bulunamadı, onu ayrıca onayla."
+    iso = t.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+    _update(b2["tag"], status="zamanlandi", publish_at=iso, schedule={p: iso for p in BEST_TIMES},
+            decided=dt.datetime.now(TR).isoformat(timespec="seconds"), otomatik_bolum=True)
+    _restore_kb(b2["tag"], chat, "zamanlandi")
+    return f"\n🎞 Bölüm 2/2 de otomatik zamanlandı: {_fmt(iso)}"
+
+
+def _bolum2_reddet(v: dict, chat: str) -> str:
+    """1. bölüm reddedilince onay bekleyen 2. bölüm de reddedilir (tek başına yayınlanmaz)."""
+    b2 = _bolum_kardesi(v, 2) if v.get("bolum") == 1 else None
+    if not b2 or b2.get("status") != "onay_bekliyor":
+        return ""
+    _update(b2["tag"], status="reddedildi", decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
+    _restore_kb(b2["tag"], chat, "reddedildi")
+    return " 2. bölüm de reddedildi."
+
+
+def _bolum2_iptal(v: dict, chat: str) -> str:
+    """1. bölümün paylaşımı iptal edilince, onunla otomatik zamanlanan (henüz paylaşılmamış) 2. bölüm de iptal edilir."""
+    b2 = _bolum_kardesi(v, 2) if v.get("bolum") == 1 else None
+    if not b2 or b2.get("status") != "zamanlandi" or not b2.get("otomatik_bolum") or _done(b2):
+        return ""
+    _update(b2["tag"], status="onay_bekliyor", publish_at=None, schedule=None, otomatik_bolum=None)
+    _restore_kb(b2["tag"], chat, "onay_bekliyor")
+    return " Otomatik zamanlanan 2. bölüm de yeniden onay bekliyor."
 
 
 def _approve(tag: str, code: str, chat: str, mid: int) -> str:
@@ -384,7 +439,7 @@ def _approve(tag: str, code: str, chat: str, mid: int) -> str:
             decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
     api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid, "reply_markup": _kb(
         [[("🚫 Paylaşımı iptal et", f"cancel:{tag}")]])})
-    return note
+    return note + _bolum2_zamanla(tag, chat)
 
 
 def _cancel(tag: str, chat: str, v: dict) -> str | None:
@@ -394,7 +449,7 @@ def _cancel(tag: str, chat: str, v: dict) -> str | None:
     _update(tag, status="onay_bekliyor", publish_at=None, schedule=None)
     api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": v["telegram_message_id"], "reply_markup": _kb(
         [[("✅ Onayla", f"ok:{tag}"), ("❌ Reddet", f"no:{tag}")]])})
-    return "Paylaşım iptal edildi, video yeniden onay bekliyor."
+    return "Paylaşım iptal edildi, video yeniden onay bekliyor." + _bolum2_iptal(v, chat)
 
 
 def _reject(tag: str, chat: str, v: dict) -> str:
@@ -410,7 +465,7 @@ def _reject(tag: str, chat: str, v: dict) -> str:
             seri.pop("bekleyen")
             seri_file.write_text(json.dumps(seri, ensure_ascii=False, indent=2), encoding="utf-8")
             note += " Serinin 2. bölümü de iptal edildi."
-    return note
+    return note + _bolum2_reddet(v, chat)
 
 
 def _retry(tag: str) -> str:
@@ -508,7 +563,7 @@ def _handle_callback(cq: dict, chat: str) -> None:
 
 
 COMMANDS = [
-    {"command": "oneri", "description": "Yedi seriden 21 konu önerisi (butonla üret)"},
+    {"command": "oneri", "description": "Sekiz seriden 24 konu önerisi (butonla üret)"},
     {"command": "uret", "description": "Hemen yeni video üret (ör. /uret kara delikler)"},
     {"command": "durum", "description": "Bekleyen ve zamanlanan videolar"},
     {"command": "rapor", "description": "İzlenme, takipçi, beğeni, kaydetme raporu"},
@@ -646,7 +701,7 @@ def process_update(u: dict, chat: str) -> None:
             api("sendMessage", data={"chat_id": chat, "text": "\n".join(lines)})
         elif text.startswith("/start") or text.startswith("/yardim"):
             api("sendMessage", data={"chat_id": chat, "text": "Merhaba! Yeni videolar buraya onaya gelir.\n\n"
-                                     "/oneri: 7 seriden 21 konu önerisi (butonla üret)\n"
+                                     "/oneri: 8 seriden 24 konu önerisi (butonla üret)\n"
                                      "/uret [konu]: hemen yeni video üret (konu isteğe bağlı; 'Kuyumcu olsaydın', "
                                      "'Çay nasıl demlenir?' gibi konularda seri kendiliğinden seçilir, başına "
                                      "'genel:' yazarsan serbest kalır)\n"
@@ -867,7 +922,7 @@ def _schedule(tag: str, p: dict, v: dict, chat: str) -> str:
         _update(tag, status="zamanlandi", schedule=new, publish_at=min(new.values()),
                 decided=dt.datetime.now(TR).isoformat(timespec="seconds"))
         _restore_kb(tag, chat, "zamanlandi")
-        return "✅ Onaylandı, takvimdeki saatlerde paylaşılacak:\n" + _sched_lines(new)
+        return "✅ Onaylandı, takvimdeki saatlerde paylaşılacak:\n" + _sched_lines(new) + _bolum2_zamanla(tag, chat)
     # bu işin kopyası birkaç saniye eski olabilir: paylaşılan platformlar ve saatler için uzaktaki en güncel kayda bakılır
     fresh = _origin_record(tag) or v
     st, due = fresh.get("status", "?"), _due_at(fresh)
