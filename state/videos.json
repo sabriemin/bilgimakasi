@@ -785,20 +785,41 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T04:20:45",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 258,
     "aciklama_message_id": 259,
     "seri_id": "202611060415-bir-kedinin-yasam-dongusu",
     "bolum": 1,
     "bolum_sayisi": 2,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "dvdFXhf-lpk",
+        "url": "https://youtube.com/shorts/dvdFXhf-lpk",
+        "at": "2026-11-06T21:01:53+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18148732282577487",
+        "url": "https://www.instagram.com/reel/DfaM1jFFPcW/",
+        "at": "2026-11-06T21:01:53+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7705120053461305365",
+        "draft": true,
+        "caption": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2\n\nMini Belgesel · Bölüm 1/2 (devamı bir sonraki videoda)\nBir kedi kör ve sağır doğar; ilk yılı on beş insan yılına denk gelir. Senin kedin hangi evrede?\n\n📷 ANUUU pama (CC BY-SA 4.0), Xkalponik (CC BY-SA 4.0), ankakay from Canada (CC BY 2.0)\n\n#kedininyaşamdöngüsü #kedi #kediler #MiniBelgesel #bilgimakasi",
+        "at": "2026-11-06T21:01:53+03:00"
+      }
+    },
     "schedule": {
       "youtube": "2026-11-06T18:00:00+00:00",
       "instagram": "2026-11-06T18:00:00+00:00",
       "tiktok": "2026-11-06T18:00:00+00:00"
     },
     "publish_at": "2026-11-06T18:00:00+00:00",
-    "decided": "2026-11-06T07:41:29+03:00"
+    "decided": "2026-11-06T07:41:29+03:00",
+    "published": "2026-11-06T21:01:53+03:00"
   },
   {
     "tag": "short-20261106-042433",
