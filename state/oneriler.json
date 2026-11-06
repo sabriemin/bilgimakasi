@@ -2,252 +2,811 @@
   "date": "2026-11-06",
   "items": [
     {
-      "topic": "Narnia'daki Türk lokumu: Edmund'ın Beyaz Cadı'ya lokum için kardeşlerini satması ve 2005 filminden sonra İngiltere'de lokum satışlarının yaklaşık %200 artması",
-      "hook": "Bir çocuk kardeşlerini bir kutu Türk lokumu için sattı",
-      "trend": "Greta Gerwig'in Narnia filmi Sihirbazın Yeğeni 26 Kasım'da vizyona giriyor",
-      "scope": "TR",
-      "category": "sanat ve müzik",
-      "score": 8,
-      "seri": "populer",
-      "uretildi": "2026-11-06T23:58+03:00"
+      "topic": "GTA V'in çıktığı ilk 3 günde 1 milyar dolar hasılatla tarihin en hızlı satan eğlence ürünü olarak Guinness rekoruna girmesi; 19 Kasım'da çıkacak GTA 6'nın Türkiye ön sipariş fiyatı 3.999 TL",
+      "hook": "Hiçbir film, albüm ya da oyun bu rekoru 13 yıldır kıramadı",
+      "trend": "GTA 6, 19 Kasım 2026'da çıkıyor; ön yükleme 12 Kasım'da başlıyor",
+      "scope": "Global",
+      "category": "teknoloji",
+      "score": 9,
+      "seri": "populer"
     },
     {
-      "topic": "İklim değişikliğini ilk fark eden kadın: Eunice Foote'un 1856'da CO2 dolu cam şişeyi güneşte ısıtıp diğerinden fazla ısındığını göstermesi ve unutulması",
-      "hook": "Küresel ısınmayı 170 yıl önce iki cam şişeyle bir kadın keşfetti",
-      "trend": "BM İklim Zirvesi COP31 9-20 Kasım'da Antalya'da yapılıyor",
+      "topic": "Euro 2000'de Türkiye'nin ev sahibi Belçika'yı Brüksel'de 2-0 yenip tarihinde ilk kez çeyrek finale çıkması; kırmızı kart gören kaleci De Wilde'ın yerine kaleye defans oyuncusu Eric Deflandre'ın geçmesi",
+      "hook": "Ev sahibini kendi evinde elediğimiz ve rakibin kaleye defansçı koyduğu gece",
+      "trend": "A Milli Takım 12 Kasım'da Uluslar Ligi'nde Belçika'yı ağırlıyor",
+      "scope": "TR",
+      "category": "spor",
+      "score": 9,
+      "seri": "populer"
+    },
+    {
+      "topic": "Rocky'nin 50. yılı: 106 dolar parası olan Stallone'un senaryoyu 360 bin dolara satmayı başrolü kendisi oynamadıkça reddetmesi, köpeği Butkus'u satıp sonra geri alması ve filmin 28 günde çekilip En İyi Film Oscar'ı kazanması",
+      "hook": "Cebinde 106 dolar vardı, 360 bin dolarlık teklifi yine de reddetti",
+      "trend": "Rocky 21 Kasım'da 50 yaşında; 'I Play Rocky' filmi bu ay vizyonda",
       "scope": "Global",
+      "category": "az bilinen insan hikâyeleri",
+      "score": 9,
+      "seri": "populer"
+    },
+    {
+      "topic": "Şampiyonlar Ligi marşının 1992'de Tony Britten tarafından Händel'in 1727'de İngiltere kralının taç giyme töreni için bestelediği 'Zadok the Priest' eserinden uyarlanması ve sözlerin üç dilde olması",
+      "hook": "Galatasaray maçında duyduğun marş aslında bir kralın taç giyme şarkısı",
+      "trend": "Galatasaray Stuttgart'ı 2-0 yendi; Şampiyonlar Ligi lig aşaması sürüyor",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 8,
+      "seri": "populer"
+    },
+    {
+      "topic": "'Black Friday' adı mağazaların zarardan kâra geçmesinden değil, 1950-60'larda Şükran Günü ertesi trafik kaosunu anlatmak için bu adı kullanan Philadelphia polisinden geliyor; kâr açıklaması 1980'lerde sonradan uyduruldu",
+      "hook": "Black Friday adını mağazalar değil, sinirli polisler koydu",
+      "trend": "27 Kasım Black Friday; Türkiye'de Kasım indirimleri başladı, aramalar yükseliyor",
+      "scope": "Global",
+      "category": "ekonomi ve markalar",
+      "score": 8,
+      "seri": "populer"
+    },
+    {
+      "topic": "8 Kasım 1895'te Wilhelm Röntgen'in bilinmeyen ışınlara 'X' demesi, buluşunun patentini almayı reddetmesi ve İngilizcede 'X-ray' denirken Türkçede ışının onun soyadıyla 'röntgen' diye anılması",
+      "hook": "Hastanede 'röntgen çekelim' derken aslında bir adamın soyadını söylüyorsun",
+      "trend": "Röntgen ışınlarının keşfinin yıl dönümü 8 Kasım'da",
+      "scope": "TR",
       "category": "bilim",
       "score": 8,
       "seri": "populer"
     },
     {
-      "topic": "11.11 indirim gününün kökeni: 1993'te Nanjing Üniversitesi'nde bekâr öğrencilerin uydurduğu 'Bekârlar Günü'nün Alibaba'yla dünyanın en büyük alışveriş gününe dönüşmesi",
-      "hook": "Dünyanın en büyük alışveriş günü bekâr öğrencilerin şakasıyla başladı",
-      "trend": "11 Kasım indirimleri Türkiye'deki e-ticaret sitelerinde de kampanyaya dönüştü",
-      "scope": "Global",
-      "category": "ekonomi ve markalar",
+      "topic": "Öğretmenler Günü dünyada 5 Ekim'de kutlanırken Türkiye'de neden 24 Kasım: Atatürk'ün 24 Kasım 1928'de Millet Mektepleri'nin Başöğretmenliğini kabul etmesi ve günün 1981'de resmîleşmesi",
+      "hook": "Dünya öğretmenlerini Ekim'de kutluyor, biz neden Kasım'ı bekliyoruz?",
+      "trend": "24 Kasım Öğretmenler Günü yaklaşıyor; öğrenciler ve veliler arıyor",
+      "scope": "TR",
+      "category": "tarih",
       "score": 7,
-      "seri": "populer",
-      "uretildi": "2026-11-06T23:59+03:00"
+      "seri": "populer"
     },
     {
-      "topic": "Cahit Arf: Arf değişmezini bulan Türk matematikçi ve formülünün 10 TL banknotlarının arkasında basılı olması",
-      "hook": "Cebindeki 10 liranın arkasındaki formülü hiç fark ettin mi?",
-      "trend": "Herkesin elindeki banknotta saklı bilinmeyen bir bilim hikâyesi",
+      "topic": "F1'in 2027'de döneceği İstanbul Park'ın ünlü 8. virajı: dört apeksli, pilotları saniyelerce 5G civarı yanal kuvvete maruz bırakan ve dünyanın en zor virajlarından sayılan uzun sol dönemeç",
+      "hook": "Bu virajı dönmek, beş kişinin başına binmesi gibi",
+      "trend": "F1 sezonu Las Vegas'la sonlanıyor; İstanbul 2027 takvimine geri döndü",
+      "scope": "TR",
+      "category": "spor",
+      "score": 7,
+      "seri": "populer"
+    },
+    {
+      "topic": "Charles Dickens'ın 'Bir Noel Şarkısı'nı altı haftada yazıp kendi parasıyla basması, ilk baskının Noel arifesine kadar tükenmesi ve kahramanın adı Scrooge'un İngilizcede 'cimri' anlamına gelen bir kelimeye dönüşmesi",
+      "hook": "Bu kitabın kahramanının adı bugün sözlükte 'cimri' demek",
+      "trend": "Johnny Depp'li 'Ebenezer: Bir Noel Şarkısı' 13 Kasım'da vizyonda",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 7,
+      "seri": "populer"
+    },
+    {
+      "topic": "Dr. Seuss'un 'Şapkalı Kedi'yi yayıncının verdiği kısıtlı kelime listesiyle 236 farklı kelimeyle yazması, ardından 50 dolarlık bir iddia için 'Green Eggs and Ham'i yalnızca 50 kelimeyle yazması",
+      "hook": "Dünyanın en sevilen çocuk kitabı sadece 50 kelimeyle yazıldı",
+      "trend": "Animasyon 'The Cat in the Hat' filmi bu hafta vizyona girdi",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 7,
+      "seri": "populer"
+    },
+    {
+      "topic": "Beşiktaş'ın 'Kara Kartal' lakabının 1941'deki Süleymaniye maçında tribünden yükselen 'Haydi kara kartallar, hücum!' çağrısıyla doğması",
+      "hook": "Beşiktaş'a 'Kara Kartal' adını bir taraftarın tek cümlesi verdi",
+      "trend": "Türk takımlı futbol hikâyeleri kanalda en çok izlenen içerik",
+      "scope": "TR",
+      "category": "spor",
+      "score": 9,
+      "seri": "konu"
+    },
+    {
+      "topic": "Türk büyükelçinin oğlu Ahmet Ertegün'ün 1947'de aile dişçisinden aldığı 10 bin dolar borçla Atlantic Records'u kurması; Ray Charles, Aretha Franklin ve Led Zeppelin'i dünyaya tanıtması",
+      "hook": "Led Zeppelin'i dünyaya tanıtan adam İstanbul doğumlu bir Türk'tü",
+      "trend": "Kalıcı merak: dünya müziğini değiştiren az bilinen Türk",
+      "scope": "TR",
+      "category": "az bilinen insan hikâyeleri",
+      "score": 9,
+      "seri": "konu"
+    },
+    {
+      "topic": "Taksim Meydanı adını 1732'de I. Mahmud döneminde Belgrad Ormanı'ndan gelen suyu şehre bölüştüren 'taksim' yani su dağıtım deposundan alıyor",
+      "hook": "Taksim aslında bir meydan değil, bir su deposunun adı",
+      "trend": "Gündelik bir yerin bilinmeyen kökeni kanalın en çok izlenen türü",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 8,
+      "seri": "konu"
+    },
+    {
+      "topic": "Eski 10 TL banknotun arka yüzünde Türk matematikçi Cahit Arf'ın portresiyle birlikte dünyada onun adıyla anılan 'Arf değişmezi' formülünün basılı olması",
+      "hook": "Cebindeki eski 10 liranın üstünde gerçek bir matematik formülü vardı",
+      "trend": "Herkesin elinden geçmiş bir nesnedeki gözden kaçan ayrıntı",
       "scope": "TR",
       "category": "bilim",
       "score": 8,
       "seri": "konu"
     },
     {
-      "topic": "Nutella'nın doğuşu: Savaş sonrası kakao kıtlığında Pietro Ferrero'nun fındıkla çoğalttığı Giandujot ezmesi ve bugün dünya fındığının büyük kısmının Türkiye'den gelmesi",
-      "hook": "Nutella aslında kakao yetmediği için icat edildi",
-      "trend": "Herkesin bildiği markanın bilinmeyen başlangıcı, Karadeniz fındığıyla bağlantısı",
+      "topic": "Türkiye tek saat diliminde ama Iğdır'da güneş, Gökçeada'dan yaklaşık 76 dakika önce doğuyor; ülke yaklaşık 19 boylam genişliğinde",
+      "hook": "Aynı saatte uyanıyoruz ama Iğdır'da güneş bir saatten fazla önce doğuyor",
+      "trend": "Günlerin kısaldığı Kasım'da gün doğumu saatleri merak ediliyor",
       "scope": "TR",
-      "category": "ekonomi ve markalar",
+      "category": "coğrafya",
       "score": 8,
       "seri": "konu"
     },
     {
-      "topic": "1833 Leonid meteor fırtınası: Bir gecede saatte on binlerce kayan yıldızın görülmesi ve Denison Olmsted'in bu geceyle meteor biliminin temelini atması",
-      "hook": "1833'te bir gece gökyüzünden saatte on binlerce yıldız kaydı",
-      "trend": "Leonid meteor yağmuru 17 Kasım civarında zirve yapıyor",
+      "topic": "Zeigarnik etkisi: 1927'de Bluma Zeigarnik'in, garsonların ödenmemiş siparişleri hatırlayıp ödenenleri unutmasından yola çıkarak yarım kalan işleri daha iyi hatırladığımızı göstermesi ve dizilerin bölüm sonlarını bu yüzden yarıda kesmesi",
+      "hook": "Dizinin bölümü tam en heyecanlı yerde bitiyorsa bunun bir bilimsel nedeni var",
+      "trend": "Türk dizilerinin bölüm sonlarını herkes bilir; nedeni az bilinir",
+      "scope": "Global",
+      "category": "psikoloji",
+      "score": 8,
+      "seri": "konu"
+    },
+    {
+      "topic": "Barkodun icadı: Joseph Woodland'ın 1948'de Miami sahilinde Mors alfabesini parmaklarıyla kuma çekip çizgileri uzatarak barkodu bulması ve ilk taranan ürünün 1974'te bir paket sakız olması",
+      "hook": "Marketteki her ürünün barkodu bir plajda kuma çizildi",
+      "trend": "Her gün gördüğümüz bir nesnenin şaşırtıcı icat hikâyesi",
+      "scope": "Global",
+      "category": "icatlar",
+      "score": 8,
+      "seri": "konu"
+    },
+    {
+      "topic": "Mona Lisa'nın 1911'de Louvre'da gece bir dolapta saklanan işçi Vincenzo Peruggia tarafından çalınması, Picasso'nun bile sorgulanması ve tablonun asıl bu hırsızlıkla dünyaca ünlü olması",
+      "hook": "Mona Lisa'yı dünyanın en ünlü tablosu yapan şey bir hırsızlıktı",
+      "trend": "Dünyanın en tanınan tablosuna dair az bilinen hikâye",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 8,
+      "seri": "konu"
+    },
+    {
+      "topic": "Nokia'nın efsane zil sesinin İspanyol gitarist Francisco Tárrega'nın 1902'de bestelediği 'Gran Vals' adlı klasik gitar eserinden alınması",
+      "hook": "Nokia zil sesi aslında 120 yıllık bir klasik gitar eseri",
+      "trend": "3310 kuşağının nostaljisi; herkesin kulağındaki melodi",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 8,
+      "seri": "konu"
+    },
+    {
+      "topic": "Hipopotamların 'kan terlediği' sanılır ama derilerinden salgılanan kırmızı-turuncu sıvı kan değil; güneş ışığını süzen doğal bir güneş kremi",
+      "hook": "Hipopotam kan terlemiyor, kendi güneş kremini üretiyor",
+      "trend": "Hayvanlar âlemine dair 'bunu bilmiyordum' dedirten kalıcı merak",
+      "scope": "Global",
+      "category": "doğa ve hayvanlar",
+      "score": 7,
+      "seri": "konu"
+    },
+    {
+      "topic": "'Kışın soğuk olması Dünya'nın Güneş'ten uzaklaşmasındandır' inanışı yanlış: Dünya Güneş'e en çok Ocak başında yaklaşır; mevsimleri eksenin 23,4 derecelik eğikliği belirler",
+      "hook": "Dünya Güneş'e en yakın ne zaman? Cevap: kışın ortasında",
+      "trend": "Havalar soğurken herkesin okulda yanlış öğrendiği yaygın inanış",
       "scope": "Global",
       "category": "uzay",
-      "score": 7,
-      "seri": "konu"
+      "score": 9,
+      "seri": "efsane"
     },
     {
-      "topic": "'Devekuşu korkunca başını kuma gömer' inanışı yanlış: Devekuşları yumurtalarını çevirmek için başlarını yerdeki yuvaya sokar, uzaktan gömülü gibi görünür",
-      "hook": "Devekuşu başını kuma gömmez, peki o görüntü neydi?",
-      "trend": "'Devekuşu gibi başını kuma gömmek' Türkçede çok kullanılan bir deyim",
+      "topic": "'Kruvasan, 1683 Viyana Kuşatması'ndan sonra Osmanlı hilalini yemek için icat edildi' hikâyesi yanlış: bu anlatı 20. yüzyılda yayıldı, ilk kruvasan tarifleri 19. yüzyıl Fransa'sından",
+      "hook": "Kruvasanın Osmanlı'yla dalga geçmek için yapıldığı hikâyesi gerçek mi?",
+      "trend": "Sosyal medyada sık paylaşılan, Osmanlı'ya dayanan popüler hikâye",
+      "scope": "TR",
+      "category": "tarih",
+      "score": 9,
+      "seri": "efsane"
+    },
+    {
+      "topic": "'Hindi Hindistan'dan gelir' inanışı yanlış: hindi Kuzey Amerika kökenli; Türkler onu Hint tavuğu, İngilizler ise Türkiye'den gelen kuş sanıp 'turkey' dedi",
+      "hook": "Bu kuşa biz 'Hint' diyoruz, İngilizler 'Türk'; ikimiz de yanılıyoruz",
+      "trend": "26 Kasım Şükran Günü'nde hindi yine dünya gündeminde",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 9,
+      "seri": "efsane"
+    },
+    {
+      "topic": "'Hezarfen Ahmet Çelebi Galata Kulesi'nden Üsküdar'a uçtu' anlatısının tek kaynağı Evliya Çelebi'nin Seyahatname'si; dönemin başka hiçbir belgesinde bu uçuş geçmiyor",
+      "hook": "Galata Kulesi'nden Üsküdar'a uçuşun tek bir tanığı var",
+      "trend": "Okullarda gerçek diye anlatılan, Galata Kulesi'yle özdeşleşmiş hikâye",
+      "scope": "TR",
+      "category": "tarih",
+      "score": 8,
+      "seri": "efsane"
+    },
+    {
+      "topic": "'Van kedileri suya girer ve yüzer' inanışı şaşırtıcı biçimde doğru: çoğu kediden farklı olarak Van kedisi suyla oynamayı sever, su geçirmeyen tüyleri sayesinde yüzebilir",
+      "hook": "Kediler sudan kaçar, ama bizim bir kedimiz yüzmeyi seviyor",
+      "trend": "Türkiye'nin simge kedisi hakkında doğru çıkan şaşırtıcı inanış",
       "scope": "TR",
       "category": "doğa ve hayvanlar",
       "score": 8,
       "seri": "efsane"
     },
     {
-      "topic": "'Yıldırım aynı yere iki kez düşmez' inanışı yanlış: Empire State Binası yılda ortalama 20-25 kez yıldırım alıyor, yüksek ve sivri noktalar tekrar tekrar vurulur",
-      "hook": "Yıldırım aynı yere iki kez düşmez mi? Bir bina yılda 25 kez vuruluyor",
-      "trend": "Türkçede sık kullanılan bir söz; sonbahar fırtınaları mevsimi",
-      "scope": "TR",
-      "category": "bilim",
-      "score": 7,
-      "seri": "efsane",
-      "uretildi": "2026-11-06T23:58+03:00"
-    },
-    {
-      "topic": "'Boğalar kırmızı renge saldırır' inanışı yanlış: Boğalar kırmızıyı ayırt edemez, matadorun pelerinini sallamasına, yani harekete saldırır",
-      "hook": "Boğa kırmızıyı göremiyor bile, peki neden saldırıyor?",
-      "trend": "Çizgi filmlerden deyimlere kadar her yerde tekrarlanan bir inanış",
+      "topic": "'Çin Seddi uzaydan çıplak gözle görünür' inanışı yanlış: dar ve çevresiyle aynı renkte olduğu için yörüngeden seçilemiyor; ilk Çinli astronot Yang Liwei de göremediğini söyledi",
+      "hook": "İlk Çinli astronot bile uzaydan Çin Seddi'ni göremedi",
+      "trend": "Ders kitaplarından bilgi yarışmalarına kadar tekrarlanan yaygın inanış",
       "scope": "Global",
-      "category": "doğa ve hayvanlar",
-      "score": 6,
+      "category": "uzay",
+      "score": 8,
       "seri": "efsane"
     },
     {
-      "topic": "Duvara matkapla dübel takmak: dübel çapında uç seçmek, uca bantla derinlik işareti koymak, deliğin altına katlanmış yapışkan not kâğıdı yapıştırıp tozu toplamak ve dübeli çekiçle hizalamak",
-      "hook": "Duvarı delerken yere tek toz düşürmemenin kâğıt püf noktası",
-      "trend": "Raf ya da tablo asmak isteyen herkesin işine yarar, temizlik derdini bitirir",
+      "topic": "'Boğa kırmızı renge saldırır' inanışı yanlış: boğalar kırmızıyı ayırt edemez, saldırıyı pelerinin rengi değil sallanma hareketi tetikler",
+      "hook": "Matadorun pelerini mavi olsaydı boğa yine saldırırdı",
+      "trend": "Atasözlerine bile girmiş, herkesin doğru sandığı inanış",
+      "scope": "Global",
+      "category": "doğa ve hayvanlar",
+      "score": 8,
+      "seri": "efsane"
+    },
+    {
+      "topic": "'Einstein matematikten kaldı' inanışı yanlış: Einstein 15 yaşından önce diferansiyel ve integral hesabı öğrendiğini söyledi; 1935'te bir gazete köşesi bu efsaneyi yaydı",
+      "hook": "Einstein matematikten kaldı mı? Cevabı bizzat kendisi verdi",
+      "trend": "Karne ve sınav dönemlerinde motivasyon diye sık paylaşılan yanlış bilgi",
+      "scope": "Global",
+      "category": "bilim",
+      "score": 8,
+      "seri": "efsane"
+    },
+    {
+      "topic": "'Yıldırım aynı yere iki kez düşmez' inanışı yanlış: yüksek yapılar defalarca vurulur, Empire State Binası'na yılda ortalama 20-25 yıldırım düşer",
+      "hook": "Bu binaya her yıl yirmiden fazla yıldırım düşüyor",
+      "trend": "Sonbahar fırtınaları döneminde gündelik dilde sık kullanılan inanış",
+      "scope": "Global",
+      "category": "bilim",
+      "score": 7,
+      "seri": "efsane"
+    },
+    {
+      "topic": "'Develer hörgüçlerinde su depolar' inanışı yanlış: hörgüç onlarca kilo yağ depolar; develerin susuzluğa dayanıklılığı böbrek ve kanlarındaki uyumdan gelir",
+      "hook": "Devenin hörgücünü açsan içinden bir damla su çıkmaz",
+      "trend": "Çocukluktan beri doğru sanılan, hayvanlarla ilgili en yaygın inanışlardan",
+      "scope": "Global",
+      "category": "doğa ve hayvanlar",
+      "score": 7,
+      "seri": "efsane"
+    },
+    {
+      "topic": "Narı dağıtmadan ayıklamak: tepesini kesip beyaz zar çizgileri boyunca 4-6 çizik atmak, dilimleri açıp su dolu kasede taneleri ayırmak; zarlar yüzer, taneler dibe çöker",
+      "hook": "Narı ayıklarken mutfağı boyamayı bırak, bir kase su yeter",
+      "trend": "Kasım nar mevsimi; herkesin her yıl uğraştığı dert",
+      "scope": "TR",
+      "category": "bilim",
+      "score": 9,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Kazağı askıda omuz çıkıntısı yapmadan asmak: ikiye katlayıp koltuk altını askının kancasına yerleştirmek, gövdeyi ve kolları askının iki yanından sarmak; örgü kendi ağırlığıyla esnemez",
+      "hook": "Kazağını askıya böyle asarsan omzunda o tümsekler hiç çıkmaz",
+      "trend": "Kasımda kazaklar dolaba çıkıyor; ev düzeni yapan herkesin işine yarar",
+      "scope": "Global",
+      "category": "bilim",
+      "score": 9,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Mikrodalgayı ovmadan temizlemek: bir kase suya limon dilimleri ve tahta kaşık koyup 3-5 dakika çalıştırmak, kapağı açmadan 5 dakika beklemek; buhar kurumuş lekeleri yumuşatır, bezle tek seferde silinir",
+      "hook": "Mikrodalgayı ovmadan temizlemenin yolu bir kase limonlu sudan geçiyor",
+      "trend": "Ev ve yurtta en çok ertelenen temizlik; kimyasal gerektirmiyor",
+      "scope": "Global",
+      "category": "bilim",
+      "score": 8,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Banyoya ya da tezgâha düz silikon çekmek: derzin iki yanına maskeleme bandı yapıştırmak, ucu 45 derece kesip tabancayı sabit hızla sürmek, sabunlu suyla ıslatılmış parmakla düzeltip bandı silikon kurumadan çekmek",
+      "hook": "Ustaların cetvel gibi silikon çekmesinin sırrı bir rulo bantta",
+      "trend": "Kiracıların ve ev sahiplerinin en sık yaptığı küçük tamir",
       "scope": "TR",
       "category": "teknoloji",
       "score": 8,
-      "seri": "nasil",
-      "uretildi": "2026-11-06T23:58+03:00"
+      "seri": "nasil"
     },
     {
-      "topic": "Kabuk yağıyla daha aromalı limonata: limon kabuklarını şekerle ovup bir saat bekletmek (oleo saccharum), sonra limon suyu ve suyla karıştırmak",
+      "topic": "Soğan doğrarken ağlamamak: soğanı 15-30 dakika buzdolabında soğutmak, keskin bıçak kullanmak ve kök kısmını en sona bırakmak; gözü yakan gaz ezilen hücrelerden çıkar ve en çok kökte yoğunlaşır",
+      "hook": "Soğan seni ağlatıyorsa suçlu bıçağın ve soğanın kök kısmı",
+      "trend": "Türk mutfağında neredeyse her yemek soğanla başlıyor",
+      "scope": "TR",
+      "category": "bilim",
+      "score": 8,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Acısız ve yoğun aromalı ev limonatası: limonun yalnızca sarı kabuğunu şekerle ovup bir saat bekletmek (oleo saccharum), çıkan aromalı şurubu sıkılmış limon suyu ve soğuk suyla karıştırmak",
       "hook": "Limonatanın asıl lezzeti suyunda değil, attığın kabukta",
-      "trend": "Barmenlerin kullandığı teknik evde mutfak malzemeleriyle yapılabiliyor",
+      "trend": "Barmenlerin 200 yıllık hilesi; evde basit malzemeyle yapılıyor",
       "scope": "Global",
+      "category": "bilim",
+      "score": 8,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Cornell yöntemiyle not tutmak: sayfayı sağda geniş not alanı, solda dar soru sütunu ve altta özet kutusu olarak üçe bölmek; sağ tarafı kapatıp soldaki sorularla kendini test etmek",
+      "hook": "Defter sayfasını üçe böl, ders notun kendi sınavına dönüşsün",
+      "trend": "Kasım ara tatili ve vize dönemi; öğrenciler etkili çalışma arıyor",
+      "scope": "TR",
+      "category": "psikoloji",
+      "score": 8,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Nevresim takımını dolapta dağılmadan saklamak: çarşaf ve nevresimi katlayıp takımın kendi yastık kılıflarından birinin içine koymak; her takım tek paket olur, eşini aramak biter",
+      "hook": "Nevresim dolabındaki karmaşayı bitiren tek hamle: yastık kılıfı",
+      "trend": "Kışlık nevresimlerin çıktığı dönem; dolap düzeni videoları çok paylaşılıyor",
+      "scope": "TR",
+      "category": "psikoloji",
+      "score": 8,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Matkapla duvara dübeli sallanmadan takmak: dübel çapında uç seçmek, deliği dübel boyundan biraz derin açmak, tozu çıkarıp dübeli çekiçle duvarla aynı hizaya oturtmak; prizin altı ve üstü hizasında delmemek",
+      "hook": "Dübelin duvarda dönmesinin sebebi çoğu zaman deliğin içindeki toz",
+      "trend": "Taşınma, raf ve televizyon montajında herkesin karşılaştığı iş",
+      "scope": "TR",
+      "category": "teknoloji",
+      "score": 7,
+      "seri": "nasil"
+    },
+    {
+      "topic": "Yurtta süzgeçsiz tek tencere makarna: makarnayı üstünü ancak geçecek kadar suyla pişirip suyu dökmemek, kalan nişastalı suya salça ve rendelenmiş peynir ekleyip kendi sosunu yapmak",
+      "hook": "Makarna suyunu lavaboya döküyorsan sosun yarısını da döküyorsun",
+      "trend": "Yurtta ve öğrenci evinde az malzeme, tek ocakla hızlı yemek",
+      "scope": "TR",
       "category": "bilim",
       "score": 7,
       "seri": "nasil"
     },
     {
-      "topic": "Cornell not alma yöntemi: sayfayı not, anahtar soru ve özet bölümlerine ayırmak, dersten sonra soruları yazmak ve sayfanın altına özet çıkarmak",
-      "hook": "Cornell öğrencilerinin kullandığı not sayfası tek bir çizgiyle başlıyor",
-      "trend": "Ara sınav döneminde öğrencilerin hızlı tekrar yapmasını sağlar",
-      "scope": "Global",
-      "category": "psikoloji",
-      "score": 7,
-      "seri": "nasil"
-    },
-    {
-      "topic": "Siyah çay nasıl üretilir: Rize'de toplanan yeşil yaprağın soldurulması, kıvrılması, oksidasyonla siyahlaşması ve kurutulması; yeşil çayla siyah çayın aynı bitkiden gelmesi",
-      "hook": "Yeşil çay ile siyah çay aynı yapraktan çıkıyor",
-      "trend": "Türkiye kişi başına çay tüketiminde dünyada ilk sırada",
+      "topic": "Rize çayı nasıl üretilir: yaş yaprağın soldurma, kıvırma, oksidasyon ve kurutmadan geçmesi; siyah çayla yeşil çayın aynı bitkiden çıkması, aradaki tek farkın oksidasyon olması",
+      "hook": "Siyah çay ile yeşil çay aynı yapraktan, tek fark bir bekleme",
+      "trend": "Türkiye kişi başı çay tüketiminde dünya birincisi; gündelik merak",
       "scope": "TR",
       "category": "ekonomi ve markalar",
       "score": 9,
-      "seri": "uretim",
-      "uretildi": "2026-11-06T23:58+03:00"
+      "seri": "uretim"
     },
     {
-      "topic": "İznik çinisi nasıl üretilir: kil yerine büyük oranda kuvarstan hazırlanan hamur, astar, elle çizilen desen ve sırla fırınlama",
-      "hook": "İznik çinisinin sırrı kilde değil, kumda",
-      "trend": "Türkiye'nin en tanınan el sanatlarından biri, şaşırtıcı bir malzeme gerçeğiyle",
+      "topic": "Simit nasıl üretilir: hamurun burulup halka yapılması, pekmezli suya batırılıp susama bulanması ve taş fırında pişmesi; o koyu renk ve parlaklığı pekmezin fırında karamelleşmesi verir",
+      "hook": "Simidin o parlak kahverengisi boyadan değil, bir kase pekmezden geliyor",
+      "trend": "Türkiye'nin en tanıdık sokak lezzeti; herkes yer, kimse üretimini bilmez",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 9,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Tahin helvası nasıl üretilir: susamın kavrulup tahine çekilmesi, şeker şurubunun çöven otu kökünden çıkan suyla köpürtülmesi ve tahinle yoğrulması; helvanın lifli dokusu bir bitki kökünden gelir",
+      "hook": "Helvanın o lif lif dokusunun sırrı, sabun gibi köpüren bir kök",
+      "trend": "Kış aylarının klasiği; çöven otu sürprizi çok az bilinir",
+      "scope": "TR",
+      "category": "bilim",
+      "score": 8,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Bursa kestane şekeri nasıl üretilir: kestanelerin soyulup haşlanması, şeker şurubunda yavaş yavaş pişirilerek şurubu içine çekmesi ve dinlendirilmesi; AB'den coğrafi işaret tescili alan bir lezzet",
+      "hook": "Bursa'nın kestane şekeri neden bu kadar pahalı? Cevap kazanda saklı",
+      "trend": "Kestane hasadı ve kestane şekeri sezonu Kasımda başlıyor",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 8,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Kot pantolon nasıl üretilir: indigo boyalı ipliklerin dokunması, kesim ve dikim, 'eskitme'nin gerçekten volkanik ponza taşlarıyla dev makinelerde yıkanarak yapılması",
+      "hook": "Taşlanmış kot gerçekten taşla yıkanıyor, hem de volkan taşıyla",
+      "trend": "Türkiye büyük denim üreticisi ve ponza taşı kaynağı; herkesin dolabında var",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 8,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Nazar boncuğu nasıl üretilir: İzmir Görece ve Kurşunlu'da cam çubukların fırında eritilip demir çubuğa sarılması, lacivert, beyaz ve sarı katmanların tek tek eklenmesi",
+      "hook": "Her nazar boncuğu bir ustanın elinde tek tek doğuyor",
+      "trend": "Türkiye'nin simgesi; turistlerin ve herkesin tanıdığı nesne",
       "scope": "TR",
       "category": "sanat ve müzik",
       "score": 8,
       "seri": "uretim"
     },
     {
-      "topic": "Kot kumaşı nasıl üretilir: pamuk ipliğinin indigo banyosuna defalarca daldırılması, boyanın ipliğin yalnız yüzeyinde kalması ve bu yüzden kotun zamanla solması",
-      "hook": "Kotunun solmasının sebebi boyanın içine hiç işlememesi",
-      "trend": "Herkesin dolabındaki ürün; Türkiye dünyanın büyük denim üreticilerinden",
-      "scope": "Global",
-      "category": "ekonomi ve markalar",
+      "topic": "Buzdolabı nasıl üretilir: çelik sacın kesilip bükülmesi, iç gövdenin plastikten vakumla şekillendirilmesi, iki duvar arasına sıvı poliüretan basılıp köpürerek yalıtım olması; Türkiye Avrupa'nın en büyük beyaz eşya üreticisi",
+      "hook": "Buzdolabının duvarları içinde köpüren bir sıvıyla soğuğu tutuyor",
+      "trend": "Efsane Cuma öncesi beyaz eşya araştırması; Türkiye'nin dev ihracat kalemi",
+      "scope": "TR",
+      "category": "teknoloji",
       "score": 8,
       "seri": "uretim"
     },
     {
-      "topic": "Yılbaşı Milli Piyango büyük ikramiyesi sana çıksaydı: vergiden sonra eline geçen para, ikramiyeyi alma prosedürü, neye yettiği ve kazanma olasılığı",
-      "hook": "Yılbaşında büyük ikramiye sana çıktı, ilk 24 saatte ne yaparsın?",
-      "trend": "Yılbaşı bilet satışları Kasım'da başlıyor; 2026'da ikramiye 800 milyon TL'ydi",
+      "topic": "Kurşun kalem nasıl üretilir: grafitin kille karıştırılıp çubuk hâlinde pişirilmesi, iki oluklu ahşap arasına yapıştırılıp kesilmesi; içinde hiç kurşun yoktur, kilin oranı kalemin sertliğini belirler",
+      "hook": "Kurşun kalemin içinde tek gram kurşun yok",
+      "trend": "Sınav döneminin vazgeçilmezi; adıyla içeriği arasındaki şaşırtıcı fark",
+      "scope": "Global",
+      "category": "icatlar",
+      "score": 8,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Çikolata nasıl üretilir: kakao meyvesinden çıkan çekirdeklerin günlerce fermente edilip kurutulması, kavrulması, öğütülmesi ve saatlerce karıştırılması; ham kakao acıdır, çikolata aroması fermantasyonda doğar",
+      "hook": "Çikolatanın tadı, kakao çekirdeği bir hafta çürümeye bırakılınca ortaya çıkıyor",
+      "trend": "Kış aylarında tüketim artıyor; herkesin sevdiği ürünün şaşırtıcı ilk aşaması",
+      "scope": "Global",
+      "category": "bilim",
+      "score": 8,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Futbol topu nasıl üretilir: sentetik deri panellerin kesilmesi, iç lastik balonun üstüne elle dikilmesi ya da ısıyla yapıştırılması; dünyadaki el dikişi topların büyük kısmı Pakistan'ın Sialkot şehrinden çıkar",
+      "hook": "Sahada tekmelenen topların çoğu tek bir şehirde elle dikiliyor",
+      "trend": "Avrupa kupaları ve lig maratonu sürüyor; futbol en çok izlenen alan",
+      "scope": "Global",
+      "category": "spor",
+      "score": 7,
+      "seri": "uretim"
+    },
+    {
+      "topic": "Milli Piyango yılbaşı büyük ikramiyesi sana çıksaydı: vergi kesintisinden sonra eline geçen para, neye yettiği ve tam biletle kazanma olasılığı (2026 yılbaşında büyük ikramiye 800 milyon TL'ydi)",
+      "hook": "Yılbaşı büyük ikramiyesi sana çıksa, devlet ilk gün ne kadarını alır?",
+      "trend": "Yılbaşı biletleri Kasımda satışa çıkıyor, yeni ikramiye tutarı merak ediliyor",
       "scope": "TR",
       "category": "ekonomi ve markalar",
       "score": 9,
-      "seri": "olsaydin",
-      "uretildi": "2026-11-06T23:58+03:00"
+      "seri": "olsaydin"
     },
     {
-      "topic": "Hava trafik kontrolörü olsaydın: İstanbul Havalimanı kulesinde bir vardiya, molaların neden zorunlu olduğu, DHMİ'ye giriş şartları ve 2026'da maaşı",
-      "hook": "Bir ekranda aynı anda onlarca uçak var ve hepsi senin sorumluluğunda",
-      "trend": "Gençlerin merak ettiği yüksek sorumluluklu ve iyi ücretli bir meslek",
+      "topic": "Süper Lig hakemi olsaydın: maç haftası hazırlığı, fiziksel testler, VAR odasıyla iletişim, derbi günü ve maç başı ücret (haberlere göre orta hakem 30 bin TL, VAR hakemi 15 bin TL)",
+      "hook": "Derbide düdük çalan hakem o 90 dakika için ne kazanıyor?",
+      "trend": "Süper Lig derbileri ve hakem kararları her hafta en çok konuşulan konu",
       "scope": "TR",
-      "category": "teknoloji",
+      "category": "spor",
+      "score": 9,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Bedelli askerlik yapmak isteseydin: 2026'nın ikinci yarısında 472.653,60 TL olan bedel, başvuru adımları, 28 günlük temel eğitim ve tutarın neden her Ocak ve Temmuz değiştiği",
+      "hook": "Bedelli askerlik ücreti neden her altı ayda bir değişiyor?",
+      "trend": "MSB'nin Temmuz 2026 tutarı açıklandı; 20-30 yaş erkeklerin en çok aradığı konu",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
       "score": 8,
       "seri": "olsaydin"
     },
     {
-      "topic": "Antarktika'da Türk Bilimsel Araştırma Kampı'nda bir sefer geçirseydin: TÜBİTAK KARE'nin seçimi, Horseshoe Adası'na yolculuk, kampta gündelik hayat ve yapılan ölçümler",
-      "hook": "Bir ay boyunca Antarktika'da, penguenlerle aynı adada yaşasaydın",
-      "trend": "Türkiye her yıl Antarktika'ya bilim seferi düzenliyor, 2027 seferi hazırlanıyor",
+      "topic": "2026'da ehliyet almaya karar verseydin: sürücü kursu, teorik ve direksiyon sınavı, harç ve kart bedeliyle 30-35 bin TL'yi bulan toplam maliyet ve sınavda kalırsan neyin yeniden ödendiği",
+      "hook": "Ehliyet almanın gerçek maliyeti, kurs ücretinin neredeyse iki katı",
+      "trend": "18 yaşına basan gençlerin ilk büyük masrafı; ücretler 2026'da sert arttı",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 8,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Kargo kuryesi olsaydın Efsane Cuma haftasında: sabah depoda paket ayrımı, günde teslim edilen paket sayısı, rota planlaması, adreste bulunamayan alıcılar ve kazancın nasıl hesaplandığı",
+      "hook": "Efsane Cuma'da sepete attığın her paket bir kuryenin gününü değiştiriyor",
+      "trend": "11.11 ve 27 Kasım Efsane Cuma indirimleri yaklaşıyor",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 8,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Öğretmen olsaydın: KPSS'den atamaya uzanan yol, bir okul gününün akışı, ek ders ücreti ve Temmuz 2026 zammıyla yeni atanan öğretmenin yaklaşık 67-73 bin TL'lik net maaşı",
+      "hook": "Yeni atanan bir öğretmen ilk maaş gününde hesabında ne görüyor?",
+      "trend": "24 Kasım Öğretmenler Günü yaklaşıyor",
+      "scope": "TR",
+      "category": "az bilinen insan hikâyeleri",
+      "score": 8,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Kapalıçarşı'da kuyumcu olsaydın: sabah dükkânı açış, has altın fiyatının gün içinde güncellenmesi, işçilik ücreti, ayar damgası ve rekor altın fiyatlarının çarşıya etkisi",
+      "hook": "Kapalıçarşı'da bir kuyumcu altın fiyatını sabah kaçta, nereden öğreniyor?",
+      "trend": "Altın fiyatları gündemde; düğün sezonu ve yılbaşı hediyeliği yaklaşıyor",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 8,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Erasmus'la yurt dışına gitseydin: başvuru ve dil sınavı, ülke grubuna göre değişen aylık hibe, ilk ay kira, ulaşım ve market harcaması, hibenin hangi ülkede yettiği",
+      "hook": "Erasmus hibesi bir ülkede yetiyor, öbüründe kirayı bile karşılamıyor",
+      "trend": "Üniversitelerde Erasmus başvuru dönemi; öğrencilerin en büyük yurt dışı hayali",
+      "scope": "TR",
+      "category": "coğrafya",
+      "score": 8,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Türk astronotu olmak isteseydin: Alper Gezeravcı ve Tuva Cihangir Atasever'in geçtiği seçim aşamaları, sağlık ve dayanıklılık testleri, eğitim süreci ve uzayda bir günün akışı",
+      "hook": "Türkiye'den uzaya gidecek bir sonraki kişi sen olsan, ilk test ne?",
+      "trend": "Türkiye'nin uzay programı ve Gezeravcı'nın uçuşu hâlâ merak ediliyor",
+      "scope": "TR",
+      "category": "uzay",
+      "score": 7,
+      "seri": "olsaydin"
+    },
+    {
+      "topic": "Türk Antarktika bilim seferine katılsaydın: İstanbul'dan Şili üzerinden buzlar kıtasına yolculuk, Horseshoe Adası'ndaki Türk bilim kampında bir gün, yanına alman gerekenler",
+      "hook": "Antarktika'daki Türk bilim kampında bir gün, güneşin batmadığı yerde",
+      "trend": "COP31 Antalya'da yapılırken iklim ve kutup araştırmaları gündemde",
       "scope": "TR",
       "category": "coğrafya",
       "score": 7,
       "seri": "olsaydin"
     },
     {
-      "topic": "Sabahattin Ali, Kürk Mantolu Madonna: Berlin'de bir tablodaki kadına tutulan Raif Efendi; roman 1940-41'de Hakikat gazetesinde 'Büyük Hikâye' başlığıyla tefrika edildi",
-      "hook": "Türkiye'nin en çok okunan aşk romanı gazetede başka adla yayımlandı",
-      "trend": "Film uyarlaması yeniden konuşuluyor; gençlerin en çok okuduğu klasik",
+      "topic": "Sabahattin Ali, Kürk Mantolu Madonna: Berlin'de bir otoportreye âşık olan sessiz memur Raif Efendi; roman, yazıldıktan yaklaşık 70 yıl sonra Türkiye'de çok satanların zirvesine çıktı ve Raif tabloyu Andrea del Sarto'nun Madonna'sına benzetir",
+      "hook": "Bu roman yazıldıktan 70 yıl sonra birden herkesin elinde",
+      "trend": "28 Ekim'de sinema uyarlaması ve Maria Puder rolü için görüşmeler haberleşti",
       "scope": "TR",
       "category": "sanat ve müzik",
       "score": 9,
       "seri": "kitap"
     },
     {
-      "topic": "Fyodor Dostoyevski, Beyaz Geceler: Petersburg'da dört gece boyunca bir yabancıyla konuşan yalnız hayalperest; Dostoyevski bu kitaptan kısa süre sonra tutuklandı",
-      "hook": "Türkiye'de en çok satan bu ince kitap dört gecede geçiyor",
-      "trend": "Dostoyevski'nin 11 Kasım doğum yıl dönümü; Türkiye'de çok satanlar listesinde",
+      "topic": "Frank Herbert, Dune: çöl gezegeni Arrakis'te büyüyen genç Paul Atreides; roman 20'den fazla yayınevinden ret yedi ve sonunda araba tamir kılavuzları basan Chilton yayınevi tarafından basıldı",
+      "hook": "Dune'u ilk basan yayınevi araba tamir kılavuzu basıyordu",
+      "trend": "Dune: Part Three (Dune Mesih uyarlaması) 18 Aralık'ta vizyona giriyor",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 9,
+      "seri": "kitap"
+    },
+    {
+      "topic": "Orhan Pamuk, Masumiyet Müzesi: Kemal'in Füsun'a duyduğu aşkın eşyaları; kitabın içinde Çukurcuma'daki gerçek müzeye ücretsiz giriş bileti basılı",
+      "hook": "Bu romanın içindeki bilet sizi gerçek bir müzeye sokuyor",
+      "trend": "Netflix dizisi Şubat 2026'da yayınlandı; gerçek müze hâlâ çok ziyaret ediliyor",
+      "scope": "TR",
+      "category": "sanat ve müzik",
+      "score": 8,
+      "seri": "kitap"
+    },
+    {
+      "topic": "Albert Camus, Yabancı: annesinin cenazesinde ağlamayan Meursault'nun hikâyesi; Camus gençliğinde Cezayir'de Racing Universitaire d'Alger'in kalecisiydi",
+      "hook": "Nobelli yazar Camus aslında bir kaleciydi",
+      "trend": "Camus'nün doğum günü 7 Kasım; Yabancı Türkiye'de en çok okunan klasiklerden",
       "scope": "Global",
       "category": "sanat ve müzik",
       "score": 8,
       "seri": "kitap"
     },
     {
-      "topic": "Charles Dickens, Bir Noel Şarkısı: Cimri Scrooge'u bir gecede ziyaret eden üç hayalet; Dickens kitabı altı haftada yazıp kendi parasıyla bastırdı",
-      "hook": "Scrooge'u yaratan yazar, bu kitapla neredeyse hiç para kazanmadı",
-      "trend": "Uyarlama Ebenezer: Bir Noel Şarkısı 13 Kasım'da Türkiye'de vizyona giriyor",
+      "topic": "Dostoyevski, Beyaz Geceler: Petersburg'da dört gece boyunca bir yabancıyla konuşan yalnız hayalperest; Dostoyevski kitabı 1848'de yazdı, bir yıl sonra sahte bir idam töreninde son anda kurtuldu",
+      "hook": "Bu kitabı yazan adam bir yıl sonra kurşuna dizilecekti",
+      "trend": "Dostoyevski 11 Kasım'da 205 yaşında; Beyaz Geceler Türkiye'de çok satıyor",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 8,
+      "seri": "kitap"
+    },
+    {
+      "topic": "Sait Faik Abasıyanık, Semaver: İstanbul'un balıkçıları, işçileri ve küçük insanları; Sait Faik'in ölümünden sonra annesi Makbule Hanım bugün de verilen Sait Faik Hikâye Armağanı'nı kurdu",
+      "hook": "Bir annenin oğlu için kurduğu ödül 70 yıldır veriliyor",
+      "trend": "Sait Faik 18 Kasım'da doğumunun 120. yılında; eserleri kamu malı",
+      "scope": "TR",
+      "category": "sanat ve müzik",
+      "score": 8,
+      "seri": "kitap"
+    },
+    {
+      "topic": "Charles Dickens, Bir Noel Şarkısı: cimri Scrooge'u ziyaret eden üç hayalet; Dickens kitabı altı haftada yazdı ve masrafını kendisi karşılayarak bastı",
+      "hook": "Scrooge'u yaratan Dickens bu kitaptan neredeyse hiç para kazanmadı",
+      "trend": "Uyarlama 'Ebenezer: Bir Noel Şarkısı' 13 Kasım'da vizyonda",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 8,
+      "seri": "kitap"
+    },
+    {
+      "topic": "Herman Melville, Moby Dick: Kaptan Ahab'ın beyaz balina takıntısı; roman 1820'de bir kaşalotun batırdığı Essex gemisinden esinlendi ama Melville hayattayken çok az sattı",
+      "hook": "Bana İsmail deyin: bir zamanlar kimsenin almadığı başyapıt",
+      "trend": "Moby Dick ABD'de 14 Kasım 1851'de yayımlandı; 175. yıl dönümü",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 8,
+      "seri": "kitap"
+    },
+    {
+      "topic": "C. S. Lewis, Narnia Günlükleri: Aslan, Cadı ve Dolap; bütün dünya Lewis'in 16 yaşında aklına gelen tek bir görüntüden doğdu: karlı ormanda şemsiyeli bir faun",
+      "hook": "Narnia, bir gencin aklındaki tek bir resimle başladı",
+      "trend": "Greta Gerwig'in Narnia filmi 26 Kasım'da sinemalarda",
       "scope": "Global",
       "category": "sanat ve müzik",
       "score": 7,
       "seri": "kitap"
     },
     {
-      "topic": "Palamudun yolculuğu: Karadeniz'de yumurtadan çıkan çingene palamudunun büyüdükçe palamut, torik, sivri ve altıparmak adını alarak Boğaz'dan Marmara ve Ege'ye göçü",
-      "hook": "Aynı balık büyüdükçe beş farklı isim alıyor",
-      "trend": "Palamut ve torik sezonu Kasım'da İstanbul Boğazı'nda zirvede",
+      "topic": "Mark Twain, Tom Sawyer'ın Maceraları: Mississippi kıyısında yaramaz bir çocuk; Twain Halley kuyruklu yıldızıyla doğdu, onunla gideceğini söyledi ve yıldız 1910'da döndüğünde öldü",
+      "hook": "Mark Twain kuyruklu yıldızla geldi, onunla gitti",
+      "trend": "Mark Twain 30 Kasım'da doğdu; Tom Sawyer okul okuma listelerinde",
+      "scope": "Global",
+      "category": "sanat ve müzik",
+      "score": 7,
+      "seri": "kitap"
+    },
+    {
+      "topic": "Kapadokya peri bacalarının oluşumu: Erciyes ve Hasandağı patlamaları, tüf birikmesi, yağmur ve rüzgârla aşınma, sert bazalt şapka taşı ve sonunda yıkılma; 5 evre",
+      "hook": "Peri bacalarının şapkası onları milyonlarca yıl ayakta tutuyor",
+      "trend": "Türkiye'nin en tanınan manzarası; kış balon sezonu merak uyandırır",
+      "scope": "TR",
+      "category": "coğrafya",
+      "score": 9,
+      "seri": "belgesel"
+    },
+    {
+      "topic": "Caretta caretta'nın yaşam döngüsü: İztuzu kumsalında yumurta, kumun sıcaklığına göre belirlenen cinsiyet, denize koşu, okyanustaki kayıp yıllar ve 25-30 yıl sonra aynı kumsala dönüş; 6 evre",
+      "hook": "Yavruların kız ya da erkek olacağına kum karar veriyor",
+      "trend": "Dalyan ve İztuzu sayesinde Türkiye'de çok sevilen bir hayvan",
       "scope": "TR",
       "category": "doğa ve hayvanlar",
       "score": 9,
       "seri": "belgesel"
     },
     {
-      "topic": "Galata Kulesi'nin hikâyesi: 1348 Ceneviz yapımından Osmanlı zindanı ve yangın gözetleme kulesine, oradan bugünkü müzeye 6 evre",
-      "hook": "Galata Kulesi bir zamanlar zindan, sonra itfaiye kulesiydi",
-      "trend": "İstanbul'un en çok ziyaret edilen yapılarından birinin az bilinen geçmişi",
+      "topic": "Hamsinin kış göçü: Azak ve kuzey Karadeniz'de yaz, suların soğuması, Kırım ve Kafkas kıyıları boyunca güneye yolculuk, Türkiye kıyılarında kışlama ve baharda geri dönüş; 5 evre",
+      "hook": "Tabağınızdaki hamsi binlerce kilometre yüzerek Karadeniz'e geliyor",
+      "trend": "Kasım hamsi mevsiminin zirvesi; herkesin konuştuğu balık",
+      "scope": "TR",
+      "category": "doğa ve hayvanlar",
+      "score": 9,
+      "seri": "belgesel"
+    },
+    {
+      "topic": "Yerebatan Sarnıcı'nın hikâyesi: 532'de Justinianus'un yaptırması, unutuluşu, 1540'larda evlerinin bodrumundan su çeken İstanbulluların izinden Petrus Gyllius'un yeniden keşfi, Medusa başları ve James Bond filmi; 5 durak",
+      "hook": "İstanbullular evlerinin altındaki saraydan yıllarca habersiz su çekti",
+      "trend": "İstanbul'un en çok ziyaret edilen yerlerinden; film sahneleriyle tanınıyor",
       "scope": "TR",
       "category": "tarih",
       "score": 8,
       "seri": "belgesel"
     },
     {
-      "topic": "Sonbaharda bir yaprağın yolculuğu: klorofilin çekilmesi, sarı ve turuncu pigmentlerin ortaya çıkması, kırmızı rengin üretilmesi, sapın kopma tabakası ve yaprak dökümü",
-      "hook": "Yaprakların sarısı aslında yaz boyunca hep oradaydı",
-      "trend": "Kasım sonbahar renklerinin en canlı olduğu dönem",
-      "scope": "Global",
+      "topic": "Leyleklerin sonbahar göçü: Avrupa'daki yuvalardan kalkış, termal akımlarla kanat çırpmadan süzülme, İstanbul Boğazı üzerinden geçiş, Anadolu ve Sina, Afrika'da kışlama; 5 durak",
+      "hook": "Yüz binlerce leylek Afrika'ya giderken İstanbul'un üstünden geçiyor",
+      "trend": "Sonbahar göç mevsimi; Boğaz kuş göçünün dünyadaki ana yollarından",
+      "scope": "TR",
       "category": "doğa ve hayvanlar",
       "score": 8,
-      "seri": "belgesel",
-      "uretildi": "2026-11-06T23:58+03:00"
+      "seri": "belgesel"
     },
     {
-      "topic": "'Otobüs' kelimesinin kökeni: Latince omnibus 'herkes için' demek; 'büs' aslında yalnızca bir Latince çoğul hâl eki",
-      "hook": "Bindiğin otobüsün adı aslında bir dilbilgisi ekinden geliyor",
-      "trend": "Her gün binilen aracın adının şaşırtıcı ve gerçek kökeni",
+      "topic": "Bir simit lokmasının yolculuğu: ağızda tükürüğün nişastayı parçalaması, yemek borusu, mide, 7 metrelik ince bağırsak, kalın bağırsak; 5 durak",
+      "hook": "Simidi uzun çiğnerseniz neden tatlanmaya başlar?",
+      "trend": "Herkesin her gün yaşadığı ama görmediği bir yolculuk",
       "scope": "TR",
-      "category": "dil ve kültür",
-      "score": 9,
-      "seri": "koken",
-      "uretildi": "2026-11-06T23:58+03:00"
+      "category": "insan vücudu",
+      "score": 8,
+      "seri": "belgesel"
     },
     {
-      "topic": "'Pastırma' kelimesinin kökeni: Türkçe 'bastırmak' fiilinden gelir, Rumence pastramă üzerinden Amerika'ya giderek 'pastrami' oldu",
-      "hook": "New York'un ünlü pastrami sandviçi aslında Türkçe bir kelime taşıyor",
-      "trend": "Pastırma yazı mevsimi; Kasım'ın ılık günleri pastırma kurutma zamanı",
+      "topic": "Galata Kulesi'nin hikâyesi: 1348'de Cenevizlilerin inşası, Osmanlı'da gözetleme ve yangın kulesi, rivayetteki Hezarfen uçuşu, fırtınada yıkılan külah, 1960'larda yenilenme ve müze; 5 durak",
+      "hook": "Galata Kulesi yüzyıllarca İstanbul'un yangın alarmıydı",
+      "trend": "İstanbul'un simgesi; her gün binlerce ziyaretçi geliyor",
+      "scope": "TR",
+      "category": "tarih",
+      "score": 8,
+      "seri": "belgesel"
+    },
+    {
+      "topic": "Bir sesin kulaktaki yolculuğu: kulak kepçesi, kulak zarı, vücudun en küçük kemiği üzengi dahil üç kemikçik, salyangozdaki tüy hücreleri, işitme siniri ve beyin; 6 durak",
+      "hook": "Duyduğunuz her ses vücudun en küçük kemiğinden geçiyor",
+      "trend": "Kulaklıklı bir neslin her gün kullandığı ama bilmediği organ",
+      "scope": "Global",
+      "category": "insan vücudu",
+      "score": 8,
+      "seri": "belgesel"
+    },
+    {
+      "topic": "Kar tanesinin yolculuğu: buluttaki toz zerresi, su buharının donması, altıgen kristalin büyümesi, sıcaklığa göre şekil alması, düşüş ve yerde birikme; 5 evre",
+      "hook": "Her kar tanesi havadaki bir toz zerresiyle başlıyor",
+      "trend": "Kış geliyor; ilk kar haberleri yaklaşırken mevsimlik merak",
+      "scope": "Global",
+      "category": "bilim",
+      "score": 7,
+      "seri": "belgesel"
+    },
+    {
+      "topic": "İpekböceğinin yaşam döngüsü: yumurta, dut yaprağıyla beslenen tırtıl, tek bir iplikten yaklaşık bir kilometrelik koza örme, pupa ve kelebek; Bursa ipeğinin kaynağı; 5 evre",
+      "hook": "Bir tırtıl kendine bir kilometrelik tek iplikten ev örüyor",
+      "trend": "Bursa ipekçiliği ve İpek Yolu sayesinde Türkiye'de tanıdık bir hikâye",
+      "scope": "TR",
+      "category": "doğa ve hayvanlar",
+      "score": 7,
+      "seri": "belgesel"
+    },
+    {
+      "topic": "'Portakal' kelimesinin kökeni: meyveye adını Portekiz verdi; tatlı portakalı Doğu'dan Avrupa'ya getiren Portekizliler yüzünden Türkçe, Yunanca ve Arapçada meyve 'Portekiz' diye anılır",
+      "hook": "Her sabah sıktığınız meyvenin adı aslında bir ülke",
+      "trend": "Kış portakal mevsimi; herkesin her gün kullandığı bir kelime",
       "scope": "TR",
       "category": "dil ve kültür",
       "score": 9,
       "seri": "koken"
     },
     {
-      "topic": "'Kravat' kelimesinin kökeni: Fransızca cravate, 17. yüzyılda boyunlarına bez bağlayan Hırvat askerlerinin adından ('Croate') gelir",
-      "hook": "Boynuna bağladığın kravatın adı bir ulusun adından geliyor",
-      "trend": "Herkesin taktığı aksesuarın adı tarihi bir askerî modaya dayanıyor",
-      "scope": "Global",
+      "topic": "'Hindi' kelimesinin kökeni: Türkler kuşa Hindistan'dan geldiğini sanıp 'Hind tavuğu' dedi, İngilizler ise Türkiye'den geldiğini sanıp 'turkey' dedi",
+      "hook": "Biz Hindistan'dan sandık, İngilizler Türkiye'den: hindinin ad karmaşası",
+      "trend": "Kasım sonundaki Şükran Günü yüzünden İngilizce 'turkey' merakı her yıl artıyor",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 9,
+      "seri": "koken"
+    },
+    {
+      "topic": "'Kahvaltı' kelimesinin kökeni: 'kahve altı', yani kahveden önce mideyi doldurmak için yenen hafif yemek",
+      "hook": "Kahvaltı aslında kahveden önce yediğiniz şey demek",
+      "trend": "Türklerin en sevdiği öğün; kelimeyi herkes kullanıyor, anlamını kimse düşünmüyor",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 9,
+      "seri": "koken"
+    },
+    {
+      "topic": "'Fener' kelimesinin kökeni: Yunanca phanári'den (lamba) gelir; Fenerbahçe de adını Kalamış'taki deniz fenerinin bahçesinden alır",
+      "hook": "Fenerbahçe'nin adı bir deniz fenerinin bahçesinden geliyor",
+      "trend": "Fenerbahçe herkesin konuştuğu kulüp; adının kökenini bilen az",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 8,
+      "seri": "koken"
+    },
+    {
+      "topic": "'Derbi' kelimesinin kökeni: 1780'de 12. Derby Kontu'nun adını verdiği Epsom at yarışından gelir; futbol derbisinin adı aslında bir İngiliz kontunun soyadı",
+      "hook": "Fenerbahçe-Galatasaray maçına adını bir İngiliz kontu verdi",
+      "trend": "Süper Lig'de derbiler her hafta gündemde",
+      "scope": "TR",
+      "category": "spor",
+      "score": 8,
+      "seri": "koken"
+    },
+    {
+      "topic": "'Kanepe' kelimesinin kökeni: Yunanca kōnōpeion'dan (cibinlikli yatak) gelir, kökü kōnōps yani sivrisinek",
+      "hook": "Oturduğunuz kanepenin adı aslında sivrisinek demek",
+      "trend": "Evdeki en tanıdık eşyanın hiç tahmin edilmeyen kökeni",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 8,
+      "seri": "koken"
+    },
+    {
+      "topic": "'Banka' kelimesinin kökeni: İtalyanca banco, yani sarrafların para saydığı tezgâh; batan sarrafın tezgâhı kırılırdı, İngilizce 'bankrupt' da 'kırık tezgâh'tan gelir",
+      "hook": "Bankanın adı bir tahta tezgâhtan geliyor",
+      "trend": "Ekonomi her gün gündemde; herkesin kullandığı kelimenin şaşırtıcı hikâyesi",
+      "scope": "TR",
+      "category": "ekonomi ve markalar",
+      "score": 8,
+      "seri": "koken"
+    },
+    {
+      "topic": "'Pantolon' kelimesinin kökeni: İtalyan halk tiyatrosu commedia dell'arte'de dar pantolon giyen yaşlı Venedikli tüccar karakteri Pantalone'den gelir",
+      "hook": "Giydiğiniz pantolon adını bir tiyatro karakterinden alıyor",
+      "trend": "Her gün giyilen bir şeyin 'bunu bilmiyordum' dedirten kökeni",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 8,
+      "seri": "koken"
+    },
+    {
+      "topic": "'Fön' kelimesinin kökeni: Alplerden esen sıcak, kuru rüzgâr Föhn'den gelir; saç kurutma makinesi bu rüzgârın adıyla satıldı ve kelime Türkçeye yerleşti",
+      "hook": "Saçınıza fön çektirirken aslında bir Alp rüzgârını çağırıyorsunuz",
+      "trend": "Kuaförde her gün söylenen kelimenin hiç bilinmeyen kökeni",
+      "scope": "TR",
+      "category": "dil ve kültür",
+      "score": 8,
+      "seri": "koken"
+    },
+    {
+      "topic": "'Okul' kelimesinin kökeni: Dil Devrimi'nde 'okumak' kökünden türetildi ama Fransızca école'ye benzetilerek seçildi; 'mektep'in yerine geçti",
+      "hook": "Okul kelimesi bilerek Fransızcaya benzetilerek uyduruldu",
+      "trend": "24 Kasım Öğretmenler Günü yaklaşıyor",
+      "scope": "TR",
       "category": "dil ve kültür",
       "score": 8,
       "seri": "koken"
