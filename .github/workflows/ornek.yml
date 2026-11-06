@@ -49,6 +49,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: FFmpeg kur
+        timeout-minutes: 8
         run: sudo apt-get update && sudo apt-get install -y ffmpeg libcairo2
       - run: pip install -r requirements.txt "rembg[cpu]"
       - uses: actions/setup-node@v4
