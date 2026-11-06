@@ -16,7 +16,7 @@ on:
         description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil, uretim, olsaydin, kitap, belgesel; belgesel iki bölümlük iki video üretir)"
         required: false
       yeniden:
-        description: "Var olan bir videonun etiketi (ör. short-20261105-213747): senaryosu yeniden yazılmadan, verilen şablonla yeniden çizilir"
+        description: "Var olan bir videonun etiketi (ör. short-20261105-213747) ya da depodaki hazır senaryo (demo/....json): senaryo yeniden yazılmadan, verilen şablonla çizilir"
         required: false
 
 permissions:
@@ -76,7 +76,10 @@ jobs:
         run: |
           ARGS=()
           [ -n "$TEMPLATE" ] && ARGS+=(--template "$TEMPLATE")
-          if [ -n "$YENIDEN" ]; then
+          if [[ "$YENIDEN" =~ ^demo/[A-Za-z0-9_/-]+\.json$ ]] && [ -f "$YENIDEN" ]; then
+            # depodaki hazır senaryo (ör. onaylanmış örnek) yayın akışına alınır
+            ARGS+=(--script "$YENIDEN")
+          elif [ -n "$YENIDEN" ]; then
             # var olan videonun senaryosu (Release'teki script.json) Claude'a yeniden yazdırılmadan yeni şablonla çizilir
             if ! [[ "$YENIDEN" =~ ^short-[0-9]{8}-[0-9]{6}$ ]]; then
               echo "::error::Etiket short-YYYYMMDD-HHMMSS biçiminde olmalı."; exit 1
