@@ -877,5 +877,18 @@
     "telegram_message_id": 285,
     "aciklama_message_id": 286,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261106-204453",
+    "title": "Napolyon kısa mıydı? Onu bir ölçü birimi küçülttü",
+    "topic": "'Napolyon çok kısaydı' inanışı yanlış: Boyu yaklaşık 1,68 m ile dönemin Fransız ortalamasının biraz üstündeydi; Fransız ve İngiliz inç farkı ile İngiliz karikatürleri efsaneyi yarattı",
+    "category": "tarih",
+    "template": "dosya",
+    "structure": "efsane",
+    "created": "2026-11-06T20:44:53",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 287,
+    "aciklama_message_id": 288,
+    "platforms": {}
   }
 ]
