@@ -1,10 +1,16 @@
 """Haftalık yayın takvimi: her serinin sabit günü ve saati (Sabri 5 Kasım 2026'da onayladı, haftada 18 video).
 
 Onayda '🎯' seçilirse video kendi serisinin bir sonraki boş saatine konur ve üç platformda aynı anda paylaşılır.
-Saatler Türkiye saatidir."""
+Saatler Türkiye saatidir.
+
+Tek kaynak state/yayin_plani.json'dur (panel de oradan okur). Dosya yoksa ya da bozuksa aşağıdaki sabitler kullanılır."""
 from __future__ import annotations
 
 import datetime as dt
+import json
+from pathlib import Path
+
+PLAN = Path(__file__).resolve().parent.parent / "state" / "yayin_plani.json"
 
 TR = dt.timezone(dt.timedelta(hours=3))
 
@@ -28,6 +34,50 @@ KAPALI = {"2026-11-10 18:00"}
 _SABLON_SERI = {"nasil": "nasil", "uretim": "uretim", "isemri": "uretim", "ajanda": "olsaydin", "dosya": "efsane",
                 "kitap": "kitap", "cizgi": "karar"}
 
+# Serinin ilk yayın günü (bu günden önceki saatleri kullanılmaz): Karar Senin 16 Kasım'da başlıyor
+BASLANGIC: dict[str, dt.date] = {"karar": dt.date(2026, 11, 16)}
+
+_GUN = {"pazartesi": 0, "salı": 1, "çarşamba": 2, "perşembe": 3, "cuma": 4, "cumartesi": 5, "pazar": 6}
+
+
+def _saat(x: object) -> str:
+    h, m = map(int, str(x).split(":"))
+    if not (0 <= h < 24 and 0 <= m < 60):
+        raise ValueError(x)
+    return f"{h:02d}:{m:02d}"
+
+
+def plan_oku(yol: Path = PLAN) -> dict | None:
+    """state/yayin_plani.json'u okur ve doğrular: {hafta, kapali, seri_adi, sablon_seri, baslangic}; yoksa None."""
+    try:
+        d = json.loads(yol.read_text(encoding="utf-8"))
+        hafta: dict[int, list[tuple[str, str]]] = {i: [] for i in range(7)}
+        for g in d["hafta"]:
+            i = _GUN[str(g["gun"]).lower()]
+            hafta[i] = sorted((_saat(x["saat"]), str(x["seri"])) for x in g["slotlar"])
+        kapali = set()
+        for x in d.get("istisnalar") or []:
+            gun, hm = str(x["zaman"]).split()
+            kapali.add(f"{dt.date.fromisoformat(gun):%Y-%m-%d} {_saat(hm)}")
+        seriler = d.get("seriler") or []
+        seri_adi = {str(x["key"]): str(x["ad"]) for x in seriler if x.get("key") and x.get("ad")}
+        baslangic = {str(x["key"]): dt.date.fromisoformat(x["baslangic"]) for x in seriler if x.get("baslangic")}
+        sablon_seri = {str(k): str(v) for k, v in (d.get("sablon_seri") or {}).items()}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+    if not any(hafta.values()):
+        return None
+    return {"hafta": hafta, "kapali": kapali, "seri_adi": seri_adi, "sablon_seri": sablon_seri, "baslangic": baslangic}
+
+
+_P = plan_oku()
+if _P:
+    HAFTA = _P["hafta"]
+    KAPALI = _P["kapali"]
+    SERI_ADI = {**SERI_ADI, **_P["seri_adi"]}
+    _SABLON_SERI = _P["sablon_seri"] or _SABLON_SERI
+    BASLANGIC = _P["baslangic"]
+
 
 def seri_of(v: dict) -> str:
     """Videonun serisi: önce anlatım kalıbı (structure), yoksa şablon; ikisi de seri değilse 'genel'."""
@@ -47,7 +97,7 @@ def sonraki_saat(seri: str, dolu: list[dt.datetime], now: dt.datetime | None = N
     for d in range(gun):
         day = now.date() + dt.timedelta(days=d)
         for hm, s in HAFTA.get(day.weekday(), []):
-            if s != seri or f"{day:%Y-%m-%d} {hm}" in KAPALI:
+            if s != seri or f"{day:%Y-%m-%d} {hm}" in KAPALI or day < BASLANGIC.get(s, day):
                 continue
             h, m = map(int, hm.split(":"))
             t = dt.datetime.combine(day, dt.time(h, m), TR)

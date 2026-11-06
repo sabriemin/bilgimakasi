@@ -1,0 +1,150 @@
+{
+  "_not": "İş Emri şablonunun (Nasıl Üretiliyor?, uretim kalıbı) örnek senaryosu: python -m shortgen.pipeline --script demo/isemri/kursun_kalem.json --no-voice --template isemri",
+  "topic": "Kurşun kalem nasıl üretiliyor",
+  "category": "icatlar",
+  "template": "isemri",
+  "title": "Kurşun kalem nasıl üretiliyor? İçinde tek gram kurşun yok",
+  "description": "Kurşun kalemin içinde kurşun yok: grafit ve kil fırında pişiyor, sedir levhalardaki oluklara yerleşiyor. Sence bir kalem kaç kilometre yazar?",
+  "hashtags": [
+    "kurşunkalemnasılüretiliyor",
+    "kurşunkalem",
+    "grafit",
+    "fabrika",
+    "bilgimakasi"
+  ],
+  "scenes": [
+    {
+      "narration": "Kurşun kalemin içinde tek gram kurşun yok. Peki nasıl üretiliyor?",
+      "kicker": "NASIL ÜRETİLİYOR?",
+      "headline": [
+        "KURŞUN KALEMİN",
+        "İÇİNDE TEK GRAM",
+        "KURŞUN YOK."
+      ],
+      "highlight_line": 2,
+      "strike": [],
+      "theme": "yellow",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/isemri/kalem.png",
+      "motion": "none"
+    },
+    {
+      "narration": "Önce toz grafit, kil ve suyla karıştırılır, presten ince çubuklar hâlinde sıkılır.",
+      "kicker": "",
+      "headline": [
+        "AŞAMA 1",
+        "GRAFİT VE KİL",
+        "KARIŞTIRILIR"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/isemri/asama1_pres.png",
+      "motion": "none",
+      "step": 1,
+      "callouts": [
+        "GRAFİT + KİL",
+        "KİL ARTTIKÇA SERT"
+      ]
+    },
+    {
+      "narration": "Kuruyan çubuklar yaklaşık bin derecelik fırında pişirilir ve sertleşir.",
+      "kicker": "",
+      "headline": [
+        "AŞAMA 2",
+        "UÇLAR FIRINDA",
+        "PİŞİRİLİR"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/isemri/asama2_firin.png",
+      "motion": "none",
+      "step": 2,
+      "callouts": [
+        "≈1.000°C"
+      ]
+    },
+    {
+      "narration": "Ardından sedir levhalara oluk açılır ve pişmiş uçlar bu oluklara yerleştirilir.",
+      "kicker": "",
+      "headline": [
+        "AŞAMA 3",
+        "UÇLAR OLUĞA",
+        "YERLEŞTİRİLİR"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/isemri/asama3_oluk.png",
+      "motion": "none",
+      "step": 3,
+      "callouts": [
+        "SEDİR LEVHA",
+        "GRAFİT UÇ"
+      ]
+    },
+    {
+      "narration": "Son olarak üstüne ikinci levha yapıştırılır, kalemler tek tek kesilip boyanır.",
+      "kicker": "",
+      "headline": [
+        "AŞAMA 4",
+        "YAPIŞTIRILIR,",
+        "KESİLİR, BOYANIR"
+      ],
+      "highlight_line": 1,
+      "strike": [],
+      "theme": "paper",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "local:demo/isemri/asama4_kes_boya.png",
+      "motion": "none",
+      "step": 4,
+      "callouts": [
+        "KAT KAT BOYA",
+        "İKİ LEVHA"
+      ]
+    },
+    {
+      "narration": "Dünyada yılda yaklaşık 14 milyar kalem üretildiği tahmin ediliyor. Sence bir kalem kaç kilometre yazar? Yorumlara yaz.",
+      "kicker": "",
+      "headline": [
+        "KURŞUN KALEM"
+      ],
+      "highlight_line": 0,
+      "strike": [],
+      "theme": "red",
+      "image_mode": "none",
+      "image_queries": [],
+      "icon": "none",
+      "illustration": "",
+      "motion": "none",
+      "card": "counter",
+      "card_value": "14 MİLYAR",
+      "card_label": "KALEM / YIL",
+      "card_note": "tahmini"
+    }
+  ],
+  "sources": [
+    "Encyclopaedia Britannica: Pencil (grafit ve kil karışımı, pişirilen uçlar, oluklu ahşap levhalar; kurşun içermez)",
+    "Faber-Castell ve Staedtler üretim anlatımları: grafit, kil ve su karışımı, ekstrüzyonla çubuk, yaklaşık 1.000°C'de pişirme, sedir levhalar, yapıştırma, kesme ve vernik/boya katları",
+    "Dünya kalem üretimi için sık anılan tahmin: yılda yaklaşık 14-15 milyar ahşap kurşun kalem (kesin resmî istatistik yok, tahmindir)",
+    "Borrowdale grafiti: 16. yüzyılda kurşun cevheri sanılması ('plumbago') ve 'kurşun kalem' adının kökeni"
+  ],
+  "search_phrase": "kurşun kalem nasıl üretiliyor",
+  "structure": "uretim",
+  "series_part": 0,
+  "next_part_brief": ""
+}

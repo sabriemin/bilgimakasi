@@ -87,7 +87,27 @@ def kalip_sablonu(structure: str | None, template: str | None) -> str | None:
     return template
 
 
+def cizgi_sablonu(script: ShortScript, template: str | None) -> str | None:
+    """Sahnelerinde Çizgi Roman tarifi (Scene.cizgi) olan senaryo yalnız Çizgi Roman kurgu modülüyle çizilir: başka
+    şablon verildiyse (ör. ornek.yml'nin varsayılanı kart) cizgi şablonuna geçilir ve günlüğe yazılır (yoksa paneller,
+    balonlar ve oylama sessizce kaybolur, video fotoğrafsız kart videosu olurdu)."""
+    if not any(sc.cizgi is not None for sc in script.scenes) or sablon_renderer(template) == "cizgi":
+        return template
+    kendi = next((k for k in template_catalog() if sablon_renderer(k) == "cizgi"), None)
+    if kendi is None:
+        raise SystemExit("Senaryoda Çizgi Roman tarifi var ama cizgi şablonu bulunamadı.")
+    print(f"Senaryonun sahnelerinde Çizgi Roman tarifi var: {template} yerine {kendi} kullanılıyor.")
+    return kendi
+
+
 TELIF_DURDU = ROOT / "output" / "telif_durdu.txt"  # uret.yml bu dosya varsa durumu Telegram'a yazar
+
+
+def adim_kartli(name: str | None) -> bool:
+    """Senaryosu Adım kartları düzeniyle (NASIL_RULES / URETIM_RULES: kanca, numaralı adım/aşama sahneleri, son sahne)
+    yazılacak şablon mu: renderer'ı nasil olanlar (nasil, uretim) ve aynı düzeni okuyan kurgu modülleri
+    (şablon dosyasında "adim_kartlari": true, ör. isemri)."""
+    return sablon_renderer(name) == "nasil" or bool(_sablon(name).get("adim_kartlari"))
 
 
 def kendi_secimli() -> set[str]:
@@ -354,7 +374,7 @@ def main() -> None:
     elif part2_due and not a.topic:
         print("Serinin 2. bölümü üretiliyor:", open_part["title"])
         script = generate_script(history, None, None, series_prev=open_part, kart=kart_on,
-                                 adim_kartlari=sablon_renderer(open_part.get("template")) == "nasil")
+                                 adim_kartlari=adim_kartli(open_part.get("template")))
     else:
         from . import konu_sirasi
         queued = None if a.topic else konu_sirasi.peek()  # panelden sıraya konan konu gündemden önce gelir
@@ -388,11 +408,13 @@ def main() -> None:
                                  # yapıya bağlı kart yönergesi yalnız şablon elle seçilmediyse (--template nasil kartsız)
                                  kart=kart_on or (not a.template and hedef == "kart"),
                                  structure=a.structure,
-                                 # Adım kartları düzeni (NASIL_RULES / URETIM_RULES) yalnız video renderer'ı nasil
-                                 # olan şablonla (nasil, uretim) çizilecekse istenir
-                                 adim_kartlari=sablon_renderer(hedef) == "nasil",
+                                 # Adım kartları düzeni (NASIL_RULES / URETIM_RULES) yalnız video bu düzeni okuyan
+                                 # şablonla (nasil, uretim, isemri) çizilecekse istenir
+                                 adim_kartlari=adim_kartli(hedef),
                                  # şablonun kendi ek yönergesi (templates/<ad>.json "istem"), ör. ek sahne alanları
-                                 sablon_kurali=str(_sablon(hedef).get("istem") or ""))
+                                 sablon_kurali=str(_sablon(hedef).get("istem") or ""),
+                                 # Çizgi Roman sahne tarifi (Scene.cizgi) şemaya yalnız cizgi şablonunda girer
+                                 **({"cizgi": True} if sablon_renderer(hedef) == "cizgi" else {}))
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":
@@ -400,7 +422,7 @@ def main() -> None:
         print("Format etiketi:", script.scenes[0].kicker)
     if script.series_part == 2 and open_part and open_part.get("template") and not a.template:
         a.template = open_part["template"]
-    template = kalip_sablonu(script.structure, pick_template(script, a.template))
+    template = cizgi_sablonu(script, kalip_sablonu(script.structure, pick_template(script, a.template)))
     print(f"Şablon: {template}")
     yapi = sablon_yapisi(template)
     if yapi and script.structure != yapi:  # ör. hazır senaryo başka kalıpta

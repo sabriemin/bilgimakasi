@@ -185,7 +185,7 @@ export function fetchKur(ayar = {}) {
       if (yol === "actions/workflows/onay.yml/dispatches" && req.method === "POST") {
         return new Response(null, { status: ayar.onayDurum || 204 });
       }
-      if ((m = /^contents\/state\/([\w.]+)\?ref=main$/.exec(yol))) {
+      if ((m = /^contents\/state\/((?:[\w-]+\/)?[\w.]+)\?ref=main$/.exec(yol))) {
         const s = (ayar.dosyaHata || {})[m[1]];
         if (s) return new Response("{\"message\":\"x\"}", { status: s });
         const t = fiksturOku(m[1], kok);

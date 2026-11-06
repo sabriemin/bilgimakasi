@@ -68,7 +68,7 @@ async function yaziTipleri(ctx) {
 }
 
 const GORUNUMLER = [["mobil", { width: 390, height: 844 }, 2], ["masaustu", { width: 1280, height: 900 }, 1]];
-const SEKMELER = ["videolar", "takvim", "istatistik", "konular"];
+const SEKMELER = ["videolar", "takvim", "istatistik", "konular", "seriler"];
 
 async function bekle(page) {
   await page.waitForSelector("main#icerik");
@@ -401,6 +401,18 @@ async function takvimEkranlari(browser, port, kayit, hatalar) {
         await bekle(page);
         await page.goto(`${URL}/panel#takvim`);
         await bekle(page);
+        // önce Yayın planı görünümü (varsayılan): 14 gün, bugün işaretli; bir videoya dokununca ayrıntı sayfası açılır
+        await page.waitForSelector(".yp-gun.bugun .yp-satir");
+        const plan = await page.evaluate(() => ({ gun: document.querySelectorAll(".yp-gun").length,
+          bos: document.querySelectorAll(".yp-bos.uret").length, video: document.querySelectorAll(".yp-video").length,
+          tasan: [...document.querySelectorAll(".yp-gun")].filter((g) => g.scrollWidth > g.clientWidth + 1).length }));
+        if (plan.gun !== 14 || !plan.bos || !plan.video || plan.tasan) sorun("yayın planı: " + JSON.stringify(plan));
+        await ekran(page, `takvim_plan_${ek}`, { fullPage: true });
+        await page.click(".yp-gun.bugun .yp-video");
+        await page.waitForSelector("dialog[open] .kart");
+        await ekran(page, `takvim_plan_video_${ek}`);
+        await dialogKapat(page);
+        await page.click(".tk-gorunum >> text=Saatler");
         await page.waitForSelector(".tk-govde .tk-cip");
         const genislik = await page.evaluate(() => document.documentElement.scrollWidth);
         if (genislik > viewport.width) sorun(`yatay kaydırma (${genislik}px)`);

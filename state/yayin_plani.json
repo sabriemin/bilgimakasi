@@ -1,0 +1,36 @@
+{
+  "_aciklama": "Haftalık yayın planı: tek kaynak. shortgen/takvim.py (Telegram'daki 🎯 düğmesi) ve panel (Takvim, Seriler) buradan okur. Saatler Türkiye saatidir (Europe/Istanbul, UTC+3). Haftada 18 video.",
+  "saat_dilimi": "Europe/Istanbul",
+  "guncelleme": "2026-11-05",
+  "seriler": [
+    {"key": "genel", "ad": "Genel", "ikon": "🎬", "sablon": "kolaj", "yeni_sablon": "", "durum": "yayında",
+     "not": "Şablon kategoriye göre seçilir: kolaj, gazete, retro, doga, gece, minimal ve kart."},
+    {"key": "nasil", "ad": "Nasıl yapılır?", "ikon": "🛠", "sablon": "nasil", "yeni_sablon": "", "durum": "yayında",
+     "not": "Adım kartları şablonu."},
+    {"key": "efsane", "ad": "Efsane mi, Gerçek mi?", "ikon": "🧐", "sablon": "dosya", "yeni_sablon": "", "durum": "yayında",
+     "not": "Dava Dosyası şablonu: Sabri örneği beğendi, 5 Kasım'da yayına geçti (önceki şablon: kart)."},
+    {"key": "uretim", "ad": "Nasıl Üretiliyor?", "ikon": "🏭", "sablon": "uretim", "yeni_sablon": "isemri", "durum": "örnek bekliyor",
+     "not": "İş Emri şablonunun örneği Sabri'nin onayında; onaylanana kadar aşama kartları şablonu kullanılıyor."},
+    {"key": "olsaydin", "ad": "Ya Sen Olsaydın?", "ikon": "💭", "sablon": "kart", "yeni_sablon": "ajanda", "durum": "örnek bekliyor",
+     "not": "Ajanda şablonunun örneği Sabri'nin onayında; konular gün akışıyla anlatılıyor."},
+    {"key": "kitap", "ad": "Bir Kitap Bir Dakika", "ikon": "📖", "sablon": "kitap", "yeni_sablon": "", "durum": "örnek bekliyor",
+     "not": "Açılan Kitap şablonunun örneği Sabri'nin onayında."},
+    {"key": "karar", "ad": "Karar Senin", "ikon": "⚽", "sablon": "", "yeni_sablon": "cizgi", "durum": "örnek bekliyor",
+     "baslangic": "2026-11-16",
+     "not": "Çizgi Roman pilotunun örneği Sabri'nin onayında. 1. sezon “Mahalleden Yıldıza”: ilk bölüm 16 Kasım 2026 Pazartesi 21:00."}
+  ],
+  "sablon_seri": {"nasil": "nasil", "uretim": "uretim", "isemri": "uretim", "ajanda": "olsaydin", "dosya": "efsane",
+                  "kitap": "kitap", "cizgi": "karar"},
+  "hafta": [
+    {"gun": "Pazartesi", "slotlar": [{"saat": "11:30", "seri": "nasil"}, {"saat": "18:00", "seri": "genel"}, {"saat": "21:00", "seri": "karar"}]},
+    {"gun": "Salı", "slotlar": [{"saat": "13:00", "seri": "efsane"}, {"saat": "18:00", "seri": "genel"}, {"saat": "22:00", "seri": "kitap"}]},
+    {"gun": "Çarşamba", "slotlar": [{"saat": "16:30", "seri": "uretim"}, {"saat": "18:00", "seri": "genel"}, {"saat": "21:00", "seri": "karar"}]},
+    {"gun": "Perşembe", "slotlar": [{"saat": "18:00", "seri": "genel"}, {"saat": "19:30", "seri": "olsaydin"}]},
+    {"gun": "Cuma", "slotlar": [{"saat": "11:30", "seri": "nasil"}, {"saat": "18:00", "seri": "genel"}, {"saat": "21:00", "seri": "karar"}]},
+    {"gun": "Cumartesi", "slotlar": [{"saat": "13:00", "seri": "efsane"}, {"saat": "19:30", "seri": "olsaydin"}]},
+    {"gun": "Pazar", "slotlar": [{"saat": "16:30", "seri": "uretim"}, {"saat": "22:00", "seri": "kitap"}]}
+  ],
+  "istisnalar": [
+    {"zaman": "2026-11-10 18:00", "seri": "genel", "neden": "Atatürk'ü anma günü: 10 Kasım akşamı Genel video yok."}
+  ]
+}

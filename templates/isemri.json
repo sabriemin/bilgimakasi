@@ -1,0 +1,30 @@
+{
+  "name": "İş Emri",
+  "description": "Nasıl Üretiliyor? için fabrika iş emri: koyu baklavalı çelik sac zemin ve sarı-siyah ikaz bantları, üstte her saniye artan SEN İZLERKEN ÜRETİLEN sayacı, sarı çelik levhada AŞAMA 2/4 ve ikaz bantlı makine bölgesinde aşamanın çizimi; altta İŞ EMRİ kâğıdı (aşama listesi, biten aşamaya yeşil tik, ONAY kutusuna TAMAM mührü, dış ses kelime kelime) ve onu sunan baretli Makas; sonda büyük ibreli üretim hızı göstergesi, tek büyük sayı ve KAPANDI mührü. Yalnız Nasıl Üretiliyor? serisi (uretim kalıbı) için, --template isemri ile seçilir.",
+  "renderer": "isemri",
+  "yapi": "uretim",
+  "adim_kartlari": true,
+  "istem": "İŞ EMRİ ŞABLONU (uretim kalıbı): video bir fabrikanın iş emri kâğıdı üstünde kurulur, ayrıca:\n- Aşama başlıkları ('AŞAMA n' satırından sonraki 1-2 satır) iş emrinin aşama listesine de yazılır: birlikte en fazla 28 karakter (ör. 'UÇLAR FIRINDA' / 'PİŞİRİLİR').\n- Son sahne (ölçek) card 'counter' olur: card_value dış seste söylenen üretim sayısı, rakam ve büyüklükle (ör. '14 MİLYAR', '2,5 MİLYON'); card_label sayılan şey ve dönem 'KALEM / YIL' biçiminde (dönem YIL, AY, GÜN ya da SAAT); card_note 'tahmini' ya da kısa kaynak (en fazla 32 karakter). Bu sayıdan saniyedeki üretim hesaplanır, ekranın üstündeki SEN İZLERKEN ÜRETİLEN sayacı her saniye artar; sayı tahminse dış seste 'yaklaşık' de.\n- Aşama çizimleri (illustration) fabrika ekipmanı olarak tarif edilsin: çelik gövde, cıvatalı flanşlar, I-profil ayaklar, ray ya da konveyör, borular, ibreli gösterge (ör. 'industrial tunnel kiln with brick walls, steel bands and a rail cart loaded with graphite rods'). Mutfak aleti ya da ev eşyası gibi görünmesin: fırın mikrodalgaya ya da ev fırınına, karıştırıcı mutfak kabına benzemesin.",
+  "colors": {
+    "accent": [221, 32, 39],
+    "highlight": [252, 213, 33],
+    "dark": [20, 19, 19],
+    "light": [48, 50, 53],
+    "box": [247, 244, 235],
+    "muted": [150, 147, 140]
+  },
+  "fonts": {
+    "headline": "Anton-Regular.ttf",
+    "subtitle": "CourierPrime-Bold.ttf"
+  },
+  "subtitle_size": 40,
+  "subtitle_y": 1400,
+  "headline_scale": 1.0,
+  "grain": true,
+  "label_style": "box",
+  "rotation": 1.8,
+  "text_entry": "pop",
+  "subtitle_box": "torn",
+  "stars": false,
+  "case": "upper"
+}
