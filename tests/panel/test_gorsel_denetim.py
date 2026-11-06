@@ -45,6 +45,39 @@ class Denetim(unittest.TestCase):
         self.assertIn("kedi videosunda insan", G.SYSTEM)
         self.assertIn("Emin değilsen UYGUN DEĞİL", G.SYSTEM)
 
+    def test_sahne_ozeti_ve_build(self):
+        # build gerçek bir senaryoyla: fotoğraf reddedilince sahne çizime gider (başlık listedir)
+        import shortgen.pipeline as pl
+        from shortgen.script import load_script
+        kok = Path(__file__).resolve().parents[2]
+        s = load_script(kok / "demo" / "belgesel" / "kedi_yasam_dongusu.json")
+        oz = pl.sahne_ozeti(s.scenes[1])
+        self.assertIsInstance(oz, str)
+        self.assertTrue(oz)
+        cache = kok / "cache" / "images"
+        cache.mkdir(parents=True, exist_ok=True)
+        foto = cache / "_denetim_testi.jpg"
+        Image.new("RGB", (900, 600), (120, 90, 90)).save(foto)
+        istenen = {}
+
+        class Dur(Exception):
+            pass
+
+        def ciz(want, topic, out):
+            istenen.update(want)
+            raise Dur
+        try:
+            with mock.patch.object(pl.images, "find_any", return_value=(foto, pl.images.ImageCredit(
+                    file=str(foto), title="x", author="y", license="CC0", page="p"))), \
+                    mock.patch.object(pl.gorsel_denetim, "denetle", return_value={1: "insan"}), \
+                    mock.patch.object(pl.illustrate, "draw_scenes", side_effect=ciz):
+                with self.assertRaises(Dur):
+                    pl.build(s, self.tmp / "out", use_voice=False, music=None, template="belgesel")
+        finally:
+            foto.unlink(missing_ok=True)
+        self.assertIn(1, istenen, "reddedilen sahne çizilir")
+        self.assertTrue(istenen[1])
+
 
 if __name__ == "__main__":
     unittest.main()
