@@ -801,5 +801,18 @@
     },
     "decided": "2026-11-06T07:41:30+03:00",
     "otomatik_bolum": true
+  },
+  {
+    "tag": "short-20261106-133143",
+    "title": "Godzilla kükremesi nasıl yapıldı? Cevap bir kontrbasta saklı",
+    "topic": "Godzilla'nın kükremesi: Akira Ifukube'nin 1954'te reçineli deri eldiveni kontrbas tellerine sürtüp kaydı yavaşlatarak sesi üretmesi ve 'Gojira' adının gorira (goril) ile kujira (balina) kelimelerinin birleşimi olması",
+    "category": "sanat ve müzik",
+    "template": "retro",
+    "structure": "hikaye",
+    "created": "2026-11-06T13:31:43",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 268,
+    "aciklama_message_id": 269,
+    "platforms": {}
   }
 ]
