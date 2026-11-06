@@ -1,15 +1,15 @@
 {
- "time": "2026-11-06T23:05+03:00",
+ "time": "2026-11-07T02:10+03:00",
  "platforms": {
   "youtube": {
    "account": {
-    "followers": 899,
+    "followers": 903,
     "views": 4296,
     "videos": 13
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 115,
+     "views": 118,
      "likes": 0,
      "comments": 0
     },
@@ -19,37 +19,37 @@
      "comments": 0
     },
     "short-20261104-2023": {
-     "views": 309,
-     "likes": 2,
+     "views": 318,
+     "likes": 3,
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 1169,
+     "views": 1170,
      "likes": 20,
      "comments": 0
     },
     "short-20261104-2048": {
-     "views": 442,
-     "likes": 2,
+     "views": 452,
+     "likes": 3,
      "comments": 0
     },
     "short-20261104-2100": {
-     "views": 1024,
+     "views": 1029,
      "likes": 14,
      "comments": 1
     },
     "short-20261104-211525": {
-     "views": 239,
-     "likes": 2,
+     "views": 811,
+     "likes": 3,
      "comments": 0
     },
     "short-20261104-212900": {
-     "views": 27,
+     "views": 29,
      "likes": 1,
      "comments": 0
     },
     "short-20261105-042947": {
-     "views": 263,
+     "views": 264,
      "likes": 1,
      "comments": 0
     },
@@ -59,18 +59,18 @@
      "comments": 0
     },
     "short-20261105-151659": {
-     "views": 942,
-     "likes": 9,
+     "views": 1012,
+     "likes": 10,
      "comments": 0
     },
     "short-20261105-221556": {
-     "views": 263,
-     "likes": 3,
+     "views": 357,
+     "likes": 5,
      "comments": 2
     },
     "short-20261106-042045": {
-     "views": 4,
-     "likes": 0,
+     "views": 294,
+     "likes": 7,
      "comments": 0
     }
    }
@@ -79,11 +79,11 @@
    "account": {
     "followers": 6,
     "videos": 13,
-    "views": 13368,
-    "likes": 124,
+    "views": 14560,
+    "likes": 136,
     "comments": 4,
     "saves": 22,
-    "shares": 32
+    "shares": 33
    },
    "videos": {
     "short-20261104-1307": {
@@ -115,7 +115,7 @@
      "shares": 19
     },
     "short-20261104-2048": {
-     "views": 1840,
+     "views": 1843,
      "likes": 14,
      "comments": 0,
      "saves": 4,
@@ -129,11 +129,11 @@
      "shares": 2
     },
     "short-20261104-211525": {
-     "views": 248,
-     "likes": 2,
+     "views": 1436,
+     "likes": 14,
      "comments": 0,
      "saves": 1,
-     "shares": 0
+     "shares": 1
     },
     "short-20261104-212900": {
      "views": 364,
@@ -171,7 +171,7 @@
      "shares": 0
     },
     "short-20261106-042045": {
-     "views": 139,
+     "views": 140,
      "likes": 2,
      "comments": 0,
      "saves": 0,
@@ -181,102 +181,102 @@
   },
   "tiktok": {
    "account": {
-    "followers": 17,
-    "likes": 285,
+    "followers": 22,
+    "likes": 391,
     "videos": 13,
-    "views": 2433,
+    "views": 5594,
     "comments": 0,
-    "shares": 1
+    "shares": 10
    },
    "videos": {},
    "list": [
     {
      "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2 Mini Bel",
-     "views": 49,
-     "likes": 4,
+     "views": 3134,
+     "likes": 108,
      "comments": 0,
-     "shares": 0
+     "shares": 8
     },
     {
      "title": "Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu Liv",
-     "views": 86,
-     "likes": 5,
+     "views": 141,
+     "likes": 6,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında P",
-     "views": 124,
-     "likes": 2,
+     "views": 130,
+     "likes": 3,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu Suza",
-     "views": 0,
+     "views": 1,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurta",
-     "views": 155,
+     "views": 157,
      "likes": 3,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını",
-     "views": 139,
+     "views": 140,
      "likes": 1,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Galatasaray 2000 yılında önce Arsenal'i, 100 gün sonra da Re",
-     "views": 145,
+     "views": 147,
      "likes": 4,
      "comments": 0,
-     "shares": 0
+     "shares": 1
     },
     {
      "title": "Kredi kartını kim icat etti sorusunun ezber cevabı, Diners C",
-     "views": 126,
+     "views": 127,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Ahtapotun üç kalbi ve mavi kanı var; üstelik jetle yüzerken ",
-     "views": 304,
+     "views": 305,
      "likes": 10,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
-     "views": 332,
+     "views": 333,
      "likes": 11,
      "comments": 0,
      "shares": 1
     },
     {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 275,
+     "views": 277,
      "likes": 10,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "You'll Never Walk Alone, Liverpool tribünlerinden önce 1945'",
-     "views": 199,
+     "views": 200,
      "likes": 8,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "1904 St. Louis Olimpiyatları'ndaki maratonda bir koşucu yolu",
-     "views": 499,
+     "views": 502,
      "likes": 6,
      "comments": 0,
      "shares": 0
