@@ -1,15 +1,15 @@
 {
- "time": "2026-11-06T15:42+03:00",
+ "time": "2026-11-06T23:05+03:00",
  "platforms": {
   "youtube": {
    "account": {
     "followers": 899,
-    "views": 3235,
-    "videos": 11
+    "views": 4296,
+    "videos": 13
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 113,
+     "views": 115,
      "likes": 0,
      "comments": 0
     },
@@ -19,27 +19,32 @@
      "comments": 0
     },
     "short-20261104-2023": {
-     "views": 308,
+     "views": 309,
      "likes": 2,
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 1108,
+     "views": 1169,
      "likes": 20,
      "comments": 0
     },
     "short-20261104-2048": {
-     "views": 433,
+     "views": 442,
      "likes": 2,
      "comments": 0
     },
     "short-20261104-2100": {
-     "views": 1022,
+     "views": 1024,
      "likes": 14,
      "comments": 1
     },
+    "short-20261104-211525": {
+     "views": 239,
+     "likes": 2,
+     "comments": 0
+    },
     "short-20261104-212900": {
-     "views": 29,
+     "views": 27,
      "likes": 1,
      "comments": 0
     },
@@ -54,26 +59,31 @@
      "comments": 0
     },
     "short-20261105-151659": {
-     "views": 926,
-     "likes": 7,
+     "views": 942,
+     "likes": 9,
      "comments": 0
     },
     "short-20261105-221556": {
-     "views": 184,
-     "likes": 2,
-     "comments": 1
+     "views": 263,
+     "likes": 3,
+     "comments": 2
+    },
+    "short-20261106-042045": {
+     "views": 4,
+     "likes": 0,
+     "comments": 0
     }
    }
   },
   "instagram": {
    "account": {
     "followers": 6,
-    "videos": 11,
-    "views": 12964,
-    "likes": 120,
+    "videos": 13,
+    "views": 13368,
+    "likes": 124,
     "comments": 4,
-    "saves": 20,
-    "shares": 31
+    "saves": 22,
+    "shares": 32
    },
    "videos": {
     "short-20261104-1307": {
@@ -91,32 +101,39 @@
      "shares": 2
     },
     "short-20261104-2023": {
-     "views": 1625,
+     "views": 1626,
      "likes": 6,
      "comments": 0,
      "saves": 1,
      "shares": 7
     },
     "short-20261104-2033": {
-     "views": 2246,
+     "views": 2247,
      "likes": 56,
      "comments": 4,
      "saves": 7,
      "shares": 19
     },
     "short-20261104-2048": {
-     "views": 1829,
+     "views": 1840,
      "likes": 14,
      "comments": 0,
-     "saves": 3,
+     "saves": 4,
      "shares": 0
     },
     "short-20261104-2100": {
-     "views": 1710,
+     "views": 1713,
      "likes": 11,
      "comments": 0,
      "saves": 4,
      "shares": 2
+    },
+    "short-20261104-211525": {
+     "views": 248,
+     "likes": 2,
+     "comments": 0,
+     "saves": 1,
+     "shares": 0
     },
     "short-20261104-212900": {
      "views": 364,
@@ -147,29 +164,50 @@
      "shares": 0
     },
     "short-20261105-221556": {
-     "views": 152,
+     "views": 153,
      "likes": 1,
      "comments": 0,
      "saves": 0,
      "shares": 0
+    },
+    "short-20261106-042045": {
+     "views": 139,
+     "likes": 2,
+     "comments": 0,
+     "saves": 0,
+     "shares": 1
     }
    }
   },
   "tiktok": {
    "account": {
     "followers": 17,
-    "likes": 275,
-    "videos": 11,
-    "views": 2020,
+    "likes": 285,
+    "videos": 13,
+    "views": 2433,
     "comments": 0,
     "shares": 1
    },
    "videos": {},
    "list": [
     {
+     "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2 Mini Bel",
+     "views": 49,
+     "likes": 4,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu Liv",
+     "views": 86,
+     "likes": 5,
+     "comments": 0,
+     "shares": 0
+    },
+    {
      "title": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında P",
-     "views": 11,
-     "likes": 1,
+     "views": 124,
+     "likes": 2,
      "comments": 0,
      "shares": 0
     },
@@ -182,14 +220,14 @@
     },
     {
      "title": "GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurta",
-     "views": 149,
+     "views": 155,
      "likes": 3,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını",
-     "views": 136,
+     "views": 139,
      "likes": 1,
      "comments": 0,
      "shares": 0
@@ -210,7 +248,7 @@
     },
     {
      "title": "Ahtapotun üç kalbi ve mavi kanı var; üstelik jetle yüzerken ",
-     "views": 150,
+     "views": 304,
      "likes": 10,
      "comments": 0,
      "shares": 0
@@ -224,7 +262,7 @@
     },
     {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 273,
+     "views": 275,
      "likes": 10,
      "comments": 0,
      "shares": 0
@@ -253,10 +291,12 @@
   "short-20261104-2033": "Manchester United'ın 40 Yıllık Serisini Bitiren Türk Takımı",
   "short-20261104-2048": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu",
   "short-20261104-2100": "Galatasaray 100 Günde Avrupa'nın İki Devini Nasıl Devirdi?",
+  "short-20261104-211525": "Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu",
   "short-20261104-212900": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi",
   "short-20261105-042947": "Ahtapotun üç kalbi ve mavi kanı: Yüzerken kalbi bile duruyor",
   "short-20261105-061537": "Kredi kartını kim icat etti? Ezberlenen hikâye uydurmaymış",
   "short-20261105-151659": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını taşıyor",
-  "short-20261105-221556": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında"
+  "short-20261105-221556": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında",
+  "short-20261106-042045": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2"
  }
 }
