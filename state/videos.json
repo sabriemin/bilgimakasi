@@ -924,5 +924,18 @@
       "tiktok": "2026-11-17T10:00:00+00:00"
     },
     "decided": "2026-11-06T23:48:49+03:00"
+  },
+  {
+    "tag": "short-20261106-205012",
+    "title": "Porsche logosundaki at nereden geliyor? Cevap bir şehrin adında",
+    "topic": "Porsche logosundaki şaha kalkmış at: Stuttgart'ın armasından gelmesi, şehrin adının rivayete göre 950 civarında Dük Liudolf'un kurduğu 'Stuotgarten' (kısrak bahçesi) harasından türemesi, boynuz ve renklerin Württemberg armasından alınması",
+    "category": "ekonomi ve markalar",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-06T20:50:12",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 294,
+    "aciklama_message_id": 295,
+    "platforms": {}
   }
 ]
