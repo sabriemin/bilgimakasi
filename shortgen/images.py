@@ -71,6 +71,27 @@ def relevant(query: str, text: str) -> bool:
     return hit >= max(1, -(-len(q) * 6 // 10))
 
 
+# Harita, şema, logo ve arma: sorgu bunu istemiyorsa görsel sahneyi anlatmaz (ör. 'Wardenclyffe Tower Shoreham'
+# sorgusuna 'Wardenclyffe Tower; Shoreham Map.JPG' dönüyordu). Başlık ve açıklamada tekil/çoğul, kategorilerde çoğul
+# adlar ("Maps of ...", "Coats of arms of ...") aranır; lisans kuralları değişmez.
+_ISTENMEYEN = {
+    "harita": r"maps?|karte|carte|mapa|locator|location map|street plan|city plan|site plan|floor ?plans?",
+    "şema": r"diagrams?|schematics?|schema|blueprints?|charts?|infographics?|graphs?",
+    "logo": r"logos?|logotypes?|wordmarks?|icons?",
+    "arma": r"coats? of arms|wappen|blason|escudo|heraldry|emblems?|seals? of",
+}
+_ISTENMEYEN_RE = {k: re.compile(r"(?<![a-z])(" + v + r")(?![a-z])", re.I) for k, v in _ISTENMEYEN.items()}
+
+
+def istenmeyen(query: str, text: str) -> str:
+    """Görsel harita / şema / logo / arma ise türünü ('harita', ...) döndürür; sorgu o türü istiyorsa ya da görsel
+    öyle değilse ''. text: dosya adı, açıklama ve kategoriler (Openverse'te başlık ve etiketler)."""
+    for tur, rx in _ISTENMEYEN_RE.items():
+        if rx.search(text or "") and not rx.search(query or ""):
+            return tur
+    return ""
+
+
 def find_any(queries: list[str], cache_dir: Path, exclude: set[str] | None = None) -> tuple[Path, ImageCredit] | None:
     """Sorguları sırayla dener: önce Wikimedia, sonra Openverse. Konuyla eşleşmeyen sonuçları reddeder."""
     for q in [q for q in queries if q.strip()]:
@@ -96,7 +117,7 @@ def find_openverse(query: str, cache_dir: Path, exclude: set[str] | None = None)
         if (it.get("foreign_landing_url") or it["url"]) in exclude:
             continue
         text = " ".join([it.get("title") or ""] + [t.get("name", "") for t in it.get("tags") or []])
-        if not relevant(query, text):
+        if not relevant(query, text) or istenmeyen(query, text):
             continue
         url = it["url"]
         out = cache_dir / (hashlib.md5(url.encode()).hexdigest() + ".jpg")
@@ -143,7 +164,7 @@ def find_image(query: str, cache_dir: Path, exclude: set[str] | None = None,
             continue
         text = " ".join([p["title"], _strip(meta.get("ImageDescription", {}).get("value", "")),
                          meta.get("Categories", {}).get("value", "").replace("|", " ")])
-        if not relevant(query, text):
+        if not relevant(query, text) or istenmeyen(query, text):
             continue
         url = info.get("thumburl") or info["url"]
         out = cache_dir / (hashlib.md5(url.encode()).hexdigest() + Path(url).suffix.lower())

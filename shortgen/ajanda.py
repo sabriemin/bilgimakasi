@@ -1,37 +1,40 @@
-"""Ya Sen Olsaydın? şablonu ("Ajanda"): açık bir ajanda sayfası, tükenmez kalemle elle yazılan gün akışı ya da hesap
-ve para konularında altta büyük sarı bir masa hesap makinesi.
+"""Ya Sen Olsaydın? şablonu ("Ajanda", 2. sürüm): resim önde, ajanda çerçevede.
 
-Dünya: krem ajanda kâğıdı, açık mavi satır çizgileri, solda basılı saat sütunu, üstte bugünün basılı tarihi (gün,
-ay, hafta günü, hafta ve yılın günü), sağ kenarda kırmızı kurdele (yalnız arka plan; düğme sütununun altında kalır).
-Serinin tek ek rengi TÜKENMEZ MAVİSİ: el yazısı, kalem işaretleri, sayfa çizgileri. Marka kimliği korunur:
-kırmızı/sarı/mürekkep/kâğıt, Anton + Courier Prime Bold, yırtık etiketler, sert gölgeler, kâğıt greni, Makas,
-hareketli filigran.
+Sabri'nin ilk sürüme itirazı: hesap makinesi fikri yerinde ama ekranı yiyordu; video Tesla'yı anlatıyor ama ne Tesla'nın
+resmi ne fuar ne de kablosuz enerji kulesi görünüyordu. Bu sürümde her sahnenin resmi (fotoğraf ya da çizim) ekranın
+büyük kısmını kaplar ve sürekli hareket eder; ajanda kimliği üst şerit, tarih damgası ve tükenmez notlarıyla korunur;
+hesap makinesi yalnız para sahnelerinde köşeden gelen küçük bir yardımcıdır.
 
-Ekran düzeni (1080x1920). Yazı yalnız x 72-920, y 236-1536 arasında; gölgeler dahil hiçbir öğe platform arayüzüne
-(sağdaki düğmeler x > 935, üst çubuk y < 170, alttaki açıklama y > 1540) taşmaz (filigran 120-228'de):
-  236-326   basılı tarih satırı: büyük kırmızı gün, ay yıl / hafta günü, sağda HAFTA · GÜN; altında çift çizgi
-  336-404   seri etiketi (siyah yırtık "YA SEN OLSAYDIN?") ........ DURAK 2/4 ☑ ◯ ☐ ☐ (elle çizilmiş kutular)
-  440-618   sahnenin başlığı (Anton); SEN / SANA / SENİN kelimesi mavi tükenmezle halkalanır (serinin imzası),
-            vurgulu satırın altından sarı fosforlu kalem geçer. Sağda Makas (x 720-920) başlığı ve sayfayı gösterir.
-  632-728   dış ses: Courier, okunan kelimenin altından fosforlu kalem geçer (sessiz izleyen de okur)
-  760-1528  sayfa: gün akışında saat çizgileri; her durak kendi saatinin çizgisine elle yazılır ("07:30" kırmızı,
-            olay mavi), önceki duraklar sayfada kalır ve tiklenir (gün dolar). Sahnenin çizimi ya da fotoğrafı sağda
-            bantlı bir polaroid olur (fotoğrafta künye çipi polaroidin alt boşluğunda). İçeriden bilgi ya da alıntı
-            sayfaya yapıştırılmış sarı yapışkan nottur ("İÇERİDEN"; dış ses notun üstüne kelime kelime yazılır).
-  1096-1532 yalnız para konularında: sarı masa hesap makinesi "MAKAS-12"; LCD yürüyen toplamı gösterir (sayaç
-            sahnesinde card_value tuşlanır, fiş sahnesinde her satır eklenir, sonda = ile toplam). Para yoksa makine
-            çizilmez, sayfa günü yazar.
-Son sahne: "SEN OLSAN NE YAPARDIN?" (SEN halkalı), boş, elle çizilmiş bir liste, sayfada duran bir tükenmez kalem ve
-"Yorumlara yaz" söylenince patlayan YORUMLARA YAZ ↓ etiketi.
+Ekran düzeni (1080x1920). Yazı yalnız x ≤ 935, y 170-1540 arasında; gölgeler dahil hiçbir yazı öğesi platform
+arayüzüne taşmaz. Yalnız sahnenin baskısı (resim katmanı) yatayda kenara kadar uzanabilir (filigran 120-228'de):
+  238-318   ajanda şeridi: solda seri etiketi; kancada "YA SEN OLSAYDIN? #1" ve sağda basılı tarih ("BİR ÖMÜR · YIL
+            YIL", "BİR AYIN HESABI", "BİR İŞ GÜNÜ · SAAT SAAT"), diğer sahnelerde sağda DURAK k/N ve elle çizilmiş
+            kutular (geçilen duraklar tikli). Altında basılı çift çizgi (açılışta makas keser).
+  340-1500  sahnenin baskısı: beyaz kenarlı, köşelerinden bantlı, neredeyse tam genişlikte bir baskı (iç alan
+            984x1132, karenin %59'u). Fotoğrafta yavaş Ken Burns (yakınlaşma + kayma); çizimde kâğıt zemin ile çizim
+            ayrı hızlarda kayar (paralaks). Resim yoksa sayfa boş kalmaz: sahnenin tema renginde büyük yıl / saat /
+            sayı afişi (o da yoksa soru işareti ya da makas). Sahneler arası geçiş sırayla kayma, bant çevirme ve
+            makas kesmesidir.
+  baskının üstünde:
+    sol üst    kicker'daki yıl ya da saat kırmızı lastik damga olarak iner ve tükenmez mavisiyle halkalanır (ajandada
+               günü daire içine almak); yıl / saat değilse kicker beyaz kâğıda tükenmezle yazılıp bantlanır
+    para       büyük sayı resmin üstünde sayarak yükselir ve card_label damgasıyla oturur; fişte satırlar dar bir kâğıt
+               şeridine yazılır; küçük sarı hesap makinesi "MAKAS-12" sağ üst köşeden kayarak gelir, yürüyen toplamı
+               gösterir, sahne bitince geri çekilir (sonraki sahne de paraysa yerinde kalır)
+    içeriden   sarı yapışkan not; dış ses söylendikçe nota tükenmezle yazılır
+    son sahne  "Senin listen:" kâğıdı, sayfada duran tükenmez kalem, "Yorumlara yaz" söylenince YORUMLARA YAZ ↓
+  ~1030-1386 başlık (Anton) yırtık kâğıt etiketlerde, sol altta (x ≤ 700); vurgulu satır sarı kâğıtta, SEN / SANA /
+            SENİN tükenmez mavisiyle halkalanır (serinin imzası). Sağında Makas başlığı gösterir.
+  1402-1530 dış ses şeridi: kâğıt üstünde Courier, okunan kelimenin altından fosforlu kalem geçer.
 
-Senaryo eşlemesi (pipeline.build spec.card'a sahnenin bütün alanlarını koyar): ilk sahne kanca, son sahne cta;
-kicker'ı saat olan ("07:30", "7.30") sahneler gün akışının durakları, card counter / receipt sahneleri hesap
-durakları (kart.card_type ile aynı kural), interstitial / quote sahneleri içeriden notu; diğer sahneler gün akışında
-önceki durağın devamıdır (başlığı durağın altına küçük not olarak yazılır).
+Senaryo eşlemesi (pipeline.build spec.card'a sahnenin bütün alanlarını, spec.image'a fotoğrafı, spec.sprite'a
+çizimi koyar): fotoğraf varsa o, yoksa çizim, ikisi de yoksa afiş. İlk sahne kanca, son sahne cta; card counter /
+receipt sahneleri hesap durakları (kart.card_type ile aynı kural), interstitial / quote sahneleri içeriden notu;
+kicker'ı saat ("07:30") ya da yıl ("1884") olan sahneler zaman çizgisinin durakları, diğerleri önceki durağın devamı.
 
-Hız: sayfa, tarih ve hesap makinesi gövdesi video başına; başlık, el yazısı satırları, polaroid ve notlar sahne
-başına; kalem işaretleri ilerleme adımı başına önbelleğe alınır. Kare başına yalnız katmanlar birleştirilir.
-Rastgelelik metin ve sahne numarasıyla tohumlanır: aynı videonun kareleri her çalıştırmada aynıdır.
+Hız: sayfa, şerit, baskı çerçevesi, damgalar ve etiketler video ya da sahne başına bir kez çizilir; kare başına yalnız
+Ken Burns penceresi (kutulu yeniden örnekleme) ve katmanlar birleştirilir. Rastgelelik metin ve sahne numarasıyla
+tohumlanır: aynı videonun kareleri her çalıştırmada aynıdır.
 """
 from __future__ import annotations
 
@@ -46,7 +49,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 from . import kart as K
 from . import nasil as N
@@ -60,42 +63,58 @@ RED, YELLOW, INK, OFF, WHITE, DGREY = K.RED, K.YELLOW, K.INK, K.OFF, K.WHITE, K.
 # ---------------------------------------------------------------- serinin rengi ve sayfa tonları
 MAVI = (27, 64, 158)                 # tükenmez kalem mavisi: serinin tek ek rengi
 MAVI_CIZGI = (190, 204, 232)         # ajanda çizgileri (aynı mavinin açığı)
-MAVI_SOLUK = (128, 150, 196)         # basılı saat sütunu
+MAVI_SOLUK = (128, 150, 196)
 SAYFA = (248, 245, 236)              # ajanda kâğıdı (marka kâğıdının sıcak açığı)
 SONUK = (150, 146, 138)              # dış seste sıradaki kelimeler
-FOSFOR = (253, 226, 74)              # fosforlu kalem (vurgu sarısının kâğıtta biraz açılmış hâli)
+FOSFOR = (253, 226, 74)              # fosforlu kalem
 LCD_BG, LCD_GHOST, LCD_INK = (201, 205, 190), (189, 193, 178), (30, 32, 29)
-POLAROID = (252, 251, 247)
+POLAROID = (252, 251, 247)           # baskının beyaz kenarı
+KAGIT_ZEMIN = {"yellow": (252, 232, 150), "red": (246, 205, 196)}   # çizim zemini (diğer temalarda krem)
+KREM = (241, 236, 222)
 
 # ---------------------------------------------------------------- yerleşim
 X0, X1 = 72, 920                     # yazı alanı
 SAFE = K.SAFE                        # (0, 170, 935, 1540)
 CLIP = (0, SAFE[1], SAFE[2], SAFE[3])
-TARIH_BASE, TARIH_CIZGI = 298, 316   # basılı tarih satırının taban çizgisi ve altındaki çift çizgi
-SIRA_CY = 370                        # seri etiketi + DURAK satırının ortası
-BAS_Y0, BAS_Y1 = 440, 618            # başlık bloğu (ilk satırın büyük harf üstü .. son satırın altı)
-BAS_X1 = 700                         # başlık ve dış ses sağda Makas'a yer bırakır
-ANLATI = (X0, 632, BAS_X1, 728)      # dış ses kutusu
-ICERIK_Y0 = 780                      # sayfanın ilk içerik çizgisi (gün akışında ilk durağın saati)
-ICERIK_Y1 = 1528                     # içeriğin alt sınırı (para yokken)
-CIZGI_UST = 404                      # sayfa çizgilerinin başladığı yer
-MAKAS_XY, MAKAS_OLCEK = (834, 552), 0.5
+BASKI_CLIP = (0, SAFE[1], W, SAFE[3])  # baskı (resim) katmanı: yatayda kenara uzanabilir, dikeyde güvenli bantta
+SIRA_CY = 279                        # ajanda şeridinin ortası (seri etiketi, DURAK)
+TARIH_CIZGI = 326                    # şeridin altındaki basılı çift çizgi
+MAKINE_CLIP = (0, TARIH_CIZGI + 14, SAFE[2], SAFE[3])   # makine şeridin altından çıkar: üstü çizginin altında kalır
+BASKI = (34, 340, 1046, 1500)        # baskının dış kenarı (beyaz kenar dahil)
+KENAR = 14
+FOTO = (BASKI[0] + KENAR, BASKI[1] + KENAR, BASKI[2] - KENAR, BASKI[3] - KENAR)   # resmin göründüğü iç alan
+KB = 1.16                            # Ken Burns payı: kaynak, iç alandan bu kadar büyük hazırlanır
+BAS_X1 = 700                         # başlık etiketleri en çok buraya kadar (sağında Makas)
+BAS_Y1 = 1386                        # son başlık etiketinin alt kenarı
+BAS_YMIN = 1020                      # başlık bloğunun en üst sınırı
+SERIT = (52, 1400, 920, 1522)        # dış ses şeridi (kâğıt; gölgesiyle 1540'ın üstünde biter)
+ANLATI = (X0 + 8, 1414, 900, 1514)   # dış ses metni
+UST0 = FOTO[1] + 22                  # baskı üstü öğelerin en üst sınırı (damga, makine)
+DAMGA_X = 70
+MAKAS_XY, MAKAS_OLCEK = (834, 1296), 0.5
+MAKAS_UST = MAKAS_XY[1] - 186        # Makas'ın (kolu dahil) üst sınırı: sağdaki notlar bunun üstünde biter
 POINT = 212.0                        # Makas'ın kolu: sol-yukarı (başlığı gösterir)
-CALC_W, CALC_H = 838, 410            # hesap makinesi (yerel; eğik ve gölgeli hâli x ≤ 935)
-CALC_X, CALC_Y, CALC_ROT = X0, 1098, -1.4
-CALC_TOP = CALC_Y - 14               # makinenin (eğim dahil) en üst noktası: içerik bunun üstünde biter
+CALC_W, CALC_H = 838, 410            # hesap makinesi tasarım ölçüsü (küçültülmeden önce)
+CALC_OLCEK = 0.44                    # ekranda: ~370x180, karenin ~%3,5'i
+CALC_X1, CALC_Y = 928, UST0 - 4      # makinenin (gölge dahil) sağ kenarı ve üst kenarı
+CALC_ROT = -3.0
+CALC_GIRIS = 0.32                    # köşeden kayarak gelme / geri çekilme süresi
 LCD_BOX = (44, 96, CALC_W - 44, 262)
 TUSLAR = ("AC", "÷", "×", "−", "+", "=")
 SEN_RE = re.compile(r"^(SEN|SANA|SENİ|SENİN|SENDE|SENDEN|SENCE|SENİNLE|SENİNKİ|SENİNKİNİ)\W*$")
 SAAT_RE = re.compile(r"(?<!\d)([01]?\d|2[0-3])\s*[:.]\s*([0-5]\d)(?!\d)")
+YIL_RE = re.compile(r"(?<![\d.,])(1[0-9]\d\d|20\d\d)(?![\d.,]?\d)")
+SAYI_RE = re.compile(r"(?<![\w])(%?\d[\d.,]*\d|%?\d)")
 YORUM_RE = re.compile(r"\byorumlara\s+yaz", re.I)
-SORU_RE = re.compile(r"^sen$", re.I)
 AYLAR = ("OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK")
 GUNLER = ("PAZARTESİ", "SALI", "ÇARŞAMBA", "PERŞEMBE", "CUMA", "CUMARTESİ", "PAZAR")
 SERI_ADI = STRUCTURES["olsaydin"][0]  # "YA SEN OLSAYDIN?" (kalıp listesinden: ad değişirse burası da değişir)
 CTA_BASLIK = ["SEN OLSAN", "NE YAPARDIN?"]
+GECIS = 0.40                         # kayma ve bant çevirme geçişi
 CUT = K.CUT_LEN                      # makas kesmesi (kart şablonuyla aynı süre)
-YENI0 = K.CUT_SLICE + K.CUT_SPLIT     # yeni başlığın belirdiği an: makas eskisini kesip parçalar ayrılınca
+YENI0 = 0.30                         # yeni başlığın belirmeye başladığı an
+OGE0 = 0.46                          # baskı üstü öğelerin en erken belirdiği an (baskı yerine oturunca)
+PARA_TURLERI = ("sayac", "fis")
 
 
 def up(s: str) -> str:
@@ -125,9 +144,12 @@ def turkce_tarih(gun: dt.date) -> tuple[str, str, str, str]:
             f"HAFTA {gun.isocalendar()[1]} · GÜN {gun.timetuple().tm_yday}")
 
 
-def tarihsiz_baslik(para: bool) -> tuple[str, str, str, str]:
-    """meta'da yayın tarihi yoksa basılı tarih satırı: somut gün yok. ('BİR', 'İŞ GÜNÜ', 'SAAT SAAT', '')"""
-    return ("BİR", "AYIN", "HESABI", "") if para else ("BİR", "İŞ GÜNÜ", "SAAT SAAT", "")
+def tarihsiz_baslik(tur) -> tuple[str, str, str, str]:
+    """meta'da yayın tarihi yoksa kancadaki basılı tarih: somut gün yok. tur: 'para' (ya da True), 'yil', 'gun'
+    (ya da False). ('BİR', 'AYIN', 'HESABI', '')"""
+    tur = {True: "para", False: "gun"}.get(tur, tur)
+    return {"para": ("BİR", "AYIN", "HESABI", ""), "yil": ("BİR", "ÖMÜR", "YIL YIL", "")}.get(
+        tur, ("BİR", "İŞ GÜNÜ", "SAAT SAAT", ""))
 
 
 def saat_of(kicker: str) -> tuple[str, int] | None:
@@ -137,6 +159,18 @@ def saat_of(kicker: str) -> tuple[str, int] | None:
         return None
     h, mi = int(m.group(1)), int(m.group(2))
     return f"{h:02d}:{mi:02d}", h * 60 + mi
+
+
+def yil_of(metin: str) -> str:
+    """Metindeki ilk yıl ('1884'te' -> '1884'); '1.200.000' gibi tutarlar yıl sayılmaz."""
+    m = YIL_RE.search(metin or "")
+    return m.group(1) if m else ""
+
+
+def damga_of(kicker: str) -> str:
+    """kicker'ın damgası: saat ('07:30') ya da yıl ('1884'); başka bir şeyse ''."""
+    st = saat_of(kicker)
+    return st[0] if st else yil_of(kicker)
 
 
 # ---------------------------------------------------------------- tükenmez kalem: el yazısı ve işaretler
@@ -533,6 +567,26 @@ def lcd_sigar(metin: str, n: int = 12) -> bool:
     return len(lcd_hucreleri(metin)) <= n
 
 
+
+def sayac_metni(deger: str, f: float) -> str:
+    """Büyük sayının sayarken görünen hâli: '276.000 $' f=0,5 -> '138.000 $'. Oran ya da aralık sayılmaz (tamamı)."""
+    s = up(deger)
+    if f >= 1 or "/" in s or re.search(r"\d\s*[-–]\s*\d", s):
+        return s
+    m = re.search(r"\d[\d.]*(?:,\d+)?", s)
+    if not m:
+        return s
+    tok = m.group(0)
+    tam, _, ondalik = tok.partition(",")
+    try:
+        v = float(tam.replace(".", "") + ("." + ondalik if ondalik else ""))
+    except ValueError:
+        return s
+    dec = len(ondalik)
+    ara = K.fmt_value(v * K.clamp(f), dec, "." in tam or v >= 10000)
+    return s[:m.start()] + ara + s[m.end():]
+
+
 # ---------------------------------------------------------------- senaryo -> sahne planı
 @dataclass
 class Sahne:
@@ -541,12 +595,16 @@ class Sahne:
     kart: str = "auto"              # kart.card_type sonucu
     saat: str = ""                  # '07:30' (gün akışı durağı)
     dakika: int = -1
+    damga: str = ""                 # kicker'daki saat ya da yıl ('07:30', '1884')
+    kicker: str = ""                # damga değilse kicker'ın kendisi (ör. 'WESTINGHOUSE ANLAŞMASI')
     durak: int = 0                  # durak sırası (1'den); durak olmayan sahnede o ana kadarki son durak
     baslik: list[str] = field(default_factory=list)
     hl: int = -1
-    resim: Path | None = None       # çizim (sprite) ya da fotoğraf
+    resim: Path | None = None       # fotoğraf (varsa) ya da çizim (sprite)
     foto: bool = False
     kunye: dict = field(default_factory=dict)
+    tema: str = "paper"
+    anlatim: str = ""
     deger: str = ""
     etiket: str = ""
     notu: str = ""
@@ -557,6 +615,10 @@ class Sahne:
     end: float = 0.0
     a: int = 0                      # kelime aralığı [a, b)
     b: int = 0
+
+    @property
+    def para(self) -> bool:
+        return self.tur in PARA_TURLERI or (self.tur == "kanca" and bool(self.deger))
 
 
 def _kart_spec(spec) -> SimpleNamespace:
@@ -571,23 +633,31 @@ def _kart_spec(spec) -> SimpleNamespace:
 def plan(specs) -> list[Sahne]:
     n = len(specs)
     out: list[Sahne] = []
+    onceki = ""
     for i, spec in enumerate(specs):
         c = spec.card or {}
         kt = K.card_type(_kart_spec(spec), i, n)
         s = Sahne(i, "serbest", kt)
         s.baslik = [up(x) for x in spec.headline if x and x.strip()]
         s.hl = spec.highlight_line if 0 <= spec.highlight_line < len(s.baslik) else -1
-        if spec.sprite is not None:
-            s.resim = spec.sprite
-        elif spec.image is not None:
+        if spec.image is not None:              # fotoğraf önce gelir: Tesla'nın kendi resmi çizimden değerlidir
             s.resim, s.foto, s.kunye = spec.image, True, dict(c.get("credit") or {})
+        elif spec.sprite is not None:
+            s.resim = spec.sprite
+        s.tema = (getattr(spec, "theme", "") or c.get("theme") or "paper").strip().lower()
+        s.anlatim = spec.narration or ""
         s.deger, s.etiket = up(c.get("card_value", "")), up(c.get("card_label", ""))
         s.notu = (c.get("card_note") or "").strip()
         s.satirlar = K.parse_receipt(c.get("card_lines"))
         s.maskot = c.get("mascot", "auto")
-        st = saat_of(spec.kicker) if i > 0 else None
-        if st:
-            s.saat, s.dakika = st
+        if i > 0:
+            s.damga = damga_of(spec.kicker)
+            k = up(spec.kicker)
+            if not s.damga and k and not k.startswith(SERI_ADI):
+                s.kicker = k
+            st = saat_of(spec.kicker)
+            if st:
+                s.saat, s.dakika = st
         if i == 0:
             s.tur = "kanca"
         elif kt == "cta":
@@ -599,8 +669,10 @@ def plan(specs) -> list[Sahne]:
         elif kt in ("interstitial", "quote"):
             s.tur = "iceriden"
             s.alinti = (c.get("card_label") or "").strip().strip('"“”') if kt == "quote" else ""
-        elif st:
+        elif s.damga and s.damga != onceki:     # aynı yılın / saatin ikinci sahnesi durağın devamıdır
             s.tur = "durak"
+        if s.damga:
+            onceki = s.damga
         out.append(s)
     k = 0
     for s in out:
@@ -612,11 +684,11 @@ def plan(specs) -> list[Sahne]:
 
 # ---------------------------------------------------------------- dış ses (fosforlu kalemle okunan kelime)
 class Anlati(N.Speech):
-    """nasil.Speech'in sayfa bölme kuralları; kâğıt üstünde: söylenmiş mürekkep, okunan fosforlu kalem üstünde
+    """nasil.Speech'in sayfa bölme kuralları; kâğıt şerit üstünde: söylenmiş mürekkep, okunan fosforlu kalem üstünde
     mürekkep, sıradaki soluk. Son sayfada tek başına 1-3 kelime kalmasın ('lira.', '78 bin lira.' gibi): yetim
-    kalırsa daha küçük puntolar (30'a dek) denenir; kutu iki satırlıktır, altında defter yazıları başlar."""
-    YETIM = 3            # son sayfada en çok bu kadar kelime kalırsa yetim sayılır ("78 bin lira.")
-    YEDEK = (30,)        # yetim kalırsa ek olarak denenen punto
+    kalırsa daha küçük puntolar (30'a dek) denenir; şerit iki satırlıktır."""
+    YETIM = 3
+    YEDEK = (30,)
 
     def __init__(self, words, a, b, rect, sizes=(36, 34, 32), max_lines=2, lh=1.34, breaks=()):
         super().__init__(words, a, b, rect, sizes=sizes, max_lines=max_lines, lh=lh, breaks=breaks)
@@ -627,7 +699,6 @@ class Anlati(N.Speech):
             if len(pages) == 1 or len(pages[-1]) > self.YETIM:
                 self._kur(size, pages)
                 return
-        # hiçbiri olmazsa ilk bölme kalır (kutu üçüncü satıra yer vermez); testler demo metinlerini bu yüzden denetler
 
     def _yetim(self) -> bool:
         return len(self.pages) >= 2 and self.pages[-1][1] - self.pages[-1][0] <= self.YETIM
@@ -649,7 +720,8 @@ class Anlati(N.Speech):
         size = self.size
         lh = size * self.lh
         cap = cap_h(self.FONT, size)
-        base = y0 + cap + 2
+        # iki satırlık şeritte tek satır dikeyde ortalanır
+        base = y0 + cap + 2 + (lh / 2 if len(lines) == 1 else 0)
         sp = K.tw(" ", self.FONT, size)
         for li, L in enumerate(lines):
             x = x0
@@ -670,10 +742,11 @@ class Anlati(N.Speech):
         return self._img[key]
 
 
-# ---------------------------------------------------------------- hesap makinesi
+# ---------------------------------------------------------------- hesap makinesi (küçük, ikincil)
 class HesapMakinesi:
     """Sarı masa hesap makinesi 'MAKAS-12': isim plakası ve güneş paneli, LCD (üst satırda kalem ya da işlem, büyük 7
-    bölmeli rakamlar, sağda birim), bir sıra işlem tuşu (basılan tuş sarı). Durum başına bir kez çizilir, eğilir."""
+    bölmeli rakamlar, sağda birim), bir sıra işlem tuşu (basılan tuş sarı). Tasarım ölçüsünde (838x410) çizilir, eğilir
+    ve CALC_OLCEK'e küçültülür: ekranda yalnız yürüyen toplamı gösteren küçük bir yardımcıdır."""
 
     def __init__(self):
         self._body: dict = {}
@@ -718,7 +791,7 @@ class HesapMakinesi:
         return self._body[basili]
 
     def layer(self, ust: str, deger: str, birim: str, basili: str | None, rozet: str) -> Image.Image:
-        """Makinenin o durumdaki eğik görüntüsü (sert gölge dahil); sol üst köşesi CALC_ORIGIN."""
+        """Makinenin o durumdaki eğik, küçültülmüş görüntüsü (sert gölge dahil)."""
         key = (ust, deger, birim, basili, rozet)
         if key in self._c:
             return self._c[key]
@@ -727,37 +800,32 @@ class HesapMakinesi:
         lx0, ly0, lx1, ly1 = LCD_BOX
         rx = lx1 - 18
         if rozet:
-            rw = K.tw(rozet, "courier", 24) + 18
-            pen.rr((rx - rw, ly0 + 16, rx, ly0 + 50), 5, outline=LCD_INK, width=3)
-            pen.text(rx - rw / 2, ly0 + 41, rozet, "courier", 24, LCD_INK, anchor="ms")
+            rw = K.tw(rozet, "courier", 26) + 18
+            pen.rr((rx - rw, ly0 + 14, rx, ly0 + 50), 5, outline=LCD_INK, width=3)
+            pen.text(rx - rw / 2, ly0 + 42, rozet, "courier", 26, LCD_INK, anchor="ms")
             rx -= rw + 14
         if ust:
-            size = 28
+            size = 32
             room = rx - (lx0 + 20)
-            while size > 22 and K.tw(ust, "courier", size) > room:
+            while size > 24 and K.tw(ust, "courier", size) > room:
                 size -= 1
-            pen.text(lx0 + 20, ly0 + 42, K.fit_words(ust, "courier", size, room), "courier", size, LCD_INK)
+            pen.text(lx0 + 20, ly0 + 44, K.fit_words(ust, "courier", size, room), "courier", size, LCD_INK)
         bw = 0.0
         if birim:
-            bf, bs = ("plex", 66) if birim == K.TL else ("anton", 52)
+            bf, bs = ("plex", 66) if birim == K.TL else ("anton", 56)
             bw = K.tw(birim, bf, bs) + 16
             pen.text(lx1 - 18, ly1 - 22, birim, bf, bs, LCD_INK, anchor="rs")
         lcd_rakamlar(pen, lx0 + 12, ly0 + 60, lx1 - 18 - bw, deger or "0", 92, 12 if not birim else 11)
         im.alpha_composite(pen.done())
-        big = im.resize((im.width * SS, im.height * SS), Image.LANCZOS)
+        k = CALC_OLCEK
+        big = im.resize((int(im.width * k * SS), int(im.height * k * SS)), Image.LANCZOS)
         big = big.rotate(CALC_ROT, resample=Image.BICUBIC, expand=True)
-        big = K.add_shadow(big, 10 * SS, 12 * SS, 0, 0.92)
+        big = K.add_shadow(big, 7 * SS, 9 * SS, 0, 0.9)
         out = big.resize((big.width // SS, big.height // SS), Image.LANCZOS)
         if len(self._c) > 80:
             self._c.clear()
         self._c[key] = out
         return out
-
-    @staticmethod
-    def origin(lay: Image.Image) -> tuple[float, float]:
-        """Eğik görüntünün sol üst köşesi: döndürülmemiş kutunun merkezi aynı yerde kalır."""
-        cx, cy = CALC_X - 20 + (CALC_W + 40) / 2, CALC_Y - 20 + (CALC_H + 40) / 2
-        return cx - (lay.width - 10) / 2, cy - (lay.height - 12) / 2
 
 
 def _sembol(pen: K.Pen, t, cx, cy, r, col):
@@ -782,13 +850,82 @@ def _sembol(pen: K.Pen, t, cx, cy, r, col):
                 pen.ell(px, py, (k + 1) / 2, fill=col)
 
 
-# ---------------------------------------------------------------- sayfadaki öğeler
+# ---------------------------------------------------------------- damga, kâğıt parçası, etiket
+def _asindir(a: np.ndarray, seed: int, oran: float = 0.10) -> np.ndarray:
+    """Lastik damga aşınması: düşük frekanslı mürekkep dalgası + ince boşluklar (alfa dizisi 0..1)."""
+    rng = np.random.default_rng(seed)
+    h, w = a.shape
+    blot = rng.normal(0, 1, (h // 16 + 2, w // 16 + 2)).astype(np.float32)
+    blot = np.asarray(Image.fromarray(blot).resize((w, h), Image.BICUBIC))
+    keep = np.clip(0.86 + 0.22 * blot, 0.35, 1.0) * (rng.random((h, w)) > oran)
+    return a * keep
+
+
+def damga_goruntusu(metin: str, size: float, seed: int, rot: float = -6.0, renk=RED, cerceve: bool = True,
+                    hale: bool = True) -> Image.Image:
+    """Kırmızı lastik damga (çift çerçeveli, aşınmış); resim üstünde okunsun diye ince kâğıt rengi hale. 1x RGBA."""
+    cap = cap_h("anton", size)
+    padx, pady = size * 0.24, size * 0.22
+    bw, bh = K.tw(metin, "anton", size) + 2 * padx, cap + 2 * pady
+    m = 26
+    pen = K.Pen(-m, -m, bw + m, bh + m)
+    beyaz = (255, 255, 255, 255)
+    if cerceve:
+        lw = max(5.0, size * 0.065)
+        pen.rr((0, 0, bw, bh), size * 0.12, outline=beyaz, width=lw)
+        ins = lw + size * 0.05
+        pen.rr((ins, ins, bw - ins, bh - ins), size * 0.07, outline=beyaz, width=max(2.5, lw * 0.42))
+    pen.text(bw / 2, pady + cap, metin, "anton", size, beyaz, anchor="ms")
+    maske = pen.done().getchannel("A")
+    a = _asindir(np.asarray(maske, np.float32) / 255.0, seed)
+    out = Image.new("RGBA", maske.size, OFF + (0,))
+    if hale:
+        h = maske.filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(1.2))
+        out.putalpha(h.point(lambda v: int(v * 0.82)))
+    ink = Image.new("RGBA", maske.size, renk + (0,))
+    ink.putalpha(Image.fromarray(np.clip(a * 242, 0, 255).astype(np.uint8)))
+    out.alpha_composite(ink)
+    out = out.rotate(rot, resample=Image.BICUBIC, expand=True)
+    bb = out.getchannel("A").getbbox()
+    return out.crop(bb) if bb else out
+
+
+def kagit_yazi(metin: str, size: float, seed: int, rot: float = -2.5, renk=MAVI, bant: bool = True,
+               max_w: float = 600) -> Image.Image:
+    """Beyaz kâğıt parçasına tükenmezle yazılmış not (üstünde sarı bant), sert gölgeli. 1x RGBA."""
+    yz = None
+    for z in range(int(size), 27, -2):
+        yz = Yazi(metin, z, renk, seed)
+        if yz.w <= max_w - 2 * z * 0.55:
+            break
+    while yz.w > max_w - 2 * yz.size * 0.55 and len(metin) > 3:     # yine sığmazsa kelime sınırında kısalır
+        metin = metin.rsplit(" ", 1)[0] if " " in metin.strip() else metin[:-2]
+        yz = Yazi(metin.rstrip(" ,.;:-–") + "…", yz.size, renk, seed)
+    padx, pady = yz.size * 0.55, yz.size * 0.42
+    w, h = yz.w + 2 * padx, yz.size * 1.04 + 2 * pady
+    sp = K.Sprite(w, h, margin=30)
+    K.torn_paper(sp, 0, 0, w, h, POLAROID, seed, rim=None)
+    im = sp.render(0)
+    yz.put(im, 30 + padx, 30 + pady + yz.size * 0.80, clip=(0, 0, im.width, im.height))
+    if bant:
+        tp = K.Sprite(w, h, margin=30)
+        K.tape(tp, w / 2 + random.Random(seed).uniform(-20, 20), 2, min(150, w * 0.45), 36, 4 if seed % 2 else -5,
+               seed, alpha=200)
+        im.alpha_composite(tp.render(0))
+    im = im.rotate(rot, resample=Image.BICUBIC, expand=True)
+    im = K.add_shadow(im, 6, 8, 0, 0.85)
+    bb = im.getchannel("A").getbbox()
+    return im.crop(bb) if bb else im
+
+
+# ---------------------------------------------------------------- sahnedeki öğeler
 class Oge:
-    """Sayfaya konan bir öğe. gorunur(si): o sahnede görünür mü; kes: görünmez olduğu sınırda makasla kesilir
-    (yoksa kendi çıkışı vardır: cikis sn). z: çizim sırası."""
+    """Sahneye konan bir öğe. gorunur(si): o sahnede görünür mü. baski: baskının üstündedir (geçişte baskıyla
+    birlikte kayar / kesilir). kutu: son hâlinin ekrandaki kutusu (yerleşim denetimi). z: çizim sırası."""
     z = 10
-    kes = True
-    cikis = 0.0
+    baski = True
+    kutu: tuple | None = None
+    yazi_mi = True                   # metin taşıyan öğe (güvenli alan ve binmeme denetimi)
 
     def __init__(self, sahneler):
         self.sahneler = set(sahneler)
@@ -799,9 +936,6 @@ class Oge:
     def draw(self, v: "AjandaVideo", img: Image.Image, t: float) -> None:
         raise NotImplementedError
 
-    def exit(self, v: "AjandaVideo", img: Image.Image, t: float, p: float) -> None:
-        """Çıkış (p 0..1): öntanımlı yok."""
-
 
 class YaziOge(Oge):
     """Elle yazılan satır: t0'dan itibaren dur sn'de soldan sağa yazılır (kalem ucu yazıyı izler). kelime: sözle eşli
@@ -811,9 +945,9 @@ class YaziOge(Oge):
         super().__init__(sahneler)
         self.yazi, self.x, self.y, self.anchor = yazi, x, y, anchor
         self.t0, self.dur, self.z, self.anlik, self.kelime = t0, max(0.05, dur), z, anlik, kelime
+        self.kutu = yazi.ink_box(x, y, anchor)
 
     def reveal(self, t: float) -> float | None:
-        """Yazılmış kısmın yerel x'i; None: tamamı."""
         if self.anlik:
             return None
         w = self.yazi.w
@@ -843,6 +977,8 @@ class YaziOge(Oge):
 
 
 class IzOge(Oge):
+    yazi_mi = False
+
     def __init__(self, sahneler, iz: Iz, t0=0.0, dur=0.3, z=12, anlik=False):
         super().__init__(sahneler)
         self.iz, self.t0, self.dur, self.z, self.anlik = iz, t0, max(0.05, dur), z, anlik
@@ -853,70 +989,148 @@ class IzOge(Oge):
             self.iz.put(img, p)
 
 
-class FosforOge(Oge):
-    """Fosforlu kalem şeridi: soldan sağa geçer."""
-    z = 5
+class DamgaOge(Oge):
+    """Yıl / saat damgası: büyükten çarparak iner (0,16 sn), sonra tükenmez mavisiyle halkalanır."""
+    z = 20
 
-    def __init__(self, sahneler, x0, y0, x1, y1, seed, t0=0.0, dur=0.3, anlik=False):
+    def __init__(self, sahneler, im, x, y, t0, anlik=False, halka: Iz | None = None):
         super().__init__(sahneler)
-        self.im, self.o = fosfor(x0, y0, x1, y1, seed)
-        self.t0, self.dur, self.anlik = t0, max(0.05, dur), anlik
+        self.im, self.x, self.y, self.t0, self.anlik, self.halka = im, x, y, t0, anlik, halka
+        self.kutu = (x, y, x + im.width, y + im.height)
 
     def draw(self, v, img, t):
-        p = 1.0 if self.anlik else K.ease_in_out((t - self.t0) / self.dur)
+        p = 1.0 if self.anlik else (t - self.t0) / 0.16
         if p <= 0:
             return
-        im = self.im
-        if p < 1:
-            im = im.crop((0, 0, max(1, int(im.width * p)), im.height))
-        K.put(img, im, *self.o)
+        k = 1.0 if p >= 1 else K.lerp(1.3, 1.0, K.clamp(p) ** 2)
+        K.put(img, self.im, self.x, self.y, k=k, alpha=min(1.0, 0.35 + p), anchor=(0.15, 0.3))
+        if self.halka is not None:
+            self.halka.put(img, 1.0 if self.anlik else (t - self.t0 - 0.32) / 0.45)
 
 
-class ResimOge(Oge):
-    """Bantlı polaroid: t0'da hafifçe büyükten iner; sahne bitince kalkıp söner."""
-    z = 8
-    kes = False
-    cikis = 0.22
+class KagitOge(Oge):
+    """Bantlı kâğıt parçası ya da yırtık etiket: t0'da hafif büyükten yapışır."""
+    z = 22
 
-    def __init__(self, sahneler, im: Image.Image, cx, cy, t0=0.0, anlik=False):
+    def __init__(self, sahneler, im, x, y, t0, anlik=False, z=22, nabiz=False, yazi_mi=True):
         super().__init__(sahneler)
-        self.im, self.cx, self.cy, self.t0, self.anlik = im, cx, cy, t0, anlik
-        # büyükten inerken güvenli alana taşmasın: sağ ya da alt kenara yakınsa o kenar sabit kalır
-        sag, alt = cx + im.width / 2, cy + im.height / 2
-        self.anchor = (1.0 if sag > SAFE[2] - 50 else 0.5, 1.0 if alt > SAFE[3] - 50 else 0.5)
+        self.im, self.x, self.y, self.t0, self.anlik, self.z, self.nabiz = im, x, y, t0, anlik, z, nabiz
+        self.yazi_mi = yazi_mi
+        self.kutu = (x, y, x + im.width, y + im.height)
 
     def draw(self, v, img, t):
-        p = 1.0 if self.anlik else (t - self.t0) / 0.28
+        p = 1.0 if self.anlik else (t - self.t0) / 0.24
         if p <= 0:
             return
-        k = 1.0 if p >= 1 else K.lerp(1.1, 1.0, K.ease_out_cubic(p))
-        a = min(1.0, p * 3)
-        K.put(img, self.im, self.cx - self.im.width / 2, self.cy - self.im.height / 2, k=k, alpha=a,
-              anchor=self.anchor)
+        k = N.ease_pop(p, 1.1) * (K.cta_pulse(t - self.t0) if self.nabiz else 1.0)
+        K.put(img, self.im, self.x, self.y, k=k, alpha=min(1.0, p * 3))
 
-    def exit(self, v, img, t, p):
-        """Kalkıp sola yukarı kayar ve söner."""
-        K.put(img, self.im, self.cx - self.im.width / 2 - 36 * p, self.cy - self.im.height / 2 - 28 * p,
-              alpha=1 - p)
+
+class SayiOge(Oge):
+    """Para durağının büyük sayısı: sarı yırtık kâğıtta sayarak yükselir, oturduğu an kırmızı etiket damgası iner."""
+    z = 30
+
+    def __init__(self, sahneler, deger: str, etiket: str, cx: float, alt: float, maxw: float, t_land: float,
+                 seed: int, anlik=False, sayim=0.75):
+        super().__init__(sahneler)
+        self.deger, self.t_land, self.anlik, self.sayim = deger, t_land, anlik, sayim
+        size = 196.0
+        while size > 70 and K.tw(deger, "anton", size) + size * 0.5 > maxw:
+            size -= 4
+        self.size = size
+        cap = cap_h("anton", size)
+        padx, pady = size * 0.25, size * 0.17
+        w, h = K.tw(deger, "anton", size) + 2 * padx, cap + 2 * pady
+        sp = K.Sprite(w, h, margin=24)
+        K.torn_paper(sp, 0, 0, w, h, YELLOW, seed, rim=INK, rim_w=4)
+        self.kagit = sp.render(-2.0, shadow=(9, 11, 0, 0.9))
+        self.x, self.y = cx - self.kagit.width / 2, alt - self.kagit.height
+        self.tx, self.ty = cx, self.y + self.kagit.height / 2 + cap / 2 - 4
+        self._yazi: dict = {}
+        self.damga = None
+        if etiket:
+            self.damga = damga_goruntusu(etiket, max(40.0, min(58.0, size * 0.3)), seed + 3, rot=7.0)
+            dx = min(self.x + self.kagit.width - self.damga.width * 0.72, SAFE[2] - 6 - self.damga.width)
+            self.dxy = (dx, self.y - self.damga.height * 0.45)
+        x0, y0 = self.x, self.y
+        x1, y1 = self.x + self.kagit.width, self.y + self.kagit.height
+        if self.damga is not None:
+            x0, y0 = min(x0, self.dxy[0]), min(y0, self.dxy[1])
+            x1 = max(x1, self.dxy[0] + self.damga.width)
+        self.kutu = (x0, y0, x1, y1)
+
+    def yazi(self, metin: str) -> Image.Image:
+        if metin not in self._yazi:
+            pad = 30
+            w = K.tw(metin, "anton", self.size) + 2 * pad
+            pen = K.Pen(self.tx - w / 2, self.ty - self.size, self.tx + w / 2, self.ty + self.size * 0.3)
+            pen.text(self.tx, self.ty, metin, "anton", self.size, INK, anchor="ms")
+            self._yazi[metin] = (pen.done(), (self.tx - w / 2, self.ty - self.size))
+        return self._yazi[metin]
+
+    def draw(self, v, img, t):
+        t0 = self.t_land - self.sayim
+        p = 1.0 if self.anlik else (t - t0 + 0.12) / 0.2
+        if p <= 0:
+            return
+        k = N.ease_pop(p, 1.08)
+        K.put(img, self.kagit, self.x, self.y, k=k, alpha=min(1.0, p * 3))
+        if p < 0.35:
+            return
+        f = 1.0 if self.anlik else K.ease_out_cubic((t - t0) / self.sayim)
+        lay, o = self.yazi(sayac_metni(self.deger, f))
+        oturdu = self.anlik or t >= self.t_land
+        kk = 1.0 if self.anlik else (1.0 + 0.1 * (1 - K.clamp((t - self.t_land) / 0.18)) if oturdu else 1.0)
+        K.put(img, lay, *o, k=kk)
+        if self.damga is not None and oturdu:
+            q = 1.0 if self.anlik else (t - self.t_land - 0.08) / 0.14
+            if q > 0:
+                K.put(img, self.damga, *self.dxy, k=1.0 if q >= 1 else K.lerp(1.4, 1.0, q * q),
+                      alpha=min(1.0, 0.3 + q), anchor=(1.0, 0.6))
+
+
+class FisOge(Oge):
+    """Dar fiş şeridi: başlık, satırlar sırayla daktiloyla basılır (soldan açılır), altında çift çizgi. Fiş kâğıdı
+    alttan kayarak gelir."""
+    z = 26
+
+    def __init__(self, sahneler, kagit: Image.Image, o, satirlar: list, t0: float, anlik=False):
+        super().__init__(sahneler)
+        self.kagit, self.o, self.satirlar, self.t0, self.anlik = kagit, o, satirlar, t0, anlik
+        self.kutu = (o[0], o[1], o[0] + kagit.width, o[1] + kagit.height)
+
+    def draw(self, v, img, t):
+        p = 1.0 if self.anlik else (t - self.t0) / 0.26
+        if p <= 0:
+            return
+        e = K.ease_out_cubic(p)
+        im = self.kagit.copy()
+        for lay, (lx, ly), ta, tb in self.satirlar:
+            q = 1.0 if self.anlik else K.clamp((t - ta) / max(0.05, tb - ta))
+            if q <= 0:
+                continue
+            if q < 1:
+                lay = lay.crop((0, 0, max(1, int(lay.width * q)), lay.height))
+            im.alpha_composite(lay, (int(lx), int(ly)))
+        K.put(img, im, self.o[0], self.o[1] + 70 * (1 - e), alpha=min(1.0, p * 2.5))
 
 
 class NotOge(Oge):
-    """Sarı yapışkan not ('İÇERİDEN'): sayfaya yapışır, yazısı sözle birlikte elle yazılır, sahne bitince kalkar."""
+    """Sarı yapışkan not ('İÇERİDEN'): yapışır, yazısı sözle birlikte elle yazılır."""
     z = 30
-    kes = False
-    cikis = 0.24
 
     def __init__(self, sahneler, govde: Image.Image, o, satirlar: list[YaziOge], izler: list[IzOge], t0):
         super().__init__(sahneler)
         self.govde, self.o, self.satirlar, self.izler, self.t0 = govde, o, satirlar, izler, t0
+        bb = govde.getchannel("A").getbbox() or (0, 0, govde.width, govde.height)
+        self.kutu = (o[0] + bb[0], o[1] + bb[1], o[0] + bb[2], o[1] + bb[3])
 
     def draw(self, v, img, t):
         p = (t - self.t0) / 0.24
         if p <= 0:
             return
-        if p < 1:                                   # yapışır: biraz büyükten iner
-            k = K.lerp(1.05, 1.0, K.ease_out_cubic(p))
-            K.put(img, self.govde, *self.o, k=k, alpha=min(1.0, p * 3))
+        if p < 1:
+            K.put(img, self.govde, *self.o, k=K.lerp(1.06, 1.0, K.ease_out_cubic(p)), alpha=min(1.0, p * 3))
             return
         K.put(img, self.govde, *self.o)
         for s in self.satirlar:
@@ -924,43 +1138,16 @@ class NotOge(Oge):
         for s in self.izler:
             s.draw(v, img, t)
 
-    def exit(self, v, img, t, p):
-        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        lay.alpha_composite(self.govde, (int(self.o[0]), int(self.o[1])))
-        for s in self.satirlar:
-            s.yazi.put(lay, s.x, s.y, s.anchor)
-        for s in self.izler:
-            s.iz.put(lay, 1.0)
-        bb = lay.getbbox()
-        if not bb:
-            return
-        lay = lay.crop(bb)
-        K.put(img, lay, bb[0] - 50 * p, bb[1] - 40 * p, k=1 + 0.03 * p, alpha=1 - p)   # sola yukarı kalkar
-
-
-class EtiketOge(Oge):
-    """Yırtık etiket ya da çıkartma: t0'da patlar."""
-    z = 40
-
-    def __init__(self, sahneler, im: Image.Image, x, y, t0, nabiz=False):
-        super().__init__(sahneler)
-        self.im, self.x, self.y, self.t0, self.nabiz = im, x, y, t0, nabiz
-
-    def draw(self, v, img, t):
-        p = (t - self.t0) / 0.28
-        if p <= 0:
-            return
-        k = N.ease_pop(p, 1.14) * (K.cta_pulse(t - self.t0) if self.nabiz else 1.0)
-        K.put(img, self.im, self.x, self.y, k=k, anchor=(0.2, 0.5))
-
 
 class ResimSabit(Oge):
-    """Sahnede duran görüntü (ör. sayfadaki kalem): t0'da hafifçe kayarak gelir."""
+    """Sahnede duran görüntü (ör. kâğıttaki kalem): t0'da hafifçe kayarak gelir."""
     z = 35
+    yazi_mi = False
 
     def __init__(self, sahneler, im, x, y, t0, dx=-40):
         super().__init__(sahneler)
         self.im, self.x, self.y, self.t0, self.dx = im, x, y, t0, dx
+        self.kutu = (x, y, x + im.width, y + im.height)
 
     def draw(self, v, img, t):
         p = (t - self.t0) / 0.35
@@ -970,84 +1157,294 @@ class ResimSabit(Oge):
         K.put(img, self.im, self.x + self.dx * (1 - e), self.y - self.dx * 0.5 * (1 - e), alpha=min(1.0, p * 2.5))
 
 
-class BaslikOge(Oge):
-    """Sahnenin Anton başlığı: vurgulu satırın altından fosforlu kalem geçer, SEN / SANA / SENİN kelimesi mavi
-    tükenmezle halkalanır. Kancada (kapak) her şey ilk karede tamdır; diğer sahnelerde başlık makas eskisini keserken
-    belirir, sonra fosfor ve halka çizilir."""
-    z = 50
+# ---------------------------------------------------------------- başlık: yırtık kâğıt etiketler
+class Baslik:
+    """Sahnenin Anton başlığı: her satır ayrı yırtık kâğıt etiket (vurgulu satır sarı), sol altta üst üste; SEN /
+    SANA / SENİN kelimesi mavi tükenmezle halkalanır. Kancada (kapak) ilk karede tamdır; diğer sahnelerde etiketler
+    YENI0'dan itibaren sırayla yapışır, sahne değişince aşağı kayıp söner."""
+    ARA = -10                         # etiketler arası (eksi: hafif üst üste biner)
 
     def __init__(self, s: Sahne, lines: list[str], hook: bool, vurgu: str | None = None):
-        super().__init__([s.i])
         self.s, self.hook = s, hook
         if vurgu is None:
             vurgu = s.baslik[s.hl] if 0 <= s.hl < len(s.baslik) else ""
-        width = BAS_X1 - X0
-        zone = BAS_Y1 - BAS_Y0
-        en_buyuk = 124 if hook else 112
-        while True:   # son satırın çengelleri (Ç, Ş, Ğ...) de dış sesin üstünde kalmalı
-            size, out = N.fit_lines(lines or [SERI_ADI], "anton", width, en_buyuk, 52, 3, zone, pitch=N.title_pitch)
-            while size > 30 and any(K.tw(L, "anton", size) > width for L in out):   # bölünmeyen uzun kelime
-                size -= 2
-            cap = cap_h("anton", size)
-            lh = N.title_pitch(out, size) if len(out) > 1 else cap
-            alt = max(0.0, K.tbox(out[-1], "anton", size)[3])
-            block = cap + (len(out) - 1) * lh + alt
-            if block <= zone or size <= 30:
+        lines = lines or [SERI_ADI]
+        size, self.lines = self._sigdir(lines, 120 if hook else 106)
+        while True:                                   # tahmin kısa kaldıysa gerçek etiketlerle küçültülür
+            self._kur(size, vurgu)
+            sigar = (self.top >= BAS_YMIN and max(b[2] for b in self.kutular) <= BAS_X1
+                     and min(b[0] for b in self.kutular) >= X0 - 14)
+            if sigar or size <= 30:
                 break
-            en_buyuk = size - 2
-        lines = out
-        self.size, self.lines = size, lines
-        top = BAS_Y0 + max(0.0, (zone - block) / 2)
-        self.bases = [top + cap + k * lh for k in range(len(lines))]
-        self.region = (0, BAS_Y0 - 60, SAFE[2], BAS_Y1 + 48)
-        pen = K.Pen(*self.region)
-        for L, b in zip(lines, self.bases):
-            pen.text(X0, b, L, "anton", size, INK)
-        self.text = pen.done()
-        self.fosfor = None
-        for L, b in zip(lines, self.bases):          # vurgulu satır yeniden sarıldıysa da metninin altından geçer
-            k = L.find(vurgu) if vurgu else -1
-            if k >= 0:
-                x0 = X0 + (K.tw(L[:k].rstrip(), "anton", size) + K.tw(" ", "anton", size) if k else 0.0)
-                self.fosfor = fosfor(x0 - 10, b - cap * 0.6, x0 + K.tw(vurgu, "anton", size) + 12, b + size * 0.07,
-                                     tohum("fosfor", s.i))
-                break
-        self.halka = None
-        for L, b in zip(lines, self.bases):
-            kel = L.split(" ")
-            for k, w in enumerate(kel):
-                if SEN_RE.match(w):
-                    core = re.sub(r"\W+$", "", w)
-                    a = X0 + K.tw(" ".join(kel[:k]) + (" " if k else ""), "anton", size)
-                    bx = a + K.tw(core, "anton", size)
-                    cx, cy = (a + bx) / 2, b - cap / 2
-                    rx = (bx - a) / 2 + min(30.0, max(18.0, size * 0.18))
-                    self.halka = Iz([el_daire(cx, cy, rx, cap / 2 + max(12.0, size * 0.11), tohum("halka", s.i))],
-                                    max(4.5, size * 0.05), MAVI)
+            size -= 3
+        self.size = size
+
+    def _kur(self, size: float, vurgu: str) -> None:
+        s = self.s
+        self.size = size
+        self.etiketler = []                           # (görüntü, x, y, metin)
+        self.kutular = []
+        planned = []
+        for k, L in enumerate(self.lines):
+            vur = bool(vurgu) and L == vurgu
+            fg, bg = (INK, YELLOW) if vur else (INK, OFF)
+            lab = K.torn_label(L, size, fg, bg, tohum("bl", s.i, k), rim=INK)
+            planned.append((L, lab, vur))
+        if vurgu and not any(v for _, _, v in planned):   # vurgu yeniden sarıldıysa içeren ilk satır
+            for j, (L, lab, _) in enumerate(planned):
+                if any(w in L.split() for w in vurgu.split()):
+                    planned[j] = (L, K.torn_label(L, size, INK, YELLOW, tohum("bl", s.i, j), rim=INK), True)
                     break
-            if self.halka:
-                break
+        ims = []
+        for k, (L, lab, vur) in enumerate(planned):
+            rot = (-1.4, 1.1, -0.8)[k % 3]
+            im = lab.render(rot, shadow=(7, 9, 0, 0.9))
+            ims.append((im, lab, rot, L))
+        y = BAS_Y1                                  # alttan yukarı: mürekkep (kâğıt + gölge) kutusuna göre
+        pos = []
+        for k in range(len(ims) - 1, -1, -1):
+            im = ims[k][0]
+            bb = im.getchannel("A").getbbox() or (0, 0, im.width, im.height)
+            pos.append((k, y - bb[3]))
+            y = y - bb[3] + bb[1] - self.ARA
+        pos.sort()
+        self.halka = None
+        for (k, yy), (im, lab, rot, L) in zip(pos, ims):
+            x = X0 - lab.m + (22 if k % 2 else 0) - 4
+            self.etiketler.append((im, x, yy, L))
+            bb = im.getchannel("A").getbbox()
+            self.kutular.append((x + bb[0], yy + bb[1], x + bb[2], yy + bb[3]))
+            if self.halka is None:
+                self.halka = self._halka(L, lab, rot, im, x, yy)
+        self.top = min(b[1] for b in self.kutular)
 
-    def zaman(self, t: float) -> tuple[float, float, float]:
-        """(başlığın görünürlüğü, fosfor ilerlemesi, halka ilerlemesi)."""
-        if self.hook:
-            return 1.0, 1.0, 1.0
+    @staticmethod
+    def etiket_h(L: str, size: float) -> float:
+        """Etiketin ekrandaki yüksekliği (yırtık kâğıt: Türkçe şapka ve çengeller dahil, eğim ve sert gölge payıyla)."""
+        l, t, r, b = K.tbox(L, "anton", size)
+        cap = cap_h("anton", size)
+        h = max(cap, -t) + max(0.0, b) + 2 * size * 0.16
+        w = K.tw(L, "anton", size) + 2 * size * 0.2
+        return h + w * 0.025 + 12
+
+    @staticmethod
+    def _sigdir(lines: list[str], en_buyuk: int) -> tuple[float, list[str]]:
+        """En büyük boyut: önce verilen satır kırılımı, sığmazsa kelimeler 1-3 satıra yeniden dağıtılır."""
+        words = " ".join(lines).split()
+
+        def sar(n):
+            if n == 1:
+                return [" ".join(words)]
+            best = None
+            for cuts in _bolmeler(len(words), n):
+                parts = [" ".join(words[a:b]) for a, b in cuts]
+                m = max(K.tw(p, "anton", 100) for p in parts)
+                if best is None or m < best[0]:
+                    best = (m, parts)
+            return best[1] if best else [" ".join(words)]
+        boy = BAS_Y1 - BAS_YMIN
+
+        def en_iyi(c) -> float:
+            if len(c) > 3:
+                return 0.0
+            size = float(en_buyuk)
+            while size >= 30:
+                gen = max(K.tw(L, "anton", size) + 2 * size * 0.2 for L in c) + 22
+                yuk = sum(Baslik.etiket_h(L, size) for L in c) + (len(c) - 1) * Baslik.ARA
+                if gen <= BAS_X1 - X0 and yuk <= boy:
+                    return size
+                size -= 2
+            return 0.0
+        # senaryonun satır kırılımı (vurgulu satır) korunur; yalnız çok küçülecekse kelimeler yeniden dağıtılır
+        s0 = en_iyi(lines)
+        adaylar = sorted(((en_iyi(c), -len(c), c) for c in (sar(n) for n in (1, 2, 3) if n <= len(words))),
+                         key=lambda a: (a[0], a[1]), reverse=True)
+        if s0 and (s0 >= 72 or not adaylar or s0 >= 0.82 * adaylar[0][0]):
+            return s0, lines
+        if adaylar and adaylar[0][0]:
+            return adaylar[0][0], adaylar[0][2]
+        return 30.0, lines
+
+    def _halka(self, L, lab, rot, im, x, yy) -> Iz | None:
+        kel = L.split(" ")
+        for k, w in enumerate(kel):
+            if not SEN_RE.match(w):
+                continue
+            size = self.size
+            core = re.sub(r"\W+$", "", w)
+            padx = size * 0.2
+            a = padx + K.tw(" ".join(kel[:k]) + (" " if k else ""), "anton", size)
+            b = a + K.tw(core, "anton", size)
+            cap = cap_h("anton", size)
+            cx, cy = lab.m + (a + b) / 2, lab.m + lab.base_y - cap / 2
+            # etiket görüntüsü merkezine göre döndürülmüştür
+            w0, h0 = lab.w + 2 * lab.m, lab.h + 2 * lab.m
+            dx, dy = cx - w0 / 2, cy - h0 / 2
+            th = math.radians(rot)
+            rx_, ry_ = dx * math.cos(th) + dy * math.sin(th), -dx * math.sin(th) + dy * math.cos(th)
+            gx, gy = x + im.width / 2 + rx_, yy + im.height / 2 + ry_
+            rx = (b - a) / 2 + min(30.0, max(18.0, size * 0.18))
+            return Iz([el_daire(gx, gy, rx, cap / 2 + max(12.0, size * 0.12), tohum("halka", self.s.i))],
+                      max(5.0, size * 0.055), MAVI)
+        return None
+
+    def draw(self, img, t, cikis: float | None = None):
+        """cikis: sahne değişirken (0..1) etiketler aşağı kayıp söner."""
         lt = t - self.s.start
-        return (K.clamp((lt - YENI0) / 0.1), K.ease_in_out((lt - YENI0 - 0.1) / 0.3), (lt - YENI0 - 0.2) / 0.5)
+        n = len(self.etiketler)
+        for k, (im, x, y, _) in enumerate(self.etiketler):
+            if cikis is not None:
+                e = K.clamp(cikis)
+                K.put(img, im, x, y + 46 * e * e, alpha=1 - e)
+                continue
+            p = 1.0 if self.hook else (lt - YENI0 - 0.07 * k) / 0.22
+            if p <= 0:
+                continue
+            K.put(img, im, x, y, k=N.ease_pop(p, 1.12), alpha=min(1.0, p * 3), anchor=(0.1, 0.5))
+        if self.halka is not None and cikis is None:
+            ph = 1.0 if self.hook else (lt - YENI0 - 0.07 * n - 0.15) / 0.45
+            if ph > 0:
+                self.halka.put(img, ph)
 
-    def draw(self, v, img, t):
-        pa, pf, ph = self.zaman(t)
-        if pa <= 0:
+
+def _bolmeler(n: int, parca: int):
+    """n kelimeyi parca satıra bölen (başlangıç, bitiş) dizileri."""
+    if parca == 1:
+        yield [(0, n)]
+        return
+    for i in range(1, n - parca + 2):
+        for rest in _bolmeler(n - i, parca - 1):
+            yield [(0, i)] + [(a + i, b + i) for a, b in rest]
+
+
+# ---------------------------------------------------------------- sahnenin baskısı (resim)
+class Baski:
+    """Sahnenin büyük baskısı: fotoğraf (Ken Burns), çizim (kâğıt zemin + ayrı kayan çizim: paralaks) ya da resim
+    yoksa tema renginde büyük yıl / saat / sayı afişi. Beyaz kenarlı, bantlı çerçeve sahne başına bir kez çizilir."""
+    M = 34                                            # çerçeve katmanının gölge / bant payı
+
+    def __init__(self, v: "AjandaVideo", s: Sahne):
+        self.v, self.s = v, s
+        self.cw, self.ch = FOTO[2] - FOTO[0], FOTO[3] - FOTO[1]
+        rng = random.Random(tohum("kb", s.i))
+        self.yakin = s.i % 2 == 0                     # sırayla yakınlaş / uzaklaş
+        self.pan = (rng.choice((-1, 1)) * rng.uniform(0.45, 0.9), rng.uniform(-0.5, 0.35))
+        self.tur = "foto" if s.foto else ("cizim" if s.resim is not None else "afis")
+        self.afis = None
+        self._src = None
+        self._cizim = None
+        self._cerceve = None
+        self._ust = None
+
+    # ------------------------------------------------------------ hazırlık
+    def hazirla(self) -> None:
+        if self._src is not None:
             return
-        if self.fosfor is not None and pf > 0:
-            im, o = self.fosfor
-            if pf < 1:
-                im = im.crop((0, 0, max(1, int(im.width * pf)), im.height))
-            K.put(img, im, *o)
-        k = 1.0 if pa >= 1 else K.lerp(1.05, 1.0, K.ease_out_cubic(pa))
-        K.put(img, self.text, *self.region[:2], k=k, alpha=min(1.0, pa * 1.6), anchor=(0.07, 0.5))
-        if self.halka is not None and ph > 0:
-            self.halka.put(img, ph)
+        sw, sh = int(round(self.cw * KB)), int(round(self.ch * KB))
+        if self.tur == "foto":
+            try:
+                src = Image.open(self.s.resim).convert("RGB")
+            except Exception:  # noqa: BLE001
+                self.tur = "afis"
+                return self.hazirla()
+            src = K.cover(src, sw, sh, focus=(0.5, 0.34))
+            sicak = Image.new("RGB", src.size, (238, 226, 204))
+            self._src = Image.blend(src, sicak, 0.07)
+        elif self.tur == "cizim":
+            zw, zh = int(self.cw * 1.05), int(self.ch * 1.05)
+            self._src = self.v.zemin(self.s.tema, zw, zh, tohum("z", self.s.i))
+            try:
+                sp = Image.open(self.s.resim).convert("RGBA")
+            except Exception:  # noqa: BLE001
+                self.tur = "afis"
+                self._src = None
+                return self.hazirla()
+            bb = sp.getchannel("A").getbbox()
+            if bb:
+                sp = sp.crop(bb)
+            q = min(self.cw * 0.86 / sp.width, self.ch * 0.66 / sp.height) * 1.08
+            sp = sp.resize((max(1, int(sp.width * q)), max(1, int(sp.height * q))), Image.LANCZOS)
+            self._cizim = K.add_shadow(sp, 12, 14, 0, 0.22)
+        else:
+            self._src = self.v.afis(self.s, sw, sh)
+
+    def cerceve(self) -> tuple[Image.Image, Image.Image]:
+        """(alt katman: gölge + beyaz kenar, üst katman: bantlar + künye çipi); sol üst köşeleri BASKI - M."""
+        if self._cerceve is None:
+            m = self.M
+            bw, bh = BASKI[2] - BASKI[0], BASKI[3] - BASKI[1]
+            pen = K.Pen(-m, -m, bw + m, bh + m)
+            pen.rr((12, 14, bw + 12, bh + 14), 6, fill=INK + (225,))
+            pen.rr((0, 0, bw, bh), 6, fill=POLAROID, outline=INK, width=4)
+            pen.rr((KENAR - 2, KENAR - 2, bw - KENAR + 2, bh - KENAR + 2), 2, fill=INK)
+            self._cerceve = pen.done()
+            ust = K.Sprite(bw, bh, margin=m)
+            rng = random.Random(tohum("bant", self.s.i))
+            K.tape(ust, 70 + rng.uniform(-10, 10), 6, 190, 46, -33 + rng.uniform(-4, 4), tohum("b1", self.s.i),
+                   alpha=200)
+            K.tape(ust, bw - 70 + rng.uniform(-10, 10), 6, 190, 46, 31 + rng.uniform(-4, 4), tohum("b2", self.s.i),
+                   alpha=200)
+            im = ust.render(0)
+            not_ = K.credit_chip(self.s.kunye) if self.s.foto else ""
+            if not_:
+                pen = K.Pen(-m, -m, bw + m, bh + m)
+                tw = K.tw(K.fit(not_, "mono", 22, 380), "mono", 22) + 62
+                K.chip_label(pen, bw - KENAR - 14 - tw, bh - KENAR - 230, not_, size=22, rot=0.0, max_w=440)
+                im.alpha_composite(pen.done())
+            self._ust = im
+        return self._cerceve, self._ust
+
+    # ------------------------------------------------------------ kare
+    def icerik(self, p: float) -> Image.Image:
+        """İç alanın (984x1132) p anındaki görüntüsü (RGB): Ken Burns penceresi, çizimde paralaks."""
+        self.hazirla()
+        e = K.lerp(p, K.ease_in_out(p), 0.5)
+        if self.tur == "cizim":
+            zw, zh = self._src.size
+            ox = (zw - self.cw) / 2 * (1 + self.pan[0] * (2 * e - 1) * 0.8)
+            oy = (zh - self.ch) / 2 * (1 - 0.6 * (2 * e - 1))
+            out = self._src.resize((self.cw, self.ch), Image.BILINEAR,
+                                   box=(ox, oy, ox + self.cw, oy + self.ch)).convert("RGBA")
+            k = K.lerp(0.93, 1.0, e) if self.yakin else K.lerp(1.0, 0.94, e)
+            sp = self._cizim
+            nw, nh = max(1, int(sp.width * k)), max(1, int(sp.height * k))
+            sp = sp.resize((nw, nh), Image.BILINEAR)
+            cx = self.cw / 2 - self.pan[0] * 26 * (2 * e - 1)
+            cy = self.ch * 0.38 + 8 * math.sin(p * math.pi * 1.4 + self.s.i)
+            out.alpha_composite(sp, (int(round(cx - nw / 2)), int(round(cy - nh / 2))))
+            return out.convert("RGB")
+        sw, sh = self._src.size
+        z = K.lerp(KB, 1.015, e) if self.yakin else K.lerp(1.015, KB, e)
+        if self.tur == "afis":
+            z = K.lerp(KB, 1.06, e) if self.yakin else K.lerp(1.06, KB, e)
+        ww, wh = min(sw, self.cw * z), min(sh, self.ch * z)
+        rx, ry = (sw - ww) / 2, (sh - wh) / 2
+        cx = sw / 2 + self.pan[0] * rx * (2 * e - 1)
+        cy = sh / 2 + self.pan[1] * ry * (2 * e - 1)
+        if self.tur == "foto":
+            cy = min(cy, sh / 2)                      # yüzler genelde üstte: pencere aşağı kaymaz
+        box = (cx - ww / 2, cy - wh / 2, cx + ww / 2, cy + wh / 2)
+        return self._src.resize((self.cw, self.ch), Image.BILINEAR, box=box)
+
+    def ciz(self, img: Image.Image, p: float) -> None:
+        alt, ust = self.cerceve()
+        o = (BASKI[0] - self.M, BASKI[1] - self.M)
+        K.put(img, alt, *o, clip=BASKI_CLIP)
+        img.paste(self.icerik(p), (FOTO[0], FOTO[1]))
+        K.put(img, ust, *o, clip=BASKI_CLIP)
+
+    def katman(self, p: float) -> Image.Image:
+        """Geçişlerde döndürülüp kaydırılan tek parça (çerçeve + resim + bantlar); sol üst köşesi BASKI - M."""
+        alt, ust = self.cerceve()
+        out = alt.copy()
+        out.paste(self.icerik(p), (self.M + KENAR, self.M + KENAR))
+        out.alpha_composite(ust)
+        return out
+
+    def birak(self) -> None:
+        """Bellek: sahne geçtikten sonra büyük kaynaklar bırakılır (gerekirse yeniden hazırlanır)."""
+        self._src = None
+        self._cizim = None
 
 
 # ---------------------------------------------------------------- video
@@ -1072,84 +1469,40 @@ class AjandaVideo:
         self.starts = [w.start for w in words]
         self.scene_starts = [s.start for s in self.p]
         self.N = max([s.durak for s in self.p] + [0])
-        self.gun = sum(1 for s in self.p if s.tur == "durak") >= 2
+        self.gun = sum(1 for s in self.p if s.tur == "durak" and s.saat) >= 2
+        self.yillik = any(s.tur == "durak" and s.damga and not s.saat for s in self.p)
         senaryo = self.meta.get("script") or {}
         ns = SimpleNamespace(scenes=[SimpleNamespace(**sc) for sc in (senaryo.get("scenes") or [])]
                              or [SimpleNamespace(**{**(sp.card or {}), "narration": sp.narration}) for sp in scenes])
-        self.para = bool(para_var(ns)) or any(s.tur in ("sayac", "fis") for s in self.p)
-        self.saatli = not self.para or self.gun     # para sayfası (gider defteri) saatsiz: giderin saati olmaz
-        self.gorunum = [self._gorunum(s) for s in self.p]
+        self.para = bool(para_var(ns)) or any(s.para for s in self.p)
         tarih = self.meta.get("tarih")
         if isinstance(tarih, str):
             tarih = dt.date.fromisoformat(tarih)
-        # Video yayından günler önce (ve sunucunun UTC saatiyle) çizilir; yayın günü bilinmeden somut tarih basılmaz
-        self.tarih = turkce_tarih(tarih) if tarih else tarihsiz_baslik(self.para and not self.gun)
+        # Video yayından günler önce çizilir; yayın günü bilinmeden somut tarih basılmaz
+        self.tarih = turkce_tarih(tarih) if tarih else tarihsiz_baslik(
+            "yil" if self.yillik else ("para" if self.para and not self.gun else "gun"))
         k0 = up(scenes[0].kicker) if scenes else ""
         self.seri = k0 if k0.startswith(SERI_ADI) else SERI_ADI
-        self.alt = CALC_TOP - 8 if self.para else ICERIK_Y1
-        self._cizgiler()
-        self.hm = HesapMakinesi() if self.para else None
+        self.hm = HesapMakinesi() if any(s.para for s in self.p) else None
         self.mascot = N.Mascot()
         self._speech: dict = {}
-        self._cut: dict = {}
         self._layers: dict = {}
+        self._eski: dict = {}
+        self.seri_sag: dict[bool, float] = {}
         self.olay: dict[int, float] = {}            # sahnenin ana anı (sayı oturdu, toplam basıldı)
-        self.sessiz: dict[int, int] = {}            # dış sesin yazılmadığı ilk kelime (notta, cta'da soru)
+        self.sessiz: dict[int, int] = {}            # dış sesin şeritte yazılmadığı ilk kelime (notta, cta'da soru)
         self.ogeler: list[Oge] = []
         self.lcd: list[tuple] = []
+        self.baskilar = [Baski(self, s) for s in self.p]
+        self.basliklar: dict[int, Baslik] = {}
         self._kur()
         self.ogeler.sort(key=lambda o: o.z)
         self.lcd.sort(key=lambda e: e[0])
         self.lcd_t = [e[0] for e in self.lcd]
+        self.makine_ara = self._makine_araliklari()
         self.kalem_ucu = None
 
-    # ------------------------------------------------------------ plan yardımcıları
-    def _gorunum(self, s: Sahne) -> str:
-        if s.tur == "cta":
-            return "cta"
-        if s.tur in ("sayac", "fis"):
-            return "hesap"
-        return "gun" if self.gun else "hesap"
-
-    def _cizgiler(self) -> None:
-        """Sayfanın çizgileri (y) ve basılı saatleri. Gün akışında ilk durağın saati ICERIK_Y0 çizgisindedir; çizgi
-        aralığı durakların saatleri ve devam notları içerik alanına sığacak kadar daralır (en az 50 px; sığmazsa çizgi
-        başına 2-3 saat). Para konusunda çizgiler 56 px, saatler (süs) ilk içerik çizgisinden makineye kadar 09, 10, ..."""
-        if self.gun:
-            dk = [s.dakika for s in self.p if s.tur == "durak"]
-            h0, h1 = min(dk) // 60, max(dk) // 60
-            son = max(s.i for s in self.p if s.tur == "durak")
-            ek = 1 + sum(1 for s in self.p[son + 1:] if s.tur == "serbest" and self.gorunum[s.i] == "gun")
-            avail = self.alt - ICERIK_Y0 - 12
-            step = 1
-            while True:
-                need = (h1 - h0) // step + 1 + ek
-                sp = min(66.0, avail / max(1, need - 1))
-                if sp >= 50 or step >= 3:
-                    break
-                step += 1
-            self.h0, self.step, self.sp = h0, step, sp
-        else:
-            self.h0, self.step, self.sp = 0, 1, 56.0
-        y = ICERIK_Y0
-        while y - self.sp >= CIZGI_UST:
-            y -= self.sp
-        k = -round((ICERIK_Y0 - y) / self.sp)
-        self.cizgi = []                                 # (y, basılı saat)
-        while y < H:
-            h = self.h0 + k * self.step
-            self.cizgi.append((y, f"{h:02d}" if self.gun and k >= 0 and h <= 23 else ""))
-            y += self.sp
-            k += 1
-        if not self.gun:
-            first = next((j for j, (yy, _) in enumerate(self.cizgi) if yy >= ICERIK_Y0 - 0.5), 0)
-            self.cizgi = [(yy, f"{9 + j - first:02d}" if j >= first and yy <= self.alt + 0.5 else "")
-                          for j, (yy, _) in enumerate(self.cizgi)]
-        self.icerik = [yy for yy, _ in self.cizgi if ICERIK_Y0 - 0.5 <= yy <= self.alt]
-
-    def satir(self, dakika: int) -> int:
-        return max(0, (dakika // 60 - self.h0) // self.step)
-
+    # ------------------------------------------------------------ yardımcılar
     def kelime_ani(self, s: Sahne, hedef: list[str], rakam: str = "", sonra: int = -1) -> tuple[float, int] | None:
         """Sahnenin dış sesinde hedef kelimelerden biri (ilk 4 harf) ya da rakam geçtiği an (mutlak, 0,08 sn önce)
         ve kelimenin indeksi; sonra: bu indeksten sonraki kelimeler."""
@@ -1161,20 +1514,136 @@ class AjandaVideo:
                 return w.start - 0.08, wi
         return None
 
-    # ------------------------------------------------------------ sayfa
+    def sayi_ani(self, s: Sahne, deger: str, sonra: int = -1) -> tuple[float, int] | None:
+        """Değerin dış seste söylendiği an: '80.000 ₺' için '80' (ardından 'bin'), '276.000' için '276' de sayılır."""
+        dig = re.sub(r"\D", "", deger.split(",")[0])
+        if not dig:
+            return None
+        for wi in range(max(s.a, sonra + 1), s.b):
+            w = re.sub(r"\D", "", self.words[wi].text)
+            if w and (w == dig or (dig.startswith(w) and not dig[len(w):].strip("0") and len(dig) - len(w) >= 3)):
+                return self.words[wi].start - 0.08, wi
+        return None
+
+    def resim_kutusu(self, si: int) -> tuple | None:
+        """Sahnenin fotoğrafının ya da çiziminin göründüğü alan (resim yoksa None; afiş de aynı alanı kaplar)."""
+        return FOTO if self.p[si].resim is not None else None
+
+    def gecis_turu(self, si: int) -> str:
+        return ("kayma", "bant", "kesme")[(si - 1) % 3]
+
+    def gecis_suresi(self, si: int) -> float:
+        return CUT if self.gecis_turu(si) == "kesme" else GECIS
+
+    def ilerleme_p(self, si: int, t: float) -> float:
+        s = self.p[si]
+        return K.clamp((t - s.start) / max(0.5, s.end - s.start))
+
+    def _tema_renk(self, tema: str) -> tuple:
+        bg = {"black": INK, "yellow": YELLOW, "red": RED}.get(tema, (244, 238, 224))
+        fg = {INK: YELLOW, YELLOW: INK, RED: OFF}.get(bg, RED)
+        golge = {INK: RED, YELLOW: RED, RED: INK}.get(bg, INK)
+        kalem = OFF if bg in (INK, RED) else MAVI
+        return bg, fg, golge, kalem
+
+    # ------------------------------------------------------------ baskı zeminleri
+    def zemin(self, tema: str, w: int, h: int, seed: int) -> Image.Image:
+        """Çizimin kâğıt zemini: tema renginde açık kâğıt, ajanda kareli çizgileri ve kırmızı kenar çizgisi."""
+        key = ("zemin", tema, w, h)
+        if key not in self._layers:
+            base = KAGIT_ZEMIN.get(tema, KREM)
+            im = Image.new("RGB", (w, h), base)
+            d = ImageDraw.Draw(im)
+            ac = K.blend(base, MAVI, 0.13)
+            for y in range(40, h, 52):
+                d.line([(0, y), (w, y)], fill=ac, width=2)
+            d.line([(96, 0), (96, h)], fill=K.blend(base, RED, 0.45), width=3)
+            g = np.asarray(im, np.float32)
+            yy, xx = np.mgrid[0:h, 0:w]
+            r = np.hypot((xx - w / 2) / (w * 0.7), (yy - h * 0.42) / (h * 0.7))
+            g *= np.clip(1.04 - 0.16 * r ** 2, 0.82, 1.03)[..., None]
+            g += np.random.default_rng(seed).normal(0, 2.4, g.shape[:2])[..., None]
+            self._layers[key] = Image.fromarray(np.clip(g, 0, 255).astype(np.uint8))
+        return self._layers[key]
+
+    def afis_metni(self, s: Sahne) -> tuple[str, str]:
+        """Resimsiz sahnenin afişi: ('1884', 'damga'), ('?', 'soru'), ('$', 'birim'), ('', 'makas'), ..."""
+        if s.para:
+            _, br = lcd_degeri(s.deger)
+            return (br, "birim") if br else ("", "bos")
+        if s.tur == "cta":
+            return "?", "soru"
+        if s.damga:
+            return s.damga, "damga"
+        y = yil_of(s.anlatim)
+        if y:
+            return y, "sayi"
+        m = SAYI_RE.search(s.anlatim)
+        if m and len(m.group(1)) >= 2:
+            return m.group(1).rstrip(".,"), "sayi"
+        return "", "makas"
+
+    def afis(self, s: Sahne, sw: int, sh: int) -> Image.Image:
+        """Resim yoksa baskının kendisi: tema renginde kareli kâğıt üstünde dev yıl / saat / sayı (sert gölgeli,
+        tükenmezle altı çizili); para sahnesinde birimin soluk dev işareti; hiçbiri yoksa makas."""
+        bg, fg, golge, kalem_ = self._tema_renk(s.tema)
+        metin, tur = self.afis_metni(s)
+        pen = K.Pen(0, 0, sw, sh)
+        pen.rr((0, 0, sw, sh), 0, fill=bg)
+        cizgi = K.blend(bg, fg, 0.10)
+        for y in range(46, sh, 56):
+            pen.rr((0, y - 1, sw, y + 1), 0, fill=cizgi)
+        pen.rr((118, 0, 121, sh), 0, fill=K.blend(bg, OFF if bg == RED else RED, 0.4))
+        cx = sw * {"soru": 0.70, "makas": 0.30 if s.tur == "iceriden" else 0.5}.get(tur, 0.5)
+        cy = sh * 0.40
+        if tur == "birim" and metin:
+            font = "plex" if metin == K.TL else "anton"
+            size = sh * 0.62
+            while size > 80 and K.tw(metin, font, size) > sw * 0.7:
+                size -= 10
+            pen.text(sw * 0.62, sh * 0.62, metin, font, size, K.blend(bg, fg, 0.13), anchor="ms")
+        elif tur in ("damga", "sayi", "soru") and metin:
+            size = sh * 0.5
+            while size > 60 and (K.tw(metin, "anton", size) > sw * 0.78 or cap_h("anton", size) > sh * 0.34):
+                size -= 6
+            cap = cap_h("anton", size)
+            base = cy + cap / 2
+            off = size * 0.045
+            pen.text(cx + off, base + off, metin, "anton", size, golge, anchor="ms")
+            pen.text(cx, base, metin, "anton", size, fg, anchor="ms")
+            w = K.tw(metin, "anton", size)
+            seed = tohum("afis", s.i)
+            for j, dy in enumerate((size * 0.12, size * 0.2)):
+                pts = el_cizgi(cx - w / 2 - 20 + j * 30, base + dy, cx + w / 2 + 30 - j * 40, base + dy - 6,
+                               seed + j, amp=3.0)
+                pen.line(pts, kalem_ + (235,), 11 - j * 3)
+        elif tur == "makas":
+            ink = OFF if bg in (INK, RED) else INK
+            sc = K.scissors_icon(sw * 0.56, 26, blade=ink, ring=YELLOW if bg == RED else RED, pivot=YELLOW
+                                 if bg != YELLOW else OFF, outline=ink, rot=-14)
+            x = 60
+            y0 = cy + 120
+            while x < sw - 60:
+                pen.rr((x, y0 - 3 - (x - 60) * 0.25, x + 34, y0 + 3 - (x - 60) * 0.25), 3, fill=K.blend(bg, ink, 0.55))
+                x += 58
+            big = sc.resize((sc.width * SS, sc.height * SS), Image.LANCZOS)
+            pen.paste(big, cx - sc.width / 2, cy - sc.height / 2)
+        im = pen.done().convert("RGB")
+        g = np.asarray(im, np.float32)
+        g += np.random.default_rng(tohum("afisgren", s.i)).normal(0, 3.0, g.shape[:2])[..., None]
+        return Image.fromarray(np.clip(g, 0, 255).astype(np.uint8))
+
+    # ------------------------------------------------------------ sayfa ve ajanda şeridi
     def sayfa(self) -> Image.Image:
-        """Ajanda sayfası (video başına): krem kâğıt, çizgiler, basılı saat sütunu, cilt gölgesi, sayfa kenarları ve
-        kurdele; basılı tarih satırı (çift çizgi hariç: açılışta makas onu keser)."""
+        """Ajanda sayfası (video başına): krem kâğıt, kenarlarda görünen çizgiler, cilt gölgesi, sayfa kenarları ve
+        kurdele; baskı bunun üstüne konur."""
         if "sayfa" in self._layers:
             return self._layers["sayfa"]
         img = Image.new("RGBA", (W, H), SAYFA + (255,))
         pen = K.Pen(0, 0, W, H)
-        for y, lab in self.cizgi:
-            pen.rr((70, y - 1, 1052, y + 1), 1, fill=MAVI_CIZGI)
-            if lab and self.saatli and y <= SAFE[3] - 10:   # alttaki açıklama bandına basılı saat düşmez
-                pen.text(38, y - 12, lab, "courier", 26, MAVI_SOLUK, anchor="ms")
-        top = self.cizgi[0][0] - 40 if self.cizgi else CIZGI_UST
-        pen.rr((66, top, 68, H), 1, fill=MAVI_CIZGI)
+        for y in range(TARIH_CIZGI + 40, H, 56):
+            pen.rr((0, y - 1, W, y + 1), 1, fill=MAVI_CIZGI)
+        pen.rr((22, TARIH_CIZGI + 12, 24, H), 1, fill=K.blend(SAYFA, RED, 0.45))
         img.alpha_composite(pen.done())
         g = np.zeros((H, W), np.float32)
         xs = np.arange(W, dtype=np.float32)
@@ -1188,21 +1657,13 @@ class AjandaVideo:
             pen.rr((x, 0, x + 1.6, H), 0.8, fill=(206, 202, 192))
         img.alpha_composite(pen.done(), (1040, 0))
         rp = K.Pen(900, 0, W, 900)                     # kurdele: düğme sütununun üstünde, yalnız süs
-        x0, x1, yb = 954, 996, 808
+        x0, x1, yb = 954, 996, 520
         pts = [(x0, -10), (x1, -10), (x1 + 4, yb), ((x0 + x1) / 2 + 2, yb - 30), (x0 + 4, yb)]
         rp.poly([(x + 7, y + 8) for x, y in pts], INK + (200,))
         rp.poly(pts, RED)
         rp.poly([(x0 + 6, -10), (x0 + 12, -10), (x0 + 15, yb - 8), (x0 + 9, yb - 4)], (236, 84, 80))
         rp.poly([(x1 - 9, -10), (x1 - 4, -10), (x1, yb - 4), (x1 - 5, yb - 8)], (176, 22, 30))
         img.alpha_composite(rp.done(), (900, 0))
-        pen = K.Pen(0, 230, SAFE[2], TARIH_CIZGI)
-        gun, ay_yil, gun_adi, sag = self.tarih
-        pen.text(X0, TARIH_BASE, gun, "anton", 74, RED)
-        gx = X0 + K.tw(gun, "anton", 74) + 16
-        pen.text(gx, TARIH_BASE - 34, ay_yil, "courier", 28, INK)
-        pen.text(gx, TARIH_BASE, gun_adi, "courier", 28, DGREY)
-        pen.text(X1, TARIH_BASE, sag, "courier", 26, DGREY, anchor="rs")
-        img.alpha_composite(pen.done(), (0, 230))
         self._layers["sayfa"] = img
         return img
 
@@ -1215,20 +1676,30 @@ class AjandaVideo:
         return self._layers["cizgi"]
 
     def taban(self, kanca: bool) -> Image.Image:
-        """Sayfa + seri etiketi (kancada büyük, kicker'daki sayıyla; diğer sahnelerde küçük)."""
+        """Sayfa + ajanda şeridi: seri etiketi (kancada büyük, kicker'daki sayıyla; sağda basılı tarih)."""
         key = ("taban", kanca)
         if key in self._layers:
             return self._layers[key]
         img = self.sayfa().copy()
         pen = K.Pen(0, SIRA_CY - 60, SAFE[2], SIRA_CY + 60)
-        if kanca:
-            size = 44
-            while size > 40 and N.label_w(self.seri, size) > X1 - X0 - 40:
-                size -= 2
-            N.paste_label(pen, self.seri, size, OFF, INK, 11, X0 + N.label_w(self.seri, size) / 2 + 2, SIRA_CY + 2,
-                          rot=-1.5)
-        else:
-            N.paste_label(pen, SERI_ADI, 40, OFF, INK, 11, X0 + N.label_w(SERI_ADI, 40) / 2 + 2, SIRA_CY, rot=-1.5)
+        metin, size = (self.seri, 44) if kanca else (SERI_ADI, 40)
+        sinir = X0 + (X1 - X0) * 0.5
+        if kanca:                                    # basılı tarih sağda; seri etiketi soldaki boşluğa sığar
+            gun, ay_yil, gun_adi, sag = self.tarih
+            base = SIRA_CY + 26
+            x_r = X1
+            if sag:
+                pen.text(x_r, base, sag, "courier", 24, DGREY, anchor="rs")
+                x_r -= K.tw(sag, "courier", 24) + 18
+            w2 = max(K.tw(ay_yil, "courier", 28), K.tw(gun_adi, "courier", 28))
+            pen.text(x_r - w2, base - 32, ay_yil, "courier", 28, INK)
+            pen.text(x_r - w2, base, gun_adi, "courier", 28, DGREY)
+            pen.text(x_r - w2 - 14, base, gun, "anton", 70, RED, anchor="rs")
+            sinir = x_r - w2 - 14 - K.tw(gun, "anton", 70) - 28
+        while size > 30 and X0 + N.label_w(metin, size) > sinir:
+            size -= 2
+        N.paste_label(pen, metin, size, OFF, INK, 11, X0 + N.label_w(metin, size) / 2 + 2, SIRA_CY + 2, rot=-1.5)
+        self.seri_sag[kanca] = X0 + N.label_w(metin, size) + 10
         img.alpha_composite(pen.done(), (0, SIRA_CY - 60))
         self._layers[key] = img
         return img
@@ -1236,12 +1707,12 @@ class AjandaVideo:
     # ------------------------------------------------------------ DURAK ilerlemesi
     def ilerleme_kutulari(self) -> tuple[float, float, float]:
         n = self.N
-        s, gap = (34, 14) if n <= 5 else (28, 10)
+        s, gap = (34, 14) if n <= 5 else ((28, 10) if n <= 7 else (24, 8))
         return X1 - 6 - (n * s + (n - 1) * gap), s, gap
 
     def ilerleme(self, img: Image.Image, si: int, t: float) -> None:
-        """Sağda 'DURAK k/N' ve elle çizilmiş kutular: geçilen duraklar mavi tikli, şimdiki kırmızı halkalı; sonda
-        TAMAM. Kancada (kapak) yok."""
+        """Şeridin sağında 'DURAK k/N' ve elle çizilmiş kutular: geçilen duraklar mavi tikli, şimdiki kırmızı
+        halkalı; sonda TAMAM. Kancada (kapak) yok."""
         if not self.N or si == 0:
             return
         s = self.p[si]
@@ -1252,11 +1723,12 @@ class AjandaVideo:
             return
         key = ("ilerleme", k, bitti)
         if key not in self._layers:
+            self.taban(False)
             kx0, bs, gap = self.ilerleme_kutulari()
             pen = K.Pen(0, SIRA_CY - 50, SAFE[2], SIRA_CY + 50)
             size = 44
             base = SIRA_CY + cap_h("anton", size) / 2
-            tx = kx0 - 22
+            tx = kx0 - 20
             if bitti:
                 pen.text(tx, base, "TAMAM", "anton", size, INK, anchor="rs")
             else:
@@ -1264,8 +1736,9 @@ class AjandaVideo:
                 w_sag = K.tw(sag, "anton", size)
                 pen.text(tx, base, sag, "anton", size, INK, anchor="rs")
                 pen.text(tx - w_sag, base, str(k), "anton", size, RED, anchor="rs")
-                pen.text(tx - w_sag - K.tw(str(k), "anton", size) - 10, base, "DURAK", "anton", size, INK,
-                         anchor="rs")
+                x_durak = tx - w_sag - K.tw(str(k), "anton", size) - 10
+                if x_durak - K.tw("DURAK", "anton", size) > self.seri_sag[False] + 12:
+                    pen.text(x_durak, base, "DURAK", "anton", size, INK, anchor="rs")
             cx = [kx0 + bs / 2 + j * (bs + gap) for j in range(self.N)]
             kutular = [Iz([el_kutu(x, SIRA_CY, bs, 300 + j)], 3.4) for j, x in enumerate(cx)]
             tikler = [Iz([el_tik(x - bs * 0.32, SIRA_CY + bs * 0.18, bs * 0.95, 400 + j)], 5.0)
@@ -1277,7 +1750,7 @@ class AjandaVideo:
             for iz in kutular:
                 iz.put(lay)
             last = self.N if bitti else k - 1
-            for j in range(last - 1):              # önceki tikler (sonuncusu bu sahnede çizilir)
+            for j in range(last - 1):
                 tikler[j].put(lay)
             bb = lay.getbbox()
             self._layers[key] = (lay.crop(bb), bb[:2], tikler, halka)
@@ -1295,188 +1768,42 @@ class AjandaVideo:
     def _kur(self) -> None:
         for s in self.p:
             if s.tur == "cta":
-                self.ogeler.append(BaslikOge(s, CTA_BASLIK, False, CTA_BASLIK[-1]))
+                self.basliklar[s.i] = Baslik(s, CTA_BASLIK, False, CTA_BASLIK[-1])
             else:
-                self.ogeler.append(BaslikOge(s, s.baslik, s.i == 0))
+                self.basliklar[s.i] = Baslik(s, s.baslik, s.i == 0)
         self.lcd.append((0.0, "", "0", "", None, ""))
-        self.resim_yeri: dict[int, tuple[float, float, float, float]] = {}
-        if self.gun:
-            self._gun_kur()
         for s in self.p:
-            g = self.gorunum[s.i]
-            if s.tur == "iceriden":
-                self._not_kur(s)
+            anlik = s.i == 0
+            t_on = 0.0 if anlik else s.start + OGE0
+            ust_alt = UST0 - 16
+            afis_metin, _ = self.afis_metni(s)
+            ayni = self.baskilar[s.i].tur == "afis" and afis_metin == s.damga
+            if s.damga and not ayni:
+                im = damga_goruntusu(s.damga, 132 if len(s.damga) <= 4 else 112, tohum("dm", s.i),
+                                     rot=-7.0 if s.i % 2 else -4.5)
+                x, y = DAMGA_X, UST0
+                halka = Iz([el_daire(x + im.width / 2, y + im.height / 2, im.width * 0.6, im.height * 0.62,
+                                     tohum("dh", s.i), tur=1.1, rot=-6)], 6.0, MAVI)
+                self.ogeler.append(DamgaOge([s.i], im, x, y, t_on, anlik=anlik, halka=halka))
+                ust_alt = y + im.height + 20
+            elif s.kicker:
+                # para sahnesinde sağ üstte makine durur: kâğıt onun soluna sığar
+                im = kagit_yazi(cumle(s.kicker), 44, tohum("kk", s.i), max_w=430 if s.para else 620)
+                self.ogeler.append(KagitOge([s.i], im, DAMGA_X - 10, UST0, t_on, anlik=anlik))
+                ust_alt = UST0 + im.height
+            if s.para:
+                self._hesap_kur(s, ust_alt, t_on, anlik)
+            elif s.tur == "iceriden":
+                self._not_kur(s, ust_alt)
             elif s.tur == "cta":
-                self._cta_kur(s)
-            elif g == "hesap":
-                self._hesap_kur(s)
-            if s.resim is not None and s.tur not in ("iceriden", "cta"):
-                self._polaroid_kur(s)
+                self._cta_kur(s, ust_alt)
 
-    def _gorunur_gun(self, i0: int, i1: int | None = None) -> list[int]:
-        """i0'dan (i1 hariç) gün akışı görünümündeki sahneler."""
-        return [j for j in range(i0, len(self.p) if i1 is None else i1) if self.gorunum[j] == "gun"]
+    def alt_sinir(self, s: Sahne, sag: bool = True) -> float:
+        """Baskı üstü öğelerin alt sınırı: başlığın üstü (sağa uzanan öğede Makas'ın üstü de)."""
+        top = self.basliklar[s.i].top
+        return min(top, MAKAS_UST) - 26 if sag else top - 26
 
-    def _yazi_sigdir(self, metin: str, room: float, sizes, col=MAVI, seed=0) -> Yazi:
-        for size in sizes:
-            y = Yazi(metin, size, col, seed)
-            if y.w <= room:
-                return y
-        size = sizes[-1]
-        while len(metin) > 2:
-            metin = metin[:-1].rstrip(" ,.;:-–")
-            y = Yazi(metin + "…", size, col, seed)
-            if y.w <= room:
-                return y
-        return Yazi(metin, size, col, seed)
-
-    def _gun_kur(self) -> None:
-        """Gün akışı: her durak kendi saatinin çizgisine ('07:30' kırmızı + olay mavi), devam sahnesinin başlığı
-        durağın altına küçük not olarak yazılır. Önceki durak bir sonraki durak başlayınca tiklenir; şimdiki durağın
-        altından fosforlu kalem geçer."""
-        def sag(s: Sahne) -> float:                     # kendi polaroidi olan sahnenin yazısı polaroide değmez
-            return 590.0 if s.resim is not None else X1 - 40.0
-        duraklar = [s for s in self.p if s.tur == "durak" and self.gorunum[s.i] == "gun"]
-        son_satir, son_durak = -1, None
-        self.giris: dict[int, tuple[int, float]] = {}     # sahne -> (satır, taban y)
-        L = len(self.icerik)
-        for s in self.p:
-            if self.gorunum[s.i] != "gun" or s.i == 0:
-                continue
-            nxt = next((d for d in duraklar if d.i > s.i), None)
-            lim = min(L, self.satir(nxt.dakika) if nxt else L)
-            gor = self._gorunur_gun(s.i)
-            ani = self.kelime_ani(s, " ".join(s.baslik).split())
-            t0 = s.start + 0.3 if ani is None else K.clamp(ani[0], s.start + 0.3, max(s.start + 0.3, s.end - 1.4))
-            if s.tur == "durak":
-                k = min(L - 1, max(self.satir(s.dakika), son_satir + 1))
-                y = self.icerik[k] - 9
-                saat = Yazi(s.saat, 38, RED, tohum("saat", s.i))
-                x_txt = 92 + saat.w + 18
-                metin = cumle(" ".join(s.baslik))
-                room = sag(s) - x_txt
-                satirlar = [self._yazi_sigdir(metin, 10 ** 6, (50,), seed=tohum("giris", s.i))]
-                if satirlar[0].w > room:
-                    tek = self._yazi_sigdir(metin, room, (48, 46, 44, 42, 40), seed=tohum("giris", s.i))
-                    kel = metin.split()
-                    iki = None
-                    if k + 1 < lim and len(kel) > 1 and not tek.text.endswith(metin):
-                        best = None
-                        for j in range(1, len(kel)):
-                            a, b = " ".join(kel[:j]), " ".join(kel[j:])
-                            ya, yb = Yazi(a, 44, MAVI, tohum("giris", s.i)), Yazi(b, 44, MAVI, tohum("giris2", s.i))
-                            if ya.w <= room and yb.w <= room and (best is None or abs(ya.w - yb.w) < best[0]):
-                                best = (abs(ya.w - yb.w), [ya, yb])
-                        iki = best[1] if best else None
-                    satirlar = iki or [tek]
-                dur = K.clamp(len(metin) * 0.045, 0.5, 1.3)
-                self.ogeler.append(YaziOge(gor, saat, 92, y, t0=t0, dur=0.28))
-                t = t0 + 0.32
-                for j, yz in enumerate(satirlar):
-                    yy = self.icerik[k + j] - 9
-                    d = dur * yz.w / max(1.0, sum(z.w for z in satirlar))
-                    self.ogeler.append(YaziOge(gor, yz, x_txt, yy, t0=t, dur=d))
-                    t += d
-                son = satirlar[-1]
-                yson = self.icerik[k + len(satirlar) - 1] - 9
-                bitis = t
-                # şimdiki durağın fosforu (sonraki durak başlayınca kalkar) ve tiki (sonraki durakta çizilir)
-                fosfor_gor = self._gorunur_gun(s.i, nxt.i if nxt else None)
-                for j, yz in enumerate(satirlar):
-                    yy = self.icerik[k + j] - 9
-                    self.ogeler.append(FosforOge(fosfor_gor, x_txt - 8, yy - yz.size * 0.52, x_txt + yz.w + 8,
-                                                 yy + yz.size * 0.12, tohum("gf", s.i, j), t0=bitis + 0.05, dur=0.3))
-                if nxt:
-                    tx = x_txt + son.w + 16
-                    self.ogeler.append(IzOge(self._gorunur_gun(nxt.i), Iz([el_tik(tx, yson - 4, 30, tohum("t", s.i))],
-                                                                          5.0), t0=nxt.start + 0.25, dur=0.25))
-                self.giris[s.i] = (k, yson)
-                son_satir, son_durak = k + len(satirlar) - 1, s
-            elif s.tur == "serbest" and son_durak is not None:
-                k = son_satir + 1
-                if k >= lim:
-                    continue
-                y = self.icerik[k] - 9
-                metin = "– " + cumle(" ".join(s.baslik))
-                x = 150
-                yz = self._yazi_sigdir(metin, sag(s) - x, (38, 36, 34, 32, 30), seed=tohum("not", s.i))
-                self.ogeler.append(YaziOge(gor, yz, x, y, t0=t0, dur=K.clamp(len(metin) * 0.045, 0.5, 1.2)))
-                self.giris[s.i] = (k, y)
-                son_satir = k
-
-    # ------------------------------------------------------------ polaroid
-    def polaroid(self, s: Sahne, w: float) -> Image.Image:
-        """Bantlı polaroid (1x, eğik, sert gölgeli): çizim açık kâğıt zeminde, fotoğraf kırpılmış; alt boşlukta çizimde
-        saat ya da başlık (el yazısı), fotoğrafta künye çipi."""
-        pad, alt = 15, 62
-        iw = w - 2 * pad
-        h = pad + iw + alt
-        m = 40
-        pen = K.Pen(-m, -m, w + m, h + m)
-        pen.rr((0, 0, w, h), 6, fill=POLAROID, outline=INK, width=4)
-        if s.foto:
-            src = Image.open(s.resim).convert("RGB")
-            im = K.cover(src, int(iw * SS), int(iw * SS)).convert("RGBA")
-            pen.paste(im, pad, pad)
-            pen.rr((pad, pad, pad + iw, pad + iw), 2, outline=INK, width=3)
-            note = K.credit_chip(s.kunye)
-            if note:
-                K.chip_label(pen, pad + 2, pad + iw + 8, note, size=22, rot=0.0, max_w=iw)
-        else:
-            pen.rr((pad, pad, pad + iw, pad + iw), 2, fill=(241, 236, 222))
-            src = Image.open(s.resim).convert("RGBA")
-            bb = src.getchannel("A").getbbox()
-            if bb:
-                src = src.crop(bb)
-            q = (iw - 28) / max(src.width, src.height)
-            d = src.resize((max(1, int(src.width * q * SS)), max(1, int(src.height * q * SS))), Image.LANCZOS)
-            pen.paste(d, pad + iw / 2 - d.width / SS / 2, pad + iw / 2 - d.height / SS / 2)
-            pen.rr((pad, pad, pad + iw, pad + iw), 2, outline=INK, width=3)
-        im = pen.done()
-        if not s.foto and s.saat:
-            cap = s.saat
-            yz = self._yazi_sigdir(cap, iw - 20, (34, 32, 30, 28), seed=tohum("pol", s.i))
-            yz.put(im, m + w / 2, m + pad + iw + alt * 0.62, "m", clip=(0, 0, im.width, im.height))
-        sp = K.Sprite(w + 2 * m, h + 2 * m, margin=0)
-        sp.im.paste(im.resize((im.width * SS, im.height * SS), Image.LANCZOS), (0, 0))
-        tape = K.Sprite(w + 2 * m, h + 2 * m, margin=0)
-        K.tape(tape, m + w / 2, m + 2, 150, 40, -4 if s.i % 2 else 3, tohum("bant", s.i), alpha=205)
-        sp.im.alpha_composite(tape.im)
-        rot = 2.6 if s.i % 2 else -2.2
-        out = sp.render(rot, shadow=(8, 10, 0, 0.9))
-        bb = out.getchannel("A").getbbox()
-        return out.crop(bb) if bb else out
-
-    def _polaroid_kur(self, s: Sahne) -> None:
-        """Polaroidin yeri: gün akışının kancasında sayfanın ortasında büyük; gün akışında durağın satırının sağında;
-        hesapta sağ sütunda (yüksekliğe göre küçülür, makineye inmez)."""
-        g = self.gorunum[s.i]
-        if g == "gun" and s.i == 0:
-            w = 470
-            top = ICERIK_Y0 + 10
-            cx = (X0 + X1) / 2 + 30
-        elif g == "gun":
-            w = 300
-            k, y = self.giris.get(s.i, (None, None))
-            if y is None:
-                y = self.icerik[0]
-            top = y - 22
-            cx = X1 - w / 2 - 14
-        else:
-            yer = (X1 - 330, ICERIK_Y0 - 64, X1, self.alt)
-            if s.i == 0:                                    # kanca: sayfada başka yazı yok, ortada
-                yer = (X0 + 160, ICERIK_Y0 - 64, X1 - 160, self.alt)
-            x0, y0, x1, y1 = self.resim_yeri.get(s.i, yer)
-            w = min(330.0, x1 - x0, (y1 - y0) - 47 - 34)
-            top = y0
-            cx = (x0 + x1) / 2
-        im = self.polaroid(s, w)
-        hh = im.height
-        top = K.clamp(top, ICERIK_Y0 - 70, self.alt + 10 - hh)
-        anlik = s.i == 0
-        self.ogeler.append(ResimOge([s.i], im, cx, top + hh / 2, t0=s.start + 0.22, anlik=anlik))
-
-    # ------------------------------------------------------------ para: hesap satırları ve makine
+    # ------------------------------------------------------------ para: büyük sayı, fiş ve makine
     def _lcd_yaz(self, t_bitis: float, ust: str, deger: str, birim: str, tus: str | None, rozet: str,
                  hizli: bool = False) -> None:
         """LCD'de değerin tuşlanması: rakamlar soldan birer birer girer (t_bitis'te tamam), sonra tuş basılır."""
@@ -1502,183 +1829,184 @@ class AjandaVideo:
         metin = s.notu + " " + " ".join(w.text for w in self.words[s.a:s.b])
         return "TAHMİNİ" if re.search(r"tahmin|yaklaşık|ortalama", metin, re.I) else ""
 
-    @staticmethod
-    def el_tutar(s: str) -> str:
-        """'20 MİLYON ₺' -> '20 milyon ₺' (el yazısında birimler küçük harf)."""
-        return re.sub(r"[A-ZÇĞİÖŞÜ]{2,}", lambda m: K.tr_lower(m.group(0)), s.strip()).replace("−", "-")
+    def _hesap_kur(self, s: Sahne, ust_alt: float, t_on: float, anlik: bool) -> None:
+        """Para durağı: büyük sayı (sayarak yükselir, damgayla oturur), fişte dar kâğıt şeridi; LCD tuşlanır."""
+        gor = [s.i]
+        rozet = self._rozet(s)
+        alt = self.alt_sinir(s)
+        lab = s.etiket or " ".join(s.baslik)
+        if s.tur == "fis":
+            self._fis_kur(s, ust_alt, alt, t_on, rozet)
+            return
+        ani = self.kelime_ani(s, lab.split())
+        t_lab = t_on if ani is None else K.clamp(ani[0], t_on, max(t_on, s.end - 1.6))
+        v = self.sayi_ani(s, s.deger)
+        t_land = K.clamp(v[0] + 0.15 if v else t_lab + 1.0, t_on + 0.9, max(t_on + 0.9, s.end - 0.3))
+        if anlik:
+            t_land = 0.0
+        sayim = K.clamp(t_land - t_on - 0.15, 0.6, 1.4)
+        sayi = SayiOge(gor, s.deger, s.etiket, 470, alt, 800, t_land, tohum("sy", s.i), anlik=anlik, sayim=sayim)
+        self.ogeler.append(sayi)
+        if s.notu:
+            im = kagit_yazi("*" + s.notu, 36, tohum("nt", s.i), rot=2.0, max_w=520)
+            y = sayi.kutu[1] - im.height - 6
+            if y >= ust_alt:
+                self.ogeler.append(KagitOge(gor, im, X1 - 6 - im.width, y, t_land + 0.45, anlik=anlik, z=24))
+        dg, br = lcd_degeri(s.deger)
+        if dg and lcd_sigar(dg, 12 if not br else 11):
+            self._lcd_yaz(t_land + 0.05, up(lab), dg, br, "=", rozet, hizli=anlik)
+        self.olay[s.i] = t_land
 
-    def _ozet(self, s: Sahne) -> list[tuple[str, str]]:
-        """Önceki para duraklarının özeti: (etiket, tutar)."""
+    def _fis_kur(self, s: Sahne, ust_alt: float, alt: float, t_on: float, rozet: str) -> None:
+        """Fiş: satırlar dar kâğıt şeridine sırayla basılır (kalem dış seste geçiyorsa o an), toplam büyük sayı olarak
+        fişin altına oturur. Makine her satırda ara toplamı gösterir."""
+        gor = [s.i]
+        satirlar = s.satirlar
+        n = len(satirlar)
+        t0 = t_on + 0.25
+        t_end = max(t0 + 0.6 * n, s.end - 1.5)
+        d = min(1.1, (t_end - t0) / max(1, n))
+        times, prev, used = [], t0, -1
+        for j, (kalem_, tutar_) in enumerate(satirlar):
+            latest = t_end - (n - j) * d
+            ani = self.kelime_ani(s, kalem_.split(), rakam=tutar_, sonra=used)
+            t = prev
+            if ani and prev <= ani[0] <= latest:
+                t, used = ani
+            times.append(max(prev, min(t, latest)))
+            prev = times[-1] + d
+        toplam_ani = self.sayi_ani(s, s.deger, sonra=used)
+        t_tot = max(prev + 0.15, toplam_ani[0] + 0.25 if toplam_ani else prev + 0.4)
+        t_tot = min(t_tot, max(prev + 0.15, s.end - 0.6))
+        # toplam: büyük sayı, fişin altında
+        sayi = SayiOge(gor, s.deger, s.etiket or "TOPLAM", 500, alt, 760, t_tot, tohum("fsy", s.i), sayim=0.6)
+        self.ogeler.append(sayi)
+        # fiş kâğıdı: başlık + satırlar + çift çizgi
+        fw = 450
+        x0 = X0 + 4
+        top = max(ust_alt + 28, UST0 + 20)             # kutunun kenar payı (m) kâğıda binmesin
+        bottom = sayi.kutu[1] + 64                      # toplamın kâğıdı fişin alt ucuna biraz biner
+        size, lh = 26, 50
+        while True:
+            need = 30 + 50 + n * lh + 34 + 24
+            if need <= bottom - top or lh <= 34:
+                break
+            lh -= 2
+            size = min(size, lh * 0.6)
+        fh = min(bottom - top, 30 + 50 + n * lh + 34 + 24)
+        m = 20
+        pen = K.Pen(-m, -m, fw + m, fh + m)
+        dis = 14
+        ust_kenar = [(x * fw / 24, (dis * 0.5 if x % 2 else 0)) for x in range(25)]
+        alt_kenar = [(fw - x * fw / 24, fh - (dis * 0.5 if x % 2 else 0)) for x in range(25)]
+        pen.poly([(x + 8, y + 10) for x, y in ust_kenar + alt_kenar], INK + (215,))
+        pen.poly(ust_kenar + alt_kenar, POLAROID)
+        baslik = K.fit(s.etiket or "HESAP", "courier", 28, fw - 60)
+        pen.text(fw / 2, 30 + 30, baslik, "courier", 28, INK, anchor="ms")
+        x = 26
+        while x < fw - 26:
+            pen.rr((x, 30 + 46, x + 10, 30 + 48), 1, fill=DGREY)
+            x += 18
+        kagit = pen.done()
+        katmanlar = []
+        acc, birim = 0.0, ""
+        for j, ((kalem_, tutar_), t) in enumerate(zip(satirlar, times)):
+            yb = 30 + 50 + (j + 1) * lh - lh * 0.3
+            lp = K.Pen(-m, yb - lh, fw + m, yb + 14)
+            neg = tutar_.strip()[:1] in "-−–"
+            sag = tutar_.replace("−", "-")
+            sw = K.tw(sag, "courier", size)
+            oda = fw - 60 - sw - 30
+            zs = size - 2
+            while zs > 19 and K.tw(kalem_, "courier", zs) > oda:
+                zs -= 1
+            sol = K.fit(kalem_, "courier", zs, oda)
+            lp.text(24, yb, sol, "courier", zs, INK)
+            lp.text(fw - 24, yb, sag, "courier", size, RED if neg else INK, anchor="rs")
+            xx = 24 + K.tw(sol, "courier", zs) + 12
+            while xx < fw - 24 - sw - 12:
+                lp.ell(xx, yb - 4, 1.8, fill=DGREY)
+                xx += 14
+            lay = lp.done()
+            katmanlar.append((lay, (0, yb - lh + m), t, t + min(d - 0.08, 0.55)))
+            tv = tutar(tutar_)
+            if tv is not None:
+                acc += tv[0]
+                _, br = lcd_degeri(tutar_)
+                birim = birim or br
+                dg, _ = lcd_degeri(tutar_.lstrip("-−– "))
+                if dg and lcd_sigar(dg):
+                    bit = t + min(d - 0.08, 0.55)
+                    self._lcd_yaz(bit, up(kalem_), dg, birim, "−" if neg else "+", rozet)
+                    dd = 0 if abs(acc - round(acc)) < 1e-6 else 2
+                    self.lcd.append((bit + 0.2, "ARA TOPLAM", ("-" if acc < 0 else "") + _fmt(abs(acc), dd), birim,
+                                     "−" if neg else "+", rozet))
+        yl = 30 + 50 + n * lh + 10
+        lp = K.Pen(-m, yl - 6, fw + m, yl + 16)
+        lp.rr((20, yl, fw - 20, yl + 3), 1, fill=INK)
+        lp.rr((20, yl + 8, fw - 20, yl + 10), 1, fill=INK)
+        katmanlar.append((lp.done(), (0, yl - 6 + m), t_tot - 0.3, t_tot - 0.1))
+        self.ogeler.append(FisOge(gor, kagit, (x0 - m, top - m), katmanlar, t_on))
+        dg, br = lcd_degeri(s.deger)
+        if dg and lcd_sigar(dg, 12 if not br else 11):
+            self.lcd.append((t_tot, up(s.etiket or "TOPLAM"), dg, br or birim, "=", rozet))
+        self.olay[s.i] = t_tot
+
+    def _makine_araliklari(self) -> list[tuple[float, float, bool, bool]]:
+        """Hesap makinesinin ekranda olduğu aralıklar: (giriş, çıkış, kayarak gelir mi, kayarak gider mi). Yalnız para
+        sahnelerinde; arka arkaya para sahnelerinde yerinde kalır."""
         out = []
-        for q in self.p[:s.i]:
-            if q.tur == "sayac" or (q.tur == "kanca" and q.deger):
-                out.append((cumle(q.etiket or " ".join(q.baslik)), self.el_tutar(q.deger)))
-            elif q.tur == "fis" and q.deger:
-                out.append((cumle(q.etiket or "Toplam"), self.el_tutar(q.deger)))
+        for s in self.p:
+            if not s.para:
+                continue
+            onceki = s.i > 0 and self.p[s.i - 1].para
+            sonraki = s.i + 1 < len(self.p) and self.p[s.i + 1].para
+            t_in = s.start if onceki else (0.0 if s.i == 0 else s.start + OGE0 - 0.1)
+            t_out = s.end if sonraki else max(t_in + CALC_GIRIS + 0.3, s.end - 0.06)
+            out.append((t_in, t_out, not onceki and s.i > 0, not sonraki))
         return out
 
-    def _satir_oge(self, gor, y, sol: str, sag: str, x_r: float, t0: float, size: float, seed, sag_renk=MAVI,
-                   anlik=False, sag_t0=None, sol_x=92, nokta=True, hizli=False,
-                   sure: float | None = None) -> tuple[Yazi, Yazi, float]:
-        """'Kalem ........ tutar' satırı: kalem solda, tutar sağa yaslı, arada seyrek noktalar. sure: satırın en çok
-        bu kadar sn'de yazılması (sıradaki satır başlamadan biter). (sol, sağ, bitiş)."""
-        a = self._yazi_sigdir(sol, max(60.0, x_r - sol_x - 60 - Yazi(sag, size, sag_renk, seed).w), (size, size - 2,
-                              size - 4, size - 6), seed=seed) if sol else None
-        b = Yazi(sag, size + 2, sag_renk, seed + 1) if sag else None
-        da = (0.16 if hizli else K.clamp(len(sol) * 0.04, 0.3, 0.8)) if sol else 0.0
-        db = (0.12 if hizli else K.clamp(len(sag) * 0.045, 0.3, 0.7)) if sag else 0.0
-        if sure is not None and da + db + 0.1 > sure:
-            f = max(0.05, sure - 0.1) / max(1e-6, da + db)
-            da, db = da * f, db * f
-        if a:
-            self.ogeler.append(YaziOge(gor, a, sol_x, y, t0=t0, dur=da, anlik=anlik))
-        tb = (t0 + da + 0.1) if sag_t0 is None else max(sag_t0, t0 + da + 0.05)
-        if a and b and nokta:
-            x, pts = sol_x + a.w + 20, []
-            while x < x_r - b.w - 18:
-                pts.append([(x, y - 2), (x + 1.6, y - 2.4)])
-                x += 22
-            if pts:
-                self.ogeler.append(IzOge(gor, Iz(pts, 4.2), t0=t0 + da, dur=max(0.05, tb - t0 - da), anlik=anlik))
-        if b:
-            self.ogeler.append(YaziOge(gor, b, x_r, y, "r", t0=tb, dur=db, anlik=anlik))
-        return a, b, tb + db
+    def makine_durumu(self, t: float) -> float | None:
+        """Makine görünmüyorsa None; görünüyorsa yerine oturma oranı (0: köşede, 1: yerinde)."""
+        for t_in, t_out, gir, cik in self.makine_ara:
+            if t_in <= t < t_out:
+                e = 1.0
+                if gir:
+                    e = min(e, K.ease_out_cubic((t - t_in) / CALC_GIRIS))
+                if cik:
+                    e = min(e, K.ease_in_out((t_out - t) / CALC_GIRIS))
+                return e
+        return None
 
-    def _hesap_kur(self, s: Sahne) -> None:
-        """Para görünümü: önceki durakların özeti (yazılmış, tikli) ve sahnenin hesabı: sayaçta '+ etiket' ve çift
-        çizgili tutar, fişte satırlar, çizgi ve '= toplam'. LCD tuşlanır."""
-        gor = [s.i]
-        lines = self.icerik
-        L = len(lines)
-        x_r = X1 - 14
-        if s.resim is not None:
-            x_r = 590
-            self.resim_yeri[s.i] = (610, lines[0] - 60, X1, self.alt)
-        rozet = self._rozet(s)
-        anlik = s.i == 0
-        blok: list = []
-        if s.tur == "sayac" or (s.tur == "kanca" and s.deger):
-            blok = ["etiket", "deger"] + (["not"] if s.notu else [])
-        elif s.tur == "fis":
-            blok = ["satir"] * len(s.satirlar) + ["toplam"] + (["not"] if s.notu else [])
-        need = len([b for b in blok if b != "not"])
-        if len(blok) > L:                               # not sığmıyorsa yazılmaz (LCD rozeti 'TAHMİNİ' der)
-            blok = [b for b in blok if b != "not"]
-        ozet = self._ozet(s)
-        bos = L - len(blok) - (1 if blok and ozet else 0)
-        ozet = ozet[-bos:] if bos > 0 else []
-        k = 0
-        for lab, val in ozet:                           # özet: makas eski hesabı kesince hızla yeniden yazılır, tikli
-            y = lines[k] - 9
-            t_oz = s.start + CUT * 0.8 + 0.08 * k
-            a, b, bit = self._satir_oge(gor, y, lab, val, x_r - 44, t_oz, 36, tohum("oz", s.i, k), hizli=True)
-            self.ogeler.append(IzOge(gor, Iz([el_tik(x_r - 30, y - 4, 26, tohum("ozt", s.i, k))], 4.4), t0=bit,
-                                     dur=0.12))
-            k += 1
-        if ozet and blok:
-            k += 1 if (L - k) > need else 0
-        lab = s.etiket or " ".join(s.baslik)
-        if s.tur == "sayac" or (s.tur == "kanca" and s.deger):
-            ani = self.kelime_ani(s, lab.split())
-            t_lab = s.start + 0.3 if ani is None else K.clamp(ani[0], s.start + 0.3, s.end - 1.6)
-            v = self.kelime_ani(s, [], rakam=s.deger)
-            t_land = K.clamp(v[0] if v else t_lab + 1.0, t_lab + 0.6, max(t_lab + 0.6, s.end - 0.9))
-            y = lines[k] - 9
-            a = self._yazi_sigdir("+ " + cumle(lab), x_r - 92, (42, 40, 38, 36), seed=tohum("et", s.i))
-            self.ogeler.append(YaziOge(gor, a, 92, y, t0=t_lab, dur=K.clamp(len(lab) * 0.045, 0.4, 0.9), anlik=anlik))
-            y2 = lines[min(L - 1, k + 1)] - 9
-            b = self._yazi_sigdir(self.el_tutar(s.deger), x_r - 120, (60, 56, 52, 48), seed=tohum("dg", s.i))
-            self.ogeler.append(YaziOge(gor, b, x_r, y2, "r", t0=t_land - 0.1, dur=K.clamp(len(s.deger) * 0.05, 0.35,
-                                                                                             0.7), anlik=anlik))
-            bx0 = x_r - b.w
-            iz = Iz([el_cizgi(bx0 - 12, y2 + 12, x_r + 6, y2 + 9, tohum("c1", s.i)),
-                     el_cizgi(bx0 - 6, y2 + 23, x_r + 2, y2 + 20, tohum("c2", s.i))], 4.4)
-            self.ogeler.append(IzOge(gor, iz, t0=t_land + 0.55, dur=0.3, anlik=anlik))
-            if "not" in blok and k + 2 < L:
-                n = self._yazi_sigdir("*" + s.notu, x_r - 96, (32, 30, 28), col=RED, seed=tohum("nt", s.i))
-                self.ogeler.append(YaziOge(gor, n, 96, lines[k + 2] - 12, t0=t_land + 0.9, dur=0.6, anlik=anlik))
-            dg, br = lcd_degeri(s.deger)
-            if dg and lcd_sigar(dg, 12 if not br else 11):
-                self._lcd_yaz(0.0 if anlik else t_land + 0.1, up(lab), dg, br, "=", rozet, hizli=anlik)
-            self.olay[s.i] = t_land
-        elif s.tur == "fis":
-            satirlar = s.satirlar
-            n = len(satirlar)
-            # satırlar sırayla yazılır (biri bitmeden öteki başlamaz); kalem dış seste geçiyorsa o an başlar
-            t0 = s.start + max(0.3, CUT)
-            t_end = max(t0 + 0.6 * n, s.end - 1.5)       # toplamdan önce satırların bittiği an
-            d = min(1.25, (t_end - t0) / max(1, n))       # satır başına yazma süresi
-            times, prev, used = [], t0, -1
-            for j, (kalem, tutar_) in enumerate(satirlar):
-                latest = t_end - (n - j) * d
-                ani = self.kelime_ani(s, kalem.split(), rakam=tutar_, sonra=used)
-                t = prev
-                if ani and prev <= ani[0] <= latest:
-                    t, used = ani
-                times.append(max(prev, min(t, latest)))
-                prev = times[-1] + d
-            toplam_ani = self.kelime_ani(s, [], rakam=s.deger, sonra=used)
-            t_tot = max(prev + 0.25, toplam_ani[0] if toplam_ani else prev + 0.4)
-            t_tot = min(t_tot, max(prev + 0.25, s.end - 0.7))
-            acc, birim = 0.0, ""
-            for j, ((kalem, tutar_), t) in enumerate(zip(satirlar, times)):
-                y = lines[k + j] - 9
-                neg = tutar_.strip()[:1] in "-−–"
-                _, _, bit = self._satir_oge(gor, y, cumle(kalem), self.el_tutar(tutar_), x_r, t, 38,
-                                            tohum("fs", s.i, j), sag_renk=RED if neg else MAVI, sure=d - 0.06)
-                tv = tutar(tutar_)
-                if tv is not None:
-                    acc += tv[0]
-                    _, br = lcd_degeri(tutar_)
-                    birim = birim or br
-                    dg, _ = lcd_degeri(tutar_.lstrip("-−– "))
-                    if dg and lcd_sigar(dg):
-                        self._lcd_yaz(bit, up(kalem), dg, birim, "−" if neg else "+", rozet)
-                        dd = 0 if abs(acc - round(acc)) < 1e-6 else 2
-                        self.lcd.append((bit + 0.2, "ARA TOPLAM", ("-" if acc < 0 else "") + _fmt(abs(acc), dd), birim,
-                                         "−" if neg else "+", rozet))
-            yl = lines[k + n - 1] - 9
-            self.ogeler.append(IzOge(gor, Iz([el_cizgi(88, yl + 16, x_r + 6, yl + 13, tohum("fc", s.i))], 4.2),
-                                     t0=max(prev - 0.05, t_tot - 0.35), dur=0.25))
-            yt = lines[min(L - 1, k + n)] - 9
-            etiket = "= " + cumle(s.etiket or "Toplam")
-            a, b, bit = self._satir_oge(gor, yt, etiket, self.el_tutar(s.deger), x_r, t_tot - 0.1, 40,
-                                        tohum("ft", s.i), sag_t0=t_tot)
-            if b is not None:
-                bx0 = x_r - b.w
-                iz = Iz([el_cizgi(bx0 - 12, yt + 12, x_r + 6, yt + 9, tohum("d1", s.i)),
-                         el_cizgi(bx0 - 6, yt + 23, x_r + 2, yt + 20, tohum("d2", s.i))], 4.4)
-                self.ogeler.append(IzOge(gor, iz, t0=bit + 0.05, dur=0.3))
-            if "not" in blok and k + n + 1 < L:
-                nt = self._yazi_sigdir("*" + s.notu, x_r - 96, (30, 28), col=RED, seed=tohum("fn", s.i))
-                self.ogeler.append(YaziOge(gor, nt, 96, lines[k + n + 1] - 12, t0=bit + 0.4, dur=0.6))
-            dg, br = lcd_degeri(s.deger)
-            if dg and lcd_sigar(dg, 12 if not br else 11):
-                self.lcd.append((t_tot, up(s.etiket or "TOPLAM"), dg, br or birim, "=", rozet))
-            self.olay[s.i] = t_tot
+    def makine(self, img: Image.Image, t: float) -> tuple | None:
+        e = self.makine_durumu(t)
+        if e is None or e <= 0.001:
+            return None
+        lay = self.hm.layer(*self.lcd_at(t))
+        si = self.scene_at(t)
+        y = CALC_Y + (64 if self.p[si].foto else 0)
+        x = CALC_X1 - lay.width
+        dy = -(y + lay.height - MAKINE_CLIP[1] + 6) * (1 - e)      # şeridin altından aşağı kayarak çıkar
+        K.put(img, lay, x, y + dy, clip=MAKINE_CLIP)
+        return (x, y + dy, x + lay.width, y + dy + lay.height)
 
     # ------------------------------------------------------------ içeriden: yapışkan not
-    def _not_kur(self, s: Sahne) -> None:
-        """Sarı yapışkan not: köşesinde kırmızı 'İÇERİDEN' etiketi; metin alıntı ya da sahnenin dış sesidir (dış ses
-        kelime kelime söylenirken nota yazılır ve o sahnede alttaki dış ses satırı gizlenir; nota sığmazsa sahnenin
-        başlığı yazılır, dış ses altta kalır). Son satırın altına kırmızı kalem çizgisi."""
-        gun = self.gorunum[s.i] == "gun"
-        nx0 = X0 + 22
-        nw = (X1 - 40) - nx0
+    def _not_kur(self, s: Sahne, ust_alt: float) -> None:
+        """Sarı yapışkan not sağda, başlığın üstünde: köşesinde kırmızı 'İÇERİDEN' etiketi; metin alıntı ya da
+        sahnenin dış sesidir (dış ses kelime kelime söylenirken nota yazılır ve şeritte gizlenir; nota sığmazsa
+        sahnenin başlığı yazılır, dış ses şeritte kalır). Son satırın altına kırmızı kalem çizgisi."""
+        nw = 500
+        nx0 = X1 - 20 - nw
         iw = nw - 74
-        if gun:
-            dolu = [y for j, (k, y) in self.giris.items() if j < s.i]
-            top = ICERIK_Y0 - 30
-        else:
-            dolu, top = [], self.icerik[0] - 64
-        max_h = self.alt - 6 - top
+        y_alt = self.alt_sinir(s)
+        max_h = y_alt - max(ust_alt, UST0)
         kelimeler = [w.text for w in self.words[s.a:s.b]]
         soz = not s.alinti and 0 < len(kelimeler) <= 26
         metin = s.alinti or (" ".join(kelimeler) if soz else cumle(" ".join(s.baslik)))
-        ust_pay = 66                                     # etiketin altı: ilk satırın büyük harf üstü
+        ust_pay = 66
         sec = None
-        for size in (46, 44, 42, 40, 38, 36, 34, 32):
-            lh = size * 1.4
+        for size in (42, 40, 38, 36, 34, 32, 30):
+            lh = size * 1.36
             lines, cur = [], []
             for w in metin.split():
                 cand = cur + [w]
@@ -1696,14 +2024,12 @@ class AjandaVideo:
         if sec is None:
             soz = False
             metin = cumle(" ".join(s.baslik))
-            size = 40
-            sec = (size, size * 1.4, [metin.split()], ust_pay + size * 0.74 + 40)
+            size = 36
+            sec = (size, size * 1.36, [metin.split()], ust_pay + size * 0.74 + 40)
         size, lh, lines, nh = sec
-        if gun and dolu:                                 # mümkünse son yazılan satırın altına yapışır
-            top = K.clamp(max(dolu) + 74, top, self.alt - 6 - nh)
+        top = y_alt - nh
         if soz:
             self.sessiz[s.i] = s.a
-        # not gövdesi (sayfa koordinatlarında)
         m = 46
         x0, y0, x1, y1 = nx0, top, nx0 + nw, top + nh
         pen = K.Pen(x0 - m, y0 - m, x1 + m, y1 + m)
@@ -1721,24 +2047,24 @@ class AjandaVideo:
         N.paste_label(pen, "İÇERİDEN", 42, OFF, RED, tohum("ic", s.i), x0 + 26 + lw / 2, y0 + 4, rot=-3.0,
                       shadow=(5, 6, 0, 0.9))
         if s.alinti and s.notu:
-            kaynak = K.fit("— " + s.notu, "courier", 28, nw - lw - 90)
-            pen.text(x1 - 30, y0 + 52, kaynak, "courier", 28, DGREY, anchor="rs")
+            kaynak = K.fit("— " + s.notu, "courier", 26, nw - lw - 90)
+            pen.text(x1 - 26, y0 + 52, kaynak, "courier", 26, DGREY, anchor="rs")
         govde = pen.done()
-        # satırlar (sözle eşli ya da sırayla yazılır)
         satirlar: list[YaziOge] = []
         wi = s.a
         y = y0 + ust_pay + size * 0.74
-        t = s.start + 0.42
+        t = s.start + OGE0 + 0.2
         for li, L in enumerate(lines):
             yz = Yazi(" ".join(L), size, MAVI, tohum("nt", s.i, li))
-            zaman = None
             if soz:
                 zaman = []
                 for j, w in enumerate(L):
                     wd = self.words[wi] if wi < len(self.words) else None
                     ta, tb = (wd.start - 0.04, max(wd.start + 0.08, wd.end - 0.04)) if wd else (s.end, s.end + 0.1)
+                    ta = max(ta, s.start + OGE0)
+                    tb = max(tb, ta + 0.05)
                     if j:
-                        zaman.append((ta - 0.02, ta))      # boşluk
+                        zaman.append((ta - 0.02, ta))
                     zaman += [(ta + (tb - ta) * c / max(1, len(w)), ta + (tb - ta) * (c + 1) / max(1, len(w)))
                               for c in range(len(w))]
                     wi += 1
@@ -1753,40 +2079,49 @@ class AjandaVideo:
         yl = son.y + size * 0.3
         cizgi = IzOge([s.i], Iz([el_cizgi(x0 + 30, yl + 2, x0 + 40 + son.yazi.w, yl - 2, tohum("nc", s.i), amp=1.2)],
                                 5.0, RED), t0=bitis, dur=0.3)
-        self.ogeler.append(NotOge([s.i], govde, (x0 - m, y0 - m), satirlar, [cizgi], s.start + 0.12))
-        self.olay[s.i] = s.start + 0.12
+        not_ = NotOge([s.i], govde, (x0 - m, y0 - m), satirlar, [cizgi], s.start + OGE0)
+        self.ogeler.append(not_)
+        self.olay[s.i] = s.start + OGE0
 
     # ------------------------------------------------------------ son sahne
-    def _cta_kur(self, s: Sahne) -> None:
-        """'Senin listen:' ve boş, elle çizilmiş üç satır; sayfada duran bir tükenmez kalem; 'Yorumlara yaz'
-        söylenince YORUMLARA YAZ ↓ etiketi. Soru söylenmeye başlayınca dış ses satırı gizlenir (başlık sorudur)."""
+    def _cta_kur(self, s: Sahne, ust_alt: float) -> None:
+        """'Senin listen:' kâğıdı (boş, elle çizilmiş üç satır), üstünde duran tükenmez kalem; 'Yorumlara yaz'
+        söylenince YORUMLARA YAZ ↓ etiketi. Soru söylenmeye başlayınca şeritteki dış ses gizlenir (başlık sorudur)."""
         gor = [s.i]
-        lines = self.icerik
-        L = len(lines)
-        t0 = s.start + 0.45
-        genis = not self.para and L >= 8                # gün akışının sayfası: liste iki satırda bir, büyük
-        adim = 2 if genis else 1
-        ts, ns, ks, cx1, kw = (56, 52, 38, 660, 380) if genis else (46, 42, 30, 540, 330)
-        y = lines[0] - 9
-        self.ogeler.append(YaziOge(gor, Yazi("Senin listen:", ts, MAVI, tohum("cta", s.i)), 92, y, t0=t0, dur=0.55))
-        t = t0 + 0.6
-        son_y = y
+        t0 = s.start + OGE0
+        etiket = yorum_etiketi(76, tohum("yy", s.i))
+        alt = self.alt_sinir(s, sag=False)
+        kw, kh = 560, 400
+        top = K.clamp(alt - kh - 26 - etiket.height, max(ust_alt, UST0) + 10, 10 ** 6)
+        kh = min(kh, alt - 26 - etiket.height - top)
+        x0 = X0 + 6
+        sp = K.Sprite(kw, kh, margin=30)
+        K.torn_paper(sp, 0, 0, kw, kh, POLAROID, tohum("ck", s.i), rim=None)
+        kagit = sp.render(0)
+        tp = K.Sprite(kw, kh, margin=30)
+        K.tape(tp, kw / 2, 4, 170, 40, -3, tohum("ct", s.i), alpha=205)
+        kagit.alpha_composite(tp.render(0))
+        kagit = K.add_shadow(kagit, 8, 10, 0, 0.85)
+        self.ogeler.append(KagitOge(gor, kagit, x0 - 30, top - 30, t0, z=22, yazi_mi=False))
+        adim = (kh - 120) / 3
+        y = top + 74
+        self.ogeler.append(YaziOge(gor, Yazi("Senin listen:", 52, MAVI, tohum("cta", s.i)), x0 + 34, y, t0=t0 + 0.2,
+                                   dur=0.55, z=24))
+        t = t0 + 0.8
+        ks = 38
         for j in range(3):
-            yy = lines[min(L - 1, (1 + j) * adim)] - 9
-            kutu = Iz([el_kutu(96 + ks / 2, yy - ks / 2, ks, tohum("ck", j))], 3.8)
-            self.ogeler.append(IzOge(gor, kutu, t0=t, dur=0.18))
-            nx = 96 + ks + 14
-            self.ogeler.append(YaziOge(gor, Yazi(f"{j + 1}.", ns, MAVI, tohum("cn", j)), nx, yy, t0=t + 0.16,
-                                       dur=0.15))
-            x1 = cx1 - 50 * (j % 2)
-            self.ogeler.append(IzOge(gor, Iz([el_cizgi(nx + ns * 1.3, yy + 2, x1, yy, tohum("cc", j), amp=1.0)],
-                                             3.6), t0=t + 0.3, dur=0.22))
+            yy = top + 120 + adim * (j + 0.7)
+            self.ogeler.append(IzOge(gor, Iz([el_kutu(x0 + 40 + ks / 2, yy - ks / 2, ks, tohum("ck", j))], 3.8),
+                                     t0=t, dur=0.18, z=24))
+            nx = x0 + 40 + ks + 14
+            self.ogeler.append(YaziOge(gor, Yazi(f"{j + 1}.", 46, MAVI, tohum("cn", j)), nx, yy, t0=t + 0.16,
+                                       dur=0.15, z=24))
+            x1 = x0 + kw - 50 - 50 * (j % 2)
+            self.ogeler.append(IzOge(gor, Iz([el_cizgi(nx + 62, yy + 2, x1, yy, tohum("cc", j), amp=1.0)], 3.6),
+                                     t0=t + 0.3, dur=0.22, z=24))
             t += 0.42
-            son_y = yy
-        im, _ = kalem(kw, 16)
-        ky = lines[min(L - 1, 2 * adim)] - im.height / 2 - (40 if genis else 20)
-        self.ogeler.append(ResimSabit(gor, im, X1 - 10 - im.width, ky, t0=t))
-        # 'Yorumlara yaz' söylendiği an (yoksa sahnenin %60'ı)
+        im, _ = kalem(380, 8)
+        self.ogeler.append(ResimSabit(gor, im, x0 + kw - im.width - 10, top + kh - im.height * 0.55, t0=t))
         t_y = None
         for wi in range(s.a, s.b - 1):
             if YORUM_RE.search(self.words[wi].text + " " + self.words[wi + 1].text):
@@ -1798,13 +2133,18 @@ class AjandaVideo:
             if K._bare(self.words[wi].text) == "sen" and K._bare(self.words[wi + 1].text).startswith("olsa"):
                 self.sessiz[s.i] = wi
                 break
-        im = yorum_etiketi(94 if genis else 62, tohum("yy", s.i))
-        alt = self.alt - 10
-        yb = min(son_y + (130 if genis else 56), alt - im.height)
-        self.ogeler.append(EtiketOge(gor, im, X0 - 2, yb, t_y, nabiz=True))
+        self.ogeler.append(KagitOge(gor, etiket, X0 - 6, alt - etiket.height, t_y, z=40, nabiz=True))
         self.olay[s.i] = t_y
 
     # ------------------------------------------------------------ dış ses
+    def serit(self) -> Image.Image:
+        if "serit" not in self._layers:
+            x0, y0, x1, y1 = SERIT
+            sp = K.Sprite(x1 - x0, y1 - y0, margin=20)
+            K.torn_paper(sp, 0, 0, x1 - x0, y1 - y0, POLAROID, 77, rim=INK, rim_w=3)
+            self._layers["serit"] = sp.render(0, shadow=(6, 8, 0, 0.85))
+        return self._layers["serit"]
+
     def anlati(self, img: Image.Image, si: int, t: float) -> None:
         s = self.p[si]
         b = self.sessiz.get(si, s.b)
@@ -1821,6 +2161,7 @@ class AjandaVideo:
         if si == len(self.p) - 1 and t > self.words[s.b - 1].end + 0.35:
             cur = b
         cur = min(max(cur, s.a), b)
+        K.put(img, self.serit(), SERIT[0] - 20, SERIT[1] - 20)
         sp.put(img, cur)
 
     # ------------------------------------------------------------ Makas
@@ -1835,7 +2176,7 @@ class AjandaVideo:
             mood = "happy"
         elif s.tur == "iceriden":
             mood = "thinking"
-        elif s.tur in ("sayac", "fis"):
+        elif s.tur in PARA_TURLERI:
             mood = "surprised" if (olay is not None and t >= olay + 0.3) else "thinking"
         else:
             mood = "normal"
@@ -1848,25 +2189,61 @@ class AjandaVideo:
         ox, oy = N.Mascot.origin(*MAKAS_XY, MAKAS_OLCEK)
         K.put(img, im, ox, oy + bob + hop)
 
-    # ------------------------------------------------------------ kesme
-    def kesik(self, si: int) -> tuple[Image.Image, tuple, tuple]:
-        """si sahnesine geçerken makasın kestiği eski katman: önceki sahnenin başlığı ve bu sahnede görünmeyecek
-        (kesilen) içeriği, son hâliyle. (katman, köken, kesme kutusu)"""
-        if si in self._cut:
-            return self._cut[si]
+    # ------------------------------------------------------------ geçiş
+    def eski_katman(self, si: int) -> tuple[Image.Image, tuple]:
+        """si sahnesine geçerken eski sahnenin baskısı, son hâliyle ve üstündeki öğelerle tek parça (katman, köken)."""
+        if si in self._eski:
+            return self._eski[si]
+        j = si - 1
         t = self.p[si].start - 1e-3
         lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        icerik = False
+        b = self.baskilar[j]
+        K.put(lay, b.katman(self.ilerleme_p(j, t)), BASKI[0] - Baski.M, BASKI[1] - Baski.M, clip=BASKI_CLIP)
         for o in self.ogeler:
-            if o.kes and o.gorunur(si - 1) and not o.gorunur(si):
+            if o.baski and o.gorunur(j):
                 o.draw(self, lay, t)
-                icerik = icerik or not isinstance(o, BaslikOge)
         self.kalem_ucu = None
-        y0, y1 = 236, int(self.alt + 12)
-        out = (lay.crop((0, y0, SAFE[2], y1)), (0, y0),
-               (X0, BAS_Y0, X1, self.alt) if icerik else (X0, BAS_Y0, BAS_X1, BAS_Y1))
-        self._cut = {si: out}
-        return out
+        bb = lay.getbbox() or (0, 0, W, H)
+        self._eski = {si: (lay.crop(bb), bb[:2])}
+        return self._eski[si]
+
+    def baski_ciz(self, img: Image.Image, si: int, t: float, lt: float) -> str | None:
+        """Baskıyı çizer; geçiş sürüyorsa eski baskıyla birlikte. Makas kesmesi sürüyorsa 'kesme' döner (eski parçalar
+        öğelerden sonra, en üstte kesilir)."""
+        b = self.baskilar[si]
+        p = self.ilerleme_p(si, t)
+        if si == 0 or lt >= self.gecis_suresi(si):
+            b.ciz(img, p)
+            return None
+        tur = self.gecis_turu(si)
+        eski, eo = self.eski_katman(si)
+        if tur == "kesme":
+            b.ciz(img, p)
+            return "kesme"
+        q = K.clamp(lt / GECIS)
+        o = (BASKI[0] - Baski.M, BASKI[1] - Baski.M)
+        if tur == "kayma":                          # eski sola kayıp döner, yeni sağdan dönerek gelir
+            e = K.ease_in_out(q)
+            r = eski.rotate(5 * e, resample=Image.BILINEAR, expand=True) if e > 0.01 else eski
+            K.put(img, r, eo[0] - 1180 * e - (r.width - eski.width) / 2, eo[1] + 40 * e - (r.height - eski.height) / 2,
+                  clip=BASKI_CLIP)
+            yeni = b.katman(p)
+            r = yeni.rotate(-4 * (1 - e), resample=Image.BILINEAR, expand=True) if e < 0.99 else yeni
+            K.put(img, r, o[0] + 1180 * (1 - e) - (r.width - yeni.width) / 2, o[1] - (r.height - yeni.height) / 2,
+                  clip=BASKI_CLIP)
+        else:                                       # bant: yeni baskı üst bandından menteşeli, aşağı açılır
+            K.put(img, eski, *eo, clip=BASKI_CLIP)
+            e = K.ease_out_back(q, 1.2) if q < 1 else 1.0
+            yeni = b.katman(p)
+            h = max(2, int(yeni.height * K.clamp(e, 0.02, 1.08)))
+            r = yeni.resize((yeni.width, h), Image.BILINEAR)
+            if e < 1:
+                golge = Image.new("RGBA", r.size, INK + (0,))
+                golge.putalpha(r.getchannel("A").point(lambda v: int(v * 0.35 * (1 - K.clamp(e)))))
+                r = r.copy()
+                r.alpha_composite(golge)
+            K.put(img, r, *o, clip=BASKI_CLIP)
+        return None
 
     # ------------------------------------------------------------ kare
     def scene_at(self, t: float) -> int:
@@ -1887,30 +2264,26 @@ class AjandaVideo:
             K.put(img, sc, x - 64 * 58 / 124, TARIH_CIZGI + 3 - sc.height / 2)
         else:
             K.put(img, rule, 0, oy)
-        gecis = si > 0 and lt < YENI0                  # makas eski başlığı kesip atana dek eski sahnenin durumu
-        if gecis:
-            self.ilerleme(img, si - 1, s.start - 1e-3)
-        else:
-            self.ilerleme(img, si, t)
+        gecis = si > 0 and lt < YENI0                  # eski başlık çekilip yenisi gelene dek eski sahnenin durumu
+        self.ilerleme(img, si - 1 if gecis else si, s.start - 1e-3 if gecis else t)
         self.kalem_ucu = None
+        kesme = self.baski_ciz(img, si, t, lt)
         for o in self.ogeler:
-            if o.gorunur(si):
+            if o.baski and o.gorunur(si):
                 o.draw(self, img, t)
-            elif o.cikis and si > 0 and o.gorunur(si - 1) and lt < o.cikis:
-                o.exit(self, img, t, lt / o.cikis)
-        if si > 0 and lt < CUT:
-            old, origin, box = self.kesik(si)
-            bot = int(self.alt + 12)
-            K.card_cut(img, old, lt, si, origin=origin, card=box, x_end=SAFE[2] - 66,
-                       clip_top=(0, 236, SAFE[2], bot), clips_bot=((0, 236, SAFE[2], bot),))
+        if kesme:
+            eski, eo = self.eski_katman(si)
+            K.card_cut(img, eski, lt, si, origin=eo, card=BASKI, x_end=SAFE[2] - 66, clip_top=BASKI_CLIP,
+                       clips_bot=(BASKI_CLIP,))
+        if gecis and lt < 0.2:
+            self.basliklar[si - 1].draw(img, t, cikis=lt / 0.2)
+        self.basliklar[si].draw(img, t)
         if gecis:
             self.anlati(img, si - 1, s.start - 1e-3)
         else:
             self.anlati(img, si, t)
         if self.hm is not None:
-            ust, deger, birim, tus, rozet = self.lcd_at(t)
-            lay = self.hm.layer(ust, deger, birim, tus, rozet)
-            K.put(img, lay, *HesapMakinesi.origin(lay))
+            self.makine(img, t)
         if self.kalem_ucu is not None:
             kalem_ucu(img, *self.kalem_ucu)
         self.makas(img, si, t, lt)
