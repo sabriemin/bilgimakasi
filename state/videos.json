@@ -247,16 +247,38 @@
     "category": "spor",
     "template": "retro",
     "created": "2026-11-04T21:15:25",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 67,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "-HoiZTjEtJs",
+        "url": "https://youtube.com/shorts/-HoiZTjEtJs",
+        "at": "2026-11-06T18:02:00+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18089748578295411",
+        "url": "https://www.instagram.com/reel/DfZ4PKbiTZu/",
+        "at": "2026-11-06T18:02:00+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7705072244954843188",
+        "draft": true,
+        "caption": "Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu\n\nLiverpool'un efsanevi stadı Anfield, 1892'ye kadar ezeli rakibi Everton'ın eviydi ve bir kira kavgası her şeyi değiştirdi. Sence futbol tarihinin en ironik ayrılığı bu mu?\n\n📷 Rodhullandemu (CC BY-SA 4.0), Arne Müseler (CC BY-SA 3.0 de), silver-novice ~ ne res adversae impedian (CC BY 2.0), Christine Matthews (CC BY-SA 2.0)\n\n#Anfield #Liverpool #Fenerbahçe #bilgi #keşfet",
+        "at": "2026-11-06T18:02:00+03:00"
+      }
+    },
     "publish_at": "2026-11-06T15:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-06T15:00:00+00:00",
       "instagram": "2026-11-06T15:00:00+00:00",
       "tiktok": "2026-11-06T15:00:00+00:00"
     },
-    "decided": "2026-11-05T00:16:37+03:00"
+    "decided": "2026-11-05T00:16:37+03:00",
+    "published": "2026-11-06T18:02:00+03:00",
+    "aciklama_message_id": 273
   },
   {
     "tag": "short-20261104-212900",
