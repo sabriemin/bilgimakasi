@@ -1125,5 +1125,18 @@
     },
     "decided": "2026-11-07T00:31:19+03:00",
     "otomatik_bolum": true
+  },
+  {
+    "tag": "short-20261106-213920",
+    "title": "Dune romanı konusu: Onu ilk basan yayınevi araba kılavuzu basıyordu",
+    "topic": "Frank Herbert'in Dune romanı: Arrakis'e taşınan genç Paul Atreides ve yirmiden fazla yayınevinin reddettiği romanı araba tamir kılavuzlarıyla tanınan Chilton'ın basması (gündem: Dune: Part Three 18 Aralık 2026'da vizyonda)",
+    "category": "dil ve kültür",
+    "template": "kitap",
+    "structure": "kitap",
+    "created": "2026-11-06T21:39:20",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 359,
+    "aciklama_message_id": 360,
+    "platforms": {}
   }
 ]
