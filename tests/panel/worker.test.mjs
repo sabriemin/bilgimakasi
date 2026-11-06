@@ -1185,7 +1185,7 @@ describe("yayın planı: /panel/api/plan", () => {
     assert.equal((await istek("/panel/api/plan", { cerez: await oturum(17 * 86400) })).cagrilar.length, 0);
   });
 
-  test("14 gün: bugün işaretli, haftada 18 saat, 10 Kasım akşamı kapalı, Karar Senin 16 Kasım'dan önce başlamadı", async () => {
+  test("14 gün: bugün işaretli, haftada 18 saat, 10 Kasım akşamı kapalı, Karar Senin yerine Mini Belgesel", async () => {
     saatIlerlet(30000);
     const { r } = await istek("/panel/api/plan", { cerez: await oturum(16 * 86400) });
     const d = await r.json();
@@ -1197,9 +1197,11 @@ describe("yayın planı: /panel/api/plan", () => {
     const genel = sal.ogeler.find((o) => o.saat === "18:00");
     assert.equal(genel.kapali, true);
     assert.match(genel.neden, /Atatürk/);
-    const kararlar = d.takvim.flatMap((g) => g.ogeler.map((o) => ({ ...o, tarih: g.tarih }))).filter((o) => o.seri === "karar");
-    assert.ok(kararlar.filter((o) => o.tarih < "2026-11-16").every((o) => o.baslamadi));
-    assert.ok(kararlar.filter((o) => o.tarih >= "2026-11-16").every((o) => !o.baslamadi));
+    // Karar Senin 6 Kasım'da takvimden çıktı; yerine Mini Belgesel (başlangıç tarihi yok)
+    const belgeseller = d.takvim.flatMap((g) => g.ogeler).filter((o) => o.seri === "belgesel");
+    assert.equal(belgeseller.length, 6);
+    assert.ok(belgeseller.every((o) => !o.baslamadi));
+    assert.ok(!d.takvim.flatMap((g) => g.ogeler).some((o) => o.seri === "karar"));
     // Perşembe 18:00 Genel: YouTube'u 18:00'de paylaşılacak video; plan dışı video kendi saatinde
     const per = d.takvim[0].ogeler;
     assert.equal(per.find((o) => o.plan && o.saat === "18:00").video.tag, "short-20261104-2023");
@@ -1212,7 +1214,7 @@ describe("yayın planı: /panel/api/plan", () => {
     const nasil = d.seriler.find((s) => s.key === "nasil");
     assert.deepEqual(nasil.saatler, ["Pzt 11:30", "Cum 11:30"]);
     assert.equal(nasil.sonraki.an, "2026-11-06T08:30:00.000Z");
-    assert.equal(d.seriler.find((s) => s.key === "karar").sonraki.tarih, "2026-11-16");
+    assert.ok(d.seriler.find((s) => s.key === "belgesel").sonraki);
     assert.equal(d.seriler.reduce((a, s) => a + s.haftalik, 0), 18);
   });
 
@@ -1250,15 +1252,15 @@ describe("yayın planı: /panel/api/plan", () => {
   test("depodaki plan: shortgen/takvim.py ile aynı 18 saat; seri tahmini takvim.seri_of gibi", () => {
     const p = PLAN();
     const kisa = p.hafta.map((g) => g.map((x) => `${x.saat} ${x.seri}`).join(", "));
-    assert.deepEqual(kisa, ["11:30 nasil, 18:00 genel, 21:00 karar", "13:00 efsane, 18:00 genel, 22:00 kitap",
-      "16:30 uretim, 18:00 genel, 21:00 karar", "18:00 genel, 19:30 olsaydin", "11:30 nasil, 18:00 genel, 21:00 karar",
+    assert.deepEqual(kisa, ["11:30 nasil, 18:00 genel, 21:00 belgesel", "13:00 efsane, 18:00 genel, 22:00 kitap",
+      "16:30 uretim, 18:00 genel, 21:00 belgesel", "18:00 genel, 19:30 olsaydin", "11:30 nasil, 18:00 genel, 21:00 belgesel",
       "13:00 efsane, 19:30 olsaydin", "16:30 uretim, 22:00 kitap"]);
     assert.equal(seriOf({ structure: "nasil", template: "kart" }, p), "nasil");
     assert.equal(seriOf({ template: "uretim" }, p), "uretim");
     assert.equal(seriOf({ template: "ajanda" }, p), "olsaydin");
     assert.equal(seriOf({ template: "kolaj", structure: "hikaye" }, p), "genel");
     assert.equal(seriOf({ template: "kart", structure: null }, p), "genel");
-    assert.deepEqual(p.seriler.map((s) => s.durum), ["yayında", "yayında", "yayında", "örnek bekliyor", "örnek bekliyor", "örnek bekliyor", "örnek bekliyor"]);
+    assert.deepEqual(p.seriler.map((s) => s.durum), ["yayında", "yayında", "yayında", "yayında", "kuruluyor", "yayında", "kuruluyor"]);
   });
 
   test("eşleşme: serinin videosu ±90 dk, başka serinin videosu yalnız tam saatte; paylaşılmış video da görünür", () => {

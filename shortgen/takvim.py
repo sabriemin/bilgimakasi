@@ -15,15 +15,15 @@ PLAN = Path(__file__).resolve().parent.parent / "state" / "yayin_plani.json"
 TR = dt.timezone(dt.timedelta(hours=3))
 
 SERI_ADI = {"genel": "Genel", "nasil": "Nasıl yapılır?", "uretim": "Nasıl Üretiliyor?", "olsaydin": "Ya Sen Olsaydın?",
-            "efsane": "Efsane mi, gerçek mi?", "kitap": "Bir Kitap Bir Dakika", "karar": "Karar Senin"}
+            "efsane": "Efsane mi, gerçek mi?", "kitap": "Bir Kitap Bir Dakika", "belgesel": "Mini Belgesel"}
 
 # Pazartesi = 0
 HAFTA: dict[int, list[tuple[str, str]]] = {
-    0: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "karar")],
+    0: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
     1: [("13:00", "efsane"), ("18:00", "genel"), ("22:00", "kitap")],
-    2: [("16:30", "uretim"), ("18:00", "genel"), ("21:00", "karar")],
+    2: [("16:30", "uretim"), ("18:00", "genel"), ("21:00", "belgesel")],
     3: [("18:00", "genel"), ("19:30", "olsaydin")],
-    4: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "karar")],
+    4: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
     5: [("13:00", "efsane"), ("19:30", "olsaydin")],
     6: [("16:30", "uretim"), ("22:00", "kitap")],
 }
@@ -32,10 +32,10 @@ HAFTA: dict[int, list[tuple[str, str]]] = {
 KAPALI = {"2026-11-10 18:00"}
 
 _SABLON_SERI = {"nasil": "nasil", "uretim": "uretim", "isemri": "uretim", "ajanda": "olsaydin", "dosya": "efsane",
-                "kitap": "kitap", "cizgi": "karar"}
+                "kitap": "kitap", "belgesel": "belgesel"}
 
 # Serinin ilk yayın günü (bu günden önceki saatleri kullanılmaz): Karar Senin 16 Kasım'da başlıyor
-BASLANGIC: dict[str, dt.date] = {"karar": dt.date(2026, 11, 16)}
+BASLANGIC: dict[str, dt.date] = {}
 
 _GUN = {"pazartesi": 0, "salı": 1, "çarşamba": 2, "perşembe": 3, "cuma": 4, "cumartesi": 5, "pazar": 6}
 

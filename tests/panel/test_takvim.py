@@ -35,18 +35,19 @@ class Takvim(unittest.TestCase):
         # state/yayin_plani.json okunuyor ve koddaki yedek sabitlerle aynı haftayı veriyor
         p = tk.plan_oku()
         self.assertIsNotNone(p)
-        yedek = {0: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "karar")],
+        yedek = {0: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
                  1: [("13:00", "efsane"), ("18:00", "genel"), ("22:00", "kitap")],
-                 2: [("16:30", "uretim"), ("18:00", "genel"), ("21:00", "karar")],
+                 2: [("16:30", "uretim"), ("18:00", "genel"), ("21:00", "belgesel")],
                  3: [("18:00", "genel"), ("19:30", "olsaydin")],
-                 4: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "karar")],
+                 4: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
                  5: [("13:00", "efsane"), ("19:30", "olsaydin")],
                  6: [("16:30", "uretim"), ("22:00", "kitap")]}
         self.assertEqual(p["hafta"], yedek)
         self.assertEqual(tk.HAFTA, yedek)
         self.assertIn("2026-11-10 18:00", p["kapali"])
-        self.assertEqual(set(p["seri_adi"]), {"genel", "nasil", "efsane", "uretim", "olsaydin", "kitap", "karar"})
-        self.assertEqual(p["sablon_seri"]["cizgi"], "karar")
+        self.assertEqual(set(p["seri_adi"]), {"genel", "nasil", "efsane", "uretim", "olsaydin", "kitap", "belgesel"})
+        self.assertEqual(p["sablon_seri"]["belgesel"], "belgesel")
+        self.assertNotIn("cizgi", p["sablon_seri"])
 
     def test_plan_dosyasi_yoksa_ya_da_bozuksa_none(self):
         import tempfile
@@ -56,10 +57,10 @@ class Takvim(unittest.TestCase):
             bozuk.write_text('{"hafta": [{"gun": "Pazartesi", "slotlar": [{"saat": "25:00", "seri": "x"}]}]}', encoding="utf-8")
             self.assertIsNone(tk.plan_oku(bozuk))
 
-    def test_karar_senin_ilk_bolumden_once_saat_vermez(self):
-        now = dt.datetime(2026, 11, 5, 23, 0, tzinfo=TR)
-        self.assertEqual(tk.sonraki_saat("karar", [], now), dt.datetime(2026, 11, 16, 21, 0, tzinfo=TR))
-
+    def test_belgesel_pzt_car_cum(self):
+        now = dt.datetime(2026, 11, 5, 23, 0, tzinfo=TR)  # Perşembe gecesi
+        self.assertEqual(tk.sonraki_saat("belgesel", [], now), dt.datetime(2026, 11, 6, 21, 0, tzinfo=TR))
+        self.assertIsNone(tk.sonraki_saat("karar", [], now), "Karar Senin takvimden çıktı")
 
 if __name__ == "__main__":
     unittest.main()
