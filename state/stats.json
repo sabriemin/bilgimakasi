@@ -1,50 +1,50 @@
 {
- "time": "2026-11-06T04:13+03:00",
+ "time": "2026-11-06T15:42+03:00",
  "platforms": {
   "youtube": {
    "account": {
     "followers": 899,
-    "views": 688,
-    "videos": 10
+    "views": 3235,
+    "videos": 11
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 108,
+     "views": 113,
      "likes": 0,
      "comments": 0
     },
     "short-20261104-1839": {
-     "views": 86,
+     "views": 87,
      "likes": 2,
      "comments": 0
     },
     "short-20261104-2023": {
-     "views": 304,
+     "views": 308,
      "likes": 2,
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 1105,
-     "likes": 18,
+     "views": 1108,
+     "likes": 20,
      "comments": 0
     },
     "short-20261104-2048": {
-     "views": 396,
+     "views": 433,
      "likes": 2,
      "comments": 0
     },
     "short-20261104-2100": {
-     "views": 1020,
+     "views": 1022,
      "likes": 14,
      "comments": 1
     },
     "short-20261104-212900": {
-     "views": 24,
+     "views": 29,
      "likes": 1,
      "comments": 0
     },
     "short-20261105-042947": {
-     "views": 261,
+     "views": 263,
      "likes": 1,
      "comments": 0
     },
@@ -54,89 +54,101 @@
      "comments": 0
     },
     "short-20261105-151659": {
-     "views": 691,
-     "likes": 6,
+     "views": 926,
+     "likes": 7,
      "comments": 0
+    },
+    "short-20261105-221556": {
+     "views": 184,
+     "likes": 2,
+     "comments": 1
     }
    }
   },
   "instagram": {
    "account": {
     "followers": 6,
-    "videos": 10,
-    "views": 11059,
-    "likes": 105,
+    "videos": 11,
+    "views": 12964,
+    "likes": 120,
     "comments": 4,
-    "saves": 17,
+    "saves": 20,
     "shares": 31
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 610,
+     "views": 611,
      "likes": 5,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 1200,
+     "views": 1201,
      "likes": 9,
      "comments": 0,
      "saves": 4,
      "shares": 2
     },
     "short-20261104-2023": {
-     "views": 1624,
+     "views": 1625,
      "likes": 6,
      "comments": 0,
      "saves": 1,
      "shares": 7
     },
     "short-20261104-2033": {
-     "views": 2242,
+     "views": 2246,
      "likes": 56,
      "comments": 4,
      "saves": 7,
      "shares": 19
     },
     "short-20261104-2048": {
-     "views": 143,
-     "likes": 1,
+     "views": 1829,
+     "likes": 14,
      "comments": 0,
-     "saves": 0,
+     "saves": 3,
      "shares": 0
     },
     "short-20261104-2100": {
-     "views": 1691,
-     "likes": 10,
+     "views": 1710,
+     "likes": 11,
      "comments": 0,
      "saves": 4,
      "shares": 2
     },
     "short-20261104-212900": {
-     "views": 363,
+     "views": 364,
      "likes": 3,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261105-042947": {
-     "views": 1759,
+     "views": 1768,
      "likes": 11,
      "comments": 0,
      "saves": 0,
      "shares": 1
     },
     "short-20261105-061537": {
-     "views": 1291,
+     "views": 1319,
      "likes": 2,
      "comments": 0,
      "saves": 1,
      "shares": 0
     },
     "short-20261105-151659": {
-     "views": 136,
+     "views": 139,
      "likes": 2,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261105-221556": {
+     "views": 152,
+     "likes": 1,
      "comments": 0,
      "saves": 0,
      "shares": 0
@@ -146,14 +158,21 @@
   "tiktok": {
    "account": {
     "followers": 17,
-    "likes": 273,
-    "videos": 10,
-    "views": 1927,
+    "likes": 275,
+    "videos": 11,
+    "views": 2020,
     "comments": 0,
     "shares": 1
    },
    "videos": {},
    "list": [
+    {
+     "title": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında P",
+     "views": 11,
+     "likes": 1,
+     "comments": 0,
+     "shares": 0
+    },
     {
      "title": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu Suza",
      "views": 0,
@@ -162,29 +181,29 @@
      "shares": 0
     },
     {
-     "title": "📢 Paylaşıldı GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım",
-     "views": 106,
-     "likes": 2,
+     "title": "GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurta",
+     "views": 149,
+     "likes": 3,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını",
-     "views": 102,
+     "views": 136,
      "likes": 1,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Galatasaray 2000 yılında önce Arsenal'i, 100 gün sonra da Re",
-     "views": 144,
+     "views": 145,
      "likes": 4,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Kredi kartını kim icat etti sorusunun ezber cevabı, Diners C",
-     "views": 125,
+     "views": 126,
      "likes": 0,
      "comments": 0,
      "shares": 0
@@ -198,14 +217,14 @@
     },
     {
      "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
-     "views": 331,
+     "views": 332,
      "likes": 11,
      "comments": 0,
      "shares": 1
     },
     {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 272,
+     "views": 273,
      "likes": 10,
      "comments": 0,
      "shares": 0
@@ -219,7 +238,7 @@
     },
     {
      "title": "1904 St. Louis Olimpiyatları'ndaki maratonda bir koşucu yolu",
-     "views": 498,
+     "views": 499,
      "likes": 6,
      "comments": 0,
      "shares": 0
@@ -237,6 +256,7 @@
   "short-20261104-212900": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi",
   "short-20261105-042947": "Ahtapotun üç kalbi ve mavi kanı: Yüzerken kalbi bile duruyor",
   "short-20261105-061537": "Kredi kartını kim icat etti? Ezberlenen hikâye uydurmaymış",
-  "short-20261105-151659": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını taşıyor"
+  "short-20261105-151659": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını taşıyor",
+  "short-20261105-221556": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında"
  }
 }
