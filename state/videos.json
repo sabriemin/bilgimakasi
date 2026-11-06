@@ -742,13 +742,20 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T04:20:45",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 258,
     "aciklama_message_id": 259,
     "seri_id": "202611060415-bir-kedinin-yasam-dongusu",
     "bolum": 1,
     "bolum_sayisi": 2,
-    "platforms": {}
+    "platforms": {},
+    "schedule": {
+      "youtube": "2026-11-06T18:00:00+00:00",
+      "instagram": "2026-11-06T18:00:00+00:00",
+      "tiktok": "2026-11-06T18:00:00+00:00"
+    },
+    "publish_at": "2026-11-06T18:00:00+00:00",
+    "decided": "2026-11-06T07:41:29+03:00"
   },
   {
     "tag": "short-20261106-042433",
@@ -758,12 +765,20 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T04:24:33",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 260,
     "aciklama_message_id": 261,
     "seri_id": "202611060415-bir-kedinin-yasam-dongusu",
     "bolum": 2,
     "bolum_sayisi": 2,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-09T18:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-09T18:00:00+00:00",
+      "instagram": "2026-11-09T18:00:00+00:00",
+      "tiktok": "2026-11-09T18:00:00+00:00"
+    },
+    "decided": "2026-11-06T07:41:30+03:00",
+    "otomatik_bolum": true
   }
 ]
