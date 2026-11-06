@@ -1047,9 +1047,16 @@
     "template": "gazete",
     "structure": "koken",
     "created": "2026-11-06T21:14:06",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 333,
     "aciklama_message_id": 334,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-12T10:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-12T10:00:00+00:00",
+      "instagram": "2026-11-12T10:00:00+00:00",
+      "tiktok": "2026-11-12T10:00:00+00:00"
+    },
+    "decided": "2026-11-07T00:15:30+03:00"
   }
 ]
