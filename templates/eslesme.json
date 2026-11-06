@@ -19,9 +19,9 @@
     "dil ve kültür": "gazete"
   },
   "yapi_sablon": {
-    "_aciklama": "Anlatım kalıbı -> şablon. Kategori eşleşmesinden ve kart kuralından önce gelir; elle seçilen şablon (--template) yine kazanır. 'nasil' (Nasıl yapılır?) kendi Adım kartları şablonunu (templates/nasil.json) kullanır. 'uretim' (Nasıl üretiliyor?) aşamalı Adım kartları şablonunu (templates/uretim.json), 'olsaydin' sayaç kartları ve hesap fişiyle kart şablonunu kullanır. 'efsane' (Efsane mi, Gerçek mi?) Dava Dosyası şablonunu (templates/dosya.json), 'kitap' (Bir Kitap Bir Dakika) kodla çizilen kitap kapağı ve sayfalarıyla kendi şablonunu (templates/kitap.json) kullanır; şablon dosyası yoksa bu satır yok sayılır.",
+    "_aciklama": "Anlatım kalıbı -> şablon. Kategori eşleşmesinden ve kart kuralından önce gelir; elle seçilen şablon (--template) yine kazanır. 'nasil' (Nasıl yapılır?) kendi Adım kartları şablonunu (templates/nasil.json) kullanır. 'uretim' (Nasıl üretiliyor?) İş Emri şablonunu (templates/isemri.json), 'olsaydin' sayaç kartları ve hesap fişiyle kart şablonunu kullanır. 'efsane' (Efsane mi, Gerçek mi?) Dava Dosyası şablonunu (templates/dosya.json), 'kitap' (Bir Kitap Bir Dakika) kodla çizilen kitap kapağı ve sayfalarıyla kendi şablonunu (templates/kitap.json) kullanır; şablon dosyası yoksa bu satır yok sayılır.",
     "nasil": "nasil",
-    "uretim": "uretim",
+    "uretim": "isemri",
     "olsaydin": "kart",
     "efsane": "dosya",
     "kitap": "kitap"

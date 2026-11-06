@@ -613,7 +613,7 @@ class Birlesim(unittest.TestCase):
         return script, template, cap
 
     def test_uretim_asama_varyanti(self):
-        for override in ("uretim", None):  # --template uretim ya da eslesme.json yapi_sablon
+        for override in ("uretim",):  # --template uretim (eslesme.json yapi_sablon artık isemri'yi seçer)
             script, template, cap = self.kur("uretim", override)
             self.assertEqual((script.structure, template), ("uretim", "uretim"))
             self.assertEqual(self.P.sablon_renderer(template), "nasil")

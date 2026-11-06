@@ -2285,7 +2285,7 @@ class OneriSerileri(Ortak):
         import shortgen.script as sc
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
         self.assertEqual(m["yapi_sablon"]["nasil"], "nasil")
-        self.assertEqual((m["yapi_sablon"]["uretim"], m["yapi_sablon"]["olsaydin"]), ("uretim", "kart"))
+        self.assertEqual((m["yapi_sablon"]["uretim"], m["yapi_sablon"]["olsaydin"]), ("isemri", "kart"))
         self.assertEqual(m["yapi_sablon"]["kitap"], "kitap")
         self.assertTrue(m["yapi_sablon"]["_aciklama"])
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
@@ -2580,7 +2580,7 @@ class NasilSablonu(unittest.TestCase):
         m = json.loads((REPO / "templates" / "eslesme.json").read_text(encoding="utf-8"))
         self.assertEqual(m["yapi_sablon"]["nasil"], "nasil", "Sabri onayladı: nasil kalıbı kendi şablonunda")
         self.assertEqual({k: v for k, v in m["yapi_sablon"].items() if not k.startswith("_")},
-                         {"nasil": "nasil", "uretim": "uretim", "olsaydin": "kart", "efsane": "dosya", "kitap": "kitap"})
+                         {"nasil": "nasil", "uretim": "isemri", "olsaydin": "kart", "efsane": "dosya", "kitap": "kitap"})
         s = self.cay
         self.assertEqual(pl.pick_template(s, "nasil"), "nasil")
         self.assertEqual(pl.pick_template(s), "nasil")
@@ -3265,7 +3265,7 @@ class YeniSeriler(unittest.TestCase):
         acik = bool((json.loads((kok / "templates" / "eslesme.json").read_text(encoding="utf-8")).get("kart") or {})
                     .get("acik"))
         for argv, beklenen in ((["--topic", "kalem", "--template", "uretim"], ("uretim", "uretim", True, acik)),
-                               (["--topic", "kalem", "--structure", "uretim"], ("uretim", "uretim", True, acik)),
+                               (["--topic", "kalem", "--structure", "uretim"], ("uretim", "isemri", True, acik)),
                                (["--topic", "kalem", "--template", "uretim", "--structure", "uretim"],
                                 ("uretim", "uretim", True, acik)),
                                (["--topic", "kuyumcu", "--structure", "olsaydin"], ("olsaydin", "kart", False, True)),
