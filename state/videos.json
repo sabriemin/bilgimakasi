@@ -1058,5 +1058,18 @@
       "tiktok": "2026-11-08T08:30:00+00:00"
     },
     "decided": "2026-11-07T00:15:30+03:00"
+  },
+  {
+    "tag": "short-20261106-211742",
+    "title": "Milli Piyango büyük ikramiye sana çıksaydı eline ne kalırdı?",
+    "topic": "Yılbaşı Milli Piyango büyük ikramiyesi sana çıksaydı: vergiden sonra eline kalan para, ikramiyenin alındığı tek şube, neye yettiği ve kazanma olasılığı",
+    "category": "ekonomi ve markalar",
+    "template": "ajanda",
+    "structure": "olsaydin",
+    "created": "2026-11-06T21:17:42",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 345,
+    "aciklama_message_id": 346,
+    "platforms": {}
   }
 ]
