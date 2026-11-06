@@ -52,12 +52,12 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ffmpeg libcairo2
       - run: pip install -r requirements.txt "rembg[cpu]"
       - uses: actions/setup-node@v4
-        if: github.event.inputs.senaryo == ''
         with:
           node-version: "22"
       - name: Claude Code kur
-        if: github.event.inputs.senaryo == ''
-        run: npm install -g @anthropic-ai/claude-code
+        # hazır senaryoda da gerekir: görsel denetimi ve yedek çizimler Claude ile yapılır. npm bazen takılıyor: 4 dk sınır, 3 deneme
+        timeout-minutes: 14
+        run: for i in 1 2 3; do timeout 240 npm install -g @anthropic-ai/claude-code && break; echo "npm yeniden deneniyor ($i)"; sleep 5; done; claude --version
       - name: Arka plan silme modelini önbellekle
         uses: actions/cache@v4
         with:
