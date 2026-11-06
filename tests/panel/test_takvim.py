@@ -11,8 +11,8 @@ TR = tk.TR
 
 
 class Takvim(unittest.TestCase):
-    def test_haftada_18_video(self):
-        self.assertEqual(sum(len(g) for g in tk.HAFTA.values()), 18)
+    def test_haftada_20_video(self):
+        self.assertEqual(sum(len(g) for g in tk.HAFTA.values()), 20)
 
     def test_seri_tahmini(self):
         self.assertEqual(tk.seri_of({"structure": "nasil", "template": "kart"}), "nasil")
@@ -38,14 +38,14 @@ class Takvim(unittest.TestCase):
         yedek = {0: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
                  1: [("13:00", "efsane"), ("18:00", "genel"), ("22:00", "kitap")],
                  2: [("16:30", "uretim"), ("18:00", "genel"), ("21:00", "belgesel")],
-                 3: [("18:00", "genel"), ("19:30", "olsaydin")],
+                 3: [("13:00", "koken"), ("18:00", "genel"), ("19:30", "olsaydin")],
                  4: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
                  5: [("13:00", "efsane"), ("19:30", "olsaydin")],
-                 6: [("16:30", "uretim"), ("22:00", "kitap")]}
+                 6: [("13:00", "koken"), ("16:30", "uretim"), ("22:00", "kitap")]}
         self.assertEqual(p["hafta"], yedek)
         self.assertEqual(tk.HAFTA, yedek)
         self.assertIn("2026-11-10 18:00", p["kapali"])
-        self.assertEqual(set(p["seri_adi"]), {"genel", "nasil", "efsane", "uretim", "olsaydin", "kitap", "belgesel"})
+        self.assertEqual(set(p["seri_adi"]), {"genel", "nasil", "efsane", "uretim", "olsaydin", "kitap", "belgesel", "koken"})
         self.assertEqual(p["sablon_seri"]["belgesel"], "belgesel")
         self.assertNotIn("cizgi", p["sablon_seri"])
 

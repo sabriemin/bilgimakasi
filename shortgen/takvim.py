@@ -1,4 +1,4 @@
-"""Haftalık yayın takvimi: her serinin sabit günü ve saati (Sabri 5 Kasım 2026'da onayladı, haftada 18 video).
+"""Haftalık yayın takvimi: her serinin sabit günü ve saati (Sabri 5 Kasım 2026'da onayladı, haftada 20 video; Kelimenin Kökeni 6 Kasım 2026).
 
 Onayda '🎯' seçilirse video kendi serisinin bir sonraki boş saatine konur ve üç platformda aynı anda paylaşılır.
 Saatler Türkiye saatidir.
@@ -15,17 +15,18 @@ PLAN = Path(__file__).resolve().parent.parent / "state" / "yayin_plani.json"
 TR = dt.timezone(dt.timedelta(hours=3))
 
 SERI_ADI = {"genel": "Genel", "nasil": "Nasıl yapılır?", "uretim": "Nasıl Üretiliyor?", "olsaydin": "Ya Sen Olsaydın?",
-            "efsane": "Efsane mi, gerçek mi?", "kitap": "Bir Kitap Bir Dakika", "belgesel": "Mini Belgesel"}
+            "efsane": "Efsane mi, gerçek mi?", "kitap": "Bir Kitap Bir Dakika", "belgesel": "Mini Belgesel",
+            "koken": "Kelimenin Kökeni"}
 
 # Pazartesi = 0
 HAFTA: dict[int, list[tuple[str, str]]] = {
     0: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
     1: [("13:00", "efsane"), ("18:00", "genel"), ("22:00", "kitap")],
     2: [("16:30", "uretim"), ("18:00", "genel"), ("21:00", "belgesel")],
-    3: [("18:00", "genel"), ("19:30", "olsaydin")],
+    3: [("13:00", "koken"), ("18:00", "genel"), ("19:30", "olsaydin")],
     4: [("11:30", "nasil"), ("18:00", "genel"), ("21:00", "belgesel")],
     5: [("13:00", "efsane"), ("19:30", "olsaydin")],
-    6: [("16:30", "uretim"), ("22:00", "kitap")],
+    6: [("13:00", "koken"), ("16:30", "uretim"), ("22:00", "kitap")],
 }
 
 # Kullanılmayacak saatler (TR, "YYYY-AA-GG SS:DD"): 10 Kasım akşamı Atatürk'ü anma günü

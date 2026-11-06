@@ -356,9 +356,23 @@ def _suggestion_topic(it: dict) -> str:
 
 def _produce_suggestion(it: dict) -> bool:
     """Öneriden üretim: serinin kalıbı (trends.SERI_KALIP: Efsane mi, gerçek mi? -> efsane, Nasıl yapılır? -> nasil,
-    Nasıl üretiliyor? -> uretim, Ya sen olsaydın? -> olsaydin, Bir Kitap Bir Dakika -> kitap, Mini Belgesel -> belgesel) üretimde sabitlenir."""
-    from .trends import kalip_of
-    return _dispatch(_suggestion_topic(it), kalip=kalip_of(it))
+    Nasıl üretiliyor? -> uretim, Ya sen olsaydın? -> olsaydin, Bir Kitap Bir Dakika -> kitap, Mini Belgesel -> belgesel,
+    Kelimenin kökeni -> koken) üretimde sabitlenir. Üretilen öneri listede işaretlenir (bir daha gösterilmez ve
+    üretilmez); serinin önerisi kalmadıysa yeni öneriler istenir."""
+    from .trends import kalip_of, uretildi_isaretle
+    ok = _dispatch(_suggestion_topic(it), kalip=kalip_of(it))
+    if ok:
+        try:
+            if uretildi_isaretle(str(it.get("topic") or "")):
+                _dispatch("", "oneri.yml")
+        except Exception as e:  # noqa: BLE001  işaret konamasa da üretim başladı
+            print("öneri işaretlenemedi:", e)
+    return ok
+
+
+def _zaten_uretildi(it: dict) -> bool:
+    from .trends import uretildi_mi
+    return uretildi_mi(it)
 
 
 def _seri_saati(tag: str, now: dt.datetime | None = None) -> dt.datetime | None:
@@ -512,6 +526,9 @@ def _handle_callback(cq: dict, chat: str) -> None:
                                      "ya da panelin Konular sekmesinden seç."})
             return
         it = items[i]
+        if _zaten_uretildi(it):
+            api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Bu öneri zaten üretildi."})
+            return
         ok = _produce_suggestion(it)
         api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Üretim başladı" if ok else "Başlatılamadı"})
         api("sendMessage", data={"chat_id": chat, "text": (f"🎬 Üretim başladı: {it['topic']}\nYaklaşık 15 dakikada gelir."
@@ -1056,6 +1073,9 @@ def process_panel(p: dict, chat: str) -> None:
             items, i = load_saved(), p.get("index")
             if type(i) is not int or not 0 <= i < len(items) or (p.get("topic") and items[i].get("topic") != p["topic"]):
                 say("⚠️ Öneri bulunamadı; öneri listesi değişmiş olabilir. Paneli yenileyip tekrar seç.")
+                return
+            if _zaten_uretildi(items[i]):
+                say("⚠️ Bu öneri zaten üretildi; listeden düşürüldü. Paneli yenile.")
                 return
             ok = _produce_suggestion(items[i])
             say(f"🎬 Üretim başladı: {items[i]['topic']}\nYaklaşık 15 dakikada gelir." if ok

@@ -652,14 +652,14 @@ class KitapIcerik(unittest.TestCase):
     # ------------------------------------------------------------ seri bağlantıları
     def test_trends_kitap_serisi(self):
         tr, sc = self.tr, self.sc
-        self.assertEqual(list(tr.SERILER)[-2:], ["kitap", "belgesel"])
+        self.assertEqual(list(tr.SERILER)[-3:], ["kitap", "belgesel", "koken"])
         self.assertEqual(tr.SERILER["kitap"], "Bir Kitap Bir Dakika")
         self.assertEqual(tr.SERI_IKON["kitap"], "📖")
         self.assertEqual(len(set(tr.SERI_IKON.values())), len(tr.SERI_IKON), "her serinin simgesi ayrı")
         self.assertEqual(tr.SERI_KALIP["kitap"], "kitap")
         self.assertEqual(tr.kalip_of({"seri": "kitap"}), "kitap")
         self.assertEqual(tr.Suggestion.model_json_schema()["properties"]["seri"]["enum"], list(tr.SERILER))
-        self.assertIn("SEKİZ SERİDE", tr.SYSTEM)
+        self.assertIn("DOKUZ SERİDE", tr.SYSTEM)
         self.assertNotIn("ALTI SERİDE", tr.SYSTEM)
         for parca in ("- kitap (Bir Kitap Bir Dakika):", "yıl dönümü", "uyarlaması", "edebiyat ödülü",
                       "okul okuma listeleri", "en az biri Türk edebiyatından", f"yazarı {sc.YIL - 71}", "kamu malıdır",

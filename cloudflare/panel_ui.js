@@ -691,7 +691,8 @@ export const ONERI_SERILERI = [["populer", "Popüler", "Popüler", "🔥"], ["ko
   ["uretim", "Üretim", "Nasıl üretiliyor?", "🏭"],
   ["olsaydin", "Olsaydın", "Ya sen olsaydın?", "💭"],
   ["kitap", "Kitap", "Bir Kitap Bir Dakika", "📖"],
-  ["belgesel", "Belgesel", "Mini Belgesel", "🎞"]];
+  ["belgesel", "Belgesel", "Mini Belgesel", "🎞"],
+  ["koken", "Köken", "Kelimenin kökeni", "🔤"]];
 const SERI_ADI = Object.fromEntries(ONERI_SERILERI.map(([k, , ad]) => [k, ad]));
 // Kalıbı sabit seriler (anahtarlar = trends.SERI_KALIP): üretimde serinin kalıbı sabitlenir (telegram_bot._produce_suggestion),
 // onay penceresinde söylenir; konu sırası yalnız konu metnini tutar, bu seriler sıradan kalıpsız üretilirdi: sıraya eklenmez
@@ -702,6 +703,7 @@ export const SERI_NOTU = {
   olsaydin: `“${SERI_ADI.olsaydin}” kalıbıyla, kart şablonunda sayaç ve hesap fişi kartlarıyla üretilir. `,
   kitap: `“${SERI_ADI.kitap}” kalıbıyla, kodla çizilen kitap kapağı ve sayfalarıyla üretilir; kamu malı olmayan kitapta alıntı yerine künye sayfası olur. `,
   belgesel: `“${SERI_ADI.belgesel}” kalıbıyla iki bölüm (her biri ~90 sn) üretilir; 1. bölüm onaylanınca 2. bölüm sıradaki belgesel saatine kendiliğinden zamanlanır. `,
+  koken: `“${SERI_ADI.koken}” kalıbıyla, gazete şablonunda üretilir. `,
 };
 
 // ------------------------------------------------------------------ tarayıcı uygulaması
@@ -2500,13 +2502,14 @@ function uygulama(AYAR) {
 
     // öneriler: seri seri; süzgeç yalnız görünümü değiştirir, düğmeler kayıttaki sırayı (index) gönderir
     const o = S.D.oneriler || {};
-    const items = o.items || [];
+    // üretilmiş öneri (uretildi) gösterilmez; düğmeler kayıttaki sırayı (index) göndermeye devam eder
+    const items = (o.items || []).map((it, i) => [it, i]).filter(([it]) => !it.uretildi);
     const tarih = ms(o.date ? o.date + "T12:00:00+03:00" : null);
     sol.append(bolumBasligi("oneriler", "Konu önerileri", items.length || null, tarih ? gunAdi(tarih) : null));
     if (!items.length) sol.append(h("div", { class: "bos" }, "Öneri yok. Aşağıdan yeni öneriler iste."));
     const siraKilit = S.bekleyen.has("queue_set"); // kayıt sürerken sıra değiştirilmez (kayıt görülünce açılır)
     const gruplar = ONERI_SERILERI.map(([k, kisa, ad, ik]) => ({ k, kisa, ad, ik,
-      liste: items.map((it, i) => [it, i]).filter(([it]) => oneriSerisi(it) === k) })).filter((g) => g.liste.length);
+      liste: items.filter(([it]) => oneriSerisi(it) === k) })).filter((g) => g.liste.length);
     const secili = gruplar.some((g) => g.k === S.oneriSeri) ? S.oneriSeri : "tumu";
     if (gruplar.length > 1) {
       // telefonda tek satırda yana kayar: kaydırma yeniden çizimde korunur, seçili seri görünür kalır (kaydirmaKoru)

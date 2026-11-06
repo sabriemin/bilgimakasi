@@ -13,7 +13,7 @@ on:
         description: "İsteğe bağlı şablon (ör. kolaj, gece, doga, kart, nasil, uretim, kitap, belgesel; nasil, uretim, kitap ve belgesel kendi kalıbıyla yazılır)"
         required: false
       kalip:
-        description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil, uretim, olsaydin, kitap, belgesel; belgesel iki bölümlük iki video üretir)"
+        description: "İsteğe bağlı sabit anlatım kalıbı (öneri serisinden: efsane, nasil, uretim, olsaydin, kitap, belgesel, koken; belgesel iki bölümlük iki video üretir)"
         required: false
       yeniden:
         description: "Var olan bir videonun etiketi (ör. short-20261105-213747) ya da depodaki hazır senaryo (demo/....json): senaryo yeniden yazılmadan, verilen şablonla çizilir"

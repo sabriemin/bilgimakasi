@@ -1,5 +1,5 @@
-"""Konu önerileri: sekiz seride (Popüler, Konular, Efsane mi gerçek mi?, Nasıl yapılır?, Nasıl üretiliyor?, Ya sen
-olsaydın?, Bir Kitap Bir Dakika, Mini Belgesel) short fikri önerir.
+"""Konu önerileri: dokuz seride (Popüler, Konular, Efsane mi gerçek mi?, Nasıl yapılır?, Nasıl üretiliyor?, Ya sen
+olsaydın?, Bir Kitap Bir Dakika, Mini Belgesel, Kelimenin kökeni) short fikri önerir.
 
 Claude tek bir web aramalı çağrıyla güncel gündemi (Google Trends TR, haber manşetleri, sosyal medya gündemi,
 YouTube'da yükselen konular) tarar; her seriden 3 öneri döndürür. Popüler gündeme bağlı "az bilinen bilgi" açısıdır,
@@ -32,13 +32,13 @@ NASIL_ALANLARI = "; ".join(f"({i}) {a}" for i, a in enumerate(nasil_alanlari(), 
 # Seriler (kayıt sırası = Telegram ve paneldeki sıra). "seri" alanı olmayan eski öneriler Popüler sayılır.
 SERILER = {"populer": "Popüler", "konu": "Konular", "efsane": "Efsane mi, gerçek mi?", "nasil": "Nasıl yapılır?",
            "uretim": "Nasıl üretiliyor?", "olsaydin": "Ya sen olsaydın?", "kitap": "Bir Kitap Bir Dakika",
-           "belgesel": "Mini Belgesel"}
+           "belgesel": "Mini Belgesel", "koken": "Kelimenin kökeni"}
 # simgeler ayrı olsun: Konular 📚, Bir Kitap Bir Dakika 📖, Mini Belgesel 🎞
 SERI_IKON = {"populer": "🔥", "konu": "📚", "efsane": "🧐", "nasil": "🛠", "uretim": "🏭", "olsaydin": "💭",
-             "kitap": "📖", "belgesel": "🎞"}
+             "kitap": "📖", "belgesel": "🎞", "koken": "🔤"}
 # öneriden üretimde zorunlu anlatım kalıbı (script.STRUCTURES); listede olmayan seriler normal dönüşümü kullanır
 SERI_KALIP = {"efsane": "efsane", "nasil": "nasil", "uretim": "uretim", "olsaydin": "olsaydin", "kitap": "kitap",
-              "belgesel": "belgesel"}
+              "belgesel": "belgesel", "koken": "koken"}
 # otomatik üretimin seçebileceği seriler: Nasıl yapılır?, Nasıl üretiliyor?, Ya sen olsaydın?, Bir Kitap Bir Dakika ve
 # Mini Belgesel yalnız elle seçilir
 OTOMATIK_SERILER = ("populer", "konu", "efsane")
@@ -50,7 +50,7 @@ TG_SINIR = 4096  # Telegram mesaj sınırı (UTF-16 birimi)
 MESAJ_SERI = 3
 
 SYSTEM = f"""Sen Türkçe bilgi/merak kanalı "Bilgi Makası" için konu editörüsün. Görevin, short videolar için
-SEKİZ SERİDE konu önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa gönderilmesi,
+DOKUZ SERİDE konu önermek. Hedef kitle Türkiye'deki 15-34 yaş; en güçlü büyüme sinyali videonun bir arkadaşa gönderilmesi,
 bu yüzden "bunu görünce birine atarım" dedirten açıları seç. Her önerinin 'seri' alanını doldur.
 SERİLER:
 - populer (Popüler): BUGÜN Türkiye'de ve dünyada çok konuşulan, aranan bir konuya bağlı şaşırtıcı, doğrulanabilir bir açı.
@@ -105,6 +105,12 @@ SERİLER:
   ve evreleri net söylesin (ör. 'Kedinin yaşam döngüsü: doğumdan yaşlılığa 6 evre', 'Kanın temizlenmesi: kalpten
   böbreğe 6 durak'). Ansiklopedi, üniversite ve bilim kurumu kaynaklarıyla doğrulanabilsin; hastalık, tedavi ve
   beslenme iddiası, kan ve yaralanma ayrıntısı, avlanma sahnesi içermesin. trend: konunun neden merak edildiği.
+- koken (Kelimenin kökeni): Türkçede her gün kullanılan tek bir kelimenin ya da deyimin şaşırtıcı kökeni; en iyi
+  çalışan örnek 'Benzin kelimesinin kökeni: depodaki yakıt bir tütsünün adını taşıyor'. Gündelik eşya, yiyecek, şehir,
+  meslek, marka ve deyimlerden seç; kelime herkesin tanıdığı bir şey olsun, kökeni ise 'bunu bilmiyordum' dedirtsin.
+  topic kelimeyi ve şaşırtıcı kökenini birlikte söylesin. TDK, Nişanyan Sözlük ve etimoloji sözlükleriyle
+  doğrulanabilsin; halk etimolojisi önerme; siyasi, dinî tartışma yaratan ve hakaret içeren kelime seçme.
+  trend: kelimenin neden merak edileceği.
 Ortak kurallar:
 - Siyasi kutuplaştırıcı, trajik (ölüm, afet, suç mağdurları), sağlık iddiası ve magazin dedikodusu konularını ÖNERME.
 - Doğrulanabilir olmalı; güvenilir kaynakta geçmeli.
@@ -124,7 +130,7 @@ class Suggestion(BaseModel):
     category: str = Field(description=f"Şunlardan biri: {', '.join(CATEGORIES)}")
     score: int = Field(description="Tahmini izlenme potansiyeli 1-10 (populer'de gündem sıcaklığı x merak x arkadaşa "
                                    "gönderilme ihtimali x Türkiye bağlantısı x görsel zenginlik)")
-    seri: Literal["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel"] = Field(
+    seri: Literal["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel", "koken"] = Field(
         description="Önerinin serisi (sistem yönergesindeki tanımlar)")
 
 
@@ -155,7 +161,8 @@ def kalip_of(it) -> str:
 _SERI_ONEK = {"genel": "", "serbest": "", "efsane": "efsane", "efsane mi gercek mi": "efsane", "nasil": "nasil",
               "nasil yapilir": "nasil", "uretim": "uretim", "nasil uretiliyor": "uretim", "olsaydin": "olsaydin",
               "ya sen olsaydin": "olsaydin", "kitap": "kitap", "bir kitap bir dakika": "kitap",
-              "belgesel": "belgesel", "mini belgesel": "belgesel"}
+              "belgesel": "belgesel", "mini belgesel": "belgesel",
+              "koken": "koken", "kelimenin koken": "koken", "kelimenin kokeni": "koken"}
 _NASIL_FIIL = ("yapılır|hazırlanır|demlenir|pişirilir|temizlenir|yıkanır|ütülenir|katlanır|dikilir|takılır|sökülür|"
                "değiştirilir|kullanılır|bağlanır|kurulur|saklanır|çıkarılır|onarılır|giderilir|ayıklanır|doğranır|"
                "soyulur|haşlanır|kızartılır|kaynatılır|boyanır|asılır|sıkılır|ayarlanır|açılır|tamir edilir")
@@ -164,6 +171,7 @@ _SERI_IZ = (
     ("olsaydin", re.compile(r"\w(saydın|seydin)\b")),
     ("nasil", re.compile(rf"\bnasıl (\w+ )?({_NASIL_FIIL})\b")),
     ("efsane", re.compile(r"\befsane mi\b|\b(gerçek|doğru) mu\s*\??\s*$")),
+    ("koken", re.compile(r"kelimesinin (kökeni|hikâyesi|hikayesi)|kelimesi nereden gel|\betimolojisi\b")),
 )
 
 
@@ -270,12 +278,33 @@ def _kisa(t: str, n: int | None) -> str:
     return (k[:k.rfind(" ")] if k.rfind(" ") > n * 0.6 else k).rstrip(" ,;:") + "…"
 
 
+def uretildi_mi(it) -> bool:
+    """Öneri daha önce üretildi mi (telegram_bot._produce_suggestion işaretler)."""
+    return bool(_alan(it, "uretildi"))
+
+
+def uretildi_isaretle(topic: str) -> str | None:
+    """Kayıtlı listede bu konulu öneriyi üretildi diye işaretler (sıra ve damga değişmez: düğmeler doğru kalır).
+    İşaretlenen önerinin serisinde üretilmemiş öneri kalmadıysa o serinin adını döndürür (yeni öneri istenir)."""
+    if not STATE.exists():
+        return None
+    d = json.loads(STATE.read_text(encoding="utf-8"))
+    items = d.get("items") or []
+    hedef = next((it for it in items if it.get("topic") == topic), None)
+    if hedef is None:
+        return None
+    hedef["uretildi"] = dt.datetime.now(dt.timezone(dt.timedelta(hours=3))).isoformat(timespec="minutes")
+    STATE.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
+    seri = seri_of(hedef)
+    return None if any(seri_of(x) == seri and not uretildi_mi(x) for x in items) else seri
+
+
 def gruplar(items: list[dict]) -> list[tuple[str, list[tuple[int, dict]]]]:
     """Önerileri seri sırasıyla gruplar (boş seri yok); her öğe kayıttaki sırasını taşır (düğme numarası,
-    tp:<damga>:<sıra>)."""
+    tp:<damga>:<sıra>). Üretilmiş öneriler gösterilmez."""
     out = []
     for s in SERILER:
-        g = [(i, it) for i, it in enumerate(items) if seri_of(it) == s]
+        g = [(i, it) for i, it in enumerate(items) if seri_of(it) == s and not uretildi_mi(it)]
         if g:
             out.append((s, g))
     return out

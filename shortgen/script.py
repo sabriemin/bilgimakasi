@@ -243,13 +243,21 @@ STRUCTURES = {
                  "diye kısa bir özetle açılır, kalan evreleri anlatır ve soru + 'Yorumlara yaz.' ile biter. Belgesel "
                  "tonu: sakin, merak uyandıran; her bilgi doğrulanmış. Şu alanlara giren konu ve açı YOK: "
                  + BELGESEL_YASAK + "."),
+    "koken": ("KELİMENİN KÖKENİ", "KELİMENİN KÖKENİ: Türkçede her gün kullanılan tek bir kelimenin (ya da deyimin) "
+              "şaşırtıcı kökeni. İlk sahne kanca: ilk cümlede kelimeyi ve kökeninin en şaşırtıcı yanını birlikte söyle "
+              "('Depodaki benzin, adını bir tütsüden alıyor.') → kelimenin geldiği dil ve ilk anlamı → dilden dile, "
+              "anlamdan anlama yolculuğu (2-3 durak, dönem ya da yılla) → Türkçeye ne zaman ve hangi yoldan girdiği → "
+              "son sahne: bugünkü anlamla bağı tek cümlede, ardından 'Başka hangi kelimenin kökenini merak ediyorsun? "
+              "Yorumlara yaz.' Köken güvenilir sözlüklerle (TDK, Nişanyan Sözlük, etimoloji sözlükleri) doğrulanabilsin; "
+              "halk etimolojisini gerçek gibi anlatma, köken tartışmalıysa 'bir görüşe göre' de. Siyasi ya da dinî "
+              "tartışma yaratan ve hakaret içeren kelime YOK."),
 }
 # Yalnız açıkça istendiğinde (öneriden üretim: --structure) kullanılan kalıplar: otomatik dönüşüme girmez.
 # kitap (Bir Kitap Bir Dakika) sahibi örnek videoyu onaylayana kadar yalnız elle seçilir.
 # belgesel (Mini Belgesel) iki bölümlük üretimdir: yalnız kendi serisinden (öneri, kalıp ya da şablon) gelir.
-FORCED_ONLY = {"nasil", "uretim", "olsaydin", "kitap", "belgesel"}
+FORCED_ONLY = {"nasil", "uretim", "olsaydin", "kitap", "belgesel", "koken"}
 # Senaryosu web aramasıyla araştırılarak yazılan kalıplar (süreç bilgileri, güncel rakamlar, kitabın künyesi)
-WEB_KALIPLARI = {"uretim", "olsaydin", "kitap", "belgesel"}
+WEB_KALIPLARI = {"uretim", "olsaydin", "kitap", "belgesel", "koken"}
 # Adım kartlarıyla (nasil kurgu modülü) çizilen kalıplar ve başlıktaki numaranın kelimesi ('ADIM 2' / 'AŞAMA 2')
 ADIM_KELIMESI = {"nasil": "ADIM", "uretim": "AŞAMA"}
 

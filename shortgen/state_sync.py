@@ -122,6 +122,17 @@ def _merge(path: str, base: str | None, remote: str | None, local: str | None) -
         for k, v in l.items():
             out[k] = round(r.get(k, 0.0) + v - b.get(k, 0.0), 4)
         return json.dumps(out, indent=2)
+    if path.endswith("oneriler.json"):  # aynı anda birkaç öneri üretilirse "uretildi" işaretleri birbirini silmesin
+        r, l = json.loads(remote), json.loads(local)
+        konu = lambda d: [x.get("topic") for x in d.get("items") or []]  # noqa: E731
+        if konu(r) != konu(l):  # bir taraf listeyi yeniledi: yeni liste kazanır
+            b = json.loads(base) if base else {}
+            return remote if konu(l) == konu(b) else local
+        isaret = {x["topic"]: x["uretildi"] for d in (r, l) for x in d.get("items") or [] if x.get("uretildi")}
+        for x in r.get("items") or []:
+            if x.get("topic") in isaret:
+                x["uretildi"] = isaret[x["topic"]]
+        return json.dumps(r, ensure_ascii=False, indent=2)
     if path.endswith("telegram_offset.json"):
         return local if json.loads(local).get("offset", 0) >= json.loads(remote).get("offset", 0) else remote
     if path.endswith(".jsonl"):

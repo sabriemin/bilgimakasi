@@ -2050,8 +2050,8 @@ class OneriSerileri(Ortak):
             self.assertEqual([tr.seri_of(x) for x in items], ["populer", "konu", "efsane"])
             self.assertIn("(toplam 9): populer, konu, efsane.", istekler[0])
             tr.suggest()  # /oneri: sekiz seri istenir ve liste kaydedilir
-            self.assertIn("(toplam 24): populer, konu, efsane, nasil, uretim, olsaydin, kitap, belgesel.", istekler[1])
-            self.assertEqual(len(json.loads(tr.STATE.read_text(encoding="utf-8"))["items"]), 8)
+            self.assertIn("(toplam 27): populer, konu, efsane, nasil, uretim, olsaydin, kitap, belgesel, koken.", istekler[1])
+            self.assertEqual(len(json.loads(tr.STATE.read_text(encoding="utf-8"))["items"]), 9)
             # otomatik üretim (best) yalnız OTOMATIK_SERILER'i ister; nasil, uretim, olsaydin, kitap hiç seçilmez
             self.assertEqual(tr.OTOMATIK_SERILER, ("populer", "konu", "efsane"))
             istekler.clear()
@@ -2130,7 +2130,7 @@ class OneriSerileri(Ortak):
     def test_nasil_dusumde_yok_ve_sabit_kalip_korunur(self):
         import shortgen.script as sc
         h = self.root / "history.jsonl"
-        self.assertEqual(sc.FORCED_ONLY, {"nasil", "uretim", "olsaydin", "kitap", "belgesel"})
+        self.assertEqual(sc.FORCED_ONLY, {"nasil", "uretim", "olsaydin", "kitap", "belgesel", "koken"})
         for son in ([], ["hikaye", "hikaye", "efsane"], ["nasil"], ["efsane", "neden", "sayac"], ["uretim"],
                     ["olsaydin", "uretim", "nasil"], ["kitap"], ["kitap", "hikaye", "kitap"]):
             h.write_text("".join(json.dumps({"topic": f"t{i}", "structure": k}) + "\n" for i, k in enumerate(son)),
@@ -2141,7 +2141,7 @@ class OneriSerileri(Ortak):
         h.write_text("", encoding="utf-8")
         self.assertEqual(sc.STRUCTURES["nasil"][0], "NASIL YAPILIR?")
         self.assertEqual(sc.STRUCTURES["uretim"][0], "NASIL ÜRETİLİYOR?")
-        self.assertEqual(list(sc.STRUCTURES)[-4:], ["uretim", "olsaydin", "kitap", "belgesel"])
+        self.assertEqual(list(sc.STRUCTURES)[-5:], ["uretim", "olsaydin", "kitap", "belgesel", "koken"])
         self.assertEqual(sc.STRUCTURES["kitap"][0], "BİR KİTAP BİR DAKİKA")
         self.assertLessEqual(set(self.tr.SERI_KALIP.values()), set(sc.STRUCTURES), "seri kalıpları geçerli kalıp")
         demo = sc.load_script(self.root / "demo" / "demo_script.json")
@@ -2200,7 +2200,7 @@ class OneriSerileri(Ortak):
         self.assertEqual(ikisi.structure, sc.allowed_structures(h)[0], "dönüşümdeki ilk kalıba döner")
         self.assertNotEqual(ikisi.structure, "nasil")
         self.assertIn(f'"structure": "{ikisi.structure}"', istekler[1], "doğrulayıcıya nasil gitmez")
-        self.assertIn("'nasil', 'uretim', 'olsaydin', 'kitap', 'belgesel' kalıplarına geçme", istekler[1])
+        self.assertIn("'nasil', 'uretim', 'olsaydin', 'kitap', 'belgesel', 'koken' kalıplarına geçme", istekler[1])
         self.assertEqual(yalniz_dogrulayici.structure, "neden", "doğrulayıcı nasil'e geçemez: üreticinin kalıbı kalır")
 
     def test_serbest_kalipta_uretim_ve_olsaydin_secilemez(self):
@@ -2581,7 +2581,7 @@ class NasilSablonu(unittest.TestCase):
         self.assertEqual(m["yapi_sablon"]["nasil"], "nasil", "Sabri onayladı: nasil kalıbı kendi şablonunda")
         self.assertEqual({k: v for k, v in m["yapi_sablon"].items() if not k.startswith("_")},
                          {"nasil": "nasil", "uretim": "isemri", "olsaydin": "ajanda", "efsane": "dosya", "kitap": "kitap",
-                          "belgesel": "belgesel"})
+                          "belgesel": "belgesel", "koken": "gazete"})
         s = self.cay
         self.assertEqual(pl.pick_template(s, "nasil"), "nasil")
         self.assertEqual(pl.pick_template(s), "nasil")
@@ -3352,14 +3352,14 @@ class YeniSeriler(unittest.TestCase):
         for yer in (sc.STRUCTURES["olsaydin"][1], sc.OLSAYDIN_RULES, self.tr.SYSTEM):
             self.assertIn(sc.OLSAYDIN_YASAK, yer)
         # öneri yönergesi: üç tür karışık, somut durum adıyla
-        for parca in ("SEKİZ SERİDE", "Kapalıçarşı'da bir kuyumcunun bir günü ve ayda kalan para",
+        for parca in ("DOKUZ SERİDE", "Kapalıçarşı'da bir kuyumcunun bir günü ve ayda kalan para",
                       "Piyango sana\n  çıksaydı", "Yurt\n  dışına taşınsaydın ilk ay kaç lira harcardın",
                       "Bir köyde yaşamaya başlasaydın", "türlere karışık", "somut durumu adıyla"):
             self.assertIn(parca, self.tr.SYSTEM)
         self.assertNotIn("DÖRT SERİDE", self.tr.SYSTEM)
         self.assertNotIn("ALTI SERİDE", self.tr.SYSTEM)
         self.assertEqual(list(self.tr.SERILER), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap",
-                                                 "belgesel"])
+                                                 "belgesel", "koken"])
         self.assertEqual((self.tr.SERI_IKON["uretim"], self.tr.SERI_IKON["olsaydin"]), ("🏭", "💭"))
         self.assertEqual(self.tr.SERILER["uretim"], "Nasıl üretiliyor?")
         self.assertEqual(self.tr.Suggestion.model_json_schema()["properties"]["seri"]["enum"], list(self.tr.SERILER))
@@ -3497,7 +3497,8 @@ class YeniSeriler(unittest.TestCase):
         P = self.P
         self.assertEqual(P.SERIES_TAGS, {"efsane": "EfsaneMiGerçekMi", "nasil": "NasılYapılır",
                                          "uretim": "NasılÜretiliyor", "olsaydin": "YaSenOlsaydın",
-                                         "kitap": "BirKitapBirDakika", "belgesel": "MiniBelgesel"})
+                                         "kitap": "BirKitapBirDakika", "belgesel": "MiniBelgesel",
+                                         "koken": "KelimeninKökeni"})
         self.assertEqual(set(P.SERIES_TAGS), set(self.tr.SERI_KALIP.values()))
         meta = {"structure": "uretim", "hashtags": ["kurşunkalem", "grafit", "fabrika", "kalem", "bilgimakasi"],
                 "description": "Bilgi.\n\n#kurşunkalem #grafit #fabrika #kalem #bilgimakasi"}

@@ -1,5 +1,5 @@
 {
- "_aciklama": "Haftalık yayın planı: tek kaynak. shortgen/takvim.py (Telegram'daki 🎯 düğmesi) ve panel (Takvim, Seriler) buradan okur. Saatler Türkiye saatidir (Europe/Istanbul, UTC+3). Haftada 18 video.",
+ "_aciklama": "Haftalık yayın planı: tek kaynak. shortgen/takvim.py (Telegram'daki 🎯 düğmesi) ve panel (Takvim, Seriler) buradan okur. Saatler Türkiye saatidir (Europe/Istanbul, UTC+3). Haftada 20 video.",
  "saat_dilimi": "Europe/Istanbul",
  "guncelleme": "2026-11-06",
  "seriler": [
@@ -65,6 +65,15 @@
    "yeni_sablon": "belgesel",
    "durum": "kuruluyor",
    "not": "İki bölümlük, bölüm başına ~1,5 dakikalık mini belgeseller (doğa, hayvanlar, insan bedeni). Bölüm 1 ve Bölüm 2 sırayla Pzt/Çar/Cum 21:00'de çıkar. Karar Senin 6 Kasım'da takvimden çıkarıldı."
+  },
+  {
+   "key": "koken",
+   "ad": "Kelimenin Kökeni",
+   "ikon": "🔤",
+   "sablon": "gazete",
+   "yeni_sablon": "",
+   "durum": "yayında",
+   "not": "6 Kasım analizi: Benzin videosu (gazete şablonu) futbol dışında YouTube'da 900'ü aşan tek video oldu. Gündelik kelimelerin şaşırtıcı kökeni."
   }
  ],
  "sablon_seri": {
@@ -132,6 +141,10 @@
    "gun": "Perşembe",
    "slotlar": [
     {
+     "saat": "13:00",
+     "seri": "koken"
+    },
+    {
      "saat": "18:00",
      "seri": "genel"
     },
@@ -174,6 +187,10 @@
   {
    "gun": "Pazar",
    "slotlar": [
+    {
+     "saat": "13:00",
+     "seri": "koken"
+    },
     {
      "saat": "16:30",
      "seri": "uretim"

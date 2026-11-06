@@ -1022,13 +1022,13 @@ let chromium = null;
 try {
   ({ chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT || "/opt/node22/lib/node_modules/playwright"));
 } catch { /* yok */ }
-const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel"]; // kalıbı sabit seriler: sıraya eklenmez
+const KALIPLI = ["efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel", "koken"]; // kalıbı sabit seriler: sıraya eklenmez
 
 describe("Konular: öneri serileri", () => {
   const DEPO = join(BURASI, "..", "..");
 
-  test("sekiz seri trends.SERILER sırasıyla; kalıbı sabit altı serinin notu var", () => {
-    assert.deepEqual(ONERI_SERILERI.map(([k]) => k), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel"]);
+  test("dokuz seri trends.SERILER sırasıyla; kalıbı sabit yedi serinin notu var", () => {
+    assert.deepEqual(ONERI_SERILERI.map(([k]) => k), ["populer", "konu", "efsane", "nasil", "uretim", "olsaydin", "kitap", "belgesel", "koken"]);
     assert.deepEqual(ONERI_SERILERI[6], ["kitap", "Kitap", "Bir Kitap Bir Dakika", "📖"]);
     assert.deepEqual(ONERI_SERILERI[7], ["belgesel", "Belgesel", "Mini Belgesel", "🎞"]);
     assert.equal(new Set(ONERI_SERILERI.map(([, , , ik]) => ik)).size, ONERI_SERILERI.length, "simgeler ayrı (Konular 📚)");
@@ -1278,18 +1278,18 @@ describe("yayın planı: /panel/api/plan", () => {
     assert.equal(p.istisnalar.length, 1);
   });
 
-  test("depodaki plan: shortgen/takvim.py ile aynı 18 saat; seri tahmini takvim.seri_of gibi", () => {
+  test("depodaki plan: shortgen/takvim.py ile aynı 20 saat; seri tahmini takvim.seri_of gibi", () => {
     const p = PLAN();
     const kisa = p.hafta.map((g) => g.map((x) => `${x.saat} ${x.seri}`).join(", "));
     assert.deepEqual(kisa, ["11:30 nasil, 18:00 genel, 21:00 belgesel", "13:00 efsane, 18:00 genel, 22:00 kitap",
-      "16:30 uretim, 18:00 genel, 21:00 belgesel", "18:00 genel, 19:30 olsaydin", "11:30 nasil, 18:00 genel, 21:00 belgesel",
-      "13:00 efsane, 19:30 olsaydin", "16:30 uretim, 22:00 kitap"]);
+      "16:30 uretim, 18:00 genel, 21:00 belgesel", "13:00 koken, 18:00 genel, 19:30 olsaydin", "11:30 nasil, 18:00 genel, 21:00 belgesel",
+      "13:00 efsane, 19:30 olsaydin", "13:00 koken, 16:30 uretim, 22:00 kitap"]);
     assert.equal(seriOf({ structure: "nasil", template: "kart" }, p), "nasil");
     assert.equal(seriOf({ template: "uretim" }, p), "uretim");
     assert.equal(seriOf({ template: "ajanda" }, p), "olsaydin");
     assert.equal(seriOf({ template: "kolaj", structure: "hikaye" }, p), "genel");
     assert.equal(seriOf({ template: "kart", structure: null }, p), "genel");
-    assert.deepEqual(p.seriler.map((s) => s.durum), ["yayında", "yayında", "yayında", "yayında", "yayında", "yayında", "kuruluyor"]);
+    assert.deepEqual(p.seriler.map((s) => s.durum), ["yayında", "yayında", "yayında", "yayında", "yayında", "yayında", "kuruluyor", "yayında"]);
   });
 
   test("eşleşme: serinin videosu ±90 dk, başka serinin videosu yalnız tam saatte; paylaşılmış video da görünür", () => {
