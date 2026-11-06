@@ -1010,5 +1010,18 @@
     "telegram_message_id": 326,
     "aciklama_message_id": 327,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261106-210951",
+    "title": "Siyah çay nasıl üretilir? Yeşil çayla aynı yapraktan çıkıyor",
+    "topic": "Siyah çay nasıl üretilir: Rize'de toplanan yaş yaprağın soldurulması, kıvrılması, oksidasyonla kararması ve fırında kurutulması; yeşil çayla siyah çayın aynı yapraktan çıkması",
+    "category": "bilim",
+    "template": "isemri",
+    "structure": "uretim",
+    "created": "2026-11-06T21:09:51",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 328,
+    "aciklama_message_id": 329,
+    "platforms": {}
   }
 ]
