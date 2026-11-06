@@ -1078,5 +1078,37 @@
       "tiktok": "2026-11-12T18:00:00+00:00"
     },
     "decided": "2026-11-07T00:18:48+03:00"
+  },
+  {
+    "tag": "short-20261106-212431",
+    "title": "Yapraklar neden sararır? Sarı yaz boyunca oradaydı | Bölüm 1/2",
+    "topic": "Sonbaharda bir yaprağın yolculuğu: klorofilin çekilmesi, sarı ve turuncu karotenoidlerin ortaya çıkması, kırmızı antosiyaninin üretilmesi, kopma tabakası ve yaprak dökümü",
+    "category": "doğa ve hayvanlar",
+    "template": "belgesel",
+    "structure": "belgesel",
+    "created": "2026-11-06T21:16:27",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 348,
+    "aciklama_message_id": 349,
+    "seri_id": "202611062108-sonbaharda-bir-yapragin-yolculug",
+    "bolum": 1,
+    "bolum_sayisi": 2,
+    "platforms": {}
+  },
+  {
+    "tag": "short-20261106-212432",
+    "title": "Yapraklar neden sararır? Sarı yaz boyunca oradaydı | Bölüm 2/2",
+    "topic": "Sonbaharda bir yaprağın yolculuğu: klorofilin çekilmesi, sarı ve turuncu karotenoidlerin ortaya çıkması, kırmızı antosiyaninin üretilmesi, kopma tabakası ve yaprak dökümü",
+    "category": "doğa ve hayvanlar",
+    "template": "belgesel",
+    "structure": "belgesel",
+    "created": "2026-11-06T21:24:31",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 350,
+    "aciklama_message_id": 351,
+    "seri_id": "202611062108-sonbaharda-bir-yapragin-yolculug",
+    "bolum": 2,
+    "bolum_sayisi": 2,
+    "platforms": {}
   }
 ]
