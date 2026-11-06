@@ -1067,9 +1067,16 @@
     "template": "ajanda",
     "structure": "olsaydin",
     "created": "2026-11-06T21:17:42",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 345,
     "aciklama_message_id": 346,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-12T18:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-12T18:00:00+00:00",
+      "instagram": "2026-11-12T18:00:00+00:00",
+      "tiktok": "2026-11-12T18:00:00+00:00"
+    },
+    "decided": "2026-11-07T00:18:48+03:00"
   }
 ]
