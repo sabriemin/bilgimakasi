@@ -567,17 +567,38 @@
     "category": "bilim",
     "template": "nasil",
     "created": "2026-11-05T22:15:56",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 191,
     "aciklama_message_id": 192,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "52Vau0oHr9E",
+        "url": "https://youtube.com/shorts/52Vau0oHr9E",
+        "at": "2026-11-06T11:32:08+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18502713514102892",
+        "url": "https://www.instagram.com/reel/DfZLr_DjpV9/",
+        "at": "2026-11-06T11:32:08+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7704973147301103636",
+        "draft": true,
+        "caption": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında\n\nPilav tane tane nasıl pişirilir? Sır, pirincin nişastasında ve dört basit adımda saklı. Sizin pilavınızın vazgeçilmez püf noktası ne?\n\n#pilavtanetanenasılpişirilir #pirinçpilavı #pilav #NasılYapılır #bilgimakasi",
+        "at": "2026-11-06T11:32:08+03:00"
+      }
+    },
     "publish_at": "2026-11-06T08:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-06T08:30:00+00:00",
       "instagram": "2026-11-06T08:30:00+00:00",
       "tiktok": "2026-11-06T08:30:00+00:00"
     },
-    "decided": "2026-11-06T01:18:23+03:00"
+    "decided": "2026-11-06T01:18:23+03:00",
+    "published": "2026-11-06T11:32:08+03:00"
   },
   {
     "tag": "short-20261105-230258",
