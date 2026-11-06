@@ -636,5 +636,18 @@
       "tiktok": "2026-11-08T19:00:00+00:00"
     },
     "decided": "2026-11-06T02:29:43+03:00"
+  },
+  {
+    "tag": "short-20261106-004840",
+    "title": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya",
+    "topic": "Nikola Tesla olsaydın: hayatının dönüm noktaları",
+    "category": "tarih",
+    "template": "ajanda",
+    "structure": "olsaydin",
+    "created": "2026-11-06T00:48:40",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 214,
+    "aciklama_message_id": 215,
+    "platforms": {}
   }
 ]
