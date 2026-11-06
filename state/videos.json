@@ -645,9 +645,10 @@
     "template": "ajanda",
     "structure": "olsaydin",
     "created": "2026-11-06T00:48:40",
-    "status": "onay_bekliyor",
+    "status": "reddedildi",
     "telegram_message_id": 214,
     "aciklama_message_id": 215,
-    "platforms": {}
+    "platforms": {},
+    "decided": "2026-11-06T03:58:35+03:00"
   }
 ]
