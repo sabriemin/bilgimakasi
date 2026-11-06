@@ -1013,10 +1013,11 @@
     "template": "gazete",
     "structure": "hikaye",
     "created": "2026-11-06T21:09:23",
-    "status": "onay_bekliyor",
+    "status": "reddedildi",
     "telegram_message_id": 326,
     "aciklama_message_id": 327,
-    "platforms": {}
+    "platforms": {},
+    "decided": "2026-11-07T00:12:22+03:00"
   },
   {
     "tag": "short-20261106-210951",
