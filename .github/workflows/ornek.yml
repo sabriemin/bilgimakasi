@@ -1,7 +1,9 @@
 name: Örnek video (yayınlanmaz)
 
-# Yeni bir şablonu göstermek için sesli örnek video üretir. Telegram'a yalnız göz atmak için gider:
-# onay düğmesi yoktur, videos.json'a / geçmişe kaydedilmez, hiçbir platformda paylaşılmaz, depoya hiçbir şey yazılmaz.
+# Yeni bir şablonu göstermek için sesli örnek video üretir. Telegram'a göz atmak için gider: onay düğmesi yoktur,
+# videos.json'a / geçmişe kaydedilmez, hiçbir platformda paylaşılmaz, depoya hiçbir şey yazılmaz.
+# Mesajdaki "📥 Yayına al" düğmesi ornek_yayinla.yml'i başlatır: bu işin çıktısı ("ornek-video", 14 gün) yeniden
+# çizilmeden normal onay akışına alınır (Mini Belgesel'de iki bölüm birlikte).
 on:
   workflow_dispatch:
     inputs:
@@ -89,7 +91,18 @@ jobs:
           echo "OUT_DIR=$(ls -td "$RUNNER_TEMP"/ornek/*/ | head -1)" >> "$GITHUB_ENV"
           # Mini Belgesel iki klasör (iki bölüm) üretir: hepsi uretilen.txt'de
           [ -s "$RUNNER_TEMP/ornek/uretilen.txt" ] || ls -td "$RUNNER_TEMP"/ornek/*/ | head -1 > "$RUNNER_TEMP/ornek/uretilen.txt"
+      - name: Telegram'a gönder (onaysız, kayıtsız; 📥 Yayına al düğmesiyle)
+        # iş çıktısından önce: mesaj numarası (telegram.json) çıktıya girer ki yayına alınınca düğme kaldırılabilsin
+        env:
+          ORNEK_RUN_ID: ${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOT: ${{ github.event.inputs.not }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, gönderim atlandı."; exit 0; fi
+          while read -r D; do python -m shortgen.telegram_bot preview "$D" "$NOT"; done < "$RUNNER_TEMP/ornek/uretilen.txt"
       - name: Videoyu iş çıktısı olarak sakla
+        # Telegram adımı düşse de video saklanır (indirip izlemek için)
         if: always() && env.OUT_DIR != ''
         uses: actions/upload-artifact@v4
         with:
@@ -98,12 +111,5 @@ jobs:
             ${{ runner.temp }}/ornek/*/video.mp4
             ${{ runner.temp }}/ornek/*/metadata.json
             ${{ runner.temp }}/ornek/*/script.json
+            ${{ runner.temp }}/ornek/*/telegram.json
           retention-days: 14
-      - name: Telegram'a gönder (onaysız, kayıtsız)
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          NOT: ${{ github.event.inputs.not }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "Telegram tanımlı değil, gönderim atlandı."; exit 0; fi
-          while read -r D; do python -m shortgen.telegram_bot preview "$D" "$NOT"; done < "$RUNNER_TEMP/ornek/uretilen.txt"

@@ -71,6 +71,30 @@ describe("Telegram webhook davranışı değişmedi", () => {
     }
   });
 
+  test("örnek mesajındaki 📥 Yayına al (oy): düğme kilitlenir, olay isle.yml'e gider; başkası basamaz", async () => {
+    const OY = { inline_keyboard: [[{ text: "📥 Yayına al", callback_data: "oy:42161338083" }]] };
+    const olay = (from) => ({ update_id: 9, callback_query: { id: "cq9", from: { id: from }, data: "oy:42161338083",
+      message: { message_id: 31, chat: { id: Number(ORTAM.CHAT_ID) }, reply_markup: OY } } });
+    const gizli = { "X-Telegram-Bot-Api-Secret-Token": ORTAM.WEBHOOK_SECRET };
+    const { r, cagrilar } = await istek("/", { method: "POST", basliklar: gizli, govde: olay(Number(ORTAM.CHAT_ID)) });
+    assert.equal(r.status, 200);
+    assert.deepEqual(cagrilar.map((c) => c.url.split("/").pop()),
+      ["answerCallbackQuery", "editMessageReplyMarkup", "dispatches"]);
+    assert.deepEqual(cagrilar[1].govde.reply_markup, { inline_keyboard: [[{ text: "⏳ İşleniyor…", callback_data: "noop:x" }]] });
+    const d = dispatchlar(cagrilar);
+    assert.equal(d.length, 1);
+    assert.equal(JSON.parse(d[0].govde.inputs.update).callback_query.data, "oy:42161338083");
+    // GitHub reddederse basılan klavye geri konur
+    const red = await istek("/", { method: "POST", basliklar: gizli, govde: olay(Number(ORTAM.CHAT_ID)),
+      fetchAyar: { dispatchDurum: 500 } });
+    const son = red.cagrilar.filter((c) => c.url.endsWith("/editMessageReplyMarkup")).pop();
+    assert.deepEqual(son.govde.reply_markup, OY);
+    // yalnız Sabri: başka kişinin basışı hiçbir yere gitmez
+    const yabanci = await istek("/", { method: "POST", basliklar: gizli, govde: olay(999) });
+    assert.equal(yabanci.r.status, 200);
+    assert.equal(yabanci.cagrilar.length, 0);
+  });
+
   test("/panel komutu: kapı tek kullanımlık giriş bağlantısını kendisi yollar, GitHub'a gitmez", async () => {
     for (const metin of ["/panel", "/panel@BilgiMakasiBot", "  /panel  "]) {
       const { r, cagrilar } = await istek("/", { method: "POST", basliklar: { "X-Telegram-Bot-Api-Secret-Token": ORTAM.WEBHOOK_SECRET },

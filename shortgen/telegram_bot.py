@@ -133,16 +133,27 @@ def notify(out_dir: Path, tag: str) -> None:
     save(VIDEOS, videos)
 
 
-def preview(out_dir: Path, label: str = "") -> None:
-    """Yalnız göz atmak için örnek video (ornek.yml): onay düğmesi yok, kayda (videos.json) geçmez, paylaşılmaz."""
+def preview(out_dir: Path, label: str = "", run_id: str = "") -> None:
+    """Yalnız göz atmak için örnek video (ornek.yml): onay düğmesi yok, kayda (videos.json) geçmez, paylaşılmaz.
+    run_id (ornek.yml çalışması) verilirse mesajda '📥 Yayına al' düğmesi olur (oy:<run_id>): basılınca
+    ornek_yayinla.yml iş çıktısındaki videoyu yeniden çizmeden normal onay akışına alır. Mesajın numarası klasöre
+    (telegram.json) yazılır ki yayına alınınca bu mesajın düğmesi kaldırılabilsin."""
     import html
+    from .ornek_yayin import ONIZLEME, dugme
     meta = json.loads((out_dir / "metadata.json").read_text(encoding="utf-8"))
+    run_id = run_id if run_id.isdigit() else ""
     # kesme kaçıştan ÖNCE: kaçışlı metni kesmek &amp; varlığını ya da </b> etiketini bölebilir (1024 sınırı içinde kalır)
     caption = (f"🧪 <b>Örnek video, paylaşılmayacak</b>\n{html.escape(label[:300])}\n\n"
-               f"<b>{html.escape(str(meta['title'])[:200])}</b>\nŞablon: {html.escape(str(meta.get('template', '-'))[:40])}")
+               f"<b>{html.escape(str(meta['title'])[:200])}</b>\nŞablon: {html.escape(str(meta.get('template', '-'))[:40])}"
+               + ("\n\nBeğendiysen 📥 Yayına al: yeniden çizilmeden onaya gelir." if run_id else ""))
+    data = {"chat_id": os.environ["TELEGRAM_CHAT_ID"], "caption": caption, "parse_mode": "HTML",
+            "supports_streaming": "true"}
+    if run_id:
+        data["reply_markup"] = _kb(dugme(run_id))
     with (out_dir / "video.mp4").open("rb") as f:
-        api("sendVideo", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "caption": caption,
-                               "parse_mode": "HTML", "supports_streaming": "true"}, files={"video": f})
+        msg = api("sendVideo", data=data, files={"video": f})
+    if run_id and isinstance(msg, dict) and msg.get("message_id"):
+        (out_dir / ONIZLEME).write_text(json.dumps({"message_id": msg["message_id"]}), encoding="utf-8")
 
 
 def _find(videos: list, tag: str) -> dict | None:
@@ -506,6 +517,9 @@ def _handle_callback(cq: dict, chat: str) -> None:
         api("sendMessage", data={"chat_id": chat, "text": (f"🎬 Üretim başladı: {it['topic']}\nYaklaşık 15 dakikada gelir."
                                                           if ok else "Üretim başlatılamadı.")})
         return
+    if action == "oy":  # örnek videoyu yayına al: oy:<ornek.yml çalışma numarası>
+        _ornek_yayinla(cq, chat, tag)
+        return
     videos = load(VIDEOS, [])
     v = _find(videos, tag)
     tries = 6 if os.environ.get("TG_WEBHOOK") == "1" else 1
@@ -560,6 +574,26 @@ def _handle_callback(cq: dict, chat: str) -> None:
                                                 "reply_markup": _kb([])})
     # "at" ve "no" notu zaten mesaj olarak gönderildi: baloncukta tekrar gösterme
     api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "" if action in ("at", "no") else note[:190]})
+
+
+def _ornek_yayinla(cq: dict, chat: str, run_id: str) -> None:
+    """Örnek mesajındaki '📥 Yayına al': ornek_yayinla.yml'i o çalışmanın numarasıyla başlatır. Release, kayıt ve onay
+    mesajını o iş yapar (Mini Belgesel'de iki bölüm birlikte). Basılan mesajın düğmesi iş bitene kadar 'yayına
+    alınıyor' olur; iş yarım kalırsa düğmeyi geri koyar."""
+    mid = cq["message"]["message_id"]
+    if not (run_id.isdigit() and len(run_id) <= 20):
+        _put_back(cq, chat)
+        api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Geçersiz örnek düğmesi."})
+        return
+    ok = _dispatch("", "ornek_yayinla.yml", inputs={"run_id": run_id, "mesaj": str(mid)})
+    if not ok:
+        _put_back(cq, chat)
+        api("answerCallbackQuery", data={"callback_query_id": cq["id"], "text": "Yayına alma başlatılamadı."})
+        return
+    api("editMessageReplyMarkup", data={"chat_id": chat, "message_id": mid,
+                                        "reply_markup": _kb([[("⏳ Yayına alınıyor…", "noop:x")]])})
+    api("answerCallbackQuery", data={"callback_query_id": cq["id"],
+                                     "text": "📥 Yayına alınıyor: onay mesajı 1-2 dakikada gelir."})
 
 
 COMMANDS = [
@@ -1412,8 +1446,8 @@ if __name__ == "__main__":
     elif sys.argv[1] == "durdu":  # uret.yml: üretim telif kuralı yüzünden durdu (pipeline'ın yazdığı kısa not)
         _durdu = Path(sys.argv[2]).read_text(encoding="utf-8").strip()
         api("sendMessage", data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": _cut16("⛔ " + _durdu, 4096)})
-    elif sys.argv[1] == "preview":  # ornek.yml: yalnız göz atmak için, onaysız ve kayıtsız
-        preview(Path(sys.argv[2]), " ".join(sys.argv[3:]))
+    elif sys.argv[1] == "preview":  # ornek.yml: onaysız ve kayıtsız; ORNEK_RUN_ID varsa '📥 Yayına al' düğmesiyle
+        preview(Path(sys.argv[2]), " ".join(sys.argv[3:]), os.environ.get("ORNEK_RUN_ID", ""))
     elif sys.argv[1] == "poll":
         poll()
     elif sys.argv[1] == "listen":

@@ -122,6 +122,10 @@ Telegram düğmeleri listenin damgasını taşır: liste yenilendikten sonra esk
 - `ornek.yml` (elle): yeni bir şablonu denemek için yayınlanmayan, kaydedilmeyen örnek video üretip Telegram'a gönderir.
   Girdiler: `senaryo` (ör. `demo/nasil/ornek_cay.json`) ya da `konu`, `sablon` (ör. `nasil`), isteğe bağlı `kalip`
   (yalnız konuyla üretimde anlatım kalıbını sabitler, ör. `nasil`; küçük harf dışı değer reddedilir) ve `not`.
+- `ornek_yayinla.yml`: örnek mesajındaki **📥 Yayına al** düğmesi (ya da elle
+  `gh workflow run ornek_yayinla.yml -f run_id=<ornek.yml çalışma numarası>`) örneği yeniden çizmeden normal onay
+  akışına alır: Release, `videos.json` kaydı (onay bekliyor) ve Onayla / Reddet mesajı. Mini Belgesel'in iki bölümü
+  birlikte alınır; 1. bölüm onaylanınca 2. bölüm kendiliğinden zamanlanır. Örnek iş çıktısı 14 gün saklanır.
 
 Depo ayarlarında **Settings → Secrets and variables → Actions** altına şu gizli anahtarları ekleyin:
 `CLAUDE_CODE_OAUTH_TOKEN`, `ELEVENLABS_API_KEY`, ``TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.

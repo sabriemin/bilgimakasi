@@ -97,7 +97,8 @@ async function handle(update, env, origin) {
     }
     // durum değiştiren adımlar: anında geri bildirim + çift basışı engelle + GitHub'a ilet
     await tg(env, "answerCallbackQuery", { callback_query_id: cq.id, text: "⏳ Alındı, işleniyor (30-60 sn)…" });
-    const lock = ["at", "no", "cancel", "cm", "rt"].includes(action); // tp (öneri listesi) kilitlenmez
+    // tp (öneri listesi) kilitlenmez; oy (örneği yayına al) kilitlenir: iki basış iki yayına alma işi başlatmasın
+    const lock = ["at", "no", "cancel", "cm", "rt", "oy"].includes(action);
     if (lock) {
       await tg(env, "editMessageReplyMarkup", { chat_id: chat, message_id: mid,
         reply_markup: kb([[["⏳ İşleniyor…", "noop:x"]]]) });
