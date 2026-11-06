@@ -1408,8 +1408,13 @@ function uygulama(AYAR) {
   const gunBasi = (n) => n * 86400000 - TR; // TR gününün (gunNo) 00:00'ı
   const gunDk = (z) => Math.floor((((z + TR) % 86400000) + 86400000) % 86400000 / 60000);
   const hmDk = (hm) => { const [a, b] = String(hm).split(":").map(Number); return a * 60 + b; };
-  const enIyi = (p) => ((((S.D && S.D.saatler) || {}).en_iyi || {})[p] || []).slice().sort();
-  const primeMi = (p, z) => enIyi(p).includes(saatDk(z));
+  // z verilirse o günün saatleri: Cumartesi ve Pazar hafta sonu listesi (yoksa hafta içi listesi)
+  const enIyi = (p, z) => {
+    const sa = (S.D && S.D.saatler) || {};
+    const hs = z != null && [0, 6].includes(parca(z).g) && ((sa.en_iyi_hafta_sonu || {})[p] || []).length;
+    return ((hs ? sa.en_iyi_hafta_sonu : sa.en_iyi || {})[p] || []).slice().sort();
+  };
+  const primeMi = (p, z) => enIyi(p, z).includes(saatDk(z));
   const enErken = () => Math.ceil((simdi() + EN_ERKEN_MS) / 60000) * 60000; // seçilebilecek en erken an
   const gunEtiketi = (i, n) => (i === 0 ? "Bugün" : i === 1 ? "Yarın" : GUN_KISA[parca(gunBasi(n) + 43200000).g]);
   const kisaGunSaat = (z) => (z == null ? "—" : `${kisaTarih(z)} ${saatDk(z)}`);
@@ -1482,7 +1487,7 @@ function uygulama(AYAR) {
     for (const [p] of PF) {
       let sec = null;
       for (let g = 0; g < GUN_SAYISI && sec == null; g++) {
-        for (const hm of enIyi(p)) {
+        for (const hm of enIyi(p, gunBasi(b + g) + 43200000)) {
           const t = gunBasi(b + g) + hmDk(hm) * 60000;
           if (t >= simdi() + 15 * 60e3 && dolu.every((c) => c.p !== p || Math.abs(c.z - t) >= ARALIK_MS)) { sec = t; break; }
         }
@@ -1655,7 +1660,7 @@ function uygulama(AYAR) {
     govde.append(saatler);
     for (const [p, ad] of PF) {
       const serit = h("div", { class: "tk-serit pf-" + p, "data-pf": p, role: "group", "aria-label": ad + " paylaşımları" });
-      for (const hm of enIyi(p)) {
+      for (const hm of enIyi(p, gunBasi(secili) + 43200000)) {
         const m = hmDk(hm);
         if (m >= bas) serit.append(h("div", { class: "tk-prime", style: `top:${m - bas}px`, title: "En iyi saat" }, h("span", null, "⭐ " + hm)));
       }
@@ -1862,7 +1867,8 @@ function uygulama(AYAR) {
     return h("div", { class: "saatler" }, bolumBasligi("saatler", "En iyi saatler", null, "⭐ prime time · 🎯 bunları kullanır"),
       h("div", { class: "saat-izgara" }, PF.map(([p, ad]) => h("div", { class: "saat-kart pf-" + p },
         h("span", { class: "pf-ikon", style: "color:var(--pf)" }, ikon(p)),
-        h("div", null, h("b", null, ad), h("span", null, enIyi(p).map((x) => "⭐ " + x).join(" · ")
+        h("div", null, h("b", null, ad), h("span", null, "Hafta içi " + enIyi(p).map((x) => "⭐ " + x).join(" · ")
+          + ((sa.en_iyi_hafta_sonu || {})[p] ? " · Hafta sonu " + sa.en_iyi_hafta_sonu[p].map((x) => "⭐ " + x).join(" · ") : "")
           + (((sa.ek || {})[p] || []).length ? ` (ek: ${sa.ek[p].join(", ")})` : "")))))),
       h("p", { class: "tarih", style: "margin:10px 2px 0" }, "🎯 seçeneği her platformu boş en iyi saatine koyar; o günün en iyi saatleri "
         + "doluysa ertesi güne geçer. Başka bir saat istersen takvimden seç." + (ek ? " Ek saat, günün asıl saatleri doluysa kullanılır." : "")
@@ -1890,7 +1896,7 @@ function uygulama(AYAR) {
     const dakika = h("select", { class: "alan", "data-odak": p + "-dk", onchange: (e) => ayarla(gunBasi(secGun) + (Math.floor(dk / 60) * 60 + Number(e.target.value)) * 60000) },
       dakikalar.sort((a, b) => a - b).map((m) => h("option", { value: m, selected: m === dk % 60,
         disabled: gunBasi(secGun) + (Math.floor(dk / 60) * 60 + m) * 60000 < min }, pad(m))));
-    const hizli = enIyi(p).map((hm) => {
+    const hizli = enIyi(p, gunBasi(secGun) + 43200000).map((hm) => {
       const t = gunBasi(secGun) + hmDk(hm) * 60000;
       return h("button", { type: "button", class: "prime", disabled: t < min, "aria-pressed": t === z ? "true" : "false", "data-odak": `${p}-p${hm}`,
         "aria-label": `En iyi saat ${hm}`, onclick: () => ayarla(t) }, "⭐ " + hm);

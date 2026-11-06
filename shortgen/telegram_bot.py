@@ -203,11 +203,24 @@ def _update(tag: str, **fields) -> dict | None:
 
 # Türkiye'deki kitle için platform başına önerilen paylaşım saatleri (TR saati).
 # BEST_TIMES ortam değişkeniyle (JSON) değiştirilebilir, ör. {"youtube": ["18:00"], ...}
-BEST_TIMES = json.loads(os.environ.get("BEST_TIMES") or json.dumps({
-    "youtube": ["18:00", "21:00"],
-    "instagram": ["12:30", "20:00"],
-    "tiktok": ["19:30", "22:00"],
+BEST_TIMES = json.loads(os.environ.get("BEST_TIMES") or json.dumps({  # hafta içi (Pazartesi-Cuma)
+    "youtube": ["12:00", "17:00", "21:00"],
+    "instagram": ["12:00", "17:00", "21:00"],
+    "tiktok": ["12:00", "17:00", "21:00"],
 }))
+# Hafta sonu (Cumartesi, Pazar) en iyi saatleri. 6 Kasım 2026: haftalık takvimle (state/yayin_plani.json) aynı saatler;
+# genel araştırmalar (Sprout Social, SocialPilot), Türkiye günlük ritmi ve Instagram'da iki Reel arası en az 4 saat.
+BEST_TIMES_HAFTASONU = json.loads(os.environ.get("BEST_TIMES_HAFTASONU") or json.dumps({
+    "youtube": ["11:30", "15:30", "20:30"],
+    "instagram": ["11:30", "15:30", "20:30"],
+    "tiktok": ["11:30", "15:30", "20:30"],
+}))
+
+
+def _en_iyi(p: str, gun: dt.date) -> list[str]:
+    """Platformun o günkü en iyi saatleri: Cumartesi ve Pazar hafta sonu listesi."""
+    return (BEST_TIMES_HAFTASONU.get(p) if gun.weekday() >= 5 else None) or BEST_TIMES.get(p, [])
+
 # Ek saatler: varsayılan olarak yok; otomatik seçim (🎯) yalnız asıl en iyi saatleri kullanır, o günün asıl saatleri
 # doluysa ertesi günün asıl saatine geçer. EXTRA_TIMES ortam değişkeniyle (JSON) ek saat tanımlanırsa asıl saatlerden
 # sonra o günün ek saati denenir. İstenen her saat panelin Takvim sekmesinden elle seçilebilir.
@@ -248,10 +261,11 @@ def _best_schedule(now: dt.datetime | None = None, exclude: str | None = None,
     now = now or dt.datetime.now(TR)
     busy = {} if ignore_busy else _busy(exclude)
     out = {}
-    for p, times in BEST_TIMES.items():
+    for p in BEST_TIMES:
         chosen = None
         for d in range(0, 14):
-            for hm in sorted(times) + sorted(EXTRA_TIMES.get(p, [])):  # önce asıl saatler, sonra ek saat
+            gun = now.date() + dt.timedelta(days=d)
+            for hm in sorted(_en_iyi(p, gun)) + sorted(EXTRA_TIMES.get(p, [])):  # önce asıl saatler, sonra ek saat
                 h, m = map(int, hm.split(":"))
                 t = dt.datetime.combine(now.date() + dt.timedelta(days=d), dt.time(h, m), TR)
                 if t <= now + dt.timedelta(minutes=15):
@@ -290,7 +304,8 @@ def _fmt(iso: str) -> str:
 
 def _is_prime(p: str, iso: str) -> bool:
     """Saat, platformun en iyi saatlerinden (prime time) biri mi (TR saatiyle)."""
-    return f"{dt.datetime.fromisoformat(iso).astimezone(TR):%H:%M}" in BEST_TIMES.get(p, [])
+    t = dt.datetime.fromisoformat(iso).astimezone(TR)
+    return f"{t:%H:%M}" in _en_iyi(p, t.date())
 
 
 def _sched_of(v: dict) -> dict[str, str]:
@@ -744,7 +759,10 @@ def process_update(u: dict, chat: str) -> None:
                 api("sendMessage", data={"chat_id": chat, "text": f"Rapor hazırlanamadı: {_err_text(e)}"})
         elif text.startswith("/saatler"):
             lines = ["Platformların en iyi paylaşım saatleri (Türkiye, ⭐ prime time):"]
-            lines += [f"• {PLATFORM_NAMES[p]}: {', '.join(t)}" + (f" (ek saat: {', '.join(EXTRA_TIMES[p])})"
+            def _gun(p, t):
+                hs = BEST_TIMES_HAFTASONU.get(p) or t
+                return ", ".join(t) if hs == t else f"hafta içi {', '.join(t)}; hafta sonu {', '.join(hs)}"
+            lines += [f"• {PLATFORM_NAMES[p]}: {_gun(p, t)}" + (f" (ek saat: {', '.join(EXTRA_TIMES[p])})"
                       if EXTRA_TIMES.get(p) else "") for p, t in BEST_TIMES.items()]
             if any(EXTRA_TIMES.get(p) for p in BEST_TIMES):
                 lines += ["Ek saat, günün kalan (en az 15 dk sonraki) asıl saatleri başka videolara ayrıldıysa kullanılır."]
@@ -1244,7 +1262,8 @@ def _window_poll_until(start: float, end: float) -> float:
     öncesine kadar verilebilir; o son anda işlenen bir onayın depoya yazılması da birkaç saniye sürebildiği için
     3 dk pay bırakılır (saat - 12 dk). Saat artık verilmediğinden fazladan bakmanın zararı yok."""
     s, e = dt.datetime.fromtimestamp(start, TR), dt.datetime.fromtimestamp(end, TR)
-    times = {hm for p in BEST_TIMES for hm in BEST_TIMES[p] + EXTRA_TIMES.get(p, [])} | {"12:00", "19:00"}
+    times = {hm for p in BEST_TIMES for hm in BEST_TIMES[p] + BEST_TIMES_HAFTASONU.get(p, []) + EXTRA_TIMES.get(p, [])} \
+        | {"12:00", "19:00"}
     cands = []
     for day in {s.date(), e.date()}:
         for hm in times:

@@ -346,7 +346,8 @@ describe("okuma API", () => {
     assert.equal(d.konu_sirasi.length, 3);
     assert.ok(d.stats_gecmis.length >= 10 && d.stats_gecmis[0].hesap.youtube);
     assert.ok(d.stats_gecmis.every((x) => Object.keys(x).join() === "time,hesap"), "video başına değerler tarayıcıya gitmez");
-    assert.deepEqual(d.saatler.en_iyi.youtube, ["18:00", "21:00"]);
+    assert.deepEqual(d.saatler.en_iyi.youtube, ["12:00", "17:00", "21:00"]);
+    assert.deepEqual(d.saatler.en_iyi_hafta_sonu.tiktok, ["11:30", "15:30", "20:30"]);
     assert.deepEqual(d.uyarilar, []);
     assert.equal(cagrilar.length, 5);
     for (const x of cagrilar) {
@@ -651,7 +652,7 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
     }
     // listede olmayan sıra (18 öneri: 0-17) ve sınır dışı/yanlış türde sıra reddedilir, hiçbir şey gönderilmez
     for (const [govde, durum, hata] of [[{ index: 18 }, 409, /değişmiş/], [{ index: 20 }, 409, /değişmiş/],
-      [{ index: 40 }, 400, /öneri/],
+      [{ index: 120 }, 400, /öneri/],
       [{ index: -1 }, 400, /öneri/], [{ index: 12.5 }, 400, /öneri/], [{ index: "olsaydin" }, 400, /öneri/],
       [{ index: 15, topic: items[16].topic }, 409, /değişmiş/]]) {
       const { r: r3, j, cagrilar } = await gonder({ action: "produce_suggestion", ...govde }, { fetchAyar: { kok } });
@@ -682,7 +683,7 @@ describe("işlemler (isle.yml'e panel olayı)", () => {
     // 21 öneri: 0-20 (20, eski 19 sınırına takılmaz); 21 listede yok, 40 sınır dışı,
     // başka önerinin konusuyla gelen sıra reddedilir
     for (const [govde, durum, hata] of [[{ index: 21 }, 409, /değişmiş/], [{ index: 39 }, 409, /değişmiş/],
-      [{ index: 40 }, 400, /öneri/], [{ index: 18, topic: items[19].topic }, 409, /değişmiş/]]) {
+      [{ index: 120 }, 400, /öneri/], [{ index: 18, topic: items[19].topic }, 409, /değişmiş/]]) {
       const { r: r3, j, cagrilar } = await gonder({ action: "produce_suggestion", ...govde }, { fetchAyar: { kok } });
       assert.equal(r3.status, durum, JSON.stringify(govde));
       assert.match(j.hata, hata);

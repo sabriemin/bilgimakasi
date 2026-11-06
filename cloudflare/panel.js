@@ -33,10 +33,12 @@ const VIDEO_ISLEM = {
 };
 const KILITLI = ["approve", "reject", "cancel", "retry", "schedule"]; // Telegram'daki düğme de "⏳ İşleniyor" olur
 const DIGER_ISLEM = ["produce_suggestion", "produce_topic", "refresh_suggestions", "report", "queue_set"];
-// öneri sırasının kaba üst sınırı: sekiz seri × 3 = 24 öneri (0-23); asıl denetim kayıtlı listedeki sıra ve konu
-const ONERI_SIRA_SINIRI = 40;
-// shortgen/telegram_bot.py BEST_TIMES / EXTRA_TIMES varsayılanlarıyla aynı (test karşılaştırır)
-export const BEST_TIMES = { youtube: ["18:00", "21:00"], instagram: ["12:30", "20:00"], tiktok: ["19:30", "22:00"] };
+// öneri sırasının kaba üst sınırı: dokuz seri × 10 = 90 öneri (0-89); asıl denetim kayıtlı listedeki sıra ve konu
+const ONERI_SIRA_SINIRI = 120;
+// shortgen/telegram_bot.py BEST_TIMES / BEST_TIMES_HAFTASONU / EXTRA_TIMES varsayılanlarıyla aynı (test karşılaştırır).
+// Haftalık takvimle (state/yayin_plani.json) aynı saatler: hafta içi ve hafta sonu ayrı.
+export const BEST_TIMES = { youtube: ["12:00", "17:00", "21:00"], instagram: ["12:00", "17:00", "21:00"], tiktok: ["12:00", "17:00", "21:00"] };
+export const BEST_TIMES_HAFTASONU = { youtube: ["11:30", "15:30", "20:30"], instagram: ["11:30", "15:30", "20:30"], tiktok: ["11:30", "15:30", "20:30"] };
 export const EXTRA_TIMES = { youtube: [], instagram: [], tiktok: [] };
 const PLATFORMLAR = ["youtube", "instagram", "tiktok"];
 const PF_ADI = { youtube: "YouTube", instagram: "Instagram", tiktok: "TikTok" };
@@ -412,7 +414,7 @@ async function durumOku(env) {
     konu_sirasi: Array.isArray(kuyruk) ? kuyruk : (kuyruk && Array.isArray(kuyruk.konular) ? kuyruk.konular : []),
     konu_sirasi_rid: (kuyruk && typeof kuyruk.rid === "string" && kuyruk.rid) || null, // son panel kaydı (izleme için)
     stats_gecmis: gecmis,
-    saatler: { en_iyi: BEST_TIMES, ek: EXTRA_TIMES },
+    saatler: { en_iyi: BEST_TIMES, en_iyi_hafta_sonu: BEST_TIMES_HAFTASONU, ek: EXTRA_TIMES },
     uyarilar,
   };
 }

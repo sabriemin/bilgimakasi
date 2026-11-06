@@ -136,12 +136,19 @@ def durum_sifirla(root: Path) -> None:
     (root / "history.jsonl").write_text("", encoding="utf-8")
 
 
+ESKI_EN_IYI = {"youtube": ["18:00", "21:00"], "instagram": ["12:30", "20:00"], "tiktok": ["19:30", "22:00"]}
+
+
 def kur(root: Path):
     """root/shortgen'i içe aktarır ve dış dünyayı taklit eder."""
     os.environ.update(TELEGRAM_BOT_TOKEN="123:TEST", TELEGRAM_CHAT_ID=CHAT, TG_WEBHOOK="1",
                       GITHUB_REPOSITORY="sabriemin/bilgimakasi", GITHUB_TOKEN="ghs_TEST", GITHUB_REF_NAME="main")
-    for k in ("BEST_TIMES", "EXTRA_TIMES", "MIN_GAP_HOURS"):
+    for k in ("BEST_TIMES", "BEST_TIMES_HAFTASONU", "EXTRA_TIMES", "MIN_GAP_HOURS"):
         os.environ.pop(k, None)
+    # senaryolar 6 Kasım'dan önceki en iyi saatlerle yazıldı (hafta sonu da aynı); yeni varsayılanlar
+    # KapiIleTutarlilik ve EnIyiSaatlerHaftaSonu'nda denetlenir
+    eski = json.dumps(ESKI_EN_IYI)
+    os.environ.update(BEST_TIMES=eski, BEST_TIMES_HAFTASONU=eski)
     sys.path.insert(0, str(root))
     for ad in [m for m in sys.modules if m == "shortgen" or m.startswith("shortgen.")]:
         del sys.modules[ad]
@@ -2458,7 +2465,7 @@ class KapiIleTutarlilik(unittest.TestCase):
 
     def setUp(self):
         sys.path.insert(0, str(REPO))
-        for k in ("BEST_TIMES", "EXTRA_TIMES"):
+        for k in ("BEST_TIMES", "BEST_TIMES_HAFTASONU", "EXTRA_TIMES"):
             os.environ.pop(k, None)
         for ad in [m for m in sys.modules if m == "shortgen" or m.startswith("shortgen.")]:
             del sys.modules[ad]
@@ -2474,8 +2481,22 @@ class KapiIleTutarlilik(unittest.TestCase):
         metin = re.sub(r",(\s*\})", r"\1", m.group(1))  # sondaki virgül
         return json.loads(re.sub(r"([{,]\s*)(\w+):", r'\1"\2":', metin))
 
+    def test_hafta_ici_ve_hafta_sonu_en_iyi_saatleri(self):
+        tb = self.tb
+        self.assertEqual(tb.BEST_TIMES["instagram"], ["12:00", "17:00", "21:00"])
+        self.assertEqual(tb.BEST_TIMES_HAFTASONU["tiktok"], ["11:30", "15:30", "20:30"])
+        cuma, cmt = _dt.date(2026, 11, 6), _dt.date(2026, 11, 7)
+        self.assertEqual(tb._en_iyi("youtube", cuma), ["12:00", "17:00", "21:00"])
+        self.assertEqual(tb._en_iyi("youtube", cmt), ["11:30", "15:30", "20:30"])
+        self.assertTrue(tb._is_prime("instagram", "2026-11-07T08:30:00+00:00"), "Cumartesi 11:30")
+        self.assertFalse(tb._is_prime("instagram", "2026-11-07T09:00:00+00:00"), "Cumartesi 12:00 hafta içi saati")
+        # Cuma 21:30'da 🎯: hafta içi saatler geçti, Cumartesi'nin ilk saati 11:30
+        now = _dt.datetime(2026, 11, 6, 21, 30, tzinfo=TRZ)
+        self.assertEqual(tb._best_schedule(now, ignore_busy=True)["youtube"], "2026-11-07T08:30:00+00:00")
+
     def test_saatler(self):
         self.assertEqual(self.js_nesne("BEST_TIMES"), self.tb.BEST_TIMES)
+        self.assertEqual(self.js_nesne("BEST_TIMES_HAFTASONU"), self.tb.BEST_TIMES_HAFTASONU)
         self.assertEqual(self.js_nesne("EXTRA_TIMES"), self.tb.EXTRA_TIMES)
 
     def test_islem_durumlari_ve_korunan_satirlar(self):
