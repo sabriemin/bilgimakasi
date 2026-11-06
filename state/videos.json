@@ -953,9 +953,16 @@
     "template": "nasil",
     "structure": "nasil",
     "created": "2026-11-06T21:04:18",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 316,
     "aciklama_message_id": 317,
-    "platforms": {}
+    "platforms": {},
+    "schedule": {
+      "youtube": "2026-11-08T18:00:00+00:00",
+      "instagram": "2026-11-08T17:00:00+00:00",
+      "tiktok": "2026-11-07T19:00:00+00:00"
+    },
+    "publish_at": "2026-11-07T19:00:00+00:00",
+    "decided": "2026-11-07T00:05:24+03:00"
   }
 ]
