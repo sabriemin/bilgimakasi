@@ -119,6 +119,30 @@ KITAP_KAPANIS = "Okudun mu? Yorumlara yaz."
 # Kitap kalıbında toplam dış ses (yavaş seslendirmede ~2,15 kelime/sn: 30-38 sn): hedef aralık ve üst sınır
 KITAP_KELIME = (125, 140)  # Sabri 6 Kas: kitap videoları 1 dakika
 KITAP_KELIME_UST = 145
+# Çizgi Roman ("Karar Senin") bölümü: genel 65-75 kelime / 9-12 sahne kuralı yerine ≈ 50-60 sn (paneller okunsun,
+# orta kısım sarkmasın); templates/cizgi.json "istem" aynı sayıları yazar (testler denetler)
+CIZGI_KELIME = (110, 130)
+CIZGI_KELIME_UST = 135
+CIZGI_SAHNE = (8, 10)
+CIZGI_UZUNLUK = (f"SÜRE (Çizgi Roman): toplam dış ses {CIZGI_KELIME[0]}-{CIZGI_KELIME[1]} kelime, {CIZGI_KELIME_UST}'i "
+                 f"GEÇMESİN (genel kuraldaki 65-75 kelime / 78 sınırı yerine); {CIZGI_SAHNE[0]}-{CIZGI_SAHNE[1]} sahne "
+                 "(9-12 yerine), her sahne bir çizgi roman sayfası. Tek satırlık ara sahne yazma: kısa iki olayı tek "
+                 "sahnede iki panelle (ust_alt, yan_yana, uc) anlat. Sahnelerin 'cizgi' alanını koru.")
+
+
+def cizgi_sorunlari(script) -> list[str]:
+    """Çizgi Roman senaryosunun uzunluk sorunları (tarifli sahne yoksa boş liste): sahne ve kelime sayısı."""
+    if not any(getattr(sc, "cizgi", None) is not None for sc in script.scenes):
+        return []
+    out = []
+    n = len(script.scenes)
+    if not CIZGI_SAHNE[0] <= n <= CIZGI_SAHNE[1]:
+        out.append(f"{n} sahne var ({CIZGI_SAHNE[0]}-{CIZGI_SAHNE[1]} olmalı)")
+    kelime = sum(len(sc.narration.split()) for sc in script.scenes)
+    if not CIZGI_KELIME[0] <= kelime <= CIZGI_KELIME_UST:
+        out.append(f"toplam dış ses {kelime} kelime ({CIZGI_KELIME[0]}-{CIZGI_KELIME[1]} olmalı, en çok "
+                   f"{CIZGI_KELIME_UST})")
+    return out
 
 
 def kamu_mali(yazar_olum: int | None, yil: int | None = None) -> bool:
@@ -192,7 +216,8 @@ ADIM_KELIMESI = {"nasil": "ADIM", "uretim": "AŞAMA"}
 class CizgiKarakter(BaseModel):
     """Panelde görünen bir karakter: görünüşü kimliğinden gelir (sabit), sahneye göre yalnız poz, ifade ve yer değişir."""
     id: Literal[tuple(CZ.KARAKTERLER)] = Field(description=(  # type: ignore[valid-type]
-        "Karakterin kimliği: kuzey, hasan, nermin, selim, orhan ya da golge (yüzü gölgede not alan adam)."))
+        "Karakterin kimliği: kuzey, hasan, nermin, selim, orhan, elif (kız kardeş), yilmaz (Yılmaz Hoca) ya da "
+        "golge (arkadan ışık alan siluet, not alan adam)."))
     poz: Literal[tuple(CZ.POZLAR)] = Field(default="dur", description=(  # type: ignore[valid-type]
         "Kollar ve eldeki nesne: dur, kartvizit, ag, top, sut (sol ayakla şut; boydan), sevinc, not, telefon, "
         "isaret, cene, kollar."))
@@ -258,6 +283,10 @@ class CizgiSahne(BaseModel):
         "Yalnız ilk sahne: üst bandın seri adı (boşsa 'KARAR SENİN'). Sonraki sahneler ilk sahneninkini kullanır."))
     bolum: int = Field(default=0, ge=0, description=(
         "Yalnız ilk sahne: bölüm numarası (üst bantta '1. BÖLÜM'). Sonraki sahneler ilk sahneninkini kullanır."))
+    manset: List[str] = Field(default_factory=list, description=(
+        "Panelin altında yırtık etiketlerle büyük yazılan vurucu cümle, 1-2 satır, satır başı en çok 14 karakter, BÜYÜK "
+        "HARF (ör. ['İKİ KULÜP,', 'TEK GECE!']). İlk sahnede kancanın manşeti (boşsa sahnenin headline'ı kullanılır); "
+        "sonra yalnız 1-2 dönüm anında; özel kartlı (gercek, ipucu, ab) sahnede ve çoğu sahnede boş."))
 
 
 class Scene(BaseModel):
@@ -1183,11 +1212,51 @@ def _claude_env() -> dict:
     return env
 
 
+# Çizgi Roman sahne tarifi (Scene.cizgi) şemaya yalnız Çizgi Roman senaryosu yazılırken ve denetlenirken girer: diğer
+# şablonların istemi büyümez, Claude onlarda cizgi doldurmaz (bkz. _cizgi_semasi, sema_json)
+_CIZGI_SEMA = False
+
+
+class _cizgi_semasi:
+    """with _cizgi_semasi(acik): bu blokta ask_claude'a giden şema Çizgi Roman alanlarını içerir (acik ise)."""
+
+    def __init__(self, acik: bool):
+        self.acik, self.eski = bool(acik), False
+
+    def __enter__(self):
+        global _CIZGI_SEMA
+        self.eski, _CIZGI_SEMA = _CIZGI_SEMA, self.acik
+        return self
+
+    def __exit__(self, *a):
+        global _CIZGI_SEMA
+        _CIZGI_SEMA = self.eski
+        return False
+
+
+def sema_json(schema: type[BaseModel]) -> dict:
+    """Claude'a giden JSON şeması. Çizgi Roman kapalıyken Scene.cizgi ve Cizgi* tanımları çıkarılır (şema bu alan
+    eklenmeden önceki hâliyle aynı kalır)."""
+    sema = schema.model_json_schema()
+    if _CIZGI_SEMA:
+        return sema
+    defs = sema.get("$defs") or {}
+    for ad in [k for k in defs if k.startswith("Cizgi")]:
+        del defs[ad]
+    for d in defs.values():
+        props = d.get("properties") or {}
+        if "cizgi" in props:
+            del props["cizgi"]
+            if "cizgi" in d.get("required", []):
+                d["required"].remove("cizgi")
+    return sema
+
+
 def ask_claude(prompt: str, schema: type[BaseModel], system: str, web: bool = False) -> BaseModel:
     """Claude Code'u başsız (-p) çalıştırır, şemaya uygun JSON döndürür."""
     left = _check_budget()
     cmd = ["claude", "-p", prompt, "--model", MODEL, "--output-format", "json",
-           "--json-schema", json.dumps(schema.model_json_schema()),
+           "--json-schema", json.dumps(sema_json(schema)),
            "--append-system-prompt", system, "--max-budget-usd", f"{min(left, 3.0):.2f}",
            "--effort", "high"]
     if web:
@@ -1276,13 +1345,15 @@ def structure_ask(keys: list[str]) -> str:
 def generate_script(history_file: Path, topic_hint: str | None = None,
                     templates: dict[str, str] | None = None, series_prev: dict | None = None,
                     allow_series: bool = False, kart: bool = False, structure: str | None = None,
-                    adim_kartlari: bool = False, sablon_kurali: str = "") -> ShortScript:
+                    adim_kartlari: bool = False, sablon_kurali: str = "", cizgi: bool = False) -> ShortScript:
     """structure verilirse (öneriden üretim) kalıp sabittir: yalnız o sunulur, doğrulama ve dil düzeltmesi değiştiremez.
     adim_kartlari: video "Adım kartları" (renderer'ı nasil olan şablon: nasil, uretim) ile çizilecek; nasil ve uretim
     kalıplarında ekran düzeni (NASIL_RULES / URETIM_RULES) yalnız o zaman istenir. Kart şablonuna giden nasil
     senaryoları genel sahne kurallarıyla yazılır. olsaydin kalıbı her zaman kendi düzenini (OLSAYDIN_RULES) ister;
     uretim ve olsaydin senaryoları yazılırken de web araması yapılır (WEB_KALIPLARI).
-    sablon_kurali: videoyu çizecek şablonun kendi ek yönergesi (şablon dosyasındaki "istem"; ör. ek sahne alanları)."""
+    sablon_kurali: videoyu çizecek şablonun kendi ek yönergesi (şablon dosyasındaki "istem"; ör. ek sahne alanları).
+    cizgi: video Çizgi Roman şablonuyla çizilecek: şemada sahne tarifi (Scene.cizgi) bulunur; değilse alan şemadan
+    çıkarılır ve yazar doldurduysa boşaltılır."""
     if structure and structure not in STRUCTURES:
         raise ValueError(f"bilinmeyen anlatım kalıbı: {structure}")
     used = _history(history_file)[-200:]
@@ -1311,8 +1382,12 @@ def generate_script(history_file: Path, topic_hint: str | None = None,
     if web:
         ask += arastirma_ask(yapi)
     kart = kart and yapi != "kitap"  # kitap videosu kendi şablonuyla çizilir: kart alanları istenmez
-    script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + kalip_kurallari(yapi, nasil)
-                        + ("\n" + sablon_kurali.strip() if sablon_kurali.strip() else ""), web=web)
+    with _cizgi_semasi(cizgi):
+        script = ask_claude(ask, ShortScript, SYSTEM + ("\n" + KART_RULES if kart else "") + kalip_kurallari(yapi, nasil)
+                            + ("\n" + sablon_kurali.strip() if sablon_kurali.strip() else ""), web=web)
+    if not cizgi:
+        for sc in script.scenes:
+            sc.cizgi = None
     forced = None if series_prev else structure
     serbest = not series_prev and not structure  # kalıp dönüşümden seçilir: FORCED_ONLY (nasil, uretim, olsaydin) seçilemez
     if forced:
@@ -1495,20 +1570,28 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         kalip += ("Sahnelerin 'delil' alanını koru; delil sahnesi çıkarır ya da birleştirirsen kalan delilleri 1'den "
                   "başlayarak sırayla yeniden numarala (aynı delili sürdüren sahneler aynı numara; kanca, compare, ara, "
                   "sonuç ve soru sahnelerinde 0). ")
+    cizgili = any(sc.cizgi is not None for sc in script.scenes)
+    if cizgili:  # Çizgi Roman: uzunluk kuralı genel 78 kelime sınırının yerine geçer
+        kalip += CIZGI_UZUNLUK + " "
+        sorun = cizgi_sorunlari(script)
+        if sorun:
+            kalip += "Çizgi Roman uzunluğunda bulunan sorunlar (düzelt): " + "; ".join(sorun) + ". "
     if duzen:
         kalip += (("Kanca, numaralı adım sahneleri (step 1, 2, 3...; başlığın ilk satırı 'ADIM n') ve son özet sahnesi "
                    "düzenini koru; adım çıkarırsan kalanları yeniden numarala. ") if yapi == "nasil" else
                   ("Kanca, numaralı aşama sahneleri (step 1, 2, 3...; başlığın ilk satırı 'AŞAMA n') ve son ölçek "
                    "sahnesi düzenini koru; aşama çıkarırsan kalanları yeniden numarala. "))
-    review = ask_claude(
-        "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
-        "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
-        "(özellikle toplam dış ses 78 kelimeyi geçmesin, ilk cümle en fazla 10 kelimelik doğrudan bir kanca olsun, search_phrase "
-        "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). " + kalip +
-        "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
-        "alanında döndür.\n\n" + _senaryo_json(script),
-        Review, SYSTEM + kalip_kurallari(yapi, duzen)
-        + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
+    sinir = (f"toplam dış ses {CIZGI_KELIME_UST} kelimeyi" if cizgili else "toplam dış ses 78 kelimeyi")
+    with _cizgi_semasi(cizgili):
+        review = ask_claude(
+            "Aşağıdaki senaryodaki her olgusal iddiayı (tarih, sayı, isim, alıntı) web aramasıyla kontrol et. "
+            "Yanlış ya da doğrulanamayan her bilgiyi düzelt veya çıkar, biçim kurallarına uymayan yerleri düzelt "
+            f"(özellikle {sinir} geçmesin, ilk cümle en fazla 10 kelimelik doğrudan bir kanca olsun, search_phrase "
+            "ilk iki cümlede ve başlıkta geçsin; boş sahne kalmasın). " + kalip +
+            "Kullandığın güvenilir kaynakları 'sources' alanına URL olarak yaz. Düzeltilmiş tam senaryoyu 'fixed' "
+            "alanında döndür.\n\n" + _senaryo_json(script),
+            Review, SYSTEM + kalip_kurallari(yapi, duzen) + ("\n" + CIZGI_UZUNLUK if cizgili else "")
+            + "\n\nŞimdi editör ve doğruluk kontrolcüsüsün.", web=True)
     if review.problems:
         print("Doğrulama notları:", *review.problems, sep="\n - ")
     if keep_structure:
@@ -1521,9 +1604,29 @@ def verify_script(script: ShortScript, keep_structure: bool = False, adim_kartla
         delil_geri_yukle(script, review.fixed)
     if review.fixed.structure == "kitap":
         _kitap_alanlarini_tamamla(script, review.fixed)
-    if any(sc.cizgi is not None for sc in script.scenes):  # Çizgi Roman: paneller ve balonlar yazarın tarifinde kalır
+    if cizgili:  # Çizgi Roman: paneller ve balonlar yazarın tarifinde kalır
         cizgi_geri_yukle(script, review.fixed)
+    if yapi == "uretim":  # İş Emri: son sahnenin üretim sayacı kartı (counter) doğrulamada düşmesin
+        sayac_karti_geri_yukle(script, review.fixed)
     return normalize_kitap(normalize_nasil(review.fixed))
+
+
+def sayac_karti_geri_yukle(eski: ShortScript, yeni: ShortScript) -> None:
+    """Yazarın son sahnesi sayaç kartıysa (card 'counter', card_value '14 MİLYAR', card_label 'KALEM / YIL') ve
+    doğrulayıcı bu kartı düşürdüyse kart alanları geri konur; yalnız kartın sayısı doğrulanmış son sahnenin dış sesinde
+    hâlâ geçiyorsa (doğrulayıcı sayıyı düzelttiyse eski kart geri gelmez). İş Emri şablonunun SEN İZLERKEN ÜRETİLEN
+    sayacı ve büyük sayısı bu karttan hesaplanır."""
+    if not eski.scenes or not yeni.scenes:
+        return
+    a, b = eski.scenes[-1], yeni.scenes[-1]
+    if a.card != "counter" or not a.card_value.strip() or (b.card == "counter" and b.card_value.strip()):
+        return
+    sayilar = _sayilar(a.card_value)
+    metin = _sayilar(b.narration)
+    if not sayilar or not all(x in metin for x in sayilar):
+        return
+    b.card, b.card_value, b.card_label = a.card, a.card_value, a.card_label
+    b.card_note = b.card_note or a.card_note
 
 
 # Kitap kalıbının sahne alanları: diğer kalıpların doğrulama ve dil düzeltmesi istemlerine yazılmaz
@@ -1652,6 +1755,12 @@ korur). Bu videoda toplam dış ses {KITAP_KELIME[0]}-{KITAP_KELIME[1]} kelime, 
 kendi ilk cümlesiyse 16 kelimeye kadar olabilir. Kitabın sonunu ya da sürprizini ele veren bilgi ekleme. Tırnak içinde
 alıntı ekleme; aktarmalar dolaylı kalsın. Yılları ve sayıları değiştirme. Son cümle '{KITAP_KAPANIS}' olarak kalsın."""
 
+# Yalnız Çizgi Roman senaryosunda (sahnelerde cizgi tarifi varsa) editöre eklenir.
+EDITOR_CIZGI = f"""
+ÇİZGİ ROMAN (Karar Senin): bu bölümde toplam dış ses {CIZGI_KELIME[0]}-{CIZGI_KELIME[1]} kelime, {CIZGI_KELIME_UST}'i geçmesin
+(65-75 kelime kuralı yerine). Tırnak içindeki sözler konuşma balonuna yazılır: tırnakları ve içindeki sözü koru. Son sahnedeki
+'A: ...' ve 'B: ...' seçeneklerini ve 'Yorumlara A ya da B yaz.' çağrısını değiştirme."""
+
 # Dil düzeltmesinde rakamları korunan kalıplar: editör bir sahnenin sayılarını değiştirirse o sahnenin metni geri alınır.
 SAYI_KORUNAN = {"uretim", "olsaydin", "kitap"}
 
@@ -1672,9 +1781,12 @@ def polish_script(script: ShortScript, adim_kartlari: bool = False) -> ShortScri
     olsaydin ve kitap kalıplarında sayıları değişen sahnenin metni editörden önceki hâline döner."""
     yapi = script.structure
     duzen = adim_kartlari and yapi in ADIM_KELIMESI
+    cizgili = any(sc.cizgi is not None for sc in script.scenes)
     ek = ((EDITOR_NASIL if duzen else "") + (EDITOR_URETIM if yapi == "uretim" else "")
-          + (EDITOR_OLSAYDIN if yapi == "olsaydin" else "") + (EDITOR_KITAP if yapi == "kitap" else ""))
-    res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + _senaryo_json(script), Polished, EDITOR + ek)
+          + (EDITOR_OLSAYDIN if yapi == "olsaydin" else "") + (EDITOR_KITAP if yapi == "kitap" else "")
+          + (EDITOR_CIZGI if cizgili else ""))
+    with _cizgi_semasi(cizgili):
+        res = ask_claude("Bu senaryonun dış sesini düzelt:\n\n" + _senaryo_json(script), Polished, EDITOR + ek)
     if res.notes:
         print("Dil düzeltmeleri:", *res.notes[:12], sep="\n - ")
     fixed = res.fixed

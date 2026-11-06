@@ -5,7 +5,7 @@ Ağ yok, ses yok (kelime süreleri voice.estimate ile, pipeline'ın --no-voice y
 - senaryo modeli: Scene.cizgi isteğe bağlı (eski JSON yüklenir), doğrulama ve dil düzeltmesi tarifi korur, tarifsiz
   senaryoların istem metni değişmez,
 - şablon kaydı: yalnız --template ile seçilir (eslesme.json değişmez), kalıp sabitlemez,
-- pilot senaryo: 17 sahne, dış ses birebir, başlık, açıklama, kategori ve kalıp,
+- pilot senaryo: 10 sahne (en çok CIZGI_SAHNE), 110-135 kelime, dış ses birebir, başlık, açıklama, kategori ve kalıp,
 - karakterler ve mekânlar: her anahtar çizilir, çıktı belirlenimci,
 - yerleşim: her sahnenin her anında içerik güvenli alanda; balon konuşanın başına, anlatıcı kutusu Makas'a binmez;
   uzun Türkçe kelimeler, 6 ve 18 sahne; son sahnenin parçaları üst üste binmez,
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -46,21 +47,14 @@ UZUN2 = "muvaffakiyetsizleştiricileştiriveremeyebileceklerimizdenmişsinizcesi
 
 ANLATIM = [
     "On beş yaşındaki Kuzey'in cebinde iki kulübün kartviziti var.",
-    "Kuzey, Sinop'ta balıkçı Hasan Reis'in oğlu.",
-    "Sabahları babasıyla ağ topluyor, akşamları Sinopspor'un gençlerinde top koşturuyor.",
+    "Sinop'ta sabahları babasıyla ağ topluyor, akşamları Sinopspor'un gençlerinde top koşturuyor.",
     "Türkiye'nin en kuzey ucu İnceburun da Sinop'ta; Kuzey adını oradan alıyor.",
     "Bu yaz bölge turnuvasında altı maçta dokuz gol atıyor.",
-    "Final maçında tribünde iki adam not alıyor.",
-    "Biri Galatasaray'ın gözcüsü Selim Bey.",
-    "Teklifi parlak: İstanbul'da altyapı, yatılı yer ve okul.",
-    "Ama orada her yaş grubunda onun gibi onlarca yetenek var.",
-    "Öbürü Samsunspor'un gözcüsü Orhan Bey.",
-    "Sözü net: \"Bizde bir yıl içinde A takımla antrenmana çıkarsın.\"",
-    "Samsun eve yakın; ama İstanbul'un kapısı ikinci kez çalmayabilir.",
-    "Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım oğlum.\"",
-    "Annesi Nermin'in tek şartı var: okul yarım kalmayacak.",
-    "Kuzey'in bilmediği bir şey var: Selim Bey aynı turnuvadan bir golcüye daha teklif yaptı.",
-    "Selim Bey yarın sabah İstanbul'a dönüyor; cevap bu gece verilecek.",
+    "Tribündeki iki gözcüden biri Galatasaray'dan Selim Bey: İstanbul'da altyapı, yatılı yer ve okul.",
+    "Ama orada onun gibi onlarca yetenek var. Samsunspor'dan Orhan Bey ise net: \"Bizde bir yılda A takımla çalışırsın.\"",
+    "Babası Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım.\" Annesi Nermin'in tek şartı: okul yarım kalmayacak.",
+    "Kuzey bilmiyor ama Selim Bey aynı turnuvadan bir golcüye daha teklif yaptı.",
+    "Samsun eve yakın; İstanbul'un kapısı ikinci kez çalmayabilir. Cevap bu gece verilecek.",
     "Kuzey ne yapsın? A: İstanbul'a, Galatasaray'a gitsin. B: Samsunspor'da şansını denesin. Yorumlara A ya da B yaz.",
 ]
 
@@ -146,7 +140,9 @@ class Senaryo(unittest.TestCase):
         self.assertTrue(s.description.endswith("Kurgusal bir hikâyedir."))
         self.assertEqual(len(s.hashtags), 5)
         kelime = sum(len(sc.narration.split()) for sc in s.scenes)
-        self.assertTrue(140 <= kelime <= 175, kelime)       # 60-80 sn (≈2,15 kelime/sn)
+        self.assertTrue(S.CIZGI_KELIME[0] <= kelime <= S.CIZGI_KELIME_UST, kelime)   # ≈ 50-60 sn
+        self.assertTrue(S.CIZGI_SAHNE[0] <= len(s.scenes) <= S.CIZGI_SAHNE[1], len(s.scenes))
+        self.assertEqual(S.cizgi_sorunlari(s), [])
         for sc in s.scenes:
             self.assertIsNotNone(sc.cizgi)
             self.assertEqual((sc.illustration, sc.image_queries, sc.image_mode), ("", [], "none"), "ağ yok")
@@ -157,13 +153,17 @@ class Senaryo(unittest.TestCase):
         self.assertEqual(kartlar[-1], "ab")
         ab = s.scenes[-1].cizgi.kart
         self.assertEqual((ab.a, ab.b), ("İSTANBUL'A, GALATASARAY'A", "SAMSUNSPOR'DA ŞANSINI DENESİN"))
-        self.assertEqual(s.scenes[14].cizgi.kart.baslik, "SEN BİLİYORSUN, KUZEY BİLMİYOR")
+        self.assertEqual(s.scenes[7].cizgi.kart.baslik, "SEN BİLİYORSUN, KUZEY BİLMİYOR")
         # balon metni dış sesteki tırnak içiyle aynı
         for sc in s.scenes:
             if sc.cizgi.balon:
                 self.assertIn(f"\"{sc.cizgi.balon.metin}\"", sc.narration)
         # gerçek kişi yok: kadro kurgusal
-        self.assertEqual(set(CZ.KARAKTERLER), {"kuzey", "hasan", "nermin", "selim", "orhan", "golge"})
+        self.assertEqual(set(CZ.KARAKTERLER), {"kuzey", "hasan", "nermin", "selim", "orhan", "golge", "elif", "yilmaz"})
+        # sezon planındaki her karakterin çizimi var (plan_s1.json karakterler)
+        plan = json.loads((REPO / "state" / "secim" / "plan_s1.json").read_text(encoding="utf-8"))
+        adlar = {k["ad"].split()[0].lower().replace("ı", "i") for k in plan["karakterler"]}
+        self.assertLessEqual(adlar, set(CZ.KARAKTERLER), adlar - set(CZ.KARAKTERLER))
 
     def test_istem_tarifsiz_senaryoda_degismez(self):
         k = S.load_script(KART_DEMO)
@@ -205,6 +205,82 @@ class Senaryo(unittest.TestCase):
         self.assertEqual([x.cizgi for x in out.scenes], [x.cizgi for x in s.scenes])
 
 
+    def test_uzunluk_kurali_uc_gecise_ulasir(self):
+        """Çizgi Roman bölümü için 65-75 kelime kuralı yerine CIZGI_KELIME: yazarın istemi (şablon), doğrulayıcı ve
+        dil editörü aynı sayıları görür; tarifsiz senaryolarda istemler eskisi gibi kalır."""
+        istem = json.loads((REPO / "templates" / "cizgi.json").read_text(encoding="utf-8"))["istem"]
+        for x in (f"{S.CIZGI_KELIME[0]}-{S.CIZGI_KELIME[1]} kelime", f"{S.CIZGI_KELIME_UST}'i",
+                  f"{S.CIZGI_SAHNE[0]}-{S.CIZGI_SAHNE[1]} sahne"):
+            self.assertIn(x, istem)
+        cagrilar = []
+
+        def ask(prompt, schema, system, web=False):
+            cagrilar.append((prompt, system, json.dumps(S.sema_json(schema))))
+            return (S.Review(ok=True, problems=[], fixed=girdi.model_copy(deep=True)) if schema is S.Review
+                    else S.Polished(notes=[], fixed=girdi.model_copy(deep=True)))
+
+        girdi = demo()
+        with mock.patch.object(S, "ask_claude", ask), mock.patch("builtins.print"):
+            S.verify_script(girdi)
+            S.polish_script(girdi)
+        (vp, vs, vsema), (pp, ps, psema) = cagrilar
+        self.assertIn(f"toplam dış ses {S.CIZGI_KELIME_UST} kelimeyi", vp)
+        self.assertNotIn("78 kelimeyi geçmesin", vp)
+        self.assertIn(S.CIZGI_UZUNLUK, vs)
+        self.assertIn(f"{S.CIZGI_KELIME[0]}-{S.CIZGI_KELIME[1]} kelime", ps)
+        self.assertIn("CizgiSahne", vsema)
+        self.assertIn("CizgiSahne", psema)
+        # tarifsiz senaryo: istemlerde Çizgi Roman yok, şemada cizgi yok
+        cagrilar.clear()
+        girdi = S.load_script(KART_DEMO)
+        with mock.patch.object(S, "ask_claude", ask), mock.patch("builtins.print"):
+            S.verify_script(girdi)
+            S.polish_script(girdi)
+        (vp, vs, vsema), (pp, ps, psema) = cagrilar
+        self.assertIn("toplam dış ses 78 kelimeyi", vp)
+        self.assertNotIn("ÇİZGİ ROMAN", ps)
+        self.assertNotIn("Çizgi Roman", vs)
+        self.assertNotIn("cizgi", vsema)
+        self.assertNotIn("Cizgi", psema)
+
+    def test_sema_yalniz_cizgide_tarif_icerir(self):
+        tam = S.ShortScript.model_json_schema()
+        self.assertIn("CizgiSahne", tam["$defs"])
+        kisa = S.sema_json(S.ShortScript)
+        self.assertNotIn("cizgi", json.dumps(kisa))
+        self.assertLess(len(json.dumps(kisa)), len(json.dumps(tam)) * 0.75)
+        with S._cizgi_semasi(True):
+            self.assertEqual(S.sema_json(S.ShortScript), tam)
+        self.assertNotIn("cizgi", json.dumps(S.sema_json(S.ShortScript)))
+        # yazar cizgi şablonu dışında tarif doldurursa boşaltılır
+        dolu = demo()
+        cagri = []
+
+        def ask(prompt, schema, system, web=False):
+            cagri.append(json.dumps(S.sema_json(schema)))
+            return dolu.model_copy(deep=True)
+
+        with mock.patch.object(S, "ask_claude", ask), mock.patch.object(S, "verify_script", lambda x, **k: x), \
+                mock.patch.object(S, "polish_script", lambda x, **k: x), mock.patch("builtins.print"), \
+                tempfile.TemporaryDirectory() as tmp:
+            h = Path(tmp) / "history.jsonl"
+            h.write_text("", encoding="utf-8")
+            out = S.generate_script(h, "Karar Senin", structure="hikaye")
+            self.assertEqual({sc.cizgi for sc in out.scenes}, {None})
+            self.assertNotIn("Cizgi", cagri[-1])
+            out = S.generate_script(h, "Karar Senin", structure="hikaye", cizgi=True)
+            self.assertIsNotNone(out.scenes[0].cizgi)
+            self.assertIn("CizgiSahne", cagri[-1])
+
+    def test_uzunluk_sorunlari(self):
+        s = demo()
+        self.assertEqual(S.cizgi_sorunlari(s), [])
+        uzun = s.model_copy(deep=True)
+        uzun.scenes = uzun.scenes + [x.model_copy(deep=True) for x in uzun.scenes[1:4]]
+        self.assertEqual(len(S.cizgi_sorunlari(uzun)), 2)
+        self.assertEqual(S.cizgi_sorunlari(S.load_script(KART_DEMO)), [])
+
+
 # ---------------------------------------------------------------- şablon kaydı
 class Sablon(unittest.TestCase):
     def test_yalniz_elle_secilir(self):
@@ -219,6 +295,14 @@ class Sablon(unittest.TestCase):
         self.assertEqual(PL.pick_template(s, "cizgi"), "cizgi")
         self.assertNotEqual(PL.pick_template(s), "cizgi")
         self.assertNotEqual(PL.pick_template(s.model_copy(update={"template": "cizgi"})), "cizgi")
+        # tarifli senaryo başka şablonla (ör. ornek.yml'nin varsayılanı kart) istenirse cizgi şablonuna geçilir
+        with mock.patch("builtins.print") as yaz:
+            self.assertEqual(PL.cizgi_sablonu(s, "kart"), "cizgi")
+        self.assertIn("cizgi", str(yaz.call_args))
+        self.assertEqual(PL.cizgi_sablonu(s, "cizgi"), "cizgi")
+        self.assertEqual(PL.cizgi_sablonu(S.load_script(KART_DEMO), "kart"), "kart")
+        yml = (REPO / ".github" / "workflows" / "ornek.yml").read_text(encoding="utf-8")
+        self.assertIn("cizgi", yml.split("sablon:", 1)[1].split("kalip:", 1)[0])
 
 
 # ---------------------------------------------------------------- karakterler ve mekânlar
@@ -304,8 +388,9 @@ class Yerlesim(unittest.TestCase):
             if not (sc.cizgi and sc.cizgi.balon):
                 continue
             S_ = v.hazirla(i)
-            pc = sc.cizgi.paneller[0].model_dump()
-            box = C.ic_kutu(S_.polys[0])
+            bp = sc.cizgi.balon.panel
+            pc = sc.cizgi.paneller[bp].model_dump()
+            box = C.ic_kutu(S_.polys[bp])
             ys = C.yerlestir(pc["karakterler"], box, True)
             kon = next(y for y in ys if y.kid == sc.cizgi.balon.konusan)
             hx, htop, mouth, hw = kon.bas
@@ -346,8 +431,40 @@ class Yerlesim(unittest.TestCase):
         a = np.asarray(im.getchannel("A"))
         self.assertGreater(a[C.PANEL_Y0 + 200, 400], 200, "panel")
         self.assertGreater(a[C.CAP[1] + 40, C.CAP[0] + 40], 200, "anlatıcı kutusu")
-        self.assertGreater(a[C.HEAD_CY, 140], 200, "üst bant")
-        self.assertGreater(a[C.HEAD_CY, 880], 200, "KURGU etiketi")
+        self.assertGreater(a[C.KAPAK_LOGO_CY, 140], 200, "büyük seri logosu")
+        self.assertTrue((a[200:300, 800:920] > 200).any(), "KURGU etiketi")
+        # kapakta anlatıcı kutusunun bütün kelimeleri mürekkep (soluk renk yok), manşet panelin altında
+        S0 = self.v.hazirla(0)
+        self.assertEqual(S0.manset, ["İKİ KULÜP,", "TEK GECE!"])
+        rgb = np.asarray(im.convert("RGB")).reshape(-1, 3)
+        self.assertFalse((np.abs(rgb.astype(int) - np.array(C.GHOST)).sum(1) < 6).any(), "kapakta soluk kelime")
+        kk = self.v.kart_katmani(S0)
+        bb = alfa_kutu(kk[0])
+        self.assertLessEqual(kk[1] + bb[3], C.CAP[1] - 4, "manşet anlatıcı kutusuna değmez")
+
+    def test_soluk_kelime_okunur(self):
+        """Sıradaki kelimelerin rengi sarı kâğıtta en az 3:1 karşıtlıkta (telefonda okunur)."""
+        def lum(c):
+            v = [x / 255 for x in c]
+            v = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in v]
+            return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]
+        a, b = lum(C.YELLOW), lum(C.GHOST)
+        self.assertGreaterEqual((max(a, b) + 0.05) / (min(a, b) + 0.05), 3.0)
+
+    def test_golge_siluet_ve_kopya_degil(self):
+        """Gölgedeki gözcü tek tonlu siluettir (ten rengi yok); aynı panelde ikinci gözcü arkada, küçük."""
+        svg = CK.figur_svg("golge", "not", "normal", "sag")
+        renkler = set(re.findall(r"#[0-9a-f]{6}", svg))
+        self.assertEqual(renkler, {K._hex(CK.SILUET), K._hex(CK.SILUET_ISIK)})
+        ys = C.yerlestir([{"id": "golge", "konum": "sol"}, {"id": "golge", "konum": "sag"}], (64, 346, 920, 760),
+                         False)
+        self.assertLess(ys[1].s, ys[0].s * 0.95)
+
+    def test_balon_tek_harf_yalniz_kalmaz(self):
+        b = C.SozBalonu("Bizde bir yıl içinde A takımla antrenmana çıkarsın.", (64, 346, 920, 1198), None, "konus",
+                        1, 340)
+        for L in b.b.lines:
+            self.assertFalse(re.search(r"(^|\s)\w$", L), b.b.lines)
 
 
 class UzunVeSayilar(unittest.TestCase):
@@ -369,7 +486,7 @@ class UzunVeSayilar(unittest.TestCase):
 
     def test_uzun_turkce_kelimeler(self):
         s = demo()
-        s.scenes = [s.scenes[i].model_copy(deep=True) for i in (0, 3, 10, 14, 16)]
+        s.scenes = [s.scenes[i].model_copy(deep=True) for i in (0, 2, 5, 7, 9)]
         s.scenes[0].narration = f"{UZUN2} {UZUN2} Kuzey'in cebinde iki kartvizit var."
         s.scenes[0].cizgi.seri = "KARAR SENİN ÇEKOSLOVAKYALILAŞTIRAMADIKLARIMIZDAN"
         s.scenes[1].cizgi.kart.metin = f"{UZUN2} {UZUN2} İnceburun Sinop'tadır."
@@ -419,7 +536,7 @@ class UctanUca(unittest.TestCase):
             sure = float(info["format"]["duration"])
             words = estimate(" ".join(ANLATIM))
             self.assertAlmostEqual(sure, words[-1].end + 0.35, delta=0.6)
-            self.assertGreater(sure, 55)
+            self.assertGreater(sure, 45)
             meta = json.loads(next((kok / "out").glob("*/metadata.json")).read_text(encoding="utf-8"))
             self.assertEqual(meta["template"], "cizgi")
             self.assertIn("Kurgusal bir hikâyedir.", meta["description"])

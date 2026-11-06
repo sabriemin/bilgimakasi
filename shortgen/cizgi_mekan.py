@@ -320,9 +320,21 @@ def harita_fener(k: Kutu, yazi, seed):
     ix, iy = k(0.45, 0.29)
     m.arka += f'<path d="M{P(ix, iy)} L{P(ix - 16, iy - 34)} A18,18 0 1 1 {P(ix + 16, iy - 34)} Z" fill="{hx(RED)}" stroke="{ink}" stroke-width="5"/>'
     m.arka += circ(ix, iy - 46, 7, OFF, 3)
-    _yazi(m, k.x(0.5), k.y(0.16), "KARADENİZ", "anton", max(30, k.s * 0.09), blend(CYAN, OFF, .55))
+    # deniz adı mavide okunsun: kırık beyaz, mürekkep kontur (sekiz yöne kaydırılmış mürekkep kopyalar)
+    ks = max(30, k.s * 0.09)
+    kc = max(2.5, ks * 0.05)
+    for a in range(8):
+        _yazi(m, k.x(0.5) + kc * math.cos(a * math.pi / 4), k.y(0.16) + kc * math.sin(a * math.pi / 4), "KARADENİZ",
+              "anton", ks, INK)
+    _yazi(m, k.x(0.5), k.y(0.16), "KARADENİZ", "anton", ks, OFF)
     _yazi(m, k.x(0.55), k.y(0.6), "SİNOP", "anton", max(28, k.s * 0.08), INK)
-    _yazi(m, ix + 26, iy + 4, "İnceburun", "courier", max(22, k.s * 0.055), INK, "ls")
+    # İnceburun: iğnenin sağında, enlem çizgisinin üstünde, kâğıt çip üstünde
+    from .cizgi_motor import tw
+    isz = max(22, k.s * 0.055)
+    lx, ly = ix + 36, k.y(0.28) - 16
+    lw = tw("İnceburun", "courier", isz)
+    m.arka += rect(lx - 9, ly - isz * 1.08, lx + lw + 9, ly + isz * 0.34, OFF, 3, rx=4)
+    _yazi(m, lx, ly, "İnceburun", "courier", isz, INK, "ls")
     # fener (sağda): beyaz kule, ışık hüzmesi
     fx, fy = k.x(0.84), k.y(0.92)
     fh = k.h * 0.42

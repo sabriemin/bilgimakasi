@@ -13,6 +13,10 @@ arayüzüne (sağdaki düğmeler x > 935, üst çubuk y < 170, alttaki açıklam
   262-326   üst bant: KARAR SENİN + 1. BÖLÜM yırtık etiketleri; sağda her karede KURGU etiketi
   346-1200  paneller (GERÇEK BİLGİ ya da ipucu kartı olan sahnede paneller 912'de biter, kart altta)
   1226-1530 sarı anlatıcı kutusu (dış ses kelime kelime) ve sağında maskot Makas
+Kapak (ilk sahne, küçük resim): üst bant yerine büyük seri logosu (siyah ve kırmızı yırtık etiketler, sarı N. BÖLÜM;
+KURGU sağ üstte), panel 438'den başlar; panelin alt kenarına binen manşet (tarifin 'manset' satırları, boşsa sahnenin
+headline'ı) ve anlatıcı kutusunun bütün kelimeleri ilk kareden mürekkep. Sonraki sahnelerde de tarifte manşet varsa
+panel 1004'te biter, manşet altına biner (dönüm anları). Sıradaki kelimeler sarı kâğıtta ≈4:1 karşıtlıkla (GHOST).
 Son sahne (ab): soru etiketi, A | B panelleri (makas oluktan keser), seçenek kartları, çağrı ve alt satır.
 
 Senaryo eşlemesi: sahnenin tarifi Scene.cizgi (script.CizgiSahne; spec.card["cizgi"]). Tarifsiz sahne düz zeminli tek
@@ -60,9 +64,14 @@ ENTRY = 0.22                               # panelin geliş süresi
 STAGGER = 0.32                             # paneller arası gecikme
 CUT_EVERY = 4                              # her kaç sahnede bir makas kesmesi
 QUOTE = "\"“”«»"
-# anlatıcı kutusunda sıradaki kelimeler: sarı kâğıtta soluk ama okunur (sessiz izleyen cümlenin tamamını görür,
-# söylenen kelime mürekkep olur)
-GHOST = (196, 160, 40)
+# anlatıcı kutusunda sıradaki kelimeler: sarı kâğıtta soluk ama telefonda okunur (sarıya karşı ≈4:1; sessiz izleyen
+# cümlenin tamamını görür, söylenen kelime mürekkep olur)
+GHOST = (122, 100, 38)
+# kapak (ilk sahne): büyük seri logosu, panel ve altında manşet etiketleri
+KAPAK_LOGO_CY = 334                        # KARAR | SENİN etiketlerinin merkezi
+KAPAK_PANEL_Y0 = 438                       # kapakta panelin üstü (logonun altı)
+MANSET_PANEL_Y1 = 1004                     # manşetli sahnede panelin altı (manşet panelin alt kenarına biner)
+MANSET_ORT = 34                            # manşetin panelin üstüne bindiği pay
 
 
 # ---------------------------------------------------------------- tarif okuma (sözlük; pipeline Scene.model_dump verir)
@@ -79,6 +88,15 @@ def seri_bilgisi(specs) -> tuple[str, int]:
     except (TypeError, ValueError):
         bolum = 0
     return seri, bolum
+
+
+def manset_satirlari(spec: SceneSpec, ilk: bool) -> list[str]:
+    """Panelin altındaki manşet: tarifin 'manset' satırları; ilk sahnede boşsa sahnenin headline'ı (kanca)."""
+    c = tarif(spec)
+    m = [up(str(x).strip()) for x in (c.get("manset") or []) if str(x).strip()]
+    if not m and ilk:
+        m = [up(str(x).strip()) for x in (spec.headline or []) if str(x).strip()]
+    return m[:2]
 
 
 def kart_turu(spec: SceneSpec) -> str:
@@ -154,8 +172,13 @@ def yerlestir(karakterler: list, box, balonlu: bool) -> list[Yer]:
     pw, ph = x1 - x0, y1 - y0
     n = max(1, len(karakterler))
     out = []
+    gorulen: dict = {}
     for i, k in enumerate(karakterler[:3]):
         kid = k.get("id") or "kuzey"
+        # aynı kimlik panelde ikinci kez (ör. iki gölge gözcü) kopya gibi durmasın: arkada, daha küçük
+        tekrar = gorulen.get(kid, 0)
+        gorulen[kid] = tekrar + 1
+        geri = 0.86 ** tekrar
         konum = k.get("konum") or ("orta" if n == 1 else ("sol", "sag", "orta")[i])
         if n == 2 and konum == "orta":
             konum = ("sol", "sag")[i]
@@ -166,10 +189,10 @@ def yerlestir(karakterler: list, box, balonlu: bool) -> list[Yer]:
         en_cok = pw / n * (1.0 if n > 1 else 1.1)
         if cerceve == "boy":
             s = min(ph * 0.8 / (CK.BOY[1] - CK.BOY[0]), en_cok / 400)
-            s *= 0.86 if balonlu else 1.0
+            s *= (0.86 if balonlu else 1.0) * geri
             y = y1 - 12 - CK.BOY[1] * s
         else:
-            s = min(ph * (0.80 if balonlu else 0.92) / (CK.BUST[1] - CK.BUST[0]), en_cok / 400)
+            s = min(ph * (0.80 if balonlu else 0.92) / (CK.BUST[1] - CK.BUST[0]), en_cok / 400) * geri
             y = y1 + 6 - CK.BUST[1] * s
         cx = x0 + pw * KONUM_X.get(konum, 0.5)
         yon = "sag" if konum == "sol" else ("sol" if konum == "sag" else "sag")
@@ -188,6 +211,8 @@ class SozBalonu:
         x0, y0, x1, y1 = box
         pw = x1 - x0
         genislik = min(pw * 0.72, 560) - 60
+        # tek harfli kelime ('A takımla') satır sonunda yalnız kalmaz: sonraki kelimeye bölünmez boşlukla bağlanır
+        text = re.sub(r"(?<!\S)(\w)\s+(?=\S)", lambda m: m.group(1) + CZM.NBSP, text)
         self.b = Balon(text, 0, 0, genislik, uc=None, tur=tur, size=50, min_size=38, satir=4, seed=seed)
         bw, bh = self.b.w, self.b.h
         if konusan is not None:
@@ -203,6 +228,11 @@ class SozBalonu:
             # balon başla yatayda çakışıyorsa başın üstünde kalır; yer yoksa yana kayar
             if abs(cx - hx_) < bw / 2 + hw and cy + bh / 2 > htop - 12:
                 cy = max(ust_sinir + bh / 2, htop - 12 - bh / 2)
+            # kısa panelde başın üstüne sığmadıysa balon başın yanına kayar (yüze binmez)
+            if abs(cx - hx_) < bw / 2 + hw and cy + bh / 2 > htop - 12:
+                yan = 1 if (min(x1, X1) - hx_) >= (hx_ - x0) else -1
+                cx = hx_ + yan * (bw / 2 + hw + 12)
+                cx = max(x0 + bw / 2 + 14, min(min(x1, X1) - bw / 2 - 14, cx))
             # kuyruk konuşanın başının hemen üstünde biter (başa binmez)
             tip = (hx_ + (hw * 0.45 if cx > hx_ else -hw * 0.45), max(cy + bh / 2 + 18, htop - 14))
         else:
@@ -327,6 +357,8 @@ class Sahne:
     anlatici: Anlatici | None = None
     sesler: list = field(default_factory=list)       # [((katman, x, y), zaman)]
     ab: dict = field(default_factory=dict)           # son sahne: soru, a, b
+    manset: list = field(default_factory=list)       # panelin altındaki büyük yırtık etiketler (kapak ve dönüm anları)
+    y0: float = PANEL_Y0                             # panellerin üstü (kapakta logonun altı)
 
 
 class CizgiVideo:
@@ -351,6 +383,11 @@ class CizgiVideo:
         self.ranges = ranges
         self.sahneler = [Sahne(i, s.start, s.end, ranges[i][0], ranges[i][1], tarif(s), kart_turu(s))
                          for i, s in enumerate(scenes)]
+        for S in self.sahneler:
+            if not S.tur:            # özel kartlı sahnede manşet yok (kart aynı yeri kullanır)
+                S.manset = manset_satirlari(scenes[S.i], S.i == 0)
+            if S.i == 0 and S.tur != "ab":
+                S.y0 = KAPAK_PANEL_Y0
         self.scene_starts = [s.start for s in scenes]
         self.mascot = Mascot()
         self._c: dict = {}
@@ -371,12 +408,15 @@ class CizgiVideo:
         return None
 
     # ------------------------------------------------------------ sabit katmanlar
-    def sayfa(self) -> Image.Image:
-        if "sayfa" not in self._c:
+    def sayfa(self, kapak: bool = False) -> Image.Image:
+        """Sayfa zemini ve üst bant; kapakta (ilk sahne) üst bant yerine büyük seri logosu."""
+        anahtar = "sayfa_kapak" if kapak else "sayfa"
+        if anahtar not in self._c:
+            bant = self.kapak_logo() if kapak else self.ust_bant()
             if self.yalniz_icerik:   # kâğıt yok; üst bant içeriktir (güvenli alan denetimine girer)
                 bg = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-                bg.alpha_composite(self.ust_bant(), (0, 0))
-                self._c["sayfa"] = bg
+                bg.alpha_composite(bant, (0, 0))
+                self._c[anahtar] = bg
             else:
                 bg = Image.new("RGBA", (W, H), PAPER + (255,))
 
@@ -385,10 +425,52 @@ class CizgiVideo:
                     d2 = np.hypot(X - W, Y - H + 40) / 900
                     return np.maximum(1 - d1, 1 - d2) * 1.15 - 0.2
 
-                bg.alpha_composite(CZM.tram(W, H, blend(PAPER, CYAN, 0.55), 26, 18, yog))
-                bg.alpha_composite(self.ust_bant(), (0, 0))
-                self._c["sayfa"] = bg
-        return self._c["sayfa"]
+                bg.alpha_composite(self.tram_zemin(yog), (0, 0))
+                bg.alpha_composite(bant, (0, 0))
+                self._c[anahtar] = bg
+        return self._c[anahtar]
+
+    def tram_zemin(self, yog) -> Image.Image:
+        if "tram" not in self._c:
+            self._c["tram"] = CZM.tram(W, H, blend(PAPER, CYAN, 0.55), 26, 18, yog)
+        return self._c["tram"]
+
+    def kapak_logo(self) -> Image.Image:
+        """Kapakta büyük seri logosu (konsept 1): siyah ve kırmızı yırtık etiketlerde seri adı, sarı N. BÖLÜM etiketi
+        sağ altta; KURGU etiketi sağ üstte (her karede)."""
+        if "logo" not in self._c:
+            pen = K.Pen(0, 0, W, KAPAK_PANEL_Y0)
+            k = CZ.KURGU_ETIKETI
+            wk, hk = etiket_olcu(k, 36)
+            kelimeler = self.seri.split()
+            ilk = " ".join(kelimeler[:-1]) if len(kelimeler) > 1 else self.seri
+            son = kelimeler[-1] if len(kelimeler) > 1 else ""
+            t = f"{self.bolum}. BÖLÜM" if self.bolum else ""
+            size = 112
+            while size > 20:          # seri adı ve bölüm etiketi sağ kenara kadar sığar
+                w1 = etiket_olcu(ilk, size)[0]
+                w2 = etiket_olcu(son, size)[0] + 16 if son else 0
+                w3 = etiket_olcu(t, size * 0.46)[0] + 10 if t else 0
+                if X0 + w1 + w2 + w3 <= X1 - 4:
+                    break
+                size -= 4
+            w1, h1 = etiket_olcu(ilk, size)
+            etiket(pen, ilk, size, OFF, INK, 24, X0 + w1 / 2, KAPAK_LOGO_CY, rot=-1.5, shadow=(8, 10, 0, 0.9))
+            x = X0 + w1 + 16
+            if son:
+                w2, h2 = etiket_olcu(son, size)
+                etiket(pen, son, size, OFF, RED, 25, x + w2 / 2, KAPAK_LOGO_CY + 4, rot=1.2, shadow=(8, 10, 0, 0.9))
+                x += w2
+            if t:
+                bs = size * 0.46
+                w3, h3 = etiket_olcu(t, bs)
+                cx = min(X1 - 6 - w3 / 2, x + 10 + w3 / 2)
+                etiket(pen, t, bs, INK, YELLOW, 26, cx, KAPAK_LOGO_CY + h1 / 2 - h3 * 0.45, rot=-3.0,
+                       shadow=(5, 6, 0, 0.9))
+            etiket(pen, k, 36, INK, YELLOW, 23, X1 - 10 - wk / 2, KAPAK_LOGO_CY - h1 / 2 - hk / 2 + 6, rot=2.0,
+                   shadow=(4, 5, 0, 0.9))
+            self._c["logo"] = pen.done()
+        return self._c["logo"]
 
     def ust_bant(self) -> Image.Image:
         """KARAR SENİN + N. BÖLÜM (solda) ve KURGU (sağda) etiketleri."""
@@ -457,8 +539,8 @@ class CizgiVideo:
             self.hazirla_ab(S)
             return S
         paneller = [p for p in (c.get("paneller") or []) if isinstance(p, dict)][:3] or [{"mekan": "bos"}]
-        y1 = KARTLI_Y1 if S.tur in ("gercek", "ipucu") else PANEL_Y1
-        S.polys = panel_polys(c.get("duzen") or "tek", len(paneller), PANEL_Y0, y1)
+        y1 = KARTLI_Y1 if S.tur in ("gercek", "ipucu") else (MANSET_PANEL_Y1 if S.manset else PANEL_Y1)
+        S.polys = panel_polys(c.get("duzen") or "tek", len(paneller), S.y0, y1)
         paneller = paneller[:len(S.polys)]
         bp = int((bal or {}).get("panel") or 0) if bal else -1
         bp = min(max(bp, 0), len(S.polys) - 1) if bal else -1
@@ -482,7 +564,7 @@ class CizgiVideo:
             else:
                 text = (bal.get("metin") or "").strip()
             if text:
-                S.balon = SozBalonu(text, box, kon, bal.get("tur") or "konus", si, PANEL_Y0 - 6)
+                S.balon = SozBalonu(text, box, kon, bal.get("tur") or "konus", si, S.y0 - 6)
         return S
 
     def ses_katmani(self, text: str, box, seed: int, koyu: bool):
@@ -543,11 +625,33 @@ class CizgiVideo:
                 etiket(pen, p, size, fg, bg, 71 + j, X0 + 8 + w / 2 + j * 24, y + hh / 2 - 30, rot=(-2.0, 1.5)[j],
                        shadow=(8, 10, 0, 0.9))
                 y += hh + 16
+        elif S.manset:
+            self.manset_ciz(pen, S.manset)
         else:
             self._c[key] = None
             return None
         self._c[key] = (pen.done(), pen.y0)
         return self._c[key]
+
+    def manset_ciz(self, pen: K.Pen, satirlar: list[str]) -> None:
+        """Manşet (konsept 1'in 'AMA KİRA / İKİ KATINA ÇIKTI!'): ilk satır siyah, ikinci kırmızı yırtık etikette kırık
+        beyaz Anton; panelin alt kenarına biner, anlatıcı kutusuna değmez."""
+        renk = [(OFF, INK), (OFF, RED)]
+        ust = MANSET_PANEL_Y1 - MANSET_ORT
+        alan = CAP[1] - 36 - ust               # etiketin gölgesi ve eğimi kutuya değmesin
+        boy = 104
+        while boy > 44:
+            olc = [etiket_olcu(p, boy) for p in satirlar]
+            if all(w <= X1 - X0 - 30 for w, _ in olc) and sum(h for _, h in olc) + 10 * (len(olc) - 1) <= alan:
+                break
+            boy -= 2
+        y = ust
+        for j, p in enumerate(satirlar):
+            w, hh = etiket_olcu(p, boy)
+            fg, bg = renk[j % 2]
+            etiket(pen, p, boy, fg, bg, 75 + j, X0 + 2 + w / 2 + j * 20, y + hh / 2, rot=(-1.8, 1.4)[j % 2],
+                   shadow=(8, 10, 0, 0.9))
+            y += hh + 10
 
     # ------------------------------------------------------------ son sahne: A | B
     def hazirla_ab(self, S: Sahne) -> None:
@@ -723,9 +827,10 @@ class CizgiVideo:
             K.put(img, im, x, y, alpha=a, clip=CLIP)
 
     # ------------------------------------------------------------ anlatıcı kutusu
-    def anlatici_katmani(self, S: Sahne, pi: int, n: int):
-        """Sayfa pi'nin kutusu: genel indeksi n'den küçük kelimeler söylenmiş (mürekkep), diğerleri soluk."""
-        key = ("cap", S.i, pi, n)
+    def anlatici_katmani(self, S: Sahne, pi: int, n: int, tam: bool = False):
+        """Sayfa pi'nin kutusu: genel indeksi n'den küçük kelimeler söylenmiş (mürekkep), diğerleri soluk. tam: bütün
+        kelimeler mürekkep (kapak: ilk kare küçük resimdir, cümle baştan okunur); kırmızı çizgi yine okunan kelimede."""
+        key = ("cap", S.i, pi, n, tam)
         if key in self._c:
             return self._c[key]
         A = S.anlatici
@@ -756,7 +861,7 @@ class CizgiVideo:
             for i in L:
                 if i < n:
                     son = (x, y, A.texts[i])
-                sp.text((x, y), A.texts[i], CAP_FONT, size, INK if i < n else GHOST)
+                sp.text((x, y), A.texts[i], CAP_FONT, size, INK if (i < n or tam) else GHOST)
                 x += tw(A.texts[i], CAP_FONT, size) + sp_w
             y += lh
         if son is not None:     # en son beliren kelimenin altı kırmızı çizgi (okunan yer)
@@ -774,7 +879,7 @@ class CizgiVideo:
         cur = vis[-1] if vis else A.idx[0]
         pi = A.sayfa_of(cur)
         n = (cur + 1) if vis else -1
-        im, w, h = self.anlatici_katmani(S, pi, n)
+        im, w, h = self.anlatici_katmani(S, pi, n, tam=S.i == 0 and pi == 0)
         k = ease_pop(lt / 0.2, 1.06) if (lt < 0.2 and S.i > 0) else 1.0     # kapakta (t=0) tam görünür
         K.put(img, im, CAP[0] - (im.width - w) / 2, CAP[1] - (im.height - h) / 2, k=k, clip=CLIP, anchor=(0.0, 0.0))
 
@@ -828,7 +933,7 @@ class CizgiVideo:
         if not self.intro or t >= dur + 0.4:
             return
         p = K.clamp(t / dur)
-        y = 334
+        y = KAPAK_PANEL_Y0 - 16 if self.sahneler[0].tur != "ab" else 334
         x = K.lerp(X0, SAFE[2] - 40, K.ease_in_out(p))
         fade = 1.0 if t < dur else 1 - (t - dur) / 0.4
         pen = K.Pen(0, y - 40, SAFE[2], y + 40)
@@ -864,7 +969,7 @@ class CizgiVideo:
         si = self.scene_at(t)
         S = self.hazirla(si)
         lt = t - S.start
-        img = self.sayfa().copy()
+        img = self.sayfa(kapak=si == 0 and S.tur != "ab").copy()
         if S.tur == "ab":
             self.draw_ab(img, S, lt)
         else:

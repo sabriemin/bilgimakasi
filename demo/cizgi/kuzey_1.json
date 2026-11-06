@@ -16,7 +16,8 @@
       "narration": "On beş yaşındaki Kuzey'in cebinde iki kulübün kartviziti var.",
       "kicker": "",
       "headline": [
-        "İKİ KARTVİZİT"
+        "İKİ KULÜP",
+        "TEK GECE"
       ],
       "highlight_line": -1,
       "strike": [],
@@ -45,45 +46,15 @@
           }
         ],
         "seri": "KARAR SENİN",
-        "bolum": 1
-      }
-    },
-    {
-      "narration": "Kuzey, Sinop'ta balıkçı Hasan Reis'in oğlu.",
-      "kicker": "",
-      "headline": [
-        "SİNOP"
-      ],
-      "highlight_line": -1,
-      "strike": [],
-      "theme": "paper",
-      "image_mode": "none",
-      "image_queries": [],
-      "icon": "none",
-      "illustration": "",
-      "motion": "none",
-      "cizgi": {
-        "duzen": "tek",
-        "paneller": [
-          {
-            "mekan": "liman",
-            "karakterler": [
-              {
-                "id": "hasan",
-                "poz": "ag",
-                "ifade": "gulumse",
-                "konum": "sol",
-                "cerceve": "bust"
-              }
-            ],
-            "ses": "",
-            "yazi": []
-          }
+        "bolum": 1,
+        "manset": [
+          "İKİ KULÜP,",
+          "TEK GECE!"
         ]
       }
     },
     {
-      "narration": "Sabahları babasıyla ağ topluyor, akşamları Sinopspor'un gençlerinde top koşturuyor.",
+      "narration": "Sinop'ta sabahları babasıyla ağ topluyor, akşamları Sinopspor'un gençlerinde top koşturuyor.",
       "kicker": "",
       "headline": [
         "SABAH AĞ",
@@ -200,48 +171,7 @@
       }
     },
     {
-      "narration": "Final maçında tribünde iki adam not alıyor.",
-      "kicker": "",
-      "headline": [
-        "TRİBÜNDE"
-      ],
-      "highlight_line": -1,
-      "strike": [],
-      "theme": "paper",
-      "image_mode": "none",
-      "image_queries": [],
-      "icon": "none",
-      "illustration": "",
-      "motion": "none",
-      "cizgi": {
-        "duzen": "tek",
-        "paneller": [
-          {
-            "mekan": "tribun",
-            "karakterler": [
-              {
-                "id": "golge",
-                "poz": "not",
-                "ifade": "normal",
-                "konum": "sol",
-                "cerceve": "bust"
-              },
-              {
-                "id": "golge",
-                "poz": "not",
-                "ifade": "normal",
-                "konum": "sag",
-                "cerceve": "bust"
-              }
-            ],
-            "ses": "",
-            "yazi": []
-          }
-        ]
-      }
-    },
-    {
-      "narration": "Biri Galatasaray'ın gözcüsü Selim Bey.",
+      "narration": "Tribündeki iki gözcüden biri Galatasaray'dan Selim Bey: İstanbul'da altyapı, yatılı yer ve okul.",
       "kicker": "",
       "headline": [
         "SELİM BEY"
@@ -255,8 +185,29 @@
       "illustration": "",
       "motion": "none",
       "cizgi": {
-        "duzen": "tek",
+        "duzen": "uc",
         "paneller": [
+          {
+            "mekan": "tribun",
+            "karakterler": [
+              {
+                "id": "golge",
+                "poz": "telefon",
+                "ifade": "normal",
+                "konum": "sol",
+                "cerceve": "bust"
+              },
+              {
+                "id": "golge",
+                "poz": "kollar",
+                "ifade": "normal",
+                "konum": "sag",
+                "cerceve": "bust"
+              }
+            ],
+            "ses": "",
+            "yazi": []
+          },
           {
             "mekan": "tribun",
             "karakterler": [
@@ -270,27 +221,7 @@
             ],
             "ses": "",
             "yazi": []
-          }
-        ]
-      }
-    },
-    {
-      "narration": "Teklifi parlak: İstanbul'da altyapı, yatılı yer ve okul.",
-      "kicker": "",
-      "headline": [
-        "TEKLİF"
-      ],
-      "highlight_line": -1,
-      "strike": [],
-      "theme": "paper",
-      "image_mode": "none",
-      "image_queries": [],
-      "icon": "none",
-      "illustration": "",
-      "motion": "none",
-      "cizgi": {
-        "duzen": "tek",
-        "paneller": [
+          },
           {
             "mekan": "brosur",
             "karakterler": [],
@@ -305,33 +236,7 @@
       }
     },
     {
-      "narration": "Ama orada her yaş grubunda onun gibi onlarca yetenek var.",
-      "kicker": "",
-      "headline": [
-        "ONLARCA YETENEK"
-      ],
-      "highlight_line": -1,
-      "strike": [],
-      "theme": "paper",
-      "image_mode": "none",
-      "image_queries": [],
-      "icon": "none",
-      "illustration": "",
-      "motion": "none",
-      "cizgi": {
-        "duzen": "tek",
-        "paneller": [
-          {
-            "mekan": "soyunma",
-            "karakterler": [],
-            "ses": "",
-            "yazi": []
-          }
-        ]
-      }
-    },
-    {
-      "narration": "Öbürü Samsunspor'un gözcüsü Orhan Bey.",
+      "narration": "Ama orada onun gibi onlarca yetenek var. Samsunspor'dan Orhan Bey ise net: \"Bizde bir yılda A takımla çalışırsın.\"",
       "kicker": "",
       "headline": [
         "ORHAN BEY"
@@ -345,44 +250,16 @@
       "illustration": "",
       "motion": "none",
       "cizgi": {
-        "duzen": "tek",
+        "duzen": "ust_alt",
         "paneller": [
           {
-            "mekan": "saha_aksam",
-            "karakterler": [
-              {
-                "id": "orhan",
-                "poz": "kollar",
-                "ifade": "gulumse",
-                "konum": "orta",
-                "cerceve": "bust"
-              }
-            ],
+            "mekan": "soyunma",
+            "karakterler": [],
             "ses": "",
             "yazi": []
-          }
-        ]
-      }
-    },
-    {
-      "narration": "Sözü net: \"Bizde bir yıl içinde A takımla antrenmana çıkarsın.\"",
-      "kicker": "",
-      "headline": [
-        "SÖZ"
-      ],
-      "highlight_line": -1,
-      "strike": [],
-      "theme": "paper",
-      "image_mode": "none",
-      "image_queries": [],
-      "icon": "none",
-      "illustration": "",
-      "motion": "none",
-      "cizgi": {
-        "duzen": "tek",
-        "paneller": [
+          },
           {
-            "mekan": "bos",
+            "mekan": "saha_aksam",
             "karakterler": [
               {
                 "id": "orhan",
@@ -405,17 +282,17 @@
         ],
         "balon": {
           "konusan": "orhan",
-          "metin": "Bizde bir yıl içinde A takımla antrenmana çıkarsın.",
+          "metin": "Bizde bir yılda A takımla çalışırsın.",
           "tur": "konus",
-          "panel": 0
+          "panel": 1
         }
       }
     },
     {
-      "narration": "Samsun eve yakın; ama İstanbul'un kapısı ikinci kez çalmayabilir.",
+      "narration": "Babası Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım.\" Annesi Nermin'in tek şartı: okul yarım kalmayacak.",
       "kicker": "",
       "headline": [
-        "İKİ YOL"
+        "BABA VE ANNE"
       ],
       "highlight_line": -1,
       "strike": [],
@@ -426,36 +303,7 @@
       "illustration": "",
       "motion": "none",
       "cizgi": {
-        "duzen": "tek",
-        "paneller": [
-          {
-            "mekan": "yol_tabelasi",
-            "karakterler": [],
-            "ses": "",
-            "yazi": [
-              "İSTANBUL",
-              "SAMSUN"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "narration": "Hasan Reis ağını katlıyor: \"Kararın neyse arkandayım oğlum.\"",
-      "kicker": "",
-      "headline": [
-        "BABA"
-      ],
-      "highlight_line": -1,
-      "strike": [],
-      "theme": "paper",
-      "image_mode": "none",
-      "image_queries": [],
-      "icon": "none",
-      "illustration": "",
-      "motion": "none",
-      "cizgi": {
-        "duzen": "tek",
+        "duzen": "ust_alt",
         "paneller": [
           {
             "mekan": "liman",
@@ -477,33 +325,7 @@
             ],
             "ses": "",
             "yazi": []
-          }
-        ],
-        "balon": {
-          "konusan": "hasan",
-          "metin": "Kararın neyse arkandayım oğlum.",
-          "tur": "konus",
-          "panel": 0
-        }
-      }
-    },
-    {
-      "narration": "Annesi Nermin'in tek şartı var: okul yarım kalmayacak.",
-      "kicker": "",
-      "headline": [
-        "ANNE"
-      ],
-      "highlight_line": -1,
-      "strike": [],
-      "theme": "paper",
-      "image_mode": "none",
-      "image_queries": [],
-      "icon": "none",
-      "illustration": "",
-      "motion": "none",
-      "cizgi": {
-        "duzen": "tek",
-        "paneller": [
+          },
           {
             "mekan": "mutfak",
             "karakterler": [
@@ -518,11 +340,17 @@
             "ses": "",
             "yazi": []
           }
-        ]
+        ],
+        "balon": {
+          "konusan": "hasan",
+          "metin": "Kararın neyse arkandayım.",
+          "tur": "konus",
+          "panel": 0
+        }
       }
     },
     {
-      "narration": "Kuzey'in bilmediği bir şey var: Selim Bey aynı turnuvadan bir golcüye daha teklif yaptı.",
+      "narration": "Kuzey bilmiyor ama Selim Bey aynı turnuvadan bir golcüye daha teklif yaptı.",
       "kicker": "",
       "headline": [
         "SIR"
@@ -563,7 +391,7 @@
       }
     },
     {
-      "narration": "Selim Bey yarın sabah İstanbul'a dönüyor; cevap bu gece verilecek.",
+      "narration": "Samsun eve yakın; İstanbul'un kapısı ikinci kez çalmayabilir. Cevap bu gece verilecek.",
       "kicker": "",
       "headline": [
         "BU GECE"
@@ -577,8 +405,17 @@
       "illustration": "",
       "motion": "none",
       "cizgi": {
-        "duzen": "tek",
+        "duzen": "yan_yana",
         "paneller": [
+          {
+            "mekan": "yol_tabelasi",
+            "karakterler": [],
+            "ses": "",
+            "yazi": [
+              "İSTANBUL",
+              "SAMSUN"
+            ]
+          },
           {
             "mekan": "saat_bilet",
             "karakterler": [],
@@ -588,6 +425,10 @@
               "SİNOP – İSTANBUL"
             ]
           }
+        ],
+        "manset": [
+          "CEVAP",
+          "BU GECE!"
         ]
       }
     },

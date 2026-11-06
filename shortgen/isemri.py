@@ -24,10 +24,13 @@ Ekran düzeni (1080x1920). Yazı yalnız x 72-920, y 236-1528 arasında; gölgel
             konuşurken bıçakları açılıp kapanır.
 Kanca (ilk sahne): levha yerine büyük soru başlığı (vurgulu satır kırmızı yırtık etikette), bölgede ürünün çizimi;
 kâğıttaki bütün kutular boş.
-Ölçek (son sahne): levhada "AŞAMA 4/4" (bölü yeşil), başlıkta ürünün adı; bölgede büyük ibreli ÜRETİM HIZI göstergesi
-(rakamsız; ibre kırmızı bölgeye çıkar ve titrer) ve TEK büyük sayı (yıllık ya da günlük üretim, ör. "≈14 MİLYAR" +
-"KALEM" etiketi). Son aşamanın tiki atılınca ONAY kutusuna TAMAM mührü basılır; "Yorumlara yaz" söylenince YORUMLARA
-YAZ çıkartması belirir ve iş emrinin üstüne büyük KAPANDI mührü iner (çağrı yoksa dış ses bitince).
+Ölçek (son sahne): sarı levhada "ÜRETİM / HIZI" (aşama numarası yok), yanında saniyedeki üretim ("DÜNYADA HER SANİYE"
+/ "≈444 KALEM", sarı); bölgede rakamlı ibreli gösterge (ibre saniyedeki üretime oturur ve titrer, altında "≈444" çipi)
+ve TEK büyük sayı (yıllık ya da günlük üretim, ör. "≈14 MİLYAR" + "KALEM" etiketi). Soru cümlesi söylenmeye
+başlayınca levha ve hız satırının yerine soru büyük başlık olarak gelir (ilk satır kırık beyaz, ikincisi kırmızı yırtık
+etikette: "SENCE BİR KALEM" / "KAÇ KİLOMETRE YAZAR?"). Son aşamanın tiki atılınca ONAY kutusuna TAMAM mührü basılır;
+"Yorumlara yaz" söylenince bölgenin sağ alt köşesinde (göstergeye ve sayıya binmeden) YORUMLARA YAZ çıkartması belirir
+ve ONAY kutusundaki TAMAM, KAPANDI mührüne döner (çağrı yoksa dış ses bitince).
 Geçişler: levha ve makine bölgesi kart şablonunun makas kesmesiyle kesilir (kart.card_cut), yenisi sağdan sekerek
 gelir; sayaç, iş emri ve Makas yerinde kalır.
 
@@ -821,7 +824,13 @@ class IsEmriVideo:
         cx = (bx0 + bx1) / 2
         ks = 34
         kb = by0 + 26 + cap_h("anton", ks)                  # "AŞAMA" tabanı (Ş çengeli altta kalır)
-        pen.text(cx, kb, "AŞAMA", "anton", ks, INK, anchor="ms")
+        pen.text(cx, kb, "ÜRETİM" if seg.kind == "recap" else "AŞAMA", "anton", ks, INK, anchor="ms")
+        if seg.kind == "recap":    # ölçek: aşama numarası yok (beşinci aşama sanılmasın), levhada ÜRETİM HIZI
+            hs = 96
+            while hs > 40 and K.tw("HIZI", "anton", hs) > bx1 - bx0 - 44:
+                hs -= 4
+            pen.text(cx, by1 - 24, "HIZI", "anton", min(hs, by1 - 24 - kb - ks * 0.22 - 14), INK, anchor="ms")
+            return
         num = str(seg.number if seg.kind == "step" else self.N)
         n = f"/{self.N}"
         alt = by1 - 24
@@ -836,27 +845,41 @@ class IsEmriVideo:
         pen.text(x, alt, num, "anton", ns, INK)
         pen.text(x + nw + 8, alt, n, "anton", ss, RED if seg.kind == "step" else YESIL)
 
-    def baslik(self, pen: K.Pen, lines: list[str]) -> None:
-        """Levhanın sağında başlık: kırık beyaz Anton, 1-3 satır, levhanın yüksekliğinde ortalı."""
+    def baslik(self, pen: K.Pen, lines: list[str], renkler: tuple | None = None) -> None:
+        """Levhanın sağında başlık: kırık beyaz Anton (renkler verilirse satır satır ve satır kırılımı korunur), 1-3
+        satır, levhanın yüksekliğinde ortalı."""
         bx0, by0, bx1, by1 = LEVHA
         tx = bx1 + 34
-        size, lines = N.fit_lines(lines, "anton", X1 - tx, 100, 36, 3, by1 - by0, pitch=N.title_pitch)
+        size = 0
+        if renkler:
+            for sz in range(100, 35, -2):
+                if (all(K.tw(L, "anton", sz) <= X1 - tx for L in lines)
+                        and cap_h("anton", sz) + (len(lines) - 1) * N.title_pitch(lines, sz) <= by1 - by0):
+                    size = sz
+                    break
+        if not size:
+            size, lines = N.fit_lines(lines, "anton", X1 - tx, 100, 36, 3, by1 - by0, pitch=N.title_pitch)
         capH = cap_h("anton", size)
         lh = N.title_pitch(lines, size)
         block = capH + (len(lines) - 1) * lh
         top = (by0 + by1) / 2 - block / 2
         for k, L in enumerate(lines):
-            pen.text(tx, top + capH + k * lh, K.fit_words(L, "anton", size, X1 - tx), "anton", size, OFF)
+            renk = renkler[min(k, len(renkler) - 1)] if renkler else OFF
+            pen.text(tx, top + capH + k * lh, K.fit_words(L, "anton", size, X1 - tx), "anton", size, renk)
 
     def kanca_basligi(self, pen: K.Pen, seg) -> float:
         """Kancanın büyük soru başlığı (vurgulu satır kırmızı yırtık etikette); bloğun alt kenarını döndürür."""
-        lines = seg.title or [self.kicker]
         max_h = min(380, self.bolge_y1 - 240 - LEVHA[1])     # makine bölgesine en az 240 px kalır
-        for size in range(124, 60, -4):
+        return self.buyuk_baslik(pen, seg.title or [self.kicker], seg.hl, max_h)
+
+    def buyuk_baslik(self, pen: K.Pen, lines: list[str], hl: int, max_h: float, en_kucuk: int = 60) -> float:
+        """Büyük başlık (kanca ve ölçekteki soru): satırlar kırık beyaz Anton, hl. satır kırmızı yırtık etikette;
+        bloğun alt kenarını döndürür."""
+        for size in range(124, en_kucuk, -4):
             hs = round(size * 0.86)
             rows = []
             for i, L in enumerate(lines):
-                if i == seg.hl:
+                if i == hl:
                     fS = K.fnt("anton", hs * SS)
                     l, tt, r, bb = fS.getbbox(L, anchor="ls")
                     top = max(cap_h("anton", hs), -tt / SS)
@@ -972,13 +995,14 @@ class IsEmriVideo:
             y = self.kanca_basligi(pen, seg)
             zb = (X0, max(BOLGE_Y0, y + 34), X1, self.bolge_y1)
         else:
-            self.levha(pen, seg)
-            self.baslik(pen, seg.title or [self.urun])
+            if seg.kind != "recap":   # ölçekte levha ve başlık ayrı katmanda (soru gelince değişir: ust_katman)
+                self.levha(pen, seg)
+                self.baslik(pen, seg.title or [self.urun])
             zb = (X0, BOLGE_Y0, X1, self.bolge_y1)
         bolge(pen, zb, seed=4 + seg.number)
         ic = (zb[0] + BANT + 18, zb[1] + BANT + 14, zb[2] - BANT - 18, zb[3] - BANT - 14)
         if seg.kind == "recap":
-            self.olcek(pen, ic)
+            self.olcek(pen, ic, zb)
         else:
             callouts = seg.callouts if seg.kind == "step" else []
             self.gorsel(pen, seg, self.gorsel_alani(seg, ic))
@@ -996,13 +1020,53 @@ class IsEmriVideo:
         R = min(150.0, (iy1 - iy0) / 2 - 30, (ix1 - ix0) * 0.22)
         return ix0 + R + 30, (iy0 + iy1) / 2, R
 
-    def olcek(self, pen: K.Pen, ic) -> None:
+    def anlik_hiz(self) -> dict | None:
+        """Göstergenin değeri: saniyedeki üretim (1'den azsa dakikadaki, saatteki ya da gündeki). Dönmüş sözlük: deger,
+        donem ('SANİYE'), metin ('≈444'), vmax (kadranın en büyük rakamı), adim (rakamlar arası). Hız yoksa None."""
+        if not self.hiz:
+            return None
+        if "anlik" not in self._q:
+            hiz, ad = self.hiz["hiz"], "SANİYE"
+            for ad, sn in DONEMLER[:4]:
+                if hiz * sn >= 1:
+                    hiz *= sn
+                    break
+            else:
+                hiz *= DONEMLER[3][1]
+            metin = binlik(round(hiz)) if hiz >= 10 else f"{hiz:.1f}".replace(".", ",").replace(",0", "")
+            yaklasik = "≈" if (self.hiz["sayi"].startswith("≈") or abs(hiz - round(hiz)) > 1e-6) else ""
+            # kadran: 5 eşit aralık, ibre değerin %70-85'ine oturur (sarı bölge)
+            hedef = hiz * 1.2 / 5
+            us = 10 ** math.floor(math.log10(hedef)) if hedef > 0 else 1
+            adim = next((m * us for m in (1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10) if m * us >= hedef), 10 * us)
+            self._q["anlik"] = {"deger": hiz, "donem": ad, "metin": yaklasik + metin, "vmax": adim * 5, "adim": adim}
+        return self._q["anlik"]
+
+    def olcek(self, pen: K.Pen, ic, zb) -> None:
         gx, gy, R = self.gosterge_yeri(ic)
         m = 34
         vb = (-R - m, -R - m, 2 * (R + m), 2 * (R + m))
         pen.svg(kadran_svg(R, [(0, 55, (205, 225, 210)), (55, 80, YELLOW), (80, 100, RED)]), vb, gx - R - m,
                 gy - R - m, 2 * (R + m))
-        pen.text(gx, gy + R * 0.46, "ÜRETİM HIZI", "courier", max(16, R * 0.13), DGREY, anchor="ms")
+        ah = self.anlik_hiz()
+        if ah:
+            # kadran rakamları (0 ... vmax) ve ibrenin altında saniyedeki üretim çipi
+            rs = max(16, R * 0.15)
+            for k in range(6):
+                v = k * 20
+                a = _ac(v, 100)
+                r = R - 60 - (8 if k in (0, 5) else 0)     # alttaki iki rakam çipe değmesin
+                deger = ah["adim"] * k
+                t = binlik(round(deger)) if deger >= 10 or deger == int(deger) else f"{deger:.1f}".replace(".", ",")
+                pen.text(gx + r * math.cos(a), gy + r * math.sin(a) + cap_h("anton", rs) / 2, t, "anton", rs, INK,
+                         anchor="ms")
+            cs = max(20, R * 0.2)
+            cw = K.tw(ah["metin"], "anton", cs) + 22
+            cy0 = gy + R * 0.5
+            pen.rr((gx - cw / 2, cy0, gx + cw / 2, cy0 + cs * 1.2), 8, fill=INK)
+            pen.text(gx, cy0 + cs * 0.6 + cap_h("anton", cs) / 2, ah["metin"], "anton", cs, OFF, anchor="ms")
+        else:
+            pen.text(gx, gy + R * 0.46, "ÜRETİM HIZI", "courier", max(16, R * 0.13), DGREY, anchor="ms")
         rx = gx + R + 56
         room = ic[2] - rx
         if self.hiz:
@@ -1010,33 +1074,98 @@ class IsEmriVideo:
             sayi, isim = self.hiz["sayi"], self.hiz["isim"]
         else:
             ust, sayi, isim = "ÜRETİM", self.urun, "TAMAMLANDI"
-        us = 46
-        while us > 28 and K.tw(ust, "anton", us) > room:
-            us -= 2
-        ss = 128
-        while ss > 48 and K.tw(sayi, "anton", ss) > room:
-            ss -= 4
+        # yorum çıkartması bölgenin sağ alt köşesine gelir: sayı bloğu onun üstünde kalır
+        alt = ic[3]
+        if self.recap_cta(self.segs[-1]) is not None:
+            st = self.cta_cikartmasi(zb)
+            alt = min(alt, self.cta_merkezi(zb)[1] - st.height / 2 - 6)
+        for olc in (1.0, 0.9, 0.8, 0.7, 0.6):
+            us = int(46 * olc)
+            while us > 24 and K.tw(ust, "anton", us) > room:
+                us -= 2
+            ss = int(128 * olc)
+            while ss > 40 and K.tw(sayi, "anton", ss) > room:
+                ss -= 4
+            isz = int(58 * olc)
+            while isz > 26 and N.label_w(isim, isz) > room:
+                isz -= 2
+            h_ust, h_sayi = cap_h("anton", us), cap_h("anton", ss)
+            h_isim = cap_h("anton", isz) * 1.5
+            ara1, ara2 = 22 * olc, 30 * olc
+            blok = h_ust + ara1 + h_sayi + ara2 + h_isim
+            if blok <= alt - ic[1] - 8:
+                break
         sayi = K.fit_words(sayi, "anton", ss, room)
-        isz = 58
-        while isz > 30 and N.label_w(isim, isz) > room:
-            isz -= 2
-        h_ust, h_sayi = cap_h("anton", us), cap_h("anton", ss)
-        h_isim = cap_h("anton", isz) * 1.5
-        blok = h_ust + 22 + h_sayi + 30 + h_isim
-        y = gy - blok / 2
+        y = max(ic[1] + 4, min(gy - blok / 2, alt - blok - 4))
         pen.text(rx, y + h_ust, ust, "anton", us, INK)
-        y += h_ust + 22
+        y += h_ust + ara1
         pen.text(rx, y + h_sayi, sayi, "anton", ss, INK)
-        y += h_sayi + 30
+        y += h_sayi + ara2
         etiket(pen, isim, isz, INK, YELLOW, 51, rx + N.label_w(isim, isz) / 2, y + h_isim / 2, rot=-1.5,
                shadow=(5, 6, 0, 0.9), rim=INK)
+
+    def soru_metni(self, seg) -> tuple[int, list[str]] | None:
+        """Ölçek sahnesindeki soru cümlesi: (ilk kelimesinin indeksi, iki satır BÜYÜK HARF). Soru yoksa None."""
+        key = ("soru_metni", seg.scenes[0])
+        if key not in self._q:
+            out = None
+            ilk = next(iter(self.soru_kirilimi(seg)), None)
+            if ilk is not None:
+                ws = []
+                for i in range(ilk, seg.b):
+                    ws.append(self.words[i].text.strip('"“”«»'))
+                    if self.words[i].text.rstrip('"“”»)’\'').endswith("?"):
+                        break
+                ws = [up(w) for w in ws if w]
+                if len(ws) > 1:   # en geniş satırı en kısa yapan kırılım (ikinci satır etikette, biraz daha geniş)
+                    k = min(range(1, len(ws)), key=lambda j: max(K.tw(" ".join(ws[:j]), "anton", 100),
+                                                                 N.label_w(" ".join(ws[j:]), 86) + 24))
+                    out = (ilk, [" ".join(ws[:k]), " ".join(ws[k:])])
+                elif ws:
+                    out = (ilk, ws)
+            self._q[key] = out
+        return self._q[key]
+
+    def ust_katman(self, seg, soru: bool) -> Image.Image:
+        """Ölçekte levhanın satırı: ÜRETİM HIZI levhası + saniyedeki üretim; soru söylenince sorunun büyük başlığı."""
+        key = ("ust_katman", seg.scenes[0], soru)
+        if key not in self._lay:
+            pen = K.Pen(*self.icerik)
+            sm = self.soru_metni(seg) if soru else None
+            if sm:
+                lines = sm[1]
+                self.buyuk_baslik(pen, lines, len(lines) - 1, BOLGE_Y0 - 18 - (LEVHA[1] - 4), en_kucuk=36)
+            else:
+                self.levha(pen, seg)
+                ah = self.anlik_hiz()
+                if ah:
+                    yer = self.hiz["yer"]
+                    self.baslik(pen, [f"{yer} HER {ah['donem']}".strip(), f"{ah['metin']} {self.hiz['isim']}"],
+                                renkler=(OFF, YELLOW))
+                else:
+                    self.baslik(pen, seg.title or [self.urun])
+            self._lay[key] = pen.done()
+        return self._lay[key]
+
+    def cta_cikartmasi(self, zb) -> Image.Image:
+        """YORUMLARA YAZ çıkartması: göstergenin sağındaki sütuna sığacak boyda."""
+        if "cta" not in self._lay:
+            ic = (zb[0] + BANT + 18, zb[1] + BANT + 14, zb[2] - BANT - 18, zb[3] - BANT - 14)
+            gx, gy, R = self.gosterge_yeri(ic)
+            self._lay["cta"] = K.cta_sticker(up(K.CtaCard.BUTTON), X1 - (gx + R + 62), size=60)
+        return self._lay["cta"]
+
+    def cta_merkezi(self, zb) -> tuple[float, float]:
+        st = self.cta_cikartmasi(zb)
+        return X1 + 4 - st.width / 2, zb[3] - 6
 
     def ibre(self, img: Image.Image, seg, lt: float) -> None:
         _, _, zb = self.icerik_katmani(seg)
         ic = (zb[0] + BANT + 18, zb[1] + BANT + 14, zb[2] - BANT - 18, zb[3] - BANT - 14)
         gx, gy, R = self.gosterge_yeri(ic)
         p = (lt - SLIDE0 - SLIDE) / 1.3
-        hedef = 86.0
+        ah = self.anlik_hiz()
+        hedef = min(96.0, 100.0 * ah["deger"] / ah["vmax"]) if ah else 86.0
         if p <= 0:
             v = 0.0
         elif p < 1:
@@ -1167,7 +1296,8 @@ class IsEmriVideo:
                 s = bs * 1.5
                 K.put(img, tik_img(s, (t - son) / TIK), bx - bs * 0.22, cy - bs / 2 - s * 0.42, clip=CLIP)
         recap = self.segs[-1] if self.segs[-1].kind == "recap" else None
-        if recap is not None and t >= recap.start + ONAY0:
+        ka = self.kapanis_ani()
+        if recap is not None and t >= recap.start + ONAY0 and (ka is None or t < ka):
             ox0, oy0, ox1, oy1 = self.olcu["onay"]
             im = self._lay.get("tamam")
             if im is None:
@@ -1177,15 +1307,16 @@ class IsEmriVideo:
             K.put(img, im, (ox0 + ox1) / 2 - im.width / 2, (oy0 + oy1) / 2 + 4 - im.height / 2, k=k,
                   alpha=min(1.0, ps * 3), clip=CLIP)
         self.speech(seg).put(img, self.cur_word(t, seg) if not self.cta_okunuyor(seg, t) else self.speech(seg).b)
-        ka = self.kapanis_ani()
-        if ka is not None and t >= ka:
+        if ka is not None and t >= ka:     # ONAY kutusundaki TAMAM, KAPANDI mührüne döner (listeye binmez)
+            ox0, oy0, ox1, oy1 = self.olcu["onay"]
             im = self._lay.get("kapandi")
             if im is None:
-                im = self._lay["kapandi"] = muhur_img(["KAPANDI"], 84, YESIL, rot=-9, seed=9, alpha=1.0,
+                ms = 34
+                while ms > 18 and K.tw("KAPANDI", "anton", ms) + ms * 0.76 + 16 > ox1 - ox0 - 6:
+                    ms -= 2
+                im = self._lay["kapandi"] = muhur_img(["KAPANDI"], ms, YESIL, rot=-9, seed=9, alpha=1.0,
                                                           dolu=True)
-            o = self.olcu
-            cy = (o["liste_y0"] + o["ayrac2"]) / 2 + 2
-            cx = (o["kx0"] + o["kx1"]) / 2 + 10
+            cx, cy = (ox0 + ox1) / 2, (oy0 + oy1) / 2 + 4
             ps = (t - ka) / 0.18
             k = K.lerp(1.9, 1.0, K.ease_out_cubic(ps)) if ps < 1 else 1.0
             K.put(img, im, cx - im.width / 2, cy - im.height / 2, k=k, alpha=min(1.0, ps * 3), clip=CLIP)
@@ -1264,6 +1395,8 @@ class IsEmriVideo:
         if not enter:
             k = 1 + 0.02 * math.sin(math.pi * K.clamp(lt / 0.5)) if lt < 0.5 else 1.0
             K.put(img, base, ox, oy, k=k, clip=clip)
+            if seg.kind == "recap":
+                self.ust_ciz(img, seg, lt, 0.0, clip)
             for im, (x, y) in notlar:
                 K.put(img, im, x, y, clip=clip)
             return
@@ -1274,14 +1407,30 @@ class IsEmriVideo:
         lay = N.feather_right(base, ox + dx, strength=K.clamp(dx / 40)) if dx > 0.5 else base
         K.put(img, lay, ox + dx, oy, clip=clip)
         if seg.kind == "recap":
+            self.ust_ciz(img, seg, lt, dx, clip)
             self.ibre(img, seg, lt)
         for j, (im, (x, y)) in enumerate(notlar):
             pc = (lt - NOTE0 - 0.2 * j) / 0.26
             if pc > 0:
                 K.put(img, im, x + dx, y, k=N.ease_pop(pc, 1.14), clip=clip)
 
+    def ust_ciz(self, img: Image.Image, seg, lt: float, dx: float, clip) -> None:
+        """Ölçekte levha satırı: soru söylenene kadar ÜRETİM HIZI levhası, sonra sorunun büyük başlığı (patlayarak)."""
+        ox, oy = self.icerik[:2]
+        sm = self.soru_metni(seg)
+        ts = (self.words[sm[0]].start - 0.06 - seg.start) if sm else None
+        if ts is None or lt < ts:
+            lay = self.ust_katman(seg, False)
+            if dx > 0.5:
+                lay = N.feather_right(lay, ox + dx, strength=K.clamp(dx / 40))
+            K.put(img, lay, ox + dx, oy, clip=clip)
+            return
+        k = N.ease_pop((lt - ts) / 0.28, 1.08) if lt - ts < 0.28 else 1.0
+        K.put(img, self.ust_katman(seg, True), ox + dx, oy, k=k, clip=clip, anchor=(0.1, 0.12))
+
     def cta(self, img: Image.Image, seg, t: float) -> None:
-        """'Yorumlara yaz' söylenince makine bölgesinin alt bandında YORUMLARA YAZ çıkartması."""
+        """'Yorumlara yaz' söylenince makine bölgesinin sağ alt köşesinde (sayı bloğunun altında, göstergeye binmeden)
+        YORUMLARA YAZ çıkartması."""
         if seg.kind != "recap":
             return
         cta = self.recap_cta(seg)
@@ -1290,12 +1439,11 @@ class IsEmriVideo:
         cs = self.words[cta].start - 0.08
         if t < cs:
             return
-        st = self._lay.get("cta")
-        if st is None:
-            st = self._lay["cta"] = K.cta_sticker(up(K.CtaCard.BUTTON), 600, size=72)
         _, _, zb = self.icerik_katmani(seg)
+        st = self.cta_cikartmasi(zb)
+        cx, cy = self.cta_merkezi(zb)
         kk = N.ease_pop((t - cs) / 0.28, 1.15) * K.cta_pulse(t - cs)
-        K.put(img, st, X1 - st.width + 6, zb[3] - st.height * 0.62, k=kk, clip=CLIP, anchor=(0.7, 0.5))
+        K.put(img, st, cx - st.width / 2, cy - st.height / 2, k=kk, clip=CLIP, anchor=(0.7, 0.5))
 
     def kesme_cizgisi(self, img: Image.Image, t: float) -> None:
         """Açılış: makas, sayaç satırının altındaki kesik çizgiyi soldan sağa keser; sonra çizgi yerinde kalır."""

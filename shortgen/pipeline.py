@@ -87,6 +87,19 @@ def kalip_sablonu(structure: str | None, template: str | None) -> str | None:
     return template
 
 
+def cizgi_sablonu(script: ShortScript, template: str | None) -> str | None:
+    """Sahnelerinde Çizgi Roman tarifi (Scene.cizgi) olan senaryo yalnız Çizgi Roman kurgu modülüyle çizilir: başka
+    şablon verildiyse (ör. ornek.yml'nin varsayılanı kart) cizgi şablonuna geçilir ve günlüğe yazılır (yoksa paneller,
+    balonlar ve oylama sessizce kaybolur, video fotoğrafsız kart videosu olurdu)."""
+    if not any(sc.cizgi is not None for sc in script.scenes) or sablon_renderer(template) == "cizgi":
+        return template
+    kendi = next((k for k in template_catalog() if sablon_renderer(k) == "cizgi"), None)
+    if kendi is None:
+        raise SystemExit("Senaryoda Çizgi Roman tarifi var ama cizgi şablonu bulunamadı.")
+    print(f"Senaryonun sahnelerinde Çizgi Roman tarifi var: {template} yerine {kendi} kullanılıyor.")
+    return kendi
+
+
 TELIF_DURDU = ROOT / "output" / "telif_durdu.txt"  # uret.yml bu dosya varsa durumu Telegram'a yazar
 
 
@@ -399,7 +412,9 @@ def main() -> None:
                                  # şablonla (nasil, uretim, isemri) çizilecekse istenir
                                  adim_kartlari=adim_kartli(hedef),
                                  # şablonun kendi ek yönergesi (templates/<ad>.json "istem"), ör. ek sahne alanları
-                                 sablon_kurali=str(_sablon(hedef).get("istem") or ""))
+                                 sablon_kurali=str(_sablon(hedef).get("istem") or ""),
+                                 # Çizgi Roman sahne tarifi (Scene.cizgi) şemaya yalnız cizgi şablonunda girer
+                                 **({"cizgi": True} if sablon_renderer(hedef) == "cizgi" else {}))
         if queued and konu_sirasi.remove(queued):  # senaryo yazıldı: konu sıradan çıkar (state_sync kaydeder)
             print("Konu sırasından çıkarıldı:", queued)
     if script.scenes and os.environ.get("SERIES_LABEL", "1") != "0":
@@ -407,7 +422,7 @@ def main() -> None:
         print("Format etiketi:", script.scenes[0].kicker)
     if script.series_part == 2 and open_part and open_part.get("template") and not a.template:
         a.template = open_part["template"]
-    template = kalip_sablonu(script.structure, pick_template(script, a.template))
+    template = cizgi_sablonu(script, kalip_sablonu(script.structure, pick_template(script, a.template)))
     print(f"Şablon: {template}")
     yapi = sablon_yapisi(template)
     if yapi and script.structure != yapi:  # ör. hazır senaryo başka kalıpta

@@ -18,7 +18,9 @@ KARAKTERLER = {
     "nermin": "Nermin, 44 yaşında, okul kantininde çalışıyor, Kuzey'in annesi: topuz koyu saç, hardal hırka",
     "selim": "Selim Bey, 50 yaşında Galatasaray gözcüsü: gözlük, gri ceket, sarı-kırmızı atkı, not defteri",
     "orhan": "Orhan Bey, 45 yaşında Samsunspor gözcüsü: kırmızı-beyaz eşofman üstü, kasket",
-    "golge": "Yüzü gölgede, not alan adam (kimliği henüz belli olmayan gözcü)",
+    "golge": "Arkadan ışık alan siluet, not alan adam (kimliği henüz belli olmayan gözcü; yüzü görünmez)",
+    "elif": "Elif, 11 yaşında, Kuzey'in kız kardeşi: kahve topuz saç, camgöbeği eşofman üstü",
+    "yilmaz": "Yılmaz Hoca, 62 yaşında Sinopspor gençler hocası: beyaz kısa saç ve beyaz bıyık, gri-mavi eşofman",
 }
 
 # ---------------------------------------------------------------- pozlar (kollar ve eldeki nesne)

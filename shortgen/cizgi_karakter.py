@@ -81,11 +81,21 @@ KADRO: dict[str, Gorunum] = {
                      sac_parlak=(110, 96, 86), ust="esofman", ust_renk=(206, 30, 38), ust_g=(160, 20, 28),
                      ust_ikinci=(250, 249, 245), alt_renk=(30, 30, 34), sakal="biyik", sakal_renk=(40, 34, 30),
                      bere="kasket", bere_renk=(206, 30, 38), bere_ikinci=(250, 249, 245), yas="yetiskin"),
-    # gölgedeki not alan adam: koyu palto, kasket, yüz gölgede
+    # gölgedeki not alan adam: arkadan ışık alan siluet (figur_svg bütün figürü tek lacivert tona boyar, kenarında
+    # ince açık ışık çizgisi); yüzü, kulakları, elleri ayrı renkte değildir
     "golge": Gorunum(ten=(90, 86, 84), ten_g=(60, 58, 56), sac="kisa", sac_renk=(30, 28, 28),
                      sac_parlak=(70, 68, 66), ust="palto", ust_renk=(64, 66, 72), ust_g=(44, 46, 52),
                      alt_renk=(40, 40, 44), bere="kasket", bere_renk=(46, 46, 50), bere_ikinci=(46, 46, 50),
                      golge=True),
+    # Elif: Kuzey'in kız kardeşi (11): kahve topuz, camgöbeği eşofman üstü (beyaz biye), genç yüz
+    "elif": Gorunum(ten=(226, 184, 144), ten_g=(198, 152, 112), sac="topuz", sac_renk=(96, 58, 34),
+                    sac_parlak=(160, 110, 74), ust="esofman", ust_renk=(40, 150, 170), ust_g=(28, 116, 134),
+                    ust_ikinci=(250, 249, 245), alt_renk=(40, 52, 70), yas="genc"),
+    # Yılmaz Hoca: Sinopspor gençler hocası (62): beyaz kısa saç, beyaz bıyık, gri-mavi eşofman; kulüp forması yok
+    "yilmaz": Gorunum(ten=(214, 166, 126), ten_g=(186, 136, 98), sac="kisa", sac_renk=(222, 220, 214),
+                      sac_parlak=(250, 249, 245), ust="esofman", ust_renk=(96, 112, 132), ust_g=(72, 86, 104),
+                      ust_ikinci=(250, 249, 245), alt_renk=(44, 48, 56), sakal="biyik",
+                      sakal_renk=(236, 234, 228), yas="olgun"),
     # soyunma odasındaki aynı formalı çocuklar (yalnız mekân çiziminde; senaryoda kullanılmaz)
     "oyuncu": Gorunum(ten=(222, 180, 140), ten_g=(194, 148, 108), sac="kisa", sac_renk=(48, 34, 26),
                       sac_parlak=(110, 80, 60), ust="esofman", ust_renk=(250, 249, 245), ust_g=(214, 212, 206),
@@ -303,10 +313,7 @@ def _bas(g: Gorunum, ifade: str, bx: float, by: float, egim: float) -> str:
     out += f'<path d="{yuz}" fill="none" stroke="{ink}" stroke-width="{SW}" stroke-linejoin="round"/>'
     out += _sac_on(g)
     out += _bere(g)
-    if g.golge:
-        # yüz gölgede: şapkanın altı koyu, yalnız çene çizgisi ve not defterine bakan gözlerin parıltısı
-        out += f'<path d="{yuz}" fill="{ink}" opacity="0.82"/>'
-        out += f'<path d="M150,190 L182,186 M218,186 L250,190" stroke="{hx((150, 148, 145))}" stroke-width="5" stroke-linecap="round"/>'
+    if g.golge:          # siluet (figur_svg bütün figürü tek tona boyar): yüz çizilmez
         return out + "</g>"
     kL, kR = KASLAR.get(ifade, KASLAR["normal"])
     kas = hx(g.sac_renk) if g.sac_renk[0] > 100 else ink
@@ -581,6 +588,19 @@ def _kollar(g: Gorunum, poz: str) -> tuple[str, str]:
 YONLER = ("sol", "sag")
 
 
+SILUET = (28, 32, 50)         # gölgedeki gözcünün tek tonu (koyu lacivert)
+SILUET_ISIK = (236, 230, 206)  # arkadan vuran projektör ışığının kenar çizgisi
+
+
+def siluet(body: str) -> str:
+    """Figürü arkadan ışık alan siluete çevirir: bütün renkler tek koyu ton (yüz, kulak, el, giysi ayrımı yok); aynı
+    biçim sol üste birkaç piksel kaydırılmış açık tonla altta kalır, kenarda ince ışık çizgisi olarak görünür."""
+    koyu = re.sub(r"#[0-9a-fA-F]{6}", hx(SILUET), body)
+    isik = re.sub(r"#[0-9a-fA-F]{6}", hx(SILUET_ISIK), body)
+    isik = re.sub(r'id="(\w+)"', r'id="\1_isik"', isik).replace("url(#agk)", "url(#agk_isik)")
+    return f'<g transform="translate(-7 -6)">{isik}</g>{koyu}'
+
+
 def figur_svg(kid: str, poz: str = "dur", ifade: str = "normal", yon: str = "sag") -> str:
     """Karakterin SVG gövdesi (viewBox VB). yon: karakterin baktığı taraf (sag: izleyicinin sağına). Aynı girdi her
     zaman aynı çıktıyı verir. Bilinmeyen poz/ifade varsayılana döner."""
@@ -600,6 +620,8 @@ def figur_svg(kid: str, poz: str = "dur", ifade: str = "normal", yon: str = "sag
         body += _top(394, 742, 40)
         for k, (x0, y0) in enumerate(((330, 700), (318, 738), (330, 776))):
             body += f'<path d="M{x0},{y0} l-46,{(k - 1) * 8}" stroke="{ink}" stroke-width="6" stroke-linecap="round"/>'
+    if g.golge:
+        body = siluet(body)
     # karakter sağa bakarken saçın/kolların asimetrisi doğal görünsün diye figür sola bakınca aynalanır
     if yon == "sol":
         body = f'<g transform="translate(400 0) scale(-1 1)">{body}</g>'

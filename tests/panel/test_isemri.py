@@ -177,6 +177,73 @@ class Hiz(unittest.TestCase):
         self.assertIsNone(v.hiz, "video boyunca kıpırdamayan sayaç gösterilmez")
 
 
+class Olcek(unittest.TestCase):
+    """Ölçek sahnesi: ÜRETİM HIZI levhası (aşama numarası yok), saniyedeki üretim, soru başlığı, çıkartmanın yeri."""
+
+    def test_anlik_hiz_ve_soru(self):
+        v, _, _ = video(demo())
+        ah = v.anlik_hiz()
+        self.assertEqual((ah["metin"], ah["donem"], ah["vmax"]), ("≈444", "SANİYE", 600))
+        self.assertTrue(60 <= 100 * ah["deger"] / ah["vmax"] <= 85, "ibre sarı bölgede durur")
+        recap = v.segs[-1]
+        ilk, satirlar = v.soru_metni(recap)
+        self.assertEqual(" ".join(satirlar), "SENCE BİR KALEM KAÇ KİLOMETRE YAZAR?")
+        self.assertEqual(len(satirlar), 2)
+        self.assertEqual(v.words[ilk].text, "Sence")
+        # soru söylenince levha satırı değişir; önce levha (sarı), sonra kırmızı etiket
+        once = np.asarray(v.frame(v.words[ilk].start - 0.3, grain=False), dtype=np.int16)
+        sonra = np.asarray(v.frame(v.words[ilk].start + 0.5, grain=False), dtype=np.int16)
+        bant = (slice(I.LEVHA[1], I.BOLGE_Y0 - 10), slice(I.X0, I.X1))
+        kirmizi = lambda a: (np.abs(a[bant] - np.array(K.RED)).sum(axis=2) < 60).sum()  # noqa: E731
+        sari = lambda a: (np.abs(a[bant] - np.array(K.YELLOW)).sum(axis=2) < 60).sum()  # noqa: E731
+        self.assertGreater(sari(once), 20000, "ÜRETİM HIZI levhası")
+        self.assertGreater(kirmizi(sonra), 20000, "sorunun kırmızı etiketi")
+        self.assertLess(sari(sonra), sari(once) / 4)
+
+    def test_cagri_cikartmasi_bir_seye_binmez(self):
+        v, specs, _ = video(demo())
+        recap = v.segs[-1]
+        _, _, zb = v.icerik_katmani(recap)
+        st = v.cta_cikartmasi(zb)
+        cx, cy = v.cta_merkezi(zb)
+        bb = st.getchannel("A").point(lambda x: 255 if x > 20 else 0).getbbox()
+        cta = (cx - st.width / 2 + bb[0], cy - st.height / 2 + bb[1], cx - st.width / 2 + bb[2],
+               cy - st.height / 2 + bb[3])
+        self.assertLessEqual(cta[2], K.SAFE[2])
+        ic = (zb[0] + I.BANT + 18, zb[1] + I.BANT + 14, zb[2] - I.BANT - 18, zb[3] - I.BANT - 14)
+        gx, gy, R = v.gosterge_yeri(ic)
+        self.assertGreater(cta[0], gx + R + 30, "göstergeye binmez")
+        self.assertLess(cta[3], v.olcu["y0"] + 40, "iş emrine yalnız kenarından değer")
+        # sayı bloğu (KALEM etiketi dahil) çıkartmanın üstünde biter: çağrı öncesi ve sonrası blok aynı görünür
+        cs = v.words[v.recap_cta(recap)].start
+        a = np.asarray(v.frame(cs - 0.2, grain=False), dtype=np.int16)
+        b = np.asarray(v.frame(specs[-1].end - 0.05, grain=False), dtype=np.int16)
+        blok = (slice(int(ic[1]), int(cta[1]) - 4), slice(int(gx + R + 50), int(ic[2])))
+        self.assertLess(np.abs(a[blok] - b[blok]).max(), 40, "çıkartma sayı bloğunu örtmez")
+
+
+class Dogrulama(unittest.TestCase):
+    def test_sayac_karti_dogrulamada_dusmez(self):
+        """Doğrulayıcı son sahnenin counter kartını düşürürse yazarınki geri gelir (sayı dış seste hâlâ geçiyorsa)."""
+        from unittest import mock
+        from shortgen import script as S
+        yazar = ShortScript.model_validate(demo())
+        rev = yazar.model_copy(deep=True)
+        son = rev.scenes[-1]
+        son.card, son.card_value, son.card_label, son.card_note = "auto", "", "", ""
+        with mock.patch.object(S, "ask_claude", lambda *a, **k: S.Review(ok=True, problems=[],
+                                                                         fixed=rev.model_copy(deep=True))), \
+                mock.patch("builtins.print"):
+            out = S.verify_script(yazar, keep_structure=True, adim_kartlari=True)
+        s = out.scenes[-1]
+        self.assertEqual((s.card, s.card_value, s.card_label), ("counter", "14 MİLYAR", "KALEM / YIL"))
+        # doğrulayıcı sayıyı düzelttiyse eski kart geri gelmez
+        rev.scenes[-1].narration = rev.scenes[-1].narration.replace("14 milyar", "12 milyar")
+        yeni = rev.model_copy(deep=True)
+        S.sayac_karti_geri_yukle(yazar, yeni)
+        self.assertEqual(yeni.scenes[-1].card_value, "")
+
+
 class Plan(unittest.TestCase):
     def test_demo_plani(self):
         v, specs, _ = video(demo())
@@ -333,10 +400,14 @@ class Zamanlama(unittest.TestCase):
         self.assertGreater(yesil, 200)
         ka = v.kapanis_ani()
         once, sonra = (np.asarray(v.frame(t, grain=False), dtype=np.int16) for t in (ka - 0.1, ka + 0.4))
-        bolge = (slice(int(o["liste_y0"]), int(o["ayrac2"])), slice(int(o["kx0"]), int(o["kx1"])))
-        yesil = (np.abs(sonra[bolge] - np.array(I.YESIL)).sum(axis=2) < 90).sum()
-        self.assertGreater(yesil, 8000, "KAPANDI mührü aşama listesinin üstüne iner")
-        self.assertGreater(np.abs(once[bolge] - sonra[bolge]).max(), 100)
+        kutu = (slice(y0 + 8, y1 - 4), slice(x0 + 8, x1 - 8))
+        yesil_once = (np.abs(once[kutu] - np.array(I.YESIL)).sum(axis=2) < 90).sum()
+        yesil = (np.abs(sonra[kutu] - np.array(I.YESIL)).sum(axis=2) < 90).sum()
+        self.assertGreater(yesil, yesil_once * 1.5, "ONAY kutusundaki TAMAM, dolu KAPANDI mührüne döner")
+        # aşama listesine mühür inmez (liste okunur kalır; çağrı çıkartmasıyla aynı anda iki çıkartma olmaz)
+        # (sağ kenardaki pay: Makas mutlu olunca yanında parıltı belirir)
+        liste = (slice(int(o["liste_y0"]), int(o["ayrac2"])), slice(int(o["kx0"]), int(o["kx1"]) - 80))
+        self.assertLess(np.abs(once[liste] - sonra[liste]).max(), 40)
 
     def test_belirlenimci(self):
         a = video(demo())[0].frame(12.3)
