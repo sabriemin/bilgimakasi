@@ -1,11 +1,11 @@
 {
- "time": "2026-11-07T04:56+03:00",
+ "time": "2026-11-07T20:13+03:00",
  "platforms": {
   "youtube": {
    "account": {
-    "followers": 903,
-    "views": 4296,
-    "videos": 13
+    "followers": 906,
+    "views": 4866,
+    "videos": 15
    },
    "videos": {
     "short-20261104-1307": {
@@ -19,32 +19,32 @@
      "comments": 0
     },
     "short-20261104-2023": {
-     "views": 331,
+     "views": 402,
      "likes": 3,
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 1170,
+     "views": 1195,
      "likes": 20,
      "comments": 0
     },
     "short-20261104-2048": {
-     "views": 468,
-     "likes": 3,
+     "views": 563,
+     "likes": 6,
      "comments": 0
     },
     "short-20261104-2100": {
-     "views": 1030,
-     "likes": 14,
+     "views": 1525,
+     "likes": 20,
      "comments": 1
     },
     "short-20261104-211525": {
-     "views": 977,
+     "views": 1066,
      "likes": 3,
      "comments": 0
     },
     "short-20261104-212900": {
-     "views": 30,
+     "views": 31,
      "likes": 1,
      "comments": 0
     },
@@ -59,31 +59,41 @@
      "comments": 0
     },
     "short-20261105-151659": {
-     "views": 1025,
+     "views": 1076,
      "likes": 10,
      "comments": 0
     },
     "short-20261105-221556": {
-     "views": 479,
-     "likes": 6,
+     "views": 841,
+     "likes": 8,
      "comments": 2
     },
+    "short-20261105-230258": {
+     "views": 1056,
+     "likes": 7,
+     "comments": 0
+    },
+    "short-20261106-021602": {
+     "views": 220,
+     "likes": 3,
+     "comments": 0
+    },
     "short-20261106-042045": {
-     "views": 472,
-     "likes": 12,
+     "views": 1070,
+     "likes": 19,
      "comments": 0
     }
    }
   },
   "instagram": {
    "account": {
-    "followers": 6,
-    "videos": 13,
-    "views": 14565,
-    "likes": 137,
+    "followers": 18,
+    "videos": 15,
+    "views": 15292,
+    "likes": 147,
     "comments": 4,
-    "saves": 22,
-    "shares": 33
+    "saves": 29,
+    "shares": 36
    },
    "videos": {
     "short-20261104-1307": {
@@ -94,119 +104,147 @@
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 1201,
+     "views": 1203,
      "likes": 9,
      "comments": 0,
      "saves": 4,
      "shares": 2
     },
     "short-20261104-2023": {
-     "views": 1626,
-     "likes": 6,
+     "views": 1630,
+     "likes": 7,
      "comments": 0,
      "saves": 1,
      "shares": 7
     },
     "short-20261104-2033": {
-     "views": 2247,
+     "views": 2263,
      "likes": 56,
      "comments": 4,
      "saves": 7,
      "shares": 19
     },
     "short-20261104-2048": {
-     "views": 1843,
+     "views": 1851,
      "likes": 14,
      "comments": 0,
      "saves": 4,
      "shares": 0
     },
     "short-20261104-2100": {
-     "views": 1713,
+     "views": 1718,
      "likes": 11,
      "comments": 0,
      "saves": 4,
      "shares": 2
     },
     "short-20261104-211525": {
-     "views": 1441,
-     "likes": 15,
+     "views": 1570,
+     "likes": 16,
      "comments": 0,
      "saves": 1,
      "shares": 1
     },
     "short-20261104-212900": {
-     "views": 364,
+     "views": 369,
      "likes": 3,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261105-042947": {
-     "views": 1768,
+     "views": 1772,
      "likes": 11,
      "comments": 0,
      "saves": 0,
      "shares": 1
     },
     "short-20261105-061537": {
-     "views": 1319,
+     "views": 1325,
      "likes": 2,
      "comments": 0,
      "saves": 1,
      "shares": 0
     },
     "short-20261105-151659": {
-     "views": 139,
+     "views": 146,
      "likes": 2,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261105-221556": {
-     "views": 153,
+     "views": 166,
      "likes": 1,
      "comments": 0,
-     "saves": 0,
+     "saves": 1,
      "shares": 0
     },
-    "short-20261106-042045": {
-     "views": 140,
-     "likes": 2,
+    "short-20261105-230258": {
+     "views": 342,
+     "likes": 3,
      "comments": 0,
      "saves": 0,
      "shares": 1
+    },
+    "short-20261106-021602": {
+     "views": 151,
+     "likes": 3,
+     "comments": 0,
+     "saves": 1,
+     "shares": 0
+    },
+    "short-20261106-042045": {
+     "views": 175,
+     "likes": 4,
+     "comments": 0,
+     "saves": 5,
+     "shares": 3
     }
    }
   },
   "tiktok": {
    "account": {
-    "followers": 23,
-    "likes": 407,
-    "videos": 13,
-    "views": 7360,
-    "comments": 0,
-    "shares": 14
+    "followers": 27,
+    "likes": 448,
+    "videos": 15,
+    "views": 14061,
+    "comments": 2,
+    "shares": 25
    },
    "videos": {},
    "list": [
     {
-     "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2 Mini Bel",
-     "views": 4898,
-     "likes": 124,
+     "title": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya Nik",
+     "views": 57,
+     "likes": 1,
      "comments": 0,
-     "shares": 12
+     "shares": 0
+    },
+    {
+     "title": "Japon Balığı Hafızası Gerçekten 3 Saniye mi? Japon balığı ha",
+     "views": 107,
+     "likes": 0,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2 Mini Bel",
+     "views": 11421,
+     "likes": 164,
+     "comments": 2,
+     "shares": 23
     },
     {
      "title": "Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu Liv",
-     "views": 141,
+     "views": 148,
      "likes": 6,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında P",
-     "views": 130,
+     "views": 134,
      "likes": 3,
      "comments": 0,
      "shares": 0
@@ -255,7 +293,7 @@
     },
     {
      "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
-     "views": 334,
+     "views": 335,
      "likes": 11,
      "comments": 0,
      "shares": 1
@@ -276,7 +314,7 @@
     },
     {
      "title": "1904 St. Louis Olimpiyatları'ndaki maratonda bir koşucu yolu",
-     "views": 502,
+     "views": 504,
      "likes": 6,
      "comments": 0,
      "shares": 0
@@ -297,6 +335,8 @@
   "short-20261105-061537": "Kredi kartını kim icat etti? Ezberlenen hikâye uydurmaymış",
   "short-20261105-151659": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını taşıyor",
   "short-20261105-221556": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında",
+  "short-20261105-230258": "Japon Balığı Hafızası Gerçekten 3 Saniye mi?",
+  "short-20261106-021602": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya",
   "short-20261106-042045": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2"
  }
 }
