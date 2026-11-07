@@ -630,17 +630,38 @@
     "template": "dosya",
     "structure": "efsane",
     "created": "2026-11-05T23:02:58",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 200,
     "aciklama_message_id": 201,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "0WKhfoeZJ0g",
+        "url": "https://youtube.com/shorts/0WKhfoeZJ0g",
+        "at": "2026-11-07T11:31:23+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18111530519131680",
+        "url": "https://www.instagram.com/reel/DfbwaIFj3Am/",
+        "at": "2026-11-07T11:31:23+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7705344028979726356",
+        "draft": true,
+        "caption": "Japon Balığı Hafızası Gerçekten 3 Saniye mi?\n\nJapon balığı hafızası 3 saniye değil: bir deneyde balıklar yemin hangi saatte geleceğini bile öğrendi. Sen bu efsaneye inanıyor muydun?\n\n📷 James St. John (CC BY 2.0), Derek Harper (CC BY-SA 2.0), Yair-haklai (CC BY-SA 4.0)\n\n#japonbalığıhafızası #japonbalığı #efsanemigerçekmi #hayvanlar #bilgimakasi",
+        "at": "2026-11-07T11:31:23+03:00"
+      }
+    },
     "publish_at": "2026-11-07T08:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-07T08:30:00+00:00",
       "instagram": "2026-11-07T08:30:00+00:00",
       "tiktok": "2026-11-07T08:30:00+00:00"
     },
-    "decided": "2026-11-06T02:09:02+03:00"
+    "decided": "2026-11-06T02:09:02+03:00",
+    "published": "2026-11-07T11:31:23+03:00"
   },
   {
     "tag": "short-20261105-230425",
