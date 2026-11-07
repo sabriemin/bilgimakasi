@@ -1257,9 +1257,12 @@
     "template": "kart",
     "structure": "sayac",
     "created": "2026-11-07T23:49:06",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 390,
     "aciklama_message_id": 391,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-07T23:50:39+00:00",
+    "schedule": null,
+    "decided": "2026-11-08T02:50:39+03:00"
   }
 ]
