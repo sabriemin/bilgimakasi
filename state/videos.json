@@ -1285,5 +1285,18 @@
     "schedule": null,
     "decided": "2026-11-08T02:50:39+03:00",
     "published": "2026-11-08T02:52:17+03:00"
+  },
+  {
+    "tag": "short-20261107-235223",
+    "title": "Altın ayarı ne demek? 14 ayarın neredeyse yarısı altın değil",
+    "topic": "Altın ayarları ve ölçüleri: 24 parçalık ayar sistemi, 22 ayar çeyrek altın ve 916 damgası, 14 ayarın 585 milyem olması, saf altının yumuşaklığı ve beyaz altının aslında karışım olup rodyumla kaplanması",
+    "category": "bilim",
+    "template": "kart",
+    "structure": "sayac",
+    "created": "2026-11-07T23:52:23",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 394,
+    "aciklama_message_id": 395,
+    "platforms": {}
   }
 ]
