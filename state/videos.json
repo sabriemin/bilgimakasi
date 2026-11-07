@@ -1257,12 +1257,33 @@
     "template": "kart",
     "structure": "sayac",
     "created": "2026-11-07T23:49:06",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 390,
     "aciklama_message_id": 391,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "Qcmi0qdFEDQ",
+        "url": "https://youtube.com/shorts/Qcmi0qdFEDQ",
+        "at": "2026-11-08T02:52:17+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17959705896017234",
+        "url": "https://www.instagram.com/reel/DfdZyqSgm3K/",
+        "at": "2026-11-08T02:52:17+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7705581175745808404",
+        "draft": true,
+        "caption": "Hava durumu nasıl ölçülür? Gizli kahraman gökte patlıyor\n\nHava durumu nasıl ölçülür? Gölgedeki kulübeden 30 kilometrede patlayan balona kadar. Yolda bir meteoroloji balonu bulsan ne yapardın?\n\n📷 peter robinson (CC BY-SA 2.0), Biswarup Ganguly (CC BY 3.0)\n\n#havadurumunasılölçülür #meteoroloji #havadurumu #bilim #bilgimakasi",
+        "at": "2026-11-08T02:52:17+03:00"
+      }
+    },
     "publish_at": "2026-11-07T23:50:39+00:00",
     "schedule": null,
-    "decided": "2026-11-08T02:50:39+03:00"
+    "decided": "2026-11-08T02:50:39+03:00",
+    "published": "2026-11-08T02:52:17+03:00"
   }
 ]
