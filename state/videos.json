@@ -998,13 +998,20 @@
     "status": "zamanlandi",
     "telegram_message_id": 316,
     "aciklama_message_id": 317,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "Lb5LhzelrJE",
+        "url": "https://youtube.com/shorts/Lb5LhzelrJE",
+        "at": "2026-11-07T20:25:10+03:00"
+      }
+    },
     "schedule": {
       "youtube": "2026-11-07T17:25:00+00:00",
       "instagram": "2026-11-07T17:30:00+00:00",
       "tiktok": "2026-11-07T17:30:00+00:00"
     },
-    "publish_at": "2026-11-07T17:25:00+00:00",
+    "publish_at": "2026-11-07T17:30:00+00:00",
     "decided": "2026-11-07T00:05:24+03:00"
   },
   {
