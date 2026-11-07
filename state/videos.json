@@ -739,17 +739,38 @@
     "template": "ajanda",
     "structure": "olsaydin",
     "created": "2026-11-06T02:16:02",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 233,
     "aciklama_message_id": 234,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "ckY2Zq1mtNo",
+        "url": "https://youtube.com/shorts/ckY2Zq1mtNo",
+        "at": "2026-11-07T15:31:27+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18101948165560998",
+        "url": "https://www.instagram.com/reel/DfcL3K1FD1V/",
+        "at": "2026-11-07T15:31:27+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7705405921643694086",
+        "draft": true,
+        "caption": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya\n\nNikola Tesla olsaydın New York'a dört sentle iner, hendek kazar, sonra Chicago Dünya Fuarı'nı aydınlatırdın. Onun yerinde olsan hangi kararı farklı verirdin?\n\nRakamlar 2026 Türkiye verilerine dayanan yaklaşık hesaplardır; kişiye ve şehre göre değişir. Yatırım tavsiyesi değildir.\n\n📷 The Nikola Tesla Museum (CC BY-SA 4.0), Nikola Tesla Museum (CC BY-SA 4.0), Nikola Tesla Museum (CC BY-SA 4.0), Ermell (CC BY-SA 4.0)\n\n#nikolateslaolsaydın #nikolatesla #alternatifakım #YaSenOlsaydın #bilgimakasi",
+        "at": "2026-11-07T15:31:27+03:00"
+      }
+    },
     "publish_at": "2026-11-07T12:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-07T12:30:00+00:00",
       "instagram": "2026-11-07T12:30:00+00:00",
       "tiktok": "2026-11-07T12:30:00+00:00"
     },
-    "decided": "2026-11-06T05:18:15+03:00"
+    "decided": "2026-11-06T05:18:15+03:00",
+    "published": "2026-11-07T15:31:27+03:00"
   },
   {
     "tag": "short-20261106-035745",
