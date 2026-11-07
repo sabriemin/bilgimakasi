@@ -1294,10 +1294,17 @@
     "template": "kart",
     "structure": "sayac",
     "created": "2026-11-07T23:52:23",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 394,
     "aciklama_message_id": 395,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-23T14:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-23T14:00:00+00:00",
+      "instagram": "2026-11-23T14:00:00+00:00",
+      "tiktok": "2026-11-23T14:00:00+00:00"
+    },
+    "decided": "2026-11-08T02:56:17+03:00"
   },
   {
     "tag": "short-20261107-235436",
