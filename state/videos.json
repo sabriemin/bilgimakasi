@@ -1248,5 +1248,18 @@
       "tiktok": "2026-11-20T14:00:00+00:00"
     },
     "decided": "2026-11-07T22:20:00+03:00"
+  },
+  {
+    "tag": "short-20261107-234906",
+    "title": "Hava durumu nasıl ölçülür? Gizli kahraman gökte patlıyor",
+    "topic": "Hava durumu nasıl ölçülür: gölgedeki beyaz kulübe, rüzgârı ölçen yolcu uçakları ve dünyada günde iki kez aynı anda uçurulup yaklaşık 30 kilometrede patlayan meteoroloji balonları",
+    "category": "bilim",
+    "template": "kart",
+    "structure": "sayac",
+    "created": "2026-11-07T23:49:06",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 390,
+    "aciklama_message_id": 391,
+    "platforms": {}
   }
 ]
