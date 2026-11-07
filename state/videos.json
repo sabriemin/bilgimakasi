@@ -1298,5 +1298,18 @@
     "telegram_message_id": 394,
     "aciklama_message_id": 395,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261107-235436",
+    "title": "Euro 2000 Türkiye Belçika: Rakip kalede defansçının durduğu gece",
+    "topic": "Euro 2000'de Türkiye'nin ev sahibi Belçika'yı Brüksel'de 2-0 yenip tarihinde ilk kez çeyrek finale çıkması; kırmızı kart gören kaleci De Wilde'ın yerine kaleye defans oyuncusu Eric Deflandre'ın geçmesi",
+    "category": "spor",
+    "template": "retro",
+    "structure": "hikaye",
+    "created": "2026-11-07T23:54:36",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 396,
+    "aciklama_message_id": 397,
+    "platforms": {}
   }
 ]
