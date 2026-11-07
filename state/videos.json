@@ -995,7 +995,7 @@
     "template": "nasil",
     "structure": "nasil",
     "created": "2026-11-06T21:04:18",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 316,
     "aciklama_message_id": 317,
     "platforms": {
@@ -1004,6 +1004,19 @@
         "id": "Lb5LhzelrJE",
         "url": "https://youtube.com/shorts/Lb5LhzelrJE",
         "at": "2026-11-07T20:25:10+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18099030992408019",
+        "url": "https://www.instagram.com/reel/DfcuMSqE4g7/",
+        "at": "2026-11-07T20:31:22+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7705483148724946996",
+        "draft": true,
+        "caption": "Aktif hatırlama yöntemi: Sınava kalıcı çalışmanın 4 adımı\n\nAktif hatırlama yöntemiyle sınava kalıcı çalışmanın sırrı, notlarını kapatmakta. Sen ders çalışırken tekrar mı okuyorsun, kendini mi test ediyorsun?\n\n#aktifhatırlamayöntemi #dersçalışma #sınav #NasılYapılır #bilgimakasi",
+        "at": "2026-11-07T20:31:22+03:00"
       }
     },
     "schedule": {
@@ -1012,7 +1025,8 @@
       "tiktok": "2026-11-07T17:30:00+00:00"
     },
     "publish_at": "2026-11-07T17:30:00+00:00",
-    "decided": "2026-11-07T00:05:24+03:00"
+    "decided": "2026-11-07T00:05:24+03:00",
+    "published": "2026-11-07T20:31:22+03:00"
   },
   {
     "tag": "short-20261106-210533",
