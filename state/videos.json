@@ -1166,5 +1166,18 @@
       "tiktok": "2026-11-10T18:00:00+00:00"
     },
     "decided": "2026-11-07T00:48:09+03:00"
+  },
+  {
+    "tag": "short-20261107-120609",
+    "title": "Plüton adını kim verdi? Kahvaltıdaki 11 yaşında bir kız",
+    "topic": "Plüton'a adını 1930'da Oxford'lu 11 yaşındaki Venetia Burney'nin kahvaltıda vermesi: dedesi Falconer Madan'ın fikri astronom Herbert Hall Turner'a, onun da Lowell Gözlemevi'ne iletmesi, adın P-L ile Percival Lowell'ın baş harflerini taşıması, oylamada bütün oyları alması ve Venetia'nın 5 sterlin ödül kazanması",
+    "category": "uzay",
+    "template": "gece",
+    "structure": "hikaye",
+    "created": "2026-11-07T12:06:09",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 367,
+    "aciklama_message_id": 368,
+    "platforms": {}
   }
 ]
