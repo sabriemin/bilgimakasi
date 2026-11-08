@@ -719,17 +719,38 @@
     "template": "isemri",
     "structure": "uretim",
     "created": "2026-11-06T01:00:26",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 219,
     "aciklama_message_id": 220,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "O-nmhciDC0o",
+        "url": "https://youtube.com/shorts/O-nmhciDC0o",
+        "at": "2026-11-08T15:31:45+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17949898719345930",
+        "url": "https://www.instagram.com/reel/DfewsIzDIYh/",
+        "at": "2026-11-08T15:31:45+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7705777132915591175",
+        "draft": true,
+        "caption": "Lokum nasıl üretilir? Jöle kıvamının sırrı jelatin değil\n\nLokum nasıl üretilir, o jöle kıvamını jelatin olmadan nasıl alır? Sen en çok hangi lokumu seversin?\n\n#lokumnasılüretilir #türklokumu #lokum #nasılüretiliyor #bilgimakasi",
+        "at": "2026-11-08T15:31:45+03:00"
+      }
+    },
     "publish_at": "2026-11-08T12:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-08T12:30:00+00:00",
       "instagram": "2026-11-08T12:30:00+00:00",
       "tiktok": "2026-11-08T12:30:00+00:00"
     },
-    "decided": "2026-11-06T04:02:29+03:00"
+    "decided": "2026-11-06T04:02:29+03:00",
+    "published": "2026-11-08T15:31:45+03:00"
   },
   {
     "tag": "short-20261106-021602",
