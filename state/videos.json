@@ -1110,17 +1110,38 @@
     "template": "gazete",
     "structure": "koken",
     "created": "2026-11-06T21:14:06",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 333,
     "aciklama_message_id": 334,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "kbzuoTch9xU",
+        "url": "https://youtube.com/shorts/kbzuoTch9xU",
+        "at": "2026-11-08T11:31:29+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17938122621410919",
+        "url": "https://www.instagram.com/reel/DfeVMcwgPxj/",
+        "at": "2026-11-08T11:31:29+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7705715252427687957",
+        "draft": true,
+        "caption": "Otobüs kelimesinin kökeni: 'Bus' aslında bir ekin parçası\n\nOtobüs kelimesinin kökeni Latince omnibus, yani 'herkes için'; 'bus' ise yalnızca bir çoğul ekinin parçası. Sence kökeni en şaşırtıcı kelime hangisi?\n\n#otobüskelimesininkökeni #etimoloji #kelimeninkökeni #türkçe #bilgimakasi",
+        "at": "2026-11-08T11:31:29+03:00"
+      }
+    },
     "publish_at": "2026-11-08T08:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-08T08:30:00+00:00",
       "instagram": "2026-11-08T08:30:00+00:00",
       "tiktok": "2026-11-08T08:30:00+00:00"
     },
-    "decided": "2026-11-07T00:15:30+03:00"
+    "decided": "2026-11-07T00:15:30+03:00",
+    "published": "2026-11-08T11:31:29+03:00"
   },
   {
     "tag": "short-20261106-211742",
