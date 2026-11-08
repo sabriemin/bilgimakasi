@@ -1346,5 +1346,18 @@
     },
     "publish_at": "2026-11-10T14:00:00+00:00",
     "decided": "2026-11-08T02:57:06+03:00"
+  },
+  {
+    "tag": "short-20261108-122750",
+    "title": "Zeigarnik Etkisi: Garson Ödenen Siparişi Neden Unutur?",
+    "topic": "Zeigarnik etkisi: Kurt Lewin'in Berlin'de bir lokantada garsonun ödenmemiş siparişleri hatırlayıp ödenenleri unuttuğunu fark etmesi ve öğrencisi Bluma Zeigarnik'in yarıda kesilen işlerin neredeyse iki kat daha iyi hatırlandığını gösteren deneyi",
+    "category": "psikoloji",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-08T12:27:50",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 412,
+    "aciklama_message_id": 413,
+    "platforms": {}
   }
 ]
