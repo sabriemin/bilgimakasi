@@ -1,15 +1,15 @@
 {
- "time": "2026-11-07T20:13+03:00",
+ "time": "2026-11-08T11:46+03:00",
  "platforms": {
   "youtube": {
    "account": {
-    "followers": 906,
-    "views": 4866,
-    "videos": 15
+    "followers": 910,
+    "views": 9984,
+    "videos": 18
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 118,
+     "views": 116,
      "likes": 0,
      "comments": 0
     },
@@ -19,37 +19,37 @@
      "comments": 0
     },
     "short-20261104-2023": {
-     "views": 402,
+     "views": 484,
      "likes": 3,
      "comments": 0
     },
     "short-20261104-2033": {
-     "views": 1195,
+     "views": 1205,
      "likes": 20,
      "comments": 0
     },
     "short-20261104-2048": {
-     "views": 563,
-     "likes": 6,
+     "views": 583,
+     "likes": 7,
      "comments": 0
     },
     "short-20261104-2100": {
-     "views": 1525,
+     "views": 1616,
      "likes": 20,
      "comments": 1
     },
     "short-20261104-211525": {
-     "views": 1066,
-     "likes": 3,
+     "views": 1078,
+     "likes": 4,
      "comments": 0
     },
     "short-20261104-212900": {
-     "views": 31,
+     "views": 32,
      "likes": 1,
      "comments": 0
     },
     "short-20261105-042947": {
-     "views": 264,
+     "views": 262,
      "likes": 1,
      "comments": 0
     },
@@ -59,262 +59,319 @@
      "comments": 0
     },
     "short-20261105-151659": {
-     "views": 1076,
+     "views": 1121,
      "likes": 10,
      "comments": 0
     },
     "short-20261105-221556": {
-     "views": 841,
-     "likes": 8,
+     "views": 989,
+     "likes": 9,
      "comments": 2
     },
     "short-20261105-230258": {
-     "views": 1056,
+     "views": 1069,
      "likes": 7,
      "comments": 0
     },
     "short-20261106-021602": {
-     "views": 220,
-     "likes": 3,
+     "views": 337,
+     "likes": 4,
      "comments": 0
     },
     "short-20261106-042045": {
-     "views": 1070,
-     "likes": 19,
+     "views": 1101,
+     "likes": 20,
+     "comments": 0
+    },
+    "short-20261106-210418": {
+     "views": 977,
+     "likes": 9,
+     "comments": 0
+    },
+    "short-20261106-211406": {
+     "views": 6,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261107-234906": {
+     "views": 390,
+     "likes": 2,
      "comments": 0
     }
    }
   },
   "instagram": {
    "account": {
-    "followers": 18,
-    "videos": 15,
-    "views": 15292,
-    "likes": 147,
-    "comments": 4,
-    "saves": 29,
-    "shares": 36
+    "followers": 52,
+    "videos": 18,
+    "views": 17266,
+    "likes": 169,
+    "comments": 6,
+    "saves": 39,
+    "shares": 51
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 611,
+     "views": 619,
      "likes": 5,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261104-1839": {
-     "views": 1203,
+     "views": 1212,
      "likes": 9,
      "comments": 0,
      "saves": 4,
      "shares": 2
     },
     "short-20261104-2023": {
-     "views": 1630,
+     "views": 1638,
      "likes": 7,
      "comments": 0,
      "saves": 1,
      "shares": 7
     },
     "short-20261104-2033": {
-     "views": 2263,
+     "views": 2276,
      "likes": 56,
      "comments": 4,
      "saves": 7,
      "shares": 19
     },
     "short-20261104-2048": {
-     "views": 1851,
-     "likes": 14,
+     "views": 1861,
+     "likes": 15,
      "comments": 0,
      "saves": 4,
      "shares": 0
     },
     "short-20261104-2100": {
-     "views": 1718,
+     "views": 1730,
      "likes": 11,
      "comments": 0,
      "saves": 4,
      "shares": 2
     },
     "short-20261104-211525": {
-     "views": 1570,
+     "views": 1599,
      "likes": 16,
      "comments": 0,
      "saves": 1,
      "shares": 1
     },
     "short-20261104-212900": {
-     "views": 369,
+     "views": 383,
      "likes": 3,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261105-042947": {
-     "views": 1772,
+     "views": 1783,
      "likes": 11,
      "comments": 0,
      "saves": 0,
      "shares": 1
     },
     "short-20261105-061537": {
-     "views": 1325,
+     "views": 1338,
      "likes": 2,
      "comments": 0,
      "saves": 1,
      "shares": 0
     },
     "short-20261105-151659": {
-     "views": 146,
-     "likes": 2,
+     "views": 160,
+     "likes": 3,
      "comments": 0,
      "saves": 0,
      "shares": 0
     },
     "short-20261105-221556": {
-     "views": 166,
-     "likes": 1,
+     "views": 195,
+     "likes": 3,
      "comments": 0,
      "saves": 1,
-     "shares": 0
-    },
-    "short-20261105-230258": {
-     "views": 342,
-     "likes": 3,
-     "comments": 0,
-     "saves": 0,
      "shares": 1
     },
+    "short-20261105-230258": {
+     "views": 446,
+     "likes": 4,
+     "comments": 0,
+     "saves": 1,
+     "shares": 2
+    },
     "short-20261106-021602": {
-     "views": 151,
-     "likes": 3,
+     "views": 181,
+     "likes": 4,
      "comments": 0,
      "saves": 1,
      "shares": 0
     },
     "short-20261106-042045": {
-     "views": 175,
-     "likes": 4,
+     "views": 262,
+     "likes": 16,
+     "comments": 2,
+     "saves": 12,
+     "shares": 15
+    },
+    "short-20261106-210418": {
+     "views": 216,
+     "likes": 1,
      "comments": 0,
-     "saves": 5,
-     "shares": 3
+     "saves": 2,
+     "shares": 1
+    },
+    "short-20261106-211406": {
+     "views": 1,
+     "likes": 1,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261107-234906": {
+     "views": 1366,
+     "likes": 2,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
     }
    }
   },
   "tiktok": {
    "account": {
-    "followers": 27,
-    "likes": 448,
-    "videos": 15,
-    "views": 14061,
+    "followers": 33,
+    "likes": 493,
+    "videos": 18,
+    "views": 16197,
     "comments": 2,
-    "shares": 25
+    "shares": 31
    },
    "videos": {},
    "list": [
     {
-     "title": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya Nik",
-     "views": 57,
+     "title": "Otobüs kelimesinin kökeni: 'Bus' aslında bir ekin parçası Ot",
+     "views": 9,
      "likes": 1,
      "comments": 0,
      "shares": 0
     },
     {
+     "title": "Hava durumu nasıl ölçülür? Gizli kahraman gökte patlıyor Hav",
+     "views": 397,
+     "likes": 5,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Aktif hatırlama yöntemi: Sınava kalıcı çalışmanın 4 adımı Ak",
+     "views": 408,
+     "likes": 20,
+     "comments": 0,
+     "shares": 2
+    },
+    {
+     "title": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya Nik",
+     "views": 381,
+     "likes": 5,
+     "comments": 0,
+     "shares": 0
+    },
+    {
      "title": "Japon Balığı Hafızası Gerçekten 3 Saniye mi? Japon balığı ha",
-     "views": 107,
-     "likes": 0,
+     "views": 418,
+     "likes": 3,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2 Mini Bel",
-     "views": 11421,
-     "likes": 164,
+     "views": 12078,
+     "likes": 176,
      "comments": 2,
-     "shares": 23
+     "shares": 27
     },
     {
      "title": "Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu Liv",
-     "views": 148,
+     "views": 153,
      "likes": 6,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında P",
-     "views": 134,
+     "views": 140,
      "likes": 3,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Açlık Oyunları Fikri Bir Gece Kanal Değiştirirken Doğdu Suza",
-     "views": 1,
+     "views": 5,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "GTA Aslında Bir Yarış Oyunuydu: Onu Bir Yazılım Hatası Kurta",
-     "views": 157,
+     "views": 160,
      "likes": 3,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Benzin kelimesinin kökeni: Depodaki yakıt bir tütsünün adını",
-     "views": 140,
+     "views": 142,
      "likes": 1,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Galatasaray 2000 yılında önce Arsenal'i, 100 gün sonra da Re",
-     "views": 148,
+     "views": 149,
      "likes": 4,
      "comments": 0,
      "shares": 1
     },
     {
      "title": "Kredi kartını kim icat etti sorusunun ezber cevabı, Diners C",
-     "views": 127,
+     "views": 129,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Ahtapotun üç kalbi ve mavi kanı var; üstelik jetle yüzerken ",
-     "views": 305,
+     "views": 307,
      "likes": 10,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Tutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kr",
-     "views": 335,
+     "views": 336,
      "likes": 11,
      "comments": 0,
      "shares": 1
     },
     {
      "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 277,
+     "views": 278,
      "likes": 10,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "You'll Never Walk Alone, Liverpool tribünlerinden önce 1945'",
-     "views": 200,
+     "views": 201,
      "likes": 8,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "1904 St. Louis Olimpiyatları'ndaki maratonda bir koşucu yolu",
-     "views": 504,
+     "views": 506,
      "likes": 6,
      "comments": 0,
      "shares": 0
@@ -337,6 +394,9 @@
   "short-20261105-221556": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında",
   "short-20261105-230258": "Japon Balığı Hafızası Gerçekten 3 Saniye mi?",
   "short-20261106-021602": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya",
-  "short-20261106-042045": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2"
+  "short-20261106-042045": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2",
+  "short-20261106-210418": "Aktif hatırlama yöntemi: Sınava kalıcı çalışmanın 4 adımı",
+  "short-20261106-211406": "Otobüs kelimesinin kökeni: 'Bus' aslında bir ekin parçası",
+  "short-20261107-234906": "Hava durumu nasıl ölçülür? Gizli kahraman gökte patlıyor"
  }
 }
