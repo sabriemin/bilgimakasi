@@ -1428,5 +1428,18 @@
       "tiktok": "2026-11-12T09:00:00+00:00"
     },
     "decided": "2026-11-08T21:11:02+03:00"
+  },
+  {
+    "tag": "short-20261108-192325",
+    "title": "10 TL arkasındaki formül: Cahit Arf'ın Arf değişmezi",
+    "topic": "Cahit Arf: Arf değişmezini bulan Türk matematikçi ve formülünün 10 TL banknotlarının arkasında basılı olması",
+    "category": "bilim",
+    "template": "kart",
+    "structure": "hikaye",
+    "created": "2026-11-08T19:23:25",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 423,
+    "aciklama_message_id": 424,
+    "platforms": {}
   }
 ]
