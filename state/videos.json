@@ -706,17 +706,38 @@
     "template": "kitap",
     "structure": "kitap",
     "created": "2026-11-05T23:28:27",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 205,
     "aciklama_message_id": 206,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "F6w0K0xPLoQ",
+        "url": "https://youtube.com/shorts/F6w0K0xPLoQ",
+        "at": "2026-11-09T20:31:46+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18107961652986350",
+        "url": "https://www.instagram.com/reel/Dfh3yvvgv88/",
+        "at": "2026-11-09T20:31:46+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706225573164615688",
+        "draft": true,
+        "caption": "Dönüşüm Kafka konusu ve kapakta asla gösterilmeyen böcek\n\nDönüşüm Kafka konusu: Gregor Samsa bir sabah haşereye dönüşür, Kafka ise o böceğin kapakta uzaktan bile gösterilmesini yasaklar. Sence Gregor gerçekte neye dönüştü?\n\n#dönüşümkafkakonusu #kafka #dönüşüm #BirKitapBirDakika #bilgimakasi",
+        "at": "2026-11-09T20:31:46+03:00"
+      }
+    },
     "publish_at": "2026-11-09T17:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-09T17:30:00+00:00",
       "instagram": "2026-11-09T17:30:00+00:00",
       "tiktok": "2026-11-09T17:30:00+00:00"
     },
-    "decided": "2026-11-06T02:29:43+03:00"
+    "decided": "2026-11-06T02:29:43+03:00",
+    "published": "2026-11-09T20:31:46+03:00"
   },
   {
     "tag": "short-20261106-004840",
