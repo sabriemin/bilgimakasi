@@ -1119,17 +1119,38 @@
     "template": "retro",
     "structure": "hikaye",
     "created": "2026-11-06T21:08:34",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 324,
     "aciklama_message_id": 325,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "F2kH7b47LSU",
+        "url": "https://youtube.com/shorts/F2kH7b47LSU",
+        "at": "2026-11-09T17:01:33+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18135866152668852",
+        "url": "https://www.instagram.com/reel/DfhfwolANoc/",
+        "at": "2026-11-09T17:01:33+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706171415502702613",
+        "draft": true,
+        "caption": "11.11 indirim günü nereden çıktı? Bekâr öğrencilerin şakası\n\n11.11 indirim günü, 1993'te Çinli bekâr öğrencilerin şakası olarak doğdu ve Alibaba'yla dev bir alışveriş gününe dönüştü. Sen bu yıl 11.11'de alışveriş yapacak mısın?\n\n📷 Zhou Guanhuai (CC BY-SA 4.0), Thomas LOMBARD, designed by HASSELL (arc (CC BY-SA 3.0)\n\n#1111indirimgünü #bekârlargünü #alibaba #eticaret #bilgimakasi",
+        "at": "2026-11-09T17:01:33+03:00"
+      }
+    },
     "publish_at": "2026-11-09T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-09T14:00:00+00:00",
       "instagram": "2026-11-09T14:00:00+00:00",
       "tiktok": "2026-11-09T14:00:00+00:00"
     },
-    "decided": "2026-11-07T00:10:18+03:00"
+    "decided": "2026-11-07T00:10:18+03:00",
+    "published": "2026-11-09T17:01:33+03:00"
   },
   {
     "tag": "short-20261106-210923",
