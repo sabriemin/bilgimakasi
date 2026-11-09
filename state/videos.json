@@ -570,17 +570,38 @@
     "category": "dil ve kültür",
     "template": "nasil",
     "created": "2026-11-05T21:56:47",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 188,
     "aciklama_message_id": 189,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "5aTkUbAXFBQ",
+        "url": "https://youtube.com/shorts/5aTkUbAXFBQ",
+        "at": "2026-11-09T12:01:21+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17994637560060444",
+        "url": "https://www.instagram.com/reel/Dfg9awmDCUw/",
+        "at": "2026-11-09T12:01:21+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706094095391803413",
+        "draft": true,
+        "caption": "Köpüklü Türk kahvesinin sırrı: Asla kaynatmamak\n\nKöpüklü Türk kahvesinin sırrı onu kaynatmamakta, gerisi dört basit adım. Sen kahveni sade mi içersin, şekerli mi?\n\n#köpüklütürkkahvesi #türkkahvesi #kahve #NasılYapılır #bilgimakasi",
+        "at": "2026-11-09T12:01:21+03:00"
+      }
+    },
     "publish_at": "2026-11-09T09:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-09T09:00:00+00:00",
       "instagram": "2026-11-09T09:00:00+00:00",
       "tiktok": "2026-11-09T09:00:00+00:00"
     },
-    "decided": "2026-11-06T00:58:52+03:00"
+    "decided": "2026-11-06T00:58:52+03:00",
+    "published": "2026-11-09T12:01:21+03:00"
   },
   {
     "tag": "short-20261105-221556",
