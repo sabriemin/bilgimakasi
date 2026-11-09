@@ -1,11 +1,11 @@
 {
- "time": "2026-11-09T18:25+03:00",
+ "time": "2026-11-09T22:12+03:00",
  "platforms": {
   "youtube": {
    "account": {
     "followers": 918,
-    "views": 13817,
-    "videos": 22
+    "views": 14746,
+    "videos": 23
    },
    "videos": {
     "short-20261104-1307": {
@@ -39,7 +39,7 @@
      "comments": 1
     },
     "short-20261104-211525": {
-     "views": 1122,
+     "views": 1124,
      "likes": 6,
      "comments": 0
     },
@@ -59,12 +59,12 @@
      "comments": 0
     },
     "short-20261105-151659": {
-     "views": 1160,
+     "views": 1164,
      "likes": 11,
      "comments": 0
     },
     "short-20261105-215647": {
-     "views": 909,
+     "views": 1037,
      "likes": 7,
      "comments": 0
     },
@@ -78,13 +78,18 @@
      "likes": 7,
      "comments": 0
     },
+    "short-20261105-232827": {
+     "views": 0,
+     "likes": 0,
+     "comments": 0
+    },
     "short-20261106-010026": {
      "views": 892,
      "likes": 1,
      "comments": 0
     },
     "short-20261106-021602": {
-     "views": 446,
+     "views": 447,
      "likes": 6,
      "comments": 0
     },
@@ -104,8 +109,8 @@
      "comments": 0
     },
     "short-20261106-210834": {
-     "views": 16,
-     "likes": 0,
+     "views": 252,
+     "likes": 1,
      "comments": 0
     },
     "short-20261106-211406": {
@@ -114,7 +119,7 @@
      "comments": 0
     },
     "short-20261107-234906": {
-     "views": 912,
+     "views": 911,
      "likes": 5,
      "comments": 0
     }
@@ -123,9 +128,9 @@
   "instagram": {
    "account": {
     "followers": 77,
-    "videos": 22,
-    "views": 18635,
-    "likes": 181,
+    "videos": 23,
+    "views": 18776,
+    "likes": 183,
     "comments": 6,
     "saves": 47,
     "shares": 63
@@ -153,7 +158,7 @@
      "shares": 7
     },
     "short-20261104-2033": {
-     "views": 2306,
+     "views": 2307,
      "likes": 56,
      "comments": 4,
      "saves": 7,
@@ -209,7 +214,7 @@
      "shares": 0
     },
     "short-20261105-215647": {
-     "views": 127,
+     "views": 128,
      "likes": 1,
      "comments": 0,
      "saves": 1,
@@ -229,6 +234,13 @@
      "saves": 1,
      "shares": 2
     },
+    "short-20261105-232827": {
+     "views": 131,
+     "likes": 1,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
     "short-20261106-010026": {
      "views": 158,
      "likes": 1,
@@ -244,7 +256,7 @@
      "shares": 0
     },
     "short-20261106-042045": {
-     "views": 321,
+     "views": 323,
      "likes": 20,
      "comments": 2,
      "saves": 16,
@@ -265,14 +277,14 @@
      "shares": 4
     },
     "short-20261106-210834": {
-     "views": 135,
-     "likes": 0,
+     "views": 140,
+     "likes": 1,
      "comments": 0,
      "saves": 0,
      "shares": 1
     },
     "short-20261106-211406": {
-     "views": 256,
+     "views": 257,
      "likes": 2,
      "comments": 0,
      "saves": 1,
@@ -289,95 +301,102 @@
   },
   "tiktok": {
    "account": {
-    "followers": 45,
-    "likes": 589,
-    "videos": 22,
-    "views": 19617,
+    "followers": 46,
+    "likes": 594,
+    "videos": 23,
+    "views": 19797,
     "comments": 4,
-    "shares": 49
+    "shares": 51
    },
    "videos": {},
    "list": [
     {
-     "title": "11.11 indirim günü nereden çıktı? Bekâr öğrencilerin şakası ",
-     "views": 20,
+     "title": "Dönüşüm Kafka konusu ve kapakta asla gösterilmeyen böcek Dön",
+     "views": 13,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
+     "title": "11.11 indirim günü nereden çıktı? Bekâr öğrencilerin şakası ",
+     "views": 70,
+     "likes": 1,
+     "comments": 0,
+     "shares": 0
+    },
+    {
      "title": "Köpüklü Türk kahvesinin sırrı: Asla kaynatmamak Köpüklü Türk",
-     "views": 72,
+     "views": 209,
      "likes": 1,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 2/2 Mini Bel",
-     "views": 413,
-     "likes": 14,
+     "views": 481,
+     "likes": 17,
      "comments": 2,
-     "shares": 5
+     "shares": 6
     },
     {
      "title": "Lokum nasıl üretilir? Jöle kıvamının sırrı jelatin değil Lok",
-     "views": 440,
+     "views": 445,
      "likes": 6,
      "comments": 0,
      "shares": 2
     },
     {
      "title": "Otobüs kelimesinin kökeni: 'Bus' aslında bir ekin parçası Ot",
-     "views": 469,
+     "views": 471,
      "likes": 14,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Hava durumu nasıl ölçülür? Gizli kahraman gökte patlıyor Hav",
-     "views": 465,
+     "views": 467,
      "likes": 5,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Aktif hatırlama yöntemi: Sınava kalıcı çalışmanın 4 adımı Ak",
-     "views": 567,
+     "views": 572,
      "likes": 25,
      "comments": 0,
      "shares": 2
     },
     {
      "title": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya Nik",
-     "views": 434,
+     "views": 436,
      "likes": 5,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Japon Balığı Hafızası Gerçekten 3 Saniye mi? Japon balığı ha",
-     "views": 496,
+     "views": 500,
      "likes": 4,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2 Mini Bel",
-     "views": 14403,
-     "likes": 232,
+     "views": 14574,
+     "likes": 233,
      "comments": 2,
-     "shares": 38
+     "shares": 39
     },
     {
      "title": "Anfield Aslında Everton'ın Eviydi: Liverpool Böyle Doğdu Liv",
-     "views": 166,
+     "views": 167,
      "likes": 6,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında P",
-     "views": 144,
+     "views": 145,
      "likes": 3,
      "comments": 0,
      "shares": 0
@@ -430,13 +449,6 @@
      "likes": 11,
      "comments": 0,
      "shares": 1
-    },
-    {
-     "title": "Manchester United Avrupa'da evinde 40 yıl yenilmedi; 1996'da",
-     "views": 281,
-     "likes": 10,
-     "comments": 0,
-     "shares": 0
     }
    ]
   }
@@ -456,6 +468,7 @@
   "short-20261105-215647": "Köpüklü Türk kahvesinin sırrı: Asla kaynatmamak",
   "short-20261105-221556": "Pilav tane tane nasıl pişirilir? Sır pirincin nişastasında",
   "short-20261105-230258": "Japon Balığı Hafızası Gerçekten 3 Saniye mi?",
+  "short-20261105-232827": "Dönüşüm Kafka konusu ve kapakta asla gösterilmeyen böcek",
   "short-20261106-010026": "Lokum nasıl üretilir? Jöle kıvamının sırrı jelatin değil",
   "short-20261106-021602": "Nikola Tesla olsaydın: dört sentten dünyayı aydınlatmaya",
   "short-20261106-042045": "Bir kedinin 15 yılı: doğumdan yaşlılığa | Bölüm 1/2",
