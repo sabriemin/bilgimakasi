@@ -1490,5 +1490,18 @@
       "tiktok": "2026-11-25T14:00:00+00:00"
     },
     "decided": "2026-11-09T11:37:21+03:00"
+  },
+  {
+    "tag": "short-20261109-144102",
+    "title": "Nutella'nın hikâyesi: Savaş, kakao kıtlığı ve Türk fındığı",
+    "topic": "Nutella'nın doğuşu: Savaş sonrası kakao kıtlığında Pietro Ferrero'nun fındıkla çoğalttığı Giandujot ezmesi ve bugün dünya fındığının yarıdan fazlasının Türkiye'de yetişmesi",
+    "category": "ekonomi ve markalar",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-09T14:41:02",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 431,
+    "aciklama_message_id": 432,
+    "platforms": {}
   }
 ]
