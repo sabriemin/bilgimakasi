@@ -1344,17 +1344,38 @@
     "template": "kitap",
     "structure": "kitap",
     "created": "2026-11-06T21:39:20",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 359,
     "aciklama_message_id": 360,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "o7Q3YzgHXgM",
+        "url": "https://youtube.com/shorts/o7Q3YzgHXgM",
+        "at": "2026-11-10T21:02:32+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18341072062277114",
+        "url": "https://www.instagram.com/reel/DfkgGGmDCgF/",
+        "at": "2026-11-10T21:02:32+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706604553295104020",
+        "draft": true,
+        "caption": "Dune romanı konusu: Onu ilk basan yayınevi araba kılavuzu basıyordu\n\nDune romanı konusu ve Frank Herbert'in yirmiden fazla kez reddedilen klasiğini, araba kılavuzlarıyla tanınan bir yayınevinin basması. Sence yeni Dune filmi kitabın hakkını verecek mi?\n\n#duneromanıkonusu #dune #frankherbert #BirKitapBirDakika #bilgimakasi",
+        "at": "2026-11-10T21:02:32+03:00"
+      }
+    },
     "publish_at": "2026-11-10T18:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-10T18:00:00+00:00",
       "instagram": "2026-11-10T18:00:00+00:00",
       "tiktok": "2026-11-10T18:00:00+00:00"
     },
-    "decided": "2026-11-07T00:48:09+03:00"
+    "decided": "2026-11-07T00:48:09+03:00",
+    "published": "2026-11-10T21:02:32+03:00"
   },
   {
     "tag": "short-20261107-120609",
