@@ -1039,17 +1039,38 @@
     "template": "dosya",
     "structure": "efsane",
     "created": "2026-11-06T20:46:04",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 289,
     "aciklama_message_id": 290,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "GweyrIubbP4",
+        "url": "https://youtube.com/shorts/GweyrIubbP4",
+        "at": "2026-11-10T12:01:29+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17908709655597937",
+        "url": "https://www.instagram.com/reel/DfjiNjKjW7d/",
+        "at": "2026-11-10T12:01:29+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706465168695461908",
+        "draft": true,
+        "caption": "Lale Hollanda çiçeği mi? İstanbul'dan gitti, adı bile Türkçeden\n\nLale Hollanda çiçeği mi, yoksa Avrupa onu Osmanlı'dan mı tanıdı; İngilizce 'tulip' adı bile tülbentten geliyor. Sence lale artık kimin çiçeği?\n\n📷 Wikipedia Loves Art participant \"ARTiFAC (CC BY-SA 2.5), Rudolphous (CC BY-SA 4.0), GoldenArtists (CC BY 4.0)\n\n#lalehollandaçiçeğimi #lale #osmanlı #EfsaneMiGerçekMi #bilgimakasi",
+        "at": "2026-11-10T12:01:29+03:00"
+      }
+    },
     "publish_at": "2026-11-10T09:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-10T09:00:00+00:00",
       "instagram": "2026-11-10T09:00:00+00:00",
       "tiktok": "2026-11-10T09:00:00+00:00"
     },
-    "decided": "2026-11-06T23:48:49+03:00"
+    "decided": "2026-11-06T23:48:49+03:00",
+    "published": "2026-11-10T12:01:29+03:00"
   },
   {
     "tag": "short-20261106-205012",
