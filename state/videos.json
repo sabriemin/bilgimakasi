@@ -1461,17 +1461,38 @@
     "template": "retro",
     "structure": "hikaye",
     "created": "2026-11-07T23:54:36",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 396,
     "aciklama_message_id": 397,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "Zk4rN_-ZJNI",
+        "url": "https://youtube.com/shorts/Zk4rN_-ZJNI",
+        "at": "2026-11-10T17:01:27+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17915571405478893",
+        "url": "https://www.instagram.com/reel/DfkEjMdknJM/",
+        "at": "2026-11-10T17:01:27+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706542381096503317",
+        "draft": true,
+        "caption": "Euro 2000 Türkiye Belçika: Rakip kalede defansçının durduğu gece\n\nEuro 2000 Türkiye Belçika maçında Hakan Şükür iki gol attı; maç biterken Belçika kalesinde bir defansçı duruyordu. Sence 12 Kasım'da İzmir'de tarih tekrarlanır mı?\n\n📷 Antonio Zugaldia from Washington, D.C.,  (CC BY 2.0)\n\n#euro2000türkiyebelçika #hakanşükür #millitakım #futbol #bilgimakasi",
+        "at": "2026-11-10T17:01:27+03:00"
+      }
+    },
     "schedule": {
       "youtube": "2026-11-10T14:00:00+00:00",
       "instagram": "2026-11-10T14:00:00+00:00",
       "tiktok": "2026-11-10T14:00:00+00:00"
     },
     "publish_at": "2026-11-10T14:00:00+00:00",
-    "decided": "2026-11-08T02:57:06+03:00"
+    "decided": "2026-11-08T02:57:06+03:00",
+    "published": "2026-11-10T17:01:27+03:00"
   },
   {
     "tag": "short-20261108-122750",
