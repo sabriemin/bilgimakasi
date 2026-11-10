@@ -1581,12 +1581,33 @@
     "template": "kart",
     "structure": "sayac",
     "created": "2026-11-10T09:51:22",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 447,
     "aciklama_message_id": 448,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "ESywrLLCfcM",
+        "url": "https://youtube.com/shorts/ESywrLLCfcM",
+        "at": "2026-11-10T13:03:14+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18140706160711623",
+        "url": "https://www.instagram.com/reel/DfjpSSXDaZj/",
+        "at": "2026-11-10T13:03:14+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706481020899919893",
+        "draft": true,
+        "caption": "10 Kasım Atatürk: Türkiye onu iki kez uğurladı\n\n10 Kasım'da Atatürk'ü iki kez uğurladık: 1938'de Dolmabahçe'de, 1953'te Anıtkabir'de. Saat 9'u 5 geçe sen neredesin?\n\n📷 William Neuheisel from DC, US (CC BY 2.0), Bernard Gagnon (CC BY-SA 3.0)\n\n#10kasımatatürk #atatürk #anıtkabir #tarih #bilgimakasi",
+        "at": "2026-11-10T13:03:14+03:00"
+      }
+    },
     "publish_at": "2026-11-10T10:01:30+00:00",
     "schedule": null,
-    "decided": "2026-11-10T13:01:30+03:00"
+    "decided": "2026-11-10T13:01:30+03:00",
+    "published": "2026-11-10T13:03:14+03:00"
   }
 ]
