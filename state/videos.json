@@ -1572,5 +1572,18 @@
       "tiktok": "2026-11-27T14:00:00+00:00"
     },
     "decided": "2026-11-10T03:35:39+03:00"
+  },
+  {
+    "tag": "short-20261110-095122",
+    "title": "10 Kasım Atatürk: Türkiye onu iki kez uğurladı",
+    "topic": "10 Kasım: Atatürk'ün 10 Kasım 1938'de saat 09.05'te Dolmabahçe'de ölümü, odasındaki saatin hâlâ 9.05'i göstermesi, naaşının yaklaşık 15 yıl Etnografya Müzesi'ndeki geçici kabirde kalması ve Anıtkabir'e yine bir 10 Kasım'da (1953) taşınması",
+    "category": "tarih",
+    "template": "kart",
+    "structure": "sayac",
+    "created": "2026-11-10T09:51:22",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 447,
+    "aciklama_message_id": 448,
+    "platforms": {}
   }
 ]
