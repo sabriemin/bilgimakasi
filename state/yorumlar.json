@@ -8,7 +8,8 @@
   "ig:17891161575620166",
   "yt:UgxyLaHIDwdReTDwswR4AaABAg",
   "yt:UgxtYc_7-Fja0Gdh6nV4AaABAg",
-  "ig:18022001778401925"
+  "ig:18022001778401925",
+  "yt:Ugxn9LSNv7-vsPUySct4AaABAg"
  ],
  "pending": {
   "3": {
@@ -58,6 +59,18 @@
    "reply": "Okulda saygı duruşu bambaşka oluyor, o an koca okul susuyor. Sizin okulda tören de yapıldı mı?",
    "message_id": 454,
    "created": "2026-11-10T14:05:24"
+  },
+  "10": {
+   "id": "yt:Ugxn9LSNv7-vsPUySct4AaABAg",
+   "platform": "youtube",
+   "parent": "Ugxn9LSNv7-vsPUySct4AaABAg",
+   "tag": "short-20261110-095122",
+   "video": "10 Kasım Atatürk: Türkiye onu iki kez uğurladı",
+   "author": "@ebrubas7914",
+   "text": "Okulda",
+   "reply": "Okuldaki 10 Kasım anmaları insanın aklında yıllarca kalıyor. Bu yıl okulunuzda nasıl bir tören yapıldı?",
+   "message_id": 462,
+   "created": "2026-11-10T15:24:20"
   }
  }
 }
