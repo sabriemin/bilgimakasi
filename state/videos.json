@@ -1630,5 +1630,18 @@
     "schedule": null,
     "decided": "2026-11-10T13:01:30+03:00",
     "published": "2026-11-10T13:03:14+03:00"
+  },
+  {
+    "tag": "short-20261110-140451",
+    "title": "Göztepe Avrupa yarı finali: Fenerbahçe ve Galatasaray'dan önce!",
+    "topic": "Avrupa kupalarında yarı final oynayan ilk Türk takımı Göztepe: 1968-69 Fuarlar Kupası'nda yarı finale çıkıp Újpest'e elenmesi ve Türkiye-Belçika maçının oynanacağı İzmir stadının kaptan Gürsel Aksel'in adını taşıması",
+    "category": "spor",
+    "template": "retro",
+    "structure": "hikaye",
+    "created": "2026-11-10T14:04:51",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 452,
+    "aciklama_message_id": 453,
+    "platforms": {}
   }
 ]
