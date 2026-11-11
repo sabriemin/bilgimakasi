@@ -1216,17 +1216,38 @@
     "template": "isemri",
     "structure": "uretim",
     "created": "2026-11-06T21:09:51",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 328,
     "aciklama_message_id": 329,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "XR2geH_B6p8",
+        "url": "https://youtube.com/shorts/XR2geH_B6p8",
+        "at": "2026-11-11T12:01:18+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18109912232353441",
+        "url": "https://www.instagram.com/reel/DfmHAibjRiA/",
+        "at": "2026-11-11T12:01:18+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706836227122792456",
+        "draft": true,
+        "caption": "Siyah çay nasıl üretilir? Yeşil çayla aynı yapraktan çıkıyor\n\nSiyah çay nasıl üretilir ve yeşil çayla aynı yapraktan çıkarken farkı hangi aşamada başlar? Sen günde kaç bardak çay içiyorsun?\n\n#siyahçaynasılüretilir #çay #rize #NasılÜretiliyor #bilgimakasi",
+        "at": "2026-11-11T12:01:18+03:00"
+      }
+    },
     "publish_at": "2026-11-11T09:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-11T09:00:00+00:00",
       "instagram": "2026-11-11T09:00:00+00:00",
       "tiktok": "2026-11-11T09:00:00+00:00"
     },
-    "decided": "2026-11-07T00:11:21+03:00"
+    "decided": "2026-11-07T00:11:21+03:00",
+    "published": "2026-11-11T12:01:18+03:00"
   },
   {
     "tag": "short-20261106-211406",
