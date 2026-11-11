@@ -865,20 +865,41 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T03:53:13",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 245,
     "aciklama_message_id": 246,
     "seri_id": "202611060348-kanin-temizlenmesi",
     "bolum": 1,
     "bolum_sayisi": 2,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "NWRhCHtbKYE",
+        "url": "https://youtube.com/shorts/NWRhCHtbKYE",
+        "at": "2026-11-11T21:02:56+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17957936880030844",
+        "url": "https://www.instagram.com/reel/DfnE6m_lRCi/",
+        "at": "2026-11-11T21:02:56+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706975612674574354",
+        "draft": true,
+        "caption": "Kanın temizlik yolculuğu: 6 durak | Bölüm 1/2\n\nMini Belgesel · Bölüm 1/2 (devamı bir sonraki videoda)\nVücudundaki kan her dakika bir tur atar ve yolda temizlenir. Sence en çalışkan organ hangisi?\n\n📷 Joan-Lluis Vives-Corrons, Elena Krishnev (CC BY 4.0)\n\n#kanıntemizlenmesi #insanvücudu #böbrek #MiniBelgesel #bilgimakasi",
+        "at": "2026-11-11T21:02:56+03:00"
+      }
+    },
     "schedule": {
       "youtube": "2026-11-11T18:00:00+00:00",
       "instagram": "2026-11-11T18:00:00+00:00",
       "tiktok": "2026-11-11T18:00:00+00:00"
     },
     "publish_at": "2026-11-11T18:00:00+00:00",
-    "decided": "2026-11-06T06:58:53+03:00"
+    "decided": "2026-11-06T06:58:53+03:00",
+    "published": "2026-11-11T21:02:56+03:00"
   },
   {
     "tag": "short-20261106-035746",
