@@ -1768,5 +1768,18 @@
     "telegram_message_id": 470,
     "aciklama_message_id": 471,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261111-215528",
+    "title": "GTA ne demek? Oyunun adı gerçek bir suçtan geliyor",
+    "topic": "'Grand Theft Auto' gerçek bir suçun adı: ABD'de (özellikle Kaliforniya'da) araba hırsızlığı böyle anılır; 'grand' (büyük) hırsızlık ayrımının kökü, 12 peniyi aşan hırsızlığın idamla cezalandırıldığı Orta Çağ İngiltere'sine uzanır; ilk oyunun çalışma adı Race'n'Chase'ti (gündem: GTA 6 19 Kasım 2026'da çıkıyor)",
+    "category": "dil ve kültür",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-11T21:55:28",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 475,
+    "aciklama_message_id": 476,
+    "platforms": {}
   }
 ]
