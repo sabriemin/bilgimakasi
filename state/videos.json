@@ -356,16 +356,38 @@
     "category": "bilim",
     "template": "doga",
     "created": "2026-11-05T04:34:25",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 101,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "dcwqOn8r2HA",
+        "url": "https://youtube.com/shorts/dcwqOn8r2HA",
+        "at": "2026-11-11T17:01:34+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18218230408317794",
+        "url": "https://www.instagram.com/reel/DfmpWo3GQUU/",
+        "at": "2026-11-11T17:01:34+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7706913615329085447",
+        "draft": true,
+        "caption": "Kış lastiği ne işe yarar? Cevap kar değil, 7 derece\n\nKış lastiği ne işe yarar? Cevap kar değil; yaklaşık 7 derecenin altında sertleşen yaz lastiği. Sen lastiğini hangi ay değiştiriyorsun?\n\n📷 Oregon Department of Transportation (CC BY 2.0), M J Richardson (CC BY-SA 2.0), John Sutton (CC BY-SA 2.0), LHcheM (CC BY-SA 3.0), HopsonRoad (CC BY-SA 4.0), Janusz Sobolewski from Mississauga, Onta (CC BY 2.0)\n\n#kışlastiğineişeyarar #kışlastiği #lastik #EfsaneMiGerçekMi #bilgimakasi",
+        "at": "2026-11-11T17:01:34+03:00"
+      }
+    },
     "publish_at": "2026-11-11T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-11T14:00:00+00:00",
       "instagram": "2026-11-11T14:00:00+00:00",
       "tiktok": "2026-11-11T14:00:00+00:00"
     },
-    "decided": "2026-11-05T07:36:22+03:00"
+    "decided": "2026-11-05T07:36:22+03:00",
+    "published": "2026-11-11T17:01:34+03:00",
+    "aciklama_message_id": 472
   },
   {
     "tag": "short-20261105-061537",
