@@ -1607,17 +1607,38 @@
     "template": "gazete",
     "structure": "koken",
     "created": "2026-11-08T18:03:56",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 420,
     "aciklama_message_id": 421,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "ID29oxcVdU4",
+        "url": "https://youtube.com/shorts/ID29oxcVdU4",
+        "at": "2026-11-12T12:02:24+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18123440209942824",
+        "url": "https://www.instagram.com/reel/Dfor4lgDkHW/",
+        "at": "2026-11-12T12:02:24+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7707207538164467719",
+        "draft": true,
+        "caption": "Hindi kelimesinin kökeni: Biz Hintli dedik, İngilizler Türkiye\n\nHindi kelimesinin kökeni Hindistan'a, İngilizcedeki turkey ise Türkiye'ye çıkıyor; oysa kuş Amerikalı. Sence en tuhaf adı hangi hayvan taşıyor?\n\n📷 Frank Schulenburg (CC BY-SA 4.0), Charles J. Sharp (CC BY-SA 4.0)\n\n#hindikelimesininkökeni #etimoloji #turkey #KelimeninKökeni #bilgimakasi",
+        "at": "2026-11-12T12:02:24+03:00"
+      }
+    },
     "publish_at": "2026-11-12T09:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-12T09:00:00+00:00",
       "instagram": "2026-11-12T09:00:00+00:00",
       "tiktok": "2026-11-12T09:00:00+00:00"
     },
-    "decided": "2026-11-08T21:11:02+03:00"
+    "decided": "2026-11-08T21:11:02+03:00",
+    "published": "2026-11-12T12:02:24+03:00"
   },
   {
     "tag": "short-20261108-192325",
