@@ -1887,9 +1887,10 @@
     "template": "kart",
     "structure": "sayac",
     "created": "2026-11-12T21:52:28",
-    "status": "onay_bekliyor",
+    "status": "reddedildi",
     "telegram_message_id": 487,
     "aciklama_message_id": 488,
-    "platforms": {}
+    "platforms": {},
+    "decided": "2026-11-13T00:55:13+03:00"
   }
 ]
