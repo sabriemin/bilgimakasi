@@ -1,0 +1,53 @@
+name: YouTube'a yeniden yükle
+
+# Sahibinin YouTube Studio'dan sildiği (ör. az izlenen) videoyu aynı dosyayla yalnız YouTube'a yeniden yükler.
+# Diğer platformlara dokunulmaz: eski YouTube kaydı youtube_onceki listesine taşınır, YouTube saati 'zaman' olarak
+# ayarlanır; saati gelince paylaşım işi (onay.yml) yalnız YouTube'u yükler. Videoyu YouTube'dan silmek bu işin
+# yapmadığı bir adımdır (kanalın izni yalnız yüklemeye yeter).
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Video etiketi ya da virgülle ayrılmış etiketler (ör. short-20261105-061537)"
+        required: true
+      zaman:
+        description: "Yükleme zamanı (ISO, ör. 2026-11-13T18:00:00+03:00) ya da virgülle etiket sırasıyla birden çok zaman. Boşsa hemen."
+        required: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  tekrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: state
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: En güncel durumu al
+        run: |
+          git config user.name "shortgen-bot"
+          git config user.email "shortgen-bot@users.noreply.github.com"
+          git fetch -q origin main && git reset -q --hard origin/main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-bot.txt
+      - run: pip install -r requirements-bot.txt
+      - name: YouTube'u yeniden yüklenecek diye işaretle
+        env:
+          TAG: ${{ inputs.tag }}
+          ZAMAN: ${{ inputs.zaman }}
+        run: |
+          python -m shortgen.youtube_tekrar
+          python -m shortgen.state_sync "YouTube'a yeniden yüklenecek"
+      - name: Paylaşım işini başlat
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m shortgen.telegram_bot dispatch-if-due
