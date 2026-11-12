@@ -61,7 +61,7 @@
     "category": "sanat ve müzik",
     "template": "retro",
     "created": "2026-11-04T18:39:21",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 26,
     "platforms": {
       "instagram": {
@@ -75,6 +75,12 @@
         "draft": true,
         "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
         "caption": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı #liverpool #fenerbahçe #şampiyonlarligi #bilgi #ilginçbilgiler"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "47TvlPEmGYY",
+        "url": "https://youtube.com/shorts/47TvlPEmGYY",
+        "at": "2026-11-13T00:59:15+03:00"
       }
     },
     "publish_at": "2026-11-12T21:58:47+00:00",
@@ -82,7 +88,7 @@
       "youtube": "2026-11-12T21:58:47+00:00"
     },
     "decided": "2026-11-04T21:42:17+03:00",
-    "published": "2026-11-04T21:44:49+03:00",
+    "published": "2026-11-13T00:59:15+03:00",
     "youtube_onceki": [
       {
         "status": "ok",
@@ -291,7 +297,7 @@
     "category": "tarih",
     "template": "kolaj",
     "created": "2026-11-04T21:29:00",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 70,
     "platforms": {
       "instagram": {
@@ -305,6 +311,12 @@
         "draft": true,
         "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
         "caption": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi\n\nTutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kraldan oğullarından birini koca olarak istedi. Sence prens Mısır'a varsaydı ne olurdu?\n\n    \n\n📷 Scan by Pataki Márta (CC BY-SA 3.0), Celpunken (CC BY 3.0), Bernard Gagnon (CC BY-SA 3.0)\n\n#TutankamonHititMektubu #Hititler #Hattuşa #tarih #bilgimakasi"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "RuZzOupTk1g",
+        "url": "https://youtube.com/shorts/RuZzOupTk1g",
+        "at": "2026-11-13T00:59:21+03:00"
       }
     },
     "publish_at": "2026-11-12T21:58:47+00:00",
@@ -312,7 +324,7 @@
       "youtube": "2026-11-12T21:58:47+00:00"
     },
     "decided": "2026-11-05T00:30:56+03:00",
-    "published": "2026-11-05T00:32:48+03:00",
+    "published": "2026-11-13T00:59:21+03:00",
     "youtube_onceki": [
       {
         "status": "ok",
@@ -912,7 +924,7 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T03:53:13",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 245,
     "aciklama_message_id": 246,
     "seri_id": "202611060348-kanin-temizlenmesi",
@@ -931,6 +943,12 @@
         "draft": true,
         "caption": "Kanın temizlik yolculuğu: 6 durak | Bölüm 1/2\n\nMini Belgesel · Bölüm 1/2 (devamı bir sonraki videoda)\nVücudundaki kan her dakika bir tur atar ve yolda temizlenir. Sence en çalışkan organ hangisi?\n\n📷 Joan-Lluis Vives-Corrons, Elena Krishnev (CC BY 4.0)\n\n#kanıntemizlenmesi #insanvücudu #böbrek #MiniBelgesel #bilgimakasi",
         "at": "2026-11-11T21:02:56+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "82iW0Jjp308",
+        "url": "https://youtube.com/shorts/82iW0Jjp308",
+        "at": "2026-11-13T00:59:26+03:00"
       }
     },
     "schedule": {
@@ -940,7 +958,7 @@
     },
     "publish_at": "2026-11-12T21:58:47+00:00",
     "decided": "2026-11-06T06:58:53+03:00",
-    "published": "2026-11-11T21:02:56+03:00",
+    "published": "2026-11-13T00:59:26+03:00",
     "youtube_onceki": [
       {
         "status": "ok",
@@ -1701,7 +1719,7 @@
     "template": "gazete",
     "structure": "koken",
     "created": "2026-11-08T18:03:56",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 420,
     "aciklama_message_id": 421,
     "platforms": {
@@ -1717,6 +1735,12 @@
         "draft": true,
         "caption": "Hindi kelimesinin kökeni: Biz Hintli dedik, İngilizler Türkiye\n\nHindi kelimesinin kökeni Hindistan'a, İngilizcedeki turkey ise Türkiye'ye çıkıyor; oysa kuş Amerikalı. Sence en tuhaf adı hangi hayvan taşıyor?\n\n📷 Frank Schulenburg (CC BY-SA 4.0), Charles J. Sharp (CC BY-SA 4.0)\n\n#hindikelimesininkökeni #etimoloji #turkey #KelimeninKökeni #bilgimakasi",
         "at": "2026-11-12T12:02:24+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "iBlS9-3i1SA",
+        "url": "https://youtube.com/shorts/iBlS9-3i1SA",
+        "at": "2026-11-13T00:59:31+03:00"
       }
     },
     "publish_at": "2026-11-12T21:58:47+00:00",
@@ -1726,7 +1750,7 @@
       "youtube": "2026-11-12T21:58:47+00:00"
     },
     "decided": "2026-11-08T21:11:02+03:00",
-    "published": "2026-11-12T12:02:24+03:00",
+    "published": "2026-11-13T00:59:31+03:00",
     "youtube_onceki": [
       {
         "status": "ok",
