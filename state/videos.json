@@ -61,14 +61,9 @@
     "category": "sanat ve müzik",
     "template": "retro",
     "created": "2026-11-04T18:39:21",
-    "status": "yayinlandi",
+    "status": "zamanlandi",
     "telegram_message_id": 26,
     "platforms": {
-      "youtube": {
-        "status": "ok",
-        "id": "KiwsoJf1J3E",
-        "url": "https://youtube.com/shorts/KiwsoJf1J3E"
-      },
       "instagram": {
         "status": "ok",
         "id": "18130437007845255",
@@ -82,10 +77,19 @@
         "caption": "Liverpool'un Marşı Aslında Bir Broadway Şarkısıydı #liverpool #fenerbahçe #şampiyonlarligi #bilgi #ilginçbilgiler"
       }
     },
-    "publish_at": "2026-11-04T18:42:17+00:00",
-    "schedule": null,
+    "publish_at": "2026-11-12T21:58:47+00:00",
+    "schedule": {
+      "youtube": "2026-11-12T21:58:47+00:00"
+    },
     "decided": "2026-11-04T21:42:17+03:00",
-    "published": "2026-11-04T21:44:49+03:00"
+    "published": "2026-11-04T21:44:49+03:00",
+    "youtube_onceki": [
+      {
+        "status": "ok",
+        "id": "KiwsoJf1J3E",
+        "url": "https://youtube.com/shorts/KiwsoJf1J3E"
+      }
+    ]
   },
   {
     "tag": "short-20261104-2023",
@@ -287,14 +291,9 @@
     "category": "tarih",
     "template": "kolaj",
     "created": "2026-11-04T21:29:00",
-    "status": "yayinlandi",
+    "status": "zamanlandi",
     "telegram_message_id": 70,
     "platforms": {
-      "youtube": {
-        "status": "ok",
-        "id": "pMZcuAmelOE",
-        "url": "https://youtube.com/shorts/pMZcuAmelOE"
-      },
       "instagram": {
         "status": "ok",
         "id": "18136662547660176",
@@ -308,10 +307,19 @@
         "caption": "Tutankamon Hitit Mektubu: Dul Kraliçe Hitit Kralından Koca İstedi\n\nTutankamon Hitit mektubu: Firavunun dul eşi, Hattuşa'daki kraldan oğullarından birini koca olarak istedi. Sence prens Mısır'a varsaydı ne olurdu?\n\n    \n\n📷 Scan by Pataki Márta (CC BY-SA 3.0), Celpunken (CC BY 3.0), Bernard Gagnon (CC BY-SA 3.0)\n\n#TutankamonHititMektubu #Hititler #Hattuşa #tarih #bilgimakasi"
       }
     },
-    "publish_at": "2026-11-04T21:30:56+00:00",
-    "schedule": null,
+    "publish_at": "2026-11-12T21:58:47+00:00",
+    "schedule": {
+      "youtube": "2026-11-12T21:58:47+00:00"
+    },
     "decided": "2026-11-05T00:30:56+03:00",
-    "published": "2026-11-05T00:32:48+03:00"
+    "published": "2026-11-05T00:32:48+03:00",
+    "youtube_onceki": [
+      {
+        "status": "ok",
+        "id": "pMZcuAmelOE",
+        "url": "https://youtube.com/shorts/pMZcuAmelOE"
+      }
+    ]
   },
   {
     "tag": "short-20261105-042947",
@@ -904,19 +912,13 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T03:53:13",
-    "status": "yayinlandi",
+    "status": "zamanlandi",
     "telegram_message_id": 245,
     "aciklama_message_id": 246,
     "seri_id": "202611060348-kanin-temizlenmesi",
     "bolum": 1,
     "bolum_sayisi": 2,
     "platforms": {
-      "youtube": {
-        "status": "ok",
-        "id": "NWRhCHtbKYE",
-        "url": "https://youtube.com/shorts/NWRhCHtbKYE",
-        "at": "2026-11-11T21:02:56+03:00"
-      },
       "instagram": {
         "status": "ok",
         "id": "17957936880030844",
@@ -932,13 +934,21 @@
       }
     },
     "schedule": {
-      "youtube": "2026-11-11T18:00:00+00:00",
       "instagram": "2026-11-11T18:00:00+00:00",
-      "tiktok": "2026-11-11T18:00:00+00:00"
+      "tiktok": "2026-11-11T18:00:00+00:00",
+      "youtube": "2026-11-12T21:58:47+00:00"
     },
-    "publish_at": "2026-11-11T18:00:00+00:00",
+    "publish_at": "2026-11-12T21:58:47+00:00",
     "decided": "2026-11-06T06:58:53+03:00",
-    "published": "2026-11-11T21:02:56+03:00"
+    "published": "2026-11-11T21:02:56+03:00",
+    "youtube_onceki": [
+      {
+        "status": "ok",
+        "id": "NWRhCHtbKYE",
+        "url": "https://youtube.com/shorts/NWRhCHtbKYE",
+        "at": "2026-11-11T21:02:56+03:00"
+      }
+    ]
   },
   {
     "tag": "short-20261106-035746",
@@ -1691,16 +1701,10 @@
     "template": "gazete",
     "structure": "koken",
     "created": "2026-11-08T18:03:56",
-    "status": "yayinlandi",
+    "status": "zamanlandi",
     "telegram_message_id": 420,
     "aciklama_message_id": 421,
     "platforms": {
-      "youtube": {
-        "status": "ok",
-        "id": "ID29oxcVdU4",
-        "url": "https://youtube.com/shorts/ID29oxcVdU4",
-        "at": "2026-11-12T12:02:24+03:00"
-      },
       "instagram": {
         "status": "ok",
         "id": "18123440209942824",
@@ -1715,14 +1719,22 @@
         "at": "2026-11-12T12:02:24+03:00"
       }
     },
-    "publish_at": "2026-11-12T09:00:00+00:00",
+    "publish_at": "2026-11-12T21:58:47+00:00",
     "schedule": {
-      "youtube": "2026-11-12T09:00:00+00:00",
       "instagram": "2026-11-12T09:00:00+00:00",
-      "tiktok": "2026-11-12T09:00:00+00:00"
+      "tiktok": "2026-11-12T09:00:00+00:00",
+      "youtube": "2026-11-12T21:58:47+00:00"
     },
     "decided": "2026-11-08T21:11:02+03:00",
-    "published": "2026-11-12T12:02:24+03:00"
+    "published": "2026-11-12T12:02:24+03:00",
+    "youtube_onceki": [
+      {
+        "status": "ok",
+        "id": "ID29oxcVdU4",
+        "url": "https://youtube.com/shorts/ID29oxcVdU4",
+        "at": "2026-11-12T12:02:24+03:00"
+      }
+    ]
   },
   {
     "tag": "short-20261108-192325",
