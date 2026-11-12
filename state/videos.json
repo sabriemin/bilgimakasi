@@ -396,7 +396,7 @@
     "category": "ekonomi ve markalar",
     "template": "kart",
     "created": "2026-11-05T06:15:37",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 110,
     "platforms": {
       "instagram": {
@@ -412,6 +412,12 @@
         "note": "TikTok'taki bildirime dokun, aşağıdaki açıklamayı yapıştır ve Paylaş de (uygulama incelemeden geçince bu adım kalkacak)",
         "caption": "Kredi kartını kim icat etti? Ezberlenen hikâye uydurmaymış\n\nKredi kartını kim icat etti sorusunun ezber cevabı, Diners Club'ın basın sorumlusunun kurguladığı bir hikâyeydi. Sen bu hikâyeyi ilk nerede duydun?\n\n📷 People's Pictorial\nKingdon Ward\nWalter H (CC BY-SA 4.0), Lhzss8 (CC BY-SA 4.0)\n\n#kredikartınıkimicatetti #kredikartı #dinersclub #ekonomitarihi #bilgimakasi",
         "at": "2026-11-05T14:02:59+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "g8NejkGRz6s",
+        "url": "https://youtube.com/shorts/g8NejkGRz6s",
+        "at": "2026-11-13T00:57:48+03:00"
       }
     },
     "publish_at": "2026-11-12T21:57:24+00:00",
@@ -419,7 +425,7 @@
       "youtube": "2026-11-12T21:57:24+00:00"
     },
     "decided": "2026-11-05T13:44:52+03:00",
-    "published": "2026-11-05T14:02:59+03:00",
+    "published": "2026-11-13T00:57:48+03:00",
     "tiktok_onceki": [
       {
         "status": "ok",
@@ -753,7 +759,7 @@
     "template": "kitap",
     "structure": "kitap",
     "created": "2026-11-05T23:28:27",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 205,
     "aciklama_message_id": 206,
     "platforms": {
@@ -769,6 +775,12 @@
         "draft": true,
         "caption": "Dönüşüm Kafka konusu ve kapakta asla gösterilmeyen böcek\n\nDönüşüm Kafka konusu: Gregor Samsa bir sabah haşereye dönüşür, Kafka ise o böceğin kapakta uzaktan bile gösterilmesini yasaklar. Sence Gregor gerçekte neye dönüştü?\n\n#dönüşümkafkakonusu #kafka #dönüşüm #BirKitapBirDakika #bilgimakasi",
         "at": "2026-11-09T20:31:46+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "jmnrk_Ac66I",
+        "url": "https://youtube.com/shorts/jmnrk_Ac66I",
+        "at": "2026-11-13T00:57:52+03:00"
       }
     },
     "publish_at": "2026-11-12T21:57:24+00:00",
@@ -778,7 +790,7 @@
       "youtube": "2026-11-12T21:57:24+00:00"
     },
     "decided": "2026-11-06T02:29:43+03:00",
-    "published": "2026-11-09T20:31:46+03:00",
+    "published": "2026-11-13T00:57:52+03:00",
     "youtube_onceki": [
       {
         "status": "ok",
@@ -1286,7 +1298,7 @@
     "template": "isemri",
     "structure": "uretim",
     "created": "2026-11-06T21:09:51",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 328,
     "aciklama_message_id": 329,
     "platforms": {
@@ -1302,6 +1314,12 @@
         "draft": true,
         "caption": "Siyah çay nasıl üretilir? Yeşil çayla aynı yapraktan çıkıyor\n\nSiyah çay nasıl üretilir ve yeşil çayla aynı yapraktan çıkarken farkı hangi aşamada başlar? Sen günde kaç bardak çay içiyorsun?\n\n#siyahçaynasılüretilir #çay #rize #NasılÜretiliyor #bilgimakasi",
         "at": "2026-11-11T12:01:18+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "eO41BKXXJXU",
+        "url": "https://youtube.com/shorts/eO41BKXXJXU",
+        "at": "2026-11-13T00:57:56+03:00"
       }
     },
     "publish_at": "2026-11-12T21:57:24+00:00",
@@ -1311,7 +1329,7 @@
       "youtube": "2026-11-12T21:57:24+00:00"
     },
     "decided": "2026-11-07T00:11:21+03:00",
-    "published": "2026-11-11T12:01:18+03:00",
+    "published": "2026-11-13T00:57:56+03:00",
     "youtube_onceki": [
       {
         "status": "ok",
@@ -1370,7 +1388,7 @@
     "template": "ajanda",
     "structure": "olsaydin",
     "created": "2026-11-06T21:17:42",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 345,
     "aciklama_message_id": 346,
     "platforms": {
@@ -1386,6 +1404,12 @@
         "draft": true,
         "caption": "Milli Piyango büyük ikramiye sana çıksaydı eline ne kalırdı?\n\nMilli Piyango büyük ikramiye sana çıksaydı, 800 milyonun yaklaşık 160 milyonu vergiye giderdi. Eline kalan parayla ilk ne yapardın?\n\nRakamlar 2026 Türkiye verilerine dayanan yaklaşık hesaplardır; kişiye ve şehre göre değişir. Yatırım tavsiyesi değildir.\n\n📷 Giuseppe Milo from Dublin, Ireland (CC BY 2.0), Derrick Brutel (CC BY-SA 4.0)\n\n#millipiyangobüyükikramiye #millipiyango #yılbaşıçekilişi #YaSenOlsaydın #bilgimakasi",
         "at": "2026-11-12T21:01:50+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "-e7b3Fkb2gw",
+        "url": "https://youtube.com/shorts/-e7b3Fkb2gw",
+        "at": "2026-11-13T00:58:01+03:00"
       }
     },
     "publish_at": "2026-11-12T21:57:24+00:00",
@@ -1395,7 +1419,7 @@
       "youtube": "2026-11-12T21:57:24+00:00"
     },
     "decided": "2026-11-07T00:18:48+03:00",
-    "published": "2026-11-12T21:01:50+03:00",
+    "published": "2026-11-13T00:58:01+03:00",
     "youtube_onceki": [
       {
         "status": "ok",
@@ -1460,7 +1484,7 @@
     "template": "kitap",
     "structure": "kitap",
     "created": "2026-11-06T21:39:20",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 359,
     "aciklama_message_id": 360,
     "platforms": {
@@ -1476,6 +1500,12 @@
         "draft": true,
         "caption": "Dune romanı konusu: Onu ilk basan yayınevi araba kılavuzu basıyordu\n\nDune romanı konusu ve Frank Herbert'in yirmiden fazla kez reddedilen klasiğini, araba kılavuzlarıyla tanınan bir yayınevinin basması. Sence yeni Dune filmi kitabın hakkını verecek mi?\n\n#duneromanıkonusu #dune #frankherbert #BirKitapBirDakika #bilgimakasi",
         "at": "2026-11-10T21:02:32+03:00"
+      },
+      "youtube": {
+        "status": "ok",
+        "id": "cInM-JkWtuE",
+        "url": "https://youtube.com/shorts/cInM-JkWtuE",
+        "at": "2026-11-13T00:58:05+03:00"
       }
     },
     "publish_at": "2026-11-12T21:57:24+00:00",
@@ -1485,7 +1515,7 @@
       "youtube": "2026-11-12T21:57:24+00:00"
     },
     "decided": "2026-11-07T00:48:09+03:00",
-    "published": "2026-11-10T21:02:32+03:00",
+    "published": "2026-11-13T00:58:05+03:00",
     "youtube_onceki": [
       {
         "status": "ok",
