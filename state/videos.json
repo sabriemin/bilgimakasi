@@ -1362,17 +1362,38 @@
     "template": "ajanda",
     "structure": "olsaydin",
     "created": "2026-11-06T21:17:42",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 345,
     "aciklama_message_id": 346,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "-9lzGfG0v74",
+        "url": "https://youtube.com/shorts/-9lzGfG0v74",
+        "at": "2026-11-12T21:01:50+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18133026796867350",
+        "url": "https://www.instagram.com/reel/Dfppm_SgOmG/",
+        "at": "2026-11-12T21:01:50+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7707346530386249735",
+        "draft": true,
+        "caption": "Milli Piyango büyük ikramiye sana çıksaydı eline ne kalırdı?\n\nMilli Piyango büyük ikramiye sana çıksaydı, 800 milyonun yaklaşık 160 milyonu vergiye giderdi. Eline kalan parayla ilk ne yapardın?\n\nRakamlar 2026 Türkiye verilerine dayanan yaklaşık hesaplardır; kişiye ve şehre göre değişir. Yatırım tavsiyesi değildir.\n\n📷 Giuseppe Milo from Dublin, Ireland (CC BY 2.0), Derrick Brutel (CC BY-SA 4.0)\n\n#millipiyangobüyükikramiye #millipiyango #yılbaşıçekilişi #YaSenOlsaydın #bilgimakasi",
+        "at": "2026-11-12T21:01:50+03:00"
+      }
+    },
     "publish_at": "2026-11-12T18:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-12T18:00:00+00:00",
       "instagram": "2026-11-12T18:00:00+00:00",
       "tiktok": "2026-11-12T18:00:00+00:00"
     },
-    "decided": "2026-11-07T00:18:48+03:00"
+    "decided": "2026-11-07T00:18:48+03:00",
+    "published": "2026-11-12T21:01:50+03:00"
   },
   {
     "tag": "short-20261106-212431",
