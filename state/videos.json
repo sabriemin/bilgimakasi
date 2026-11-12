@@ -519,17 +519,38 @@
     "category": "sanat ve müzik",
     "template": "kart",
     "created": "2026-11-05T17:51:45",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 159,
     "aciklama_message_id": 160,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "MxfA7w7CmGU",
+        "url": "https://youtube.com/shorts/MxfA7w7CmGU",
+        "at": "2026-11-12T17:01:28+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18100349513421762",
+        "url": "https://www.instagram.com/reel/DfpOI2RE8JR/",
+        "at": "2026-11-12T17:01:28+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7707284668022229012",
+        "draft": true,
+        "caption": "Avengers Doomsday'in kötü adamı bir zamanlar Avengers'ın kahramanıydı\n\nAvengers Doomsday'in kötü adamı Doktor Doom'un maskesinin altında çok tanıdık bir yüz var. Sence bu dönüş tutar mı?\n\n📷 Ferran Cornellà (CC BY-SA 4.0), Videoking (CC BY-SA 3.0), The Conmunity -  Pop Culture Geek from L (CC BY 2.0), jareed from London, UK (CC BY 2.0), Ramsey Nasser (CC BY 3.0)\n\n#avengersdoomsdaykötüadam #doktordoom #robertdowneyjr #marvel #bilgimakasi",
+        "at": "2026-11-12T17:01:28+03:00"
+      }
+    },
     "publish_at": "2026-11-12T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-12T14:00:00+00:00",
       "instagram": "2026-11-12T14:00:00+00:00",
       "tiktok": "2026-11-12T14:00:00+00:00"
     },
-    "decided": "2026-11-05T20:55:14+03:00"
+    "decided": "2026-11-05T20:55:14+03:00",
+    "published": "2026-11-12T17:01:28+03:00"
   },
   {
     "tag": "short-20261105-213125",
