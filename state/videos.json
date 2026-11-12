@@ -1878,5 +1878,18 @@
       "tiktok": "2026-12-02T14:00:00+00:00"
     },
     "decided": "2026-11-12T21:02:24+03:00"
+  },
+  {
+    "tag": "short-20261112-215228",
+    "title": "Milli Takım'ın İlk Teknik Direktörü: Galatasaray'ı Kuran Adam",
+    "topic": "Milli Takım'ın ilk teknik direktörünün Galatasaray'ın kurucusu Ali Sami Yen olması: 26 Ekim 1923'te Romanya'yla oynanan ve 2-2 biten ilk milli maçın Cumhuriyet'in ilanından üç gün önce oynanması, 1924'te ilk yabancı hoca olarak İskoç Billy Hunter'ın gelmesi ve Sergen Yalçın'ın İzmir'de Belçika karşısındaki ilk maçı",
+    "category": "spor",
+    "template": "kart",
+    "structure": "sayac",
+    "created": "2026-11-12T21:52:28",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 487,
+    "aciklama_message_id": 488,
+    "platforms": {}
   }
 ]
