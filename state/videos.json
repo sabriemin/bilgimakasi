@@ -472,16 +472,38 @@
     "category": "dil ve kültür",
     "template": "kart",
     "created": "2026-11-05T13:47:46",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 123,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "Ilq7Yj_GXxY",
+        "url": "https://youtube.com/shorts/Ilq7Yj_GXxY",
+        "at": "2026-11-13T17:01:48+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17922532155451752",
+        "url": "https://www.instagram.com/reel/Dfry_X8I8LW/",
+        "at": "2026-11-13T17:01:48+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7707655809337657365",
+        "draft": true,
+        "caption": "Kırat nereden gelir? Eşit sanılan keçiboynuzu çekirdekleri\n\nKırat nereden gelir: elmasın ölçüsü, hep eşit sanılan keçiboynuzu çekirdeklerinden doğdu ama çekirdekler hiç eşit değilmiş. Sen yüzde 5'lik farkı avucunda anlar mıydın?\n\n📷 Roger Culos (CC BY-SA 3.0), Petragems (CC BY-SA 4.0)\n\n#kıratneredengelir #keçiboynuzu #elmas #EfsaneMiGerçekMi #bilgimakasi",
+        "at": "2026-11-13T17:01:48+03:00"
+      }
+    },
     "publish_at": "2026-11-13T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-13T14:00:00+00:00",
       "instagram": "2026-11-13T14:00:00+00:00",
       "tiktok": "2026-11-13T14:00:00+00:00"
     },
-    "decided": "2026-11-05T16:50:32+03:00"
+    "decided": "2026-11-05T16:50:32+03:00",
+    "published": "2026-11-13T17:01:48+03:00",
+    "aciklama_message_id": 503
   },
   {
     "tag": "short-20261105-151659",
