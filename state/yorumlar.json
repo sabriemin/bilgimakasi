@@ -11,7 +11,8 @@
   "ig:18022001778401925",
   "yt:Ugxn9LSNv7-vsPUySct4AaABAg",
   "yt:UgxupyAn4fu4rxva1yB4AaABAg",
-  "yt:UgyUY84b9PbfIgLx-sd4AaABAg"
+  "yt:UgyUY84b9PbfIgLx-sd4AaABAg",
+  "yt:UgzpL_SljJgHChfVd2N4AaABAg"
  ],
  "pending": {
   "3": {
@@ -85,6 +86,18 @@
    "reply": "Haha, termos markası da var ama buradaki Stan Lee, Marvel'ın efsane yazarı 😄 Doctor Doom'u da 1962'de Jack Kirby'yle birlikte o yaratmıştı.",
    "message_id": 485,
    "created": "2026-11-12T18:04:41"
+  },
+  "13": {
+   "id": "yt:UgzpL_SljJgHChfVd2N4AaABAg",
+   "platform": "youtube",
+   "parent": "UgzpL_SljJgHChfVd2N4AaABAg",
+   "tag": "short-20261105-175145",
+   "video": "Avengers Doomsday'in kötü adamı bir zamanlar Avengers'ın kahramanıydı",
+   "author": "@herzamangalata",
+   "text": "Chat cpt öle demiyor bir adam bir filmde iki karakter oynuyor diyor yani o Tony Stark değil",
+   "reply": "Haklısın, Doctor Doom ile Tony Stark ayrı karakterler. Başlıkta kastettiğimiz, ikisini de oynayan Robert Downey Jr. Sence Doom rolüne yakışacak mı?",
+   "message_id": 499,
+   "created": "2026-11-13T07:04:47"
   }
  }
 }
