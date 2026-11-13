@@ -2047,5 +2047,18 @@
     "telegram_message_id": 501,
     "aciklama_message_id": 502,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261113-211734",
+    "title": "Boğaz alt akıntısı: Dipte ters yöne akan gizli nehir",
+    "topic": "Boğaz'ın alt akıntısı: Üstte Karadeniz'den Marmara'ya, dipte Marmara'dan Karadeniz'e akan tuzlu su ve Luigi Marsili'nin 1680'de İstanbul'da incelediği bu akıntıyı iki delikli bölmeli kap deneyiyle tuzluluk (yoğunluk) farkıyla açıklaması (gündem: lodos vapur seferlerini iptal ettirdi)",
+    "category": "bilim",
+    "template": "kart",
+    "structure": "hikaye",
+    "created": "2026-11-13T21:17:34",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 507,
+    "aciklama_message_id": 508,
+    "platforms": {}
   }
 ]
