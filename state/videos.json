@@ -1991,5 +1991,18 @@
     "aciklama_message_id": 488,
     "platforms": {},
     "decided": "2026-11-13T00:55:13+03:00"
+  },
+  {
+    "tag": "short-20261113-134422",
+    "title": "Lodos ne demek? Adı bir Yunan rüzgâr tanrısından geliyor",
+    "topic": "Lodos ve poyraz adlarının kökeni: lodos Yunanca güney rüzgârı/tanrısı Notos'tan, poyraz kuzey rüzgârı tanrısı Boreas'tan geliyor; Galileo'nun 1619'da verdiği aurora borealis adı da aynı Boreas'tan",
+    "category": "dil ve kültür",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-13T13:44:22",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 501,
+    "aciklama_message_id": 502,
+    "platforms": {}
   }
 ]
