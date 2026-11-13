@@ -1109,17 +1109,38 @@
     "template": "nasil",
     "structure": "nasil",
     "created": "2026-11-06T20:43:10",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 285,
     "aciklama_message_id": 286,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "eoDwBgYdHc8",
+        "url": "https://youtube.com/shorts/eoDwBgYdHc8",
+        "at": "2026-11-13T12:01:43+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18126687289904840",
+        "url": "https://www.instagram.com/reel/DfrQmNhirVE/",
+        "at": "2026-11-13T12:01:43+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7707578492992653332",
+        "draft": true,
+        "caption": "Telefonda hızlı yazma: Klavyedeki gizli fare ve 3 kısayol daha\n\nTelefonda hızlı yazmanın sırrı boşluk tuşunda saklı: üstünde parmağınızı kaydırınca imleç de kayıyor. Sizin bildiğiniz gizli klavye kısayolu hangisi?\n\n#telefondahızlıyazma #klavye #telefonipuçları #NasılYapılır #bilgimakasi",
+        "at": "2026-11-13T12:01:43+03:00"
+      }
+    },
     "publish_at": "2026-11-13T09:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-13T09:00:00+00:00",
       "instagram": "2026-11-13T09:00:00+00:00",
       "tiktok": "2026-11-13T09:00:00+00:00"
     },
-    "decided": "2026-11-06T23:50:14+03:00"
+    "decided": "2026-11-06T23:50:14+03:00",
+    "published": "2026-11-13T12:01:43+03:00"
   },
   {
     "tag": "short-20261106-204453",
