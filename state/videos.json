@@ -2136,5 +2136,18 @@
       "tiktok": "2026-12-03T14:00:00+00:00"
     },
     "decided": "2026-11-14T22:40:45+03:00"
+  },
+  {
+    "tag": "short-20261114-194503",
+    "title": "Plaka kodları nasıl verildi? Kahramanmaraş neden 46?",
+    "topic": "Plaka kodları neden 01 Adana'yla başlıyor: 1962'de 67 il alfabetik sıraya göre numaralandı; Mersin 33, Kahramanmaraş 46 ve Şanlıurfa 63 numarayı o dönemki adları İçel, Maraş ve Urfa yüzünden aldı; 68-81 ise il oluş sırasına göre verildi",
+    "category": "coğrafya",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-14T19:45:03",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 525,
+    "aciklama_message_id": 526,
+    "platforms": {}
   }
 ]
