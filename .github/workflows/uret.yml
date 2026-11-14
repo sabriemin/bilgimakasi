@@ -49,7 +49,9 @@ jobs:
       - name: FFmpeg kur
         timeout-minutes: 8
         run: sudo apt-get update && sudo apt-get install -y ffmpeg libcairo2
-      - run: pip install -r requirements.txt "rembg[cpu]"
+      # rembg (onnxruntime, scipy, numba: her çalışmada ~15 sn) kurulmaz: arka plan silme yalnız fotoğraf kesitinde
+      # (anim.prepare_sprite) kullanılır, pipeline her sahneyi çizim olarak (drawn=True) verdiği için hiç çağrılmıyordu.
+      - run: pip install -r requirements.txt
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -57,13 +59,10 @@ jobs:
         # hazır senaryoda da gerekir: görsel denetimi ve yedek çizimler Claude ile yapılır. npm bazen takılıyor: 4 dk sınır, 3 deneme
         timeout-minutes: 14
         run: for i in 1 2 3; do timeout 240 npm install -g @anthropic-ai/claude-code && break; echo "npm yeniden deneniyor ($i)"; sleep 5; done; claude --version
-      - name: Arka plan silme modelini önbellekle
-        uses: actions/cache@v4
-        with:
-          path: ~/.u2net
-          key: u2net-v1
       - name: Video üret
         env:
+          # çıktı satır satır akar: günlükteki zaman damgaları adım içindeki her aşamanın süresini gösterir
+          PYTHONUNBUFFERED: "1"
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           CLAUDE_MONTHLY_BUDGET_USD: ${{ vars.CLAUDE_MONTHLY_BUDGET_USD || '90' }}
