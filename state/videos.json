@@ -2064,10 +2064,17 @@
     "template": "kart",
     "structure": "neden",
     "created": "2026-11-13T13:44:22",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 501,
     "aciklama_message_id": 502,
-    "platforms": {}
+    "platforms": {},
+    "schedule": {
+      "youtube": "2026-11-15T08:30:00+00:00",
+      "instagram": "2026-11-15T08:30:00+00:00",
+      "tiktok": "2026-11-15T08:30:00+00:00"
+    },
+    "publish_at": "2026-11-15T08:30:00+00:00",
+    "decided": "2026-11-14T14:51:21+03:00"
   },
   {
     "tag": "short-20261113-211734",
