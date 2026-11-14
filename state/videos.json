@@ -1193,17 +1193,38 @@
     "template": "dosya",
     "structure": "efsane",
     "created": "2026-11-06T20:44:53",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 287,
     "aciklama_message_id": 288,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "qQmy4h2vFY0",
+        "url": "https://youtube.com/shorts/qQmy4h2vFY0",
+        "at": "2026-11-14T14:45:52+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17933749368161480",
+        "url": "https://www.instagram.com/reel/DfuIM4PirBm/",
+        "at": "2026-11-14T14:45:52+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7707991692137531412",
+        "draft": true,
+        "caption": "Napolyon kısa mıydı? Onu bir ölçü birimi küçülttü\n\nNapolyon kısa mıydı, yoksa onu bir inç farkı ve İngiliz karikatüristler mi küçülttü? Sen de Napolyon kompleksinin gerçek bir boya dayandığını mı sanıyordun?\n\n#napolyonkısamıydı #napolyon #napolyonkompleksi #EfsaneMiGerçekMi #bilgimakasi",
+        "at": "2026-11-14T14:45:52+03:00"
+      }
+    },
     "publish_at": "2026-11-14T08:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-14T08:30:00+00:00",
       "instagram": "2026-11-14T08:30:00+00:00",
       "tiktok": "2026-11-14T08:30:00+00:00"
     },
-    "decided": "2026-11-06T23:49:26+03:00"
+    "decided": "2026-11-06T23:49:26+03:00",
+    "published": "2026-11-14T14:45:52+03:00"
   },
   {
     "tag": "short-20261106-204604",
