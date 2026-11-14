@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  actions: read  # zamanlanmış çalışmanın yinelenip yinelenmediğine bakmak için
 
 concurrency:
   group: rapor
@@ -20,13 +21,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Bu ölçüm başlatılmış işle yapıldı mı
+        id: gerek
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Ölçüm 07:03 ve 18:03'te elle başlatılan (workflow_dispatch) işle de yapılıyor; GitHub'ın cron'u ise saatlerce
+          # gecikip (13:40-15:45, 21:40-01:30) aynı ölçümü ikinci kez yapıyordu (iş başına 2 dk). Son 10 saatte başarılı
+          # bir başlatılmış ölçüm varsa zamanlanmış çalışma kurulum yapmadan biter; yoksa (ya da öğrenilemezse) her zamanki gibi.
+          SON=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/rapor.yml/runs?event=workflow_dispatch&status=success&per_page=1" \
+                --jq '.workflow_runs[0].run_started_at // ""' 2>/dev/null || true)
+          BAS=$(date -u -d "$SON" +%s 2>/dev/null || echo 0)
+          if [ -n "$SON" ] && [ "$BAS" -gt 0 ] && [ $(( $(date -u +%s) - BAS )) -lt 36000 ]; then
+            echo "Son başlatılmış ölçüm $SON: zamanlanmış ölçüm atlanıyor."; echo "atla=evet" >> "$GITHUB_OUTPUT"
+          else
+            echo "atla=hayir" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@v4
+        if: steps.gerek.outputs.atla != 'evet'
       - uses: actions/setup-python@v5
+        if: steps.gerek.outputs.atla != 'evet'
         with:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
+        if: steps.gerek.outputs.atla != 'evet'
       - name: Ölç ve panel geçmişine kaydet (Telegram'a rapor gitmez)
+        if: steps.gerek.outputs.atla != 'evet'
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
@@ -41,11 +63,14 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: python -m shortgen.stats kaydet
       - uses: actions/setup-node@v4
+        if: steps.gerek.outputs.atla != 'evet'
         with:
           node-version: "22"
       - name: Claude Code kur
+        if: steps.gerek.outputs.atla != 'evet'
         run: npm install -g @anthropic-ai/claude-code
       - name: Yeni yorumlara cevap taslağı
+        if: steps.gerek.outputs.atla != 'evet'
         continue-on-error: true
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -59,6 +84,7 @@ jobs:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
         run: python -m shortgen.comments check
       - name: Kaydet
+        if: steps.gerek.outputs.atla != 'evet'
         run: |
           git config user.name "shortgen-bot"
           git config user.email "shortgen-bot@users.noreply.github.com"
