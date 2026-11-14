@@ -2095,5 +2095,18 @@
     },
     "publish_at": "2026-11-14T17:30:00+00:00",
     "decided": "2026-11-14T14:51:19+03:00"
+  },
+  {
+    "tag": "short-20261114-125328",
+    "title": "F Klavye Nedir? QWERTY'ye Türkiye'nin Verdiği Cevap",
+    "topic": "Türkçe F klavyenin hikâyesi: İhsan Sıtkı Yener öncülüğünde Türkçedeki harf sıklığına göre tasarlanan, 1955'te standartlaşan, yükü iki ele neredeyse eşit dağıtan ve Türk daktilocularına 59 dünya şampiyonluğu kazandıran düzen",
+    "category": "icatlar",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-14T12:53:28",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 521,
+    "aciklama_message_id": 522,
+    "platforms": {}
   }
 ]
