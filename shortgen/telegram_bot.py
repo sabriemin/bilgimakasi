@@ -1183,8 +1183,8 @@ def _due_times(since: dt.datetime, until: dt.datetime) -> list[dt.datetime]:
 
 # Seçilen saatte tam zamanında paylaşım: kapının dakikalık zamanlayıcısı (worker.js scheduled) ve işle.yml'in
 # dispatch-if-due adımı, saati yaklaşan paylaşım için onay.yml'i o anı hedefleyerek başlatır. İş, paylaşımdan en çok
-# birkaç dakika önce başlatılır (kurulum ~1 dk) ki Actions dakikası beklemeye harcanmasın.
-DUE_WINDOW = dt.timedelta(minutes=3)  # worker.js ONCE_MS
+# 2 dakika önce başlatılır (başlatmadan paylaşım adımına ~20 sn) ki Actions dakikası beklemeye harcanmasın.
+DUE_WINDOW = dt.timedelta(minutes=2)  # worker.js ONCE_MS
 DUE_STALE = dt.timedelta(hours=3)  # bundan eski bekleyen saat için iş başlatılmaz (takılı bir kayıt döngü yapmasın)
 RUN_DEDUPE = dt.timedelta(minutes=30)
 NOT_STARTED = ("queued", "pending", "waiting", "requested")  # state grubunda sırasını bekleyen (başlamamış) iş

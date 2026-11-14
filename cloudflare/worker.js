@@ -132,9 +132,10 @@ async function handle(update, env, origin) {
 }
 
 // ---------------------------------------------------------------- zamanlayıcı
-// bu kadar içinde gelecek paylaşım için iş başlatılır (cron dakikada bir; iş ~1 dk'da kurulur, Actions dakikası beklemeye
-// harcanmasın); telegram_bot.DUE_WINDOW ile aynı
-const ONCE_MS = 3 * 60e3;
+// bu kadar içinde gelecek paylaşım için iş başlatılır (cron dakikada bir; başlatmadan paylaşım adımına ~20 sn, iş saatini
+// beklerken Actions dakikası harcar: 3 dk önceden başlatmak her paylaşıma ~1 dk boş bekleme ekliyordu);
+// telegram_bot.DUE_WINDOW ile aynı
+const ONCE_MS = 2 * 60e3;
 const ESKI_MS = 3 * 3600e3; // bundan eski bekleyen saat için başlatılmaz (takılı bir kayıt döngü yapmasın)
 const TEKRAR_MS = 30 * 60e3; // aynı hedefle son 30 dk'da başlatılmış iş varsa yenisi başlatılmaz
 const BASLAMAMIS = ["queued", "pending", "waiting", "requested"]; // state grubunda sırasını bekleyen iş

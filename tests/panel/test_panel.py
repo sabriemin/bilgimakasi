@@ -1424,12 +1424,12 @@ class Takvim(Ortak):
 
     def test_saati_yaklasan_paylasim_icin_onay_isi_hedefle_baslatilir(self):
         calistir = self.dispatch
-        # fikstürdeki en yakın paylaşım: GTA (Z) 09:30Z; iş en çok 3 dk önce başlatılır (kurulum ~1 dk, boş bekleme olmasın)
-        ok, d, g = calistir("2026-11-05T09:27:30Z")
+        # fikstürdeki en yakın paylaşım: GTA (Z) 09:30Z; iş en çok 2 dk önce başlatılır (kurulum ~20 sn, boş bekleme olmasın)
+        ok, d, g = calistir("2026-11-05T09:28:30Z")
         self.assertTrue(ok)
-        self.assertEqual(d, [{"gh": "onay.yml", "json": {"ref": "main", "inputs": {"dakika": "5", "hedef": "2026-11-05T09:30Z"}}}])
+        self.assertEqual(d, [{"gh": "onay.yml", "json": {"ref": "main", "inputs": {"dakika": "4", "hedef": "2026-11-05T09:30Z"}}}])
         self.assertEqual(g, [{"gh_get": "onay.yml/runs", "params": {"per_page": 20}, "auth": "Bearer ghs_TEST"}])
-        self.assertEqual(calistir("2026-11-05T09:26:30Z")[:2], (False, []), "3 dakikadan uzak")
+        self.assertEqual(calistir("2026-11-05T09:27:30Z")[:2], (False, []), "2 dakikadan uzak")
         self.assertEqual(calistir("2026-11-05T09:29:50Z")[1][0]["json"]["inputs"], {"dakika": "3", "hedef": "2026-11-05T09:30Z"})
         # aynı hedefle bekleyen iş ya da son 30 dk'da başlatılmış iş varsa başlatılmaz
         is_ = lambda st, dk, ad="Paylaşım 2026-11-05T09:30Z": self.is_(st, dk, ad, "2026-11-05T09:28:00Z")  # noqa: E731
@@ -1449,9 +1449,9 @@ class Takvim(Ortak):
         self.req.dispatch_durum = 204
         # saati 3 saatten eski takılı kayıt (Z, 09:30Z) sayılmaz: sıradaki (2048, 17:00Z) için başlatılır
         self.video_degistir("short-20261104-2100", status="iptal")
-        self.assertEqual(calistir("2026-11-05T16:57:30Z")[1][0]["json"]["inputs"], {"dakika": "5", "hedef": "2026-11-05T17:00Z"})
+        self.assertEqual(calistir("2026-11-05T16:58:30Z")[1][0]["json"]["inputs"], {"dakika": "4", "hedef": "2026-11-05T17:00Z"})
         self.video_degistir("short-20261104-2048", status="iptal")
-        self.assertEqual(calistir("2026-11-05T16:57:30Z")[:2], (False, []), "yalnız takılı kayıt ve uzak saat kaldı")
+        self.assertEqual(calistir("2026-11-05T16:58:30Z")[:2], (False, []), "yalnız takılı kayıt ve uzak saat kaldı")
 
     def test_saati_gecmis_kaydin_isi_sonraki_videonun_paylasimini_bekletmez(self):
         # A (GTA) 40 dk önce paylaşılacaktı, hâlâ bekliyor; B (Açlık Oyunları) Instagram'ı 1,5 dk sonra

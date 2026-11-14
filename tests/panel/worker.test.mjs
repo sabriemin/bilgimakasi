@@ -920,33 +920,33 @@ describe("zamanlayıcı: saati yaklaşan paylaşım için onay.yml", () => {
     name: "Telegram onaylarını işle", status, conclusion, created_at: new Date(SIMDI - dkOnce * 60e3).toISOString() });
   beforeEach(() => saatKur(SIMDI));
 
-  test("3 dakika içindeki paylaşım için bir kez, doğru girdilerle başlatır", async () => {
-    const { yollar, onay, cagrilar, loglar } = await calistir([video(2.5)]);
+  test("2 dakika içindeki paylaşım için bir kez, doğru girdilerle başlatır", async () => {
+    const { yollar, onay, cagrilar, loglar } = await calistir([video(1.5)]);
     assert.deepEqual(yollar, ["GET contents/state/videos.json?ref=main", "GET actions/workflows/onay.yml/runs?per_page=20",
       "POST actions/workflows/onay.yml/dispatches"]);
-    assert.deepEqual(onay[0].govde, { ref: "main", inputs: { dakika: "5", hedef: "2026-11-05T14:55Z" } });
+    assert.deepEqual(onay[0].govde, { ref: "main", inputs: { dakika: "4", hedef: "2026-11-05T14:54Z" } });
     assert.ok(cagrilar.every((c) => c.basliklar.authorization === `Bearer ${ORTAM.GH_PAT}`));
-    assert.match(loglar.join("\n"), /başlatıldı \(2026-11-05T14:55Z, 5 dk\)/);
+    assert.match(loglar.join("\n"), /başlatıldı \(2026-11-05T14:54Z, 4 dk\)/);
     assert.ok(!loglar.join("\n").includes(ORTAM.GH_PAT));
     // saniyeli an dakikaya iner, kalan süre yukarı yuvarlanır (iş ~1 dk'da kurulur, boş bekleme olmasın)
     assert.equal(hedefAdi(Date.parse("2026-11-05T14:57:59Z")), "2026-11-05T14:57Z");
     const yakin = await calistir([video(1.2)]);
     assert.deepEqual(yakin.onay[0].govde.inputs, { dakika: "4", hedef: "2026-11-05T14:53Z" });
-    assert.equal((await calistir([video(3.5)])).onay.length, 0, "3 dakikadan uzak");
+    assert.equal((await calistir([video(2.5)])).onay.length, 0, "2 dakikadan uzak");
     // Telegram'a hiçbir şey gitmez
     assert.equal(cagrilar.filter((c) => c.url.includes("telegram")).length, 0);
   });
 
   test("aynı hedefle bekleyen/çalışan ya da son 30 dk'da başlatılmış iş varsa başlatmaz", async () => {
-    const hedef = "2026-11-05T14:55Z";
+    const hedef = "2026-11-05T14:54Z";
     for (const isler of [[is_("queued", 1, hedef)], [is_("in_progress", 25, hedef)], [is_("completed", 10, hedef)]]) {
-      const x = await calistir([video(2.5)], { isler });
+      const x = await calistir([video(1.5)], { isler });
       assert.equal(x.onay.length, 0, JSON.stringify(isler));
       assert.match(x.loglar.join(" "), /iş zaten var/);
     }
     const iptal = is_("completed", 5, hedef, "cancelled"); // state grubunda çalışmadan iptal edilmiş
     for (const isler of [[is_("completed", 40, hedef)], [is_("queued", 1, "2026-11-05T13:57Z")], [is_("in_progress", 2, null)], [iptal]]) {
-      assert.equal((await calistir([video(2.5)], { isler })).onay.length, 1, JSON.stringify(isler));
+      assert.equal((await calistir([video(1.5)], { isler })).onay.length, 1, JSON.stringify(isler));
     }
   });
 
@@ -972,9 +972,9 @@ describe("zamanlayıcı: saati yaklaşan paylaşım için onay.yml", () => {
     v = video(-30, { platforms: { youtube: { status: "hata", error: "x" } } });
     v.publish_at = v.schedule.instagram;
     assert.equal((await calistir([v])).onay.length, 0);
-    // eskimiş publish_at, bekleyen platformlar 2,5 dk sonra: o ana göre
-    v = video(2.5); v.publish_at = iso(SIMDI - 100 * 60e3);
-    assert.equal((await calistir([v])).onay[0].govde.inputs.hedef, "2026-11-05T14:55Z");
+    // eskimiş publish_at, bekleyen platformlar 1,5 dk sonra: o ana göre
+    v = video(1.5); v.publish_at = iso(SIMDI - 100 * 60e3);
+    assert.equal((await calistir([v])).onay[0].govde.inputs.hedef, "2026-11-05T14:54Z");
   });
 
   test("saati geçmiş kaydın işi (hata almış, yüklüyor) sonraki videonun paylaşımını bekletmez; işler birbirini iptal etmez", async () => {
@@ -998,17 +998,17 @@ describe("zamanlayıcı: saati yaklaşan paylaşım için onay.yml", () => {
   });
 
   test("GitHub hatalarında hata fırlatmaz; iş listesi alınamazsa yalnız saati gelmemiş paylaşım için başlatır", async () => {
-    let x = await calistir([video(2.5)], { dosyaHata: { "videos.json": 500 } });
+    let x = await calistir([video(1.5)], { dosyaHata: { "videos.json": 500 } });
     assert.equal(x.onay.length, 0);
     assert.match(x.loglar.join(" "), /durum okunamadı \(500\)/);
-    x = await calistir([video(2.5)], { islerDurum: 500 });
+    x = await calistir([video(1.5)], { islerDurum: 500 });
     assert.equal(x.onay.length, 1);
     x = await calistir([video(-10)], { islerDurum: 500 });
     assert.equal(x.onay.length, 0);
     assert.match(x.loglar.join(" "), /iş listesi alınamadı/);
-    x = await calistir([video(2.5)], { onayDurum: 422 });
+    x = await calistir([video(1.5)], { onayDurum: 422 });
     assert.match(x.loglar.join(" "), /başlatılamadı \(422\)/);
-    x = await calistir([video(2.5)], { ghAgHatasi: true });
+    x = await calistir([video(1.5)], { ghAgHatasi: true });
     assert.match(x.loglar.join(" "), /zamanlayıcı hatası/);
     // ayar eksikse GitHub'a hiç gidilmez
     const f = fetchKur({});
