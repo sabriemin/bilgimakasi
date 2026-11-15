@@ -18,7 +18,9 @@
   "yt:UgxbOBqztWry1BVzm914AaABAg",
   "yt:UgyosIdqc5mvB9QB2Pl4AaABAg",
   "yt:UgwI96mg0Nf1xiVrsIZ4AaABAg",
-  "yt:UgyLeE6E4xkwX4Kj4lh4AaABAg"
+  "yt:UgyLeE6E4xkwX4Kj4lh4AaABAg",
+  "yt:Ugxw8H-o5u5NDfDjqKt4AaABAg",
+  "yt:UgzLRRTaGj3_GmgjqBJ4AaABAg"
  ],
  "pending": {
   "3": {
@@ -116,6 +118,18 @@
    "reply": "Teşekkürler 😄 Klavyedeki gizli fareyi daha önce biliyor muydun, yoksa senin için de yeni miydi?",
    "message_id": 506,
    "created": "2026-11-13T18:04:41"
+  },
+  "21": {
+   "id": "yt:UgzLRRTaGj3_GmgjqBJ4AaABAg",
+   "platform": "youtube",
+   "parent": "UgzLRRTaGj3_GmgjqBJ4AaABAg",
+   "tag": "short-20261106-204310",
+   "video": "Telefonda hızlı yazma: Klavyedeki gizli fare ve 3 kısayol daha",
+   "author": "@kadirCabuk-v4u",
+   "text": "Şaşkınlık",
+   "reply": "Boşluk tuşundaki gizli imleci çoğu kişi bilmiyor 😄 En çok hangi kısayol şaşırttı?",
+   "message_id": 528,
+   "created": "2026-11-15T07:05:46"
   }
  }
 }
