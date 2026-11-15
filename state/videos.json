@@ -2064,17 +2064,38 @@
     "template": "kart",
     "structure": "neden",
     "created": "2026-11-13T13:44:22",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 501,
     "aciklama_message_id": 502,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "qvHFzcrntaI",
+        "url": "https://youtube.com/shorts/qvHFzcrntaI",
+        "at": "2026-11-15T11:31:50+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18100542518440696",
+        "url": "https://www.instagram.com/reel/DfwWyH1mVqP/",
+        "at": "2026-11-15T11:31:50+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7708312838431393812",
+        "draft": true,
+        "caption": "Lodos ne demek? Adı bir Yunan rüzgâr tanrısından geliyor\n\nLodos ne demek? İstanbul'u savuran lodos da poyraz da adını iki Yunan rüzgâr tanrısından alıyor. Sence hangisi daha sert esiyor?\n\n📷 Jakub Hałun (CC BY 4.0)\n\n#lodosnedemek #lodos #poyraz #etimoloji #bilgimakasi",
+        "at": "2026-11-15T11:31:50+03:00"
+      }
+    },
     "schedule": {
       "youtube": "2026-11-15T08:30:00+00:00",
       "instagram": "2026-11-15T08:30:00+00:00",
       "tiktok": "2026-11-15T08:30:00+00:00"
     },
     "publish_at": "2026-11-15T08:30:00+00:00",
-    "decided": "2026-11-14T14:51:21+03:00"
+    "decided": "2026-11-14T14:51:21+03:00",
+    "published": "2026-11-15T11:31:50+03:00"
   },
   {
     "tag": "short-20261113-211734",
