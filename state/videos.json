@@ -2186,9 +2186,16 @@
     "template": "retro",
     "structure": "hikaye",
     "created": "2026-11-15T20:08:13",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 532,
     "aciklama_message_id": 533,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-12-07T14:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-12-07T14:00:00+00:00",
+      "instagram": "2026-12-07T14:00:00+00:00",
+      "tiktok": "2026-12-07T14:00:00+00:00"
+    },
+    "decided": "2026-11-16T02:33:06+03:00"
   }
 ]
