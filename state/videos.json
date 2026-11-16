@@ -2239,5 +2239,18 @@
       "tiktok": "2026-12-07T14:00:00+00:00"
     },
     "decided": "2026-11-16T02:33:06+03:00"
+  },
+  {
+    "tag": "short-20261116-141833",
+    "title": "Kimlik numarası neden hep çift rakamla biter? Cevap bir formülde",
+    "topic": "T.C. kimlik numarasının son iki hanesi rastgele değil: 10. hane ilk dokuz haneden bir formülle, 11. hane ilk on hanenin toplamının son basamağıyla hesaplanıyor; iki formül birleşince son hane tek sıradaki rakamların toplamının 8 katına iniyor ve bu yüzden her kimlik numarası çift rakamla bitiyor",
+    "category": "bilim",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-16T14:18:33",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 537,
+    "aciklama_message_id": 538,
+    "platforms": {}
   }
 ]
