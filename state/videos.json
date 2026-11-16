@@ -2289,9 +2289,16 @@
     "template": "kart",
     "structure": "sayac",
     "created": "2026-11-16T23:44:28",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 540,
     "aciklama_message_id": 541,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-12-09T14:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-12-09T14:00:00+00:00",
+      "instagram": "2026-12-09T14:00:00+00:00",
+      "tiktok": "2026-12-09T14:00:00+00:00"
+    },
+    "decided": "2026-11-17T02:45:58+03:00"
   }
 ]
