@@ -1336,17 +1336,38 @@
     "template": "nasil",
     "structure": "nasil",
     "created": "2026-11-06T21:05:33",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 319,
     "aciklama_message_id": 320,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "2RuJ_Z4A-JA",
+        "url": "https://youtube.com/shorts/2RuJ_Z4A-JA",
+        "at": "2026-11-16T12:01:22+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18006840018008156",
+        "url": "https://www.instagram.com/reel/Dfy--pugDbV/",
+        "at": "2026-11-16T12:01:22+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7708691690961438726",
+        "draft": true,
+        "caption": "Duvara dübel nasıl takılır? Tozu yere düşürmeden\n\nDuvara dübel nasıl takılır, hem de tozu yere düşürmeden? Sen duvarı delerken hangi püf noktasını kullanıyorsun?\n\n#duvaradübelnasıltakılır #dübel #matkap #NasılYapılır #bilgimakasi",
+        "at": "2026-11-16T12:01:22+03:00"
+      }
+    },
     "publish_at": "2026-11-16T09:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-16T09:00:00+00:00",
       "instagram": "2026-11-16T09:00:00+00:00",
       "tiktok": "2026-11-16T09:00:00+00:00"
     },
-    "decided": "2026-11-07T00:07:53+03:00"
+    "decided": "2026-11-07T00:07:53+03:00",
+    "published": "2026-11-16T12:01:22+03:00"
   },
   {
     "tag": "short-20261106-210834",
