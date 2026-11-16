@@ -552,17 +552,38 @@
     "category": "tarih",
     "template": "kart",
     "created": "2026-11-05T17:29:56",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 155,
     "aciklama_message_id": 156,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "ZBFozdI0b9E",
+        "url": "https://youtube.com/shorts/ZBFozdI0b9E",
+        "at": "2026-11-16T17:01:47+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18171289015466295",
+        "url": "https://www.instagram.com/reel/DfzhUGumX-_/",
+        "at": "2026-11-16T17:01:47+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7708769043821430805",
+        "draft": true,
+        "caption": "Jeremy Bentham: Panoptikon'u Tasarlayan Adam Hâlâ Cam Kutuda Oturuyor\n\nPanoptikon'u tasarlayan Jeremy Bentham, yaklaşık 200 yıldır Londra'da cam bir kutuda oturuyor. Sence bu hikâyenin en tuhaf kısmı hangisi?\n\n📷 Ethan Doyle White (CC BY-SA 4.0), Plinio the elder (CC BY-SA 4.0), Michael Reeve (CC BY-SA 3.0)\n\n#jeremybenthampanoptikon #panoptikon #jeremybentham #felsefe #bilgimakasi",
+        "at": "2026-11-16T17:01:47+03:00"
+      }
+    },
     "publish_at": "2026-11-16T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-16T14:00:00+00:00",
       "instagram": "2026-11-16T14:00:00+00:00",
       "tiktok": "2026-11-16T14:00:00+00:00"
     },
-    "decided": "2026-11-05T20:35:07+03:00"
+    "decided": "2026-11-05T20:35:07+03:00",
+    "published": "2026-11-16T17:01:47+03:00"
   },
   {
     "tag": "short-20261105-175145",
