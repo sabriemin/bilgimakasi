@@ -2273,5 +2273,18 @@
     "telegram_message_id": 537,
     "aciklama_message_id": 538,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261116-234428",
+    "title": "Harry Potter ve Felsefe Taşı: Bazı Sahneler Neden İki Kez Çekildi?",
+    "topic": "Harry Potter ve Felsefe Taşı filmi 25 yaşında: Amerika'da adı 'Sorcerer's Stone' olduğu için taşın adının geçtiği her sahnenin iki kez çekilmesi, Türkçe adın İngiliz aslına sadık kalması ve felsefe taşı ile Nicolas Flamel'in gerçek simya tarihinden gelmesi",
+    "category": "sanat ve müzik",
+    "template": "kart",
+    "structure": "sayac",
+    "created": "2026-11-16T23:44:28",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 540,
+    "aciklama_message_id": 541,
+    "platforms": {}
   }
 ]
