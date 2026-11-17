@@ -2033,17 +2033,38 @@
     "template": "dosya",
     "structure": "efsane",
     "created": "2026-11-10T21:16:59",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 464,
     "aciklama_message_id": 465,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "-vEdgVPFDOA",
+        "url": "https://youtube.com/shorts/-vEdgVPFDOA",
+        "at": "2026-11-17T12:01:15+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18137585317780482",
+        "url": "https://www.instagram.com/reel/Df1jxOKAC4A/",
+        "at": "2026-11-17T12:01:15+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7709062738119903252",
+        "draft": true,
+        "caption": "Houston Rockets adı nereden geliyor? Cevap NASA değil\n\nHouston Rockets adı nereden geliyor derseniz, cevap NASA değil, 1967'de San Diego'da yapılan bir halk yarışması. Sence bu tesadüf mü, kader mi?\n\n#houstonrocketsadıneredengeliyor #alperenşengün #houstonrockets #EfsaneMiGerçekMi #bilgimakasi",
+        "at": "2026-11-17T12:01:15+03:00"
+      }
+    },
     "publish_at": "2026-11-17T09:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-17T09:00:00+00:00",
       "instagram": "2026-11-17T09:00:00+00:00",
       "tiktok": "2026-11-17T09:00:00+00:00"
     },
-    "decided": "2026-11-11T01:03:33+03:00"
+    "decided": "2026-11-11T01:03:33+03:00",
+    "published": "2026-11-17T12:01:15+03:00"
   },
   {
     "tag": "short-20261111-131821",
