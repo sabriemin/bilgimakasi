@@ -1678,13 +1678,33 @@
     "template": "belgesel",
     "structure": "belgesel",
     "created": "2026-11-06T21:24:31",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 350,
     "aciklama_message_id": 351,
     "seri_id": "202611062108-sonbaharda-bir-yapragin-yolculug",
     "bolum": 2,
     "bolum_sayisi": 2,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "xdQaINvvvgk",
+        "url": "https://youtube.com/shorts/xdQaINvvvgk",
+        "at": "2026-11-18T21:01:52+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18118266722149992",
+        "url": "https://www.instagram.com/reel/Df5GXN_gUBy/",
+        "at": "2026-11-18T21:01:52+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7709573106253105173",
+        "draft": true,
+        "caption": "Yapraklar neden sararır? Sarı yaz boyunca oradaydı | Bölüm 2/2\n\nMini Belgesel · Bölüm 2/2\nYapraklar neden sararır? Sarı bütün yaz yaprağın içinde saklıydı, kırmızıyı ise ağaç sonbaharda sıfırdan üretir. Sence sonbaharın en güzel rengi hangisi?\n\n📷 Frankie Fouganthin (CC BY-SA 4.0), Steve Evans from Citizen of the World (CC BY 2.0), DouglasGoldman (CC BY-SA 4.0), Sharon Mollerus (CC BY 2.0), Sixflashphoto (CC BY-SA 4.0)\n\n#yapraklarnedensararır #sonbahar #klorofil #MiniBelgesel #bilgimakasi",
+        "at": "2026-11-18T21:01:52+03:00"
+      }
+    },
     "publish_at": "2026-11-18T18:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-18T18:00:00+00:00",
@@ -1692,7 +1712,8 @@
       "tiktok": "2026-11-18T18:00:00+00:00"
     },
     "decided": "2026-11-07T00:31:19+03:00",
-    "otomatik_bolum": true
+    "otomatik_bolum": true,
+    "published": "2026-11-18T21:01:52+03:00"
   },
   {
     "tag": "short-20261106-213920",
