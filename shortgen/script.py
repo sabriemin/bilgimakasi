@@ -1554,9 +1554,24 @@ def _month_usage() -> tuple[dict, str]:
     return u, _period()
 
 
+BUTCE = ROOT / "state" / "claude_butce.json"  # dönem başına elle konan tavan: {"2026-10-24": 150}
+
+
+def _limit(m: str) -> float:
+    """Dönemin tavanı: state/claude_butce.json'da o dönem için bir değer varsa o, yoksa CLAUDE_MONTHLY_BUDGET_USD.
+    Böylece tek bir dönemin tavanı (ör. abonelik kredisi o ay daha yüksekse) kalıcı ayarı değiştirmeden açılır."""
+    try:
+        v = json.loads(BUTCE.read_text(encoding="utf-8")).get(m)
+        if v is not None:
+            return float(v)
+    except (OSError, ValueError, AttributeError):
+        pass
+    return float(os.environ.get("CLAUDE_MONTHLY_BUDGET_USD", "90"))
+
+
 def _check_budget() -> float:
-    limit = float(os.environ.get("CLAUDE_MONTHLY_BUDGET_USD", "90"))
     u, m = _month_usage()
+    limit = _limit(m)
     left = limit - u.get(m, 0.0)
     if left <= 0:
         raise BudgetExceeded(f"Bu dönemin Claude bütçesi ({limit:.0f} $, {m} başlangıçlı) doldu, üretim durduruldu.")

@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from . import gorsel_denetim, illustrate, images, render, voice
-from .script import (STRUCTURES, KitapTelifHatasi, ShortScript, belgesel_bolumleri, belgesel_sorunlari,
+from .script import (STRUCTURES, KitapTelifHatasi, BudgetExceeded, ShortScript, belgesel_bolumleri, belgesel_sorunlari,
                      generate_script, karar_kapanisi, kitap_telif, load_script, normalize_belgesel, para_var)
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -573,4 +573,13 @@ if __name__ == "__main__":
         main()
     except KitapTelifHatasi as e:
         _telif_durdu_yaz(e)
+        raise
+    except BudgetExceeded as e:
+        # bütçe dolunca üretim sessizce düşmesin: uret.yml aynı notu Telegram'a yazar
+        try:
+            TELIF_DURDU.parent.mkdir(parents=True, exist_ok=True)
+            TELIF_DURDU.write_text(f"{e}\nİstediğin video üretilmedi; bütçe yenilenince ya da tavan açılınca yeniden Üret.",
+                                   encoding="utf-8")
+        except OSError as hata:
+            print("Bütçe notu yazılamadı:", hata)
         raise
