@@ -2413,12 +2413,33 @@
     "template": "retro",
     "structure": "hikaye",
     "created": "2026-11-19T10:07:43",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 558,
     "aciklama_message_id": 559,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "qtGotHqv6gM",
+        "url": "https://youtube.com/shorts/qtGotHqv6gM",
+        "at": "2026-11-19T13:10:28+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18184452697438053",
+        "url": "https://www.instagram.com/reel/Df61RyuCTzM/",
+        "at": "2026-11-19T13:10:28+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7709822620053489716",
+        "draft": true,
+        "caption": "GTA 6 satış rekoru: 13 yıllık GTA V rekoru kırılacak mı?\n\nGTA 6 satış rekoru için tek rakip GTA V: 2013'te üç günde 1 milyar dolara ulaşıp Guinness'e girdi. Sence GTA 6 bu rekoru kırar mı?\n\n📷 Prayitno / Thank you for (12 millions +) (CC BY 2.0)\n\n#gta6satışrekoru #gta6 #gtav #guinnessrekoru #bilgimakasi",
+        "at": "2026-11-19T13:10:28+03:00"
+      }
+    },
     "publish_at": "2026-11-19T10:08:38+00:00",
     "schedule": null,
-    "decided": "2026-11-19T13:08:38+03:00"
+    "decided": "2026-11-19T13:08:38+03:00",
+    "published": "2026-11-19T13:10:28+03:00"
   }
 ]
