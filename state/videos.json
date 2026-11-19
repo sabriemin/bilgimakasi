@@ -1772,17 +1772,38 @@
     "template": "gece",
     "structure": "hikaye",
     "created": "2026-11-07T12:06:09",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 367,
     "aciklama_message_id": 368,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "phljX6eE6QM",
+        "url": "https://youtube.com/shorts/phljX6eE6QM",
+        "at": "2026-11-19T17:02:08+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18113234429225768",
+        "url": "https://www.instagram.com/reel/Df7PyfaAV0w/",
+        "at": "2026-11-19T17:02:08+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7709882350633486342",
+        "draft": true,
+        "caption": "Plüton adını kim verdi? Kahvaltıdaki 11 yaşında bir kız\n\nPlüton adını kim verdi? Bir astronom değil, 1930'da kahvaltı sofrasında fikir bulan 11 yaşında bir kız. Sen yeni bir gezegene ne ad verirdin?\n\n📷 Dave &amp; Margie Hill / Kleerup from Ce (CC BY-SA 2.0)\n\n#plütonadınıkimverdi #plüton #venetiaburney #uzay #bilgimakasi",
+        "at": "2026-11-19T17:02:08+03:00"
+      }
+    },
     "publish_at": "2026-11-19T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-19T14:00:00+00:00",
       "instagram": "2026-11-19T14:00:00+00:00",
       "tiktok": "2026-11-19T14:00:00+00:00"
     },
-    "decided": "2026-11-07T15:07:11+03:00"
+    "decided": "2026-11-07T15:07:11+03:00",
+    "published": "2026-11-19T17:02:08+03:00"
   },
   {
     "tag": "short-20261107-191636",
