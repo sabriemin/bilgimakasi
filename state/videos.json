@@ -1813,17 +1813,38 @@
     "template": "kart",
     "structure": "neden",
     "created": "2026-11-07T19:16:35",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 381,
     "aciklama_message_id": 382,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "saOUZ6VDG6Y",
+        "url": "https://youtube.com/shorts/saOUZ6VDG6Y",
+        "at": "2026-11-20T17:01:50+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17977595829156286",
+        "url": "https://www.instagram.com/reel/Df90fRaEYJu/",
+        "at": "2026-11-20T17:01:50+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7710253389824755730",
+        "draft": true,
+        "caption": "Öğretmenler Günü neden 24 Kasım? Cevap 1928'de saklı\n\nÖğretmenler Günü neden 24 Kasım? Cevap 1928'deki Harf Devrimi'nde ve Millet Mektepleri'nde saklı. Senin unutamadığın öğretmen kim?\n\n#öğretmenlergününeden24kasım #öğretmenlergünü #atatürk #harfdevrimi #bilgimakasi",
+        "at": "2026-11-20T17:01:50+03:00"
+      }
+    },
     "publish_at": "2026-11-20T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-20T14:00:00+00:00",
       "instagram": "2026-11-20T14:00:00+00:00",
       "tiktok": "2026-11-20T14:00:00+00:00"
     },
-    "decided": "2026-11-07T22:20:00+03:00"
+    "decided": "2026-11-07T22:20:00+03:00",
+    "published": "2026-11-20T17:01:50+03:00"
   },
   {
     "tag": "short-20261107-234906",
