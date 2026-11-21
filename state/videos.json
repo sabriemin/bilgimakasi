@@ -2435,17 +2435,38 @@
     "template": "dosya",
     "structure": "efsane",
     "created": "2026-11-17T15:15:46",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 545,
     "aciklama_message_id": 546,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "jU4ftK5DzXo",
+        "url": "https://youtube.com/shorts/jU4ftK5DzXo",
+        "at": "2026-11-21T11:31:29+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18147294700590779",
+        "url": "https://www.instagram.com/reel/Df_zhgbAaiq/",
+        "at": "2026-11-21T11:31:29+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7710539277188548616",
+        "draft": true,
+        "caption": "Kruvasan Osmanlı hilali yüzünden mi doğdu? Efsane mi, gerçek mi?\n\nKruvasan Osmanlı hilali hikâyesi, yani çöreğin 1683 Viyana kuşatmasında doğduğu iddiası aslında bir efsane. Sen bunu ilk nerede duymuştun?\n\n📷 Shixart1985 (CC BY 2.0), El bes (CC BY-SA 3.0)\n\n#kruvasanosmanlıhilali #kruvasan #viyanakuşatması #EfsaneMiGerçekMi #bilgimakasi",
+        "at": "2026-11-21T11:31:29+03:00"
+      }
+    },
     "publish_at": "2026-11-21T08:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-21T08:30:00+00:00",
       "instagram": "2026-11-21T08:30:00+00:00",
       "tiktok": "2026-11-21T08:30:00+00:00"
     },
-    "decided": "2026-11-19T00:54:40+03:00"
+    "decided": "2026-11-19T00:54:40+03:00",
+    "published": "2026-11-21T11:31:29+03:00"
   },
   {
     "tag": "short-20261119-100743",
