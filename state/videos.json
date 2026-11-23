@@ -1891,17 +1891,38 @@
     "template": "kart",
     "structure": "sayac",
     "created": "2026-11-07T23:52:23",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 394,
     "aciklama_message_id": 395,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "c8pcfLRU1Gg",
+        "url": "https://youtube.com/shorts/c8pcfLRU1Gg",
+        "at": "2026-11-23T17:01:39+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18376311502245930",
+        "url": "https://www.instagram.com/reel/DgFi3-EHOvN/",
+        "at": "2026-11-23T17:01:39+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7711366659499444276",
+        "draft": true,
+        "caption": "Altın ayarı ne demek? 14 ayarın neredeyse yarısı altın değil\n\nAltın ayarı ne demek, 14 ayar bir bileziğin içinde gerçekte ne kadar altın var? Senin takın kaç ayar?\n\n📷 “Jonathan Zander (Digon3)\" (CC BY-SA 3.0), RhAgchem (CC BY-SA 4.0)\n\n#altınayarınedemek #14ayar #çeyrekaltın #kuyumcu #bilgimakasi",
+        "at": "2026-11-23T17:01:39+03:00"
+      }
+    },
     "publish_at": "2026-11-23T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-23T14:00:00+00:00",
       "instagram": "2026-11-23T14:00:00+00:00",
       "tiktok": "2026-11-23T14:00:00+00:00"
     },
-    "decided": "2026-11-08T02:56:17+03:00"
+    "decided": "2026-11-08T02:56:17+03:00",
+    "published": "2026-11-23T17:01:39+03:00"
   },
   {
     "tag": "short-20261107-235436",
