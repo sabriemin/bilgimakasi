@@ -2546,5 +2546,18 @@
     "schedule": null,
     "decided": "2026-11-19T13:08:38+03:00",
     "published": "2026-11-19T13:10:28+03:00"
+  },
+  {
+    "tag": "short-20261124-164510",
+    "title": "Galatasaray Aston Villa: Kupayı 2. Maçındaki Kaleci Kazandırdı",
+    "topic": "Galatasaray–Aston Villa gecesi: Aston Villa'nın 1982 Avrupa Kupası finalinde ilk 10 dakikada sakatlanan kaleci Jimmy Rimmer'ın yerine, A takımda yalnızca bir maçı olan 23 yaşındaki Nigel Spink'in girmesi ve Bayern Münih'i durdurup Villa'ya kupayı kazandırması",
+    "category": "spor",
+    "template": "retro",
+    "structure": "hikaye",
+    "created": "2026-11-24T16:45:10",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 572,
+    "aciklama_message_id": 573,
+    "platforms": {}
   }
 ]
