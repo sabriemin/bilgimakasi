@@ -2555,9 +2555,12 @@
     "template": "retro",
     "structure": "hikaye",
     "created": "2026-11-24T16:45:10",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 572,
     "aciklama_message_id": 573,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-24T16:46:04+00:00",
+    "schedule": null,
+    "decided": "2026-11-24T19:46:04+03:00"
   }
 ]
