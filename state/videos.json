@@ -2583,5 +2583,18 @@
     "schedule": null,
     "decided": "2026-11-24T19:46:04+03:00",
     "published": "2026-11-24T19:47:51+03:00"
+  },
+  {
+    "tag": "short-20261124-235516",
+    "title": "Fenerbahçe renkleri nereden geliyor? Lacivert bir tesadüftü",
+    "topic": "Fenerbahçe adının ve renklerinin hikâyesi: 1907'de Türklerin dernek kurması yasakken Kadıköy'de gizlice kurulan kulübün adını deniz feneriyle bilinen Fenerbahçe semtinden alması, ilk renklerin papatyadan esinlenen sarı-beyaz olması ve lacivertin bir dükkândaki stok tesadüfüyle gelmesi (gündem: 25 Kasım Shakhtar Donetsk maçı)",
+    "category": "spor",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-24T23:55:16",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 576,
+    "aciklama_message_id": 577,
+    "platforms": {}
   }
 ]
