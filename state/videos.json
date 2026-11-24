@@ -1973,17 +1973,38 @@
     "template": "kart",
     "structure": "neden",
     "created": "2026-11-08T12:27:50",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 412,
     "aciklama_message_id": 413,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "Db8qmGvuENk",
+        "url": "https://youtube.com/shorts/Db8qmGvuENk",
+        "at": "2026-11-24T17:01:21+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18108513803208003",
+        "url": "https://www.instagram.com/reel/DgIHqwkkmji/",
+        "at": "2026-11-24T17:01:21+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7711737657163958292",
+        "draft": true,
+        "caption": "Zeigarnik Etkisi: Garson Ödenen Siparişi Neden Unutur?\n\nZeigarnik etkisi, Berlin'de bir garsonun ödenmemiş siparişleri hatırlayıp ödenenleri unutmasıyla fark edildi. Senin aklında yarım kalan iş ne?\n\n#zeigarniketkisi #psikoloji #hafıza #kurtlewin #bilgimakasi",
+        "at": "2026-11-24T17:01:21+03:00"
+      }
+    },
     "publish_at": "2026-11-24T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-24T14:00:00+00:00",
       "instagram": "2026-11-24T14:00:00+00:00",
       "tiktok": "2026-11-24T14:00:00+00:00"
     },
-    "decided": "2026-11-08T15:31:36+03:00"
+    "decided": "2026-11-08T15:31:36+03:00",
+    "published": "2026-11-24T17:01:21+03:00"
   },
   {
     "tag": "short-20261108-180356",
