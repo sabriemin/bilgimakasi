@@ -22,7 +22,13 @@
   "yt:Ugxw8H-o5u5NDfDjqKt4AaABAg",
   "yt:UgzLRRTaGj3_GmgjqBJ4AaABAg",
   "yt:UgxPKFXUl-G4qEhz4dN4AaABAg",
-  "ig:18450049009121277"
+  "ig:18450049009121277",
+  "yt:UgwYO1N9NnBTiCoojT14AaABAg",
+  "yt:Ugww_fE_3VodYQDOjPN4AaABAg",
+  "yt:Ugwt6hK2Zb58fxk6eMp4AaABAg",
+  "yt:Ugzr0NGhzdBPDuoKCu94AaABAg",
+  "yt:UgyjJUQyE1K-aW4i-Ll4AaABAg",
+  "ig:17913017457574257"
  ],
  "pending": {
   "3": {
@@ -132,6 +138,30 @@
    "reply": "Boşluk tuşundaki gizli imleci çoğu kişi bilmiyor 😄 En çok hangi kısayol şaşırttı?",
    "message_id": 528,
    "created": "2026-11-15T07:05:46"
+  },
+  "27": {
+   "id": "yt:Ugzr0NGhzdBPDuoKCu94AaABAg",
+   "platform": "youtube",
+   "parent": "Ugzr0NGhzdBPDuoKCu94AaABAg",
+   "tag": "short-20261119-100743",
+   "video": "GTA 6 satış rekoru: 13 yıllık GTA V rekoru kırılacak mı?",
+   "author": "@astro.dünyam",
+   "text": "Aday değil bence gta6 herkesde ps 5 pro mu var ama eski konsol vardır illaki gta 5 hala",
+   "reply": "GTA 6 için Pro şart değil, normal PS5 ve Xbox Series'te de çalışıyor. Ama haklısın, eski konsol ve PC'de olmaması satışları kısabilir. Sence PC sürümü gelince fark kapanır mı?",
+   "message_id": 569,
+   "created": "2026-11-24T07:04:26"
+  },
+  "28": {
+   "id": "yt:UgyjJUQyE1K-aW4i-Ll4AaABAg",
+   "platform": "youtube",
+   "parent": "UgyjJUQyE1K-aW4i-Ll4AaABAg",
+   "tag": "short-20261119-100743",
+   "video": "GTA 6 satış rekoru: 13 yıllık GTA V rekoru kırılacak mı?",
+   "author": "@AbdulahEmirYılmaz",
+   "text": "Basaramazz",
+   "reply": "Toplam satışta zor olabilir, GTA V 13 yılda 3 konsol neslinde satıldı. İlk günlerdeki satış rekoru ise bambaşka bir yarış. Sence o rekoru da kıramaz mı?",
+   "message_id": 570,
+   "created": "2026-11-24T07:04:26"
   }
  }
 }
