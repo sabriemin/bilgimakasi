@@ -2555,12 +2555,33 @@
     "template": "retro",
     "structure": "hikaye",
     "created": "2026-11-24T16:45:10",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 572,
     "aciklama_message_id": 573,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "6cy4-U0lbwo",
+        "url": "https://youtube.com/shorts/6cy4-U0lbwo",
+        "at": "2026-11-24T19:47:51+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17920596072531805",
+        "url": "https://www.instagram.com/reel/DgIauLWDvI4/",
+        "at": "2026-11-24T19:47:51+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7711780187347748884",
+        "draft": true,
+        "caption": "Galatasaray Aston Villa: Kupayı 2. Maçındaki Kaleci Kazandırdı\n\nGalatasaray Aston Villa maçı öncesi: Villa, 1982'de Avrupa Kupası'nı A takımda tek maçı olan yedek kaleci Nigel Spink'le kazandı. Sence bu gece RAMS Park'ta kim kahraman olur?\n\n📷 Wouter Engler (CC BY-SA 4.0), Nationaal Archief, Den Haag, Rijksfotoar (CC BY-SA 3.0 nl), L'Equipe (CC BY-SA 4.0)\n\n#galatasarayastonvilla #astonvilla #galatasaray #şampiyonlarligi #bilgimakasi",
+        "at": "2026-11-24T19:47:51+03:00"
+      }
+    },
     "publish_at": "2026-11-24T16:46:04+00:00",
     "schedule": null,
-    "decided": "2026-11-24T19:46:04+03:00"
+    "decided": "2026-11-24T19:46:04+03:00",
+    "published": "2026-11-24T19:47:51+03:00"
   }
 ]
