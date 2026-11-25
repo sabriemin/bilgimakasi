@@ -2630,5 +2630,18 @@
     "telegram_message_id": 579,
     "aciklama_message_id": 580,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261125-233646",
+    "title": "Black Friday adı nereden geliyor? Mağazalar değil, polisler koydu",
+    "topic": "Black Friday adının kökeni: Philadelphia polisinin alışveriş kalabalığı ve trafik yüzünden Şükran Günü'nün ertesine 'Black Friday' demesi, 'mağazalar o gün kâra geçer' açıklamasının 1980'lerde ortaya çıkması, esnafın 1961'de adı 'Big Friday' yapma denemesinin tutmaması ve Türkiye'de günün 'Efsane Cuma' olarak yerleşmesi",
+    "category": "ekonomi ve markalar",
+    "template": "kart",
+    "structure": "neden",
+    "created": "2026-11-25T23:36:46",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 581,
+    "aciklama_message_id": 582,
+    "platforms": {}
   }
 ]
