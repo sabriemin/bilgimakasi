@@ -2063,17 +2063,38 @@
     "template": "kart",
     "structure": "hikaye",
     "created": "2026-11-08T19:23:25",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 423,
     "aciklama_message_id": 424,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "_kEaOJH-zZU",
+        "url": "https://youtube.com/shorts/_kEaOJH-zZU",
+        "at": "2026-11-25T17:01:33+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "17895498036617449",
+        "url": "https://www.instagram.com/reel/DgKsd5WBTmk/",
+        "at": "2026-11-25T17:01:33+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7712108798139254802",
+        "draft": true,
+        "caption": "10 TL arkasındaki formül: Cahit Arf'ın Arf değişmezi\n\n10 TL arkasındaki formül, Türk matematikçi Cahit Arf'ın 1941'de bulduğu Arf değişmezi. Sen bu formülü hiç fark etmiş miydin?\n\n📷 Matti Blume (CC BY-SA 4.0)\n\n#10tlarkasındakiformül #cahitarf #arfdeğişmezi #matematik #bilgimakasi",
+        "at": "2026-11-25T17:01:33+03:00"
+      }
+    },
     "publish_at": "2026-11-25T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-25T14:00:00+00:00",
       "instagram": "2026-11-25T14:00:00+00:00",
       "tiktok": "2026-11-25T14:00:00+00:00"
     },
-    "decided": "2026-11-09T11:37:21+03:00"
+    "decided": "2026-11-09T11:37:21+03:00",
+    "published": "2026-11-25T17:01:33+03:00"
   },
   {
     "tag": "short-20261109-144102",
