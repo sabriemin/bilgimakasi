@@ -2705,5 +2705,18 @@
       "tiktok": "2026-12-10T14:00:00+00:00"
     },
     "decided": "2026-11-26T22:14:57+03:00"
+  },
+  {
+    "tag": "short-20261126-233635",
+    "title": "Trabzonspor Liverpool 1976: geleceğin Avrupa şampiyonunu yenen gece",
+    "topic": "Trabzonspor'un 20 Ekim 1976'da Avni Aker'de Cemil Usta'nın penaltı golüyle Liverpool'u 1-0 yenmesi; Anfield'daki rövanşı 3-0 kazanan Liverpool'un o sezon Roma'da Mönchengladbach'ı 3-1 yenerek tarihindeki ilk Avrupa Kupası'nı kaldırması (gündem: Trabzonspor bu akşam Konferans Ligi'nde CSKA Sofya deplasmanında)",
+    "category": "spor",
+    "template": "retro",
+    "structure": "hikaye",
+    "created": "2026-11-26T23:36:35",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 597,
+    "aciklama_message_id": 598,
+    "platforms": {}
   }
 ]
