@@ -2647,10 +2647,17 @@
     "template": "dosya",
     "structure": "efsane",
     "created": "2026-11-25T16:29:13",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 579,
     "aciklama_message_id": 580,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-11-28T08:30:00+00:00",
+    "schedule": {
+      "youtube": "2026-11-28T08:30:00+00:00",
+      "instagram": "2026-11-28T08:30:00+00:00",
+      "tiktok": "2026-11-28T08:30:00+00:00"
+    },
+    "decided": "2026-11-26T22:15:01+03:00"
   },
   {
     "tag": "short-20261125-233646",
