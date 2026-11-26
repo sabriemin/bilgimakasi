@@ -2664,5 +2664,18 @@
     "telegram_message_id": 581,
     "aciklama_message_id": 582,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261126-160448",
+    "title": "Türkiye EURO ev sahipliğini tek oyla nasıl kaçırdı?",
+    "topic": "Türkiye'nin EURO ev sahipliği için dört kez aday olup kaybetmesi: 2008 ve 2012 adaylıkları, EURO 2016'nın 28 Mayıs 2010'da Cenevre'de 7-6 ile Fransa'ya gitmesi, EURO 2024'ün 12-4 ile Almanya'ya verilmesi ve EURO 2032'nin İtalya'yla ortak alınması",
+    "category": "spor",
+    "template": "retro",
+    "structure": "hikaye",
+    "created": "2026-11-26T16:04:48",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 584,
+    "aciklama_message_id": 585,
+    "platforms": {}
   }
 ]
