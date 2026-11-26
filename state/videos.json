@@ -2104,17 +2104,38 @@
     "template": "kart",
     "structure": "neden",
     "created": "2026-11-09T14:41:02",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 431,
     "aciklama_message_id": 432,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "8pO93O-GMHc",
+        "url": "https://youtube.com/shorts/8pO93O-GMHc",
+        "at": "2026-11-26T17:02:05+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18108671714529797",
+        "url": "https://www.instagram.com/reel/DgNRQ03yRF8/",
+        "at": "2026-11-26T17:02:05+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7712479936221382676",
+        "draft": true,
+        "caption": "Nutella'nın hikâyesi: Savaş, kakao kıtlığı ve Türk fındığı\n\nNutella'nın hikâyesi, savaş sonrası kakao kıtlığında fındıkla çoğaltılan ve bıçakla dilimlenen bir ezmeyle başladı. Sence Nutella'nın asıl yıldızı kakao mu, fındık mı?\n\n📷 Cloud7 (CC BY-SA 3.0), Ei'eke (CC BY-SA 4.0), Fir0002 at English Wikipedia (CC BY-SA 3.0)\n\n#nutellanınhikayesi #nutella #fındık #ferrero #bilgimakasi",
+        "at": "2026-11-26T17:02:05+03:00"
+      }
+    },
     "publish_at": "2026-11-26T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-26T14:00:00+00:00",
       "instagram": "2026-11-26T14:00:00+00:00",
       "tiktok": "2026-11-26T14:00:00+00:00"
     },
-    "decided": "2026-11-09T20:33:02+03:00"
+    "decided": "2026-11-09T20:33:02+03:00",
+    "published": "2026-11-26T17:02:05+03:00"
   },
   {
     "tag": "short-20261109-235146",
