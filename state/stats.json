@@ -1,20 +1,20 @@
 {
- "time": "2026-11-19T01:19+03:00",
+ "time": "2026-11-27T02:11+03:00",
  "platforms": {
   "youtube": {
    "account": {
-    "followers": 922,
-    "views": 24755,
-    "videos": 46
+    "followers": 924,
+    "views": 32402,
+    "videos": 55
    },
    "videos": {
     "short-20261104-1307": {
-     "views": 116,
+     "views": 117,
      "likes": 0,
      "comments": 0
     },
     "short-20261104-1839": {
-     "views": 366,
+     "views": 367,
      "likes": 0,
      "comments": 0
     },
@@ -29,22 +29,22 @@
      "comments": 0
     },
     "short-20261104-2048": {
-     "views": 591,
+     "views": 599,
      "likes": 7,
      "comments": 0
     },
     "short-20261104-2100": {
-     "views": 1624,
+     "views": 1625,
      "likes": 20,
      "comments": 1
     },
     "short-20261104-211525": {
-     "views": 1136,
+     "views": 1137,
      "likes": 6,
      "comments": 0
     },
     "short-20261104-212900": {
-     "views": 60,
+     "views": 66,
      "likes": 0,
      "comments": 0
     },
@@ -54,7 +54,7 @@
      "comments": 0
     },
     "short-20261105-043425": {
-     "views": 412,
+     "views": 418,
      "likes": 2,
      "comments": 0
     },
@@ -64,17 +64,17 @@
      "comments": 0
     },
     "short-20261105-134746": {
-     "views": 64,
+     "views": 66,
      "likes": 0,
      "comments": 0
     },
     "short-20261105-151659": {
-     "views": 1167,
+     "views": 1168,
      "likes": 11,
      "comments": 0
     },
     "short-20261105-172956": {
-     "views": 105,
+     "views": 114,
      "likes": 0,
      "comments": 0
     },
@@ -84,7 +84,7 @@
      "comments": 4
     },
     "short-20261105-215647": {
-     "views": 1100,
+     "views": 1101,
      "likes": 7,
      "comments": 0
     },
@@ -94,57 +94,57 @@
      "comments": 2
     },
     "short-20261105-230258": {
-     "views": 1072,
+     "views": 1077,
      "likes": 7,
      "comments": 0
     },
     "short-20261105-232827": {
-     "views": 63,
+     "views": 64,
      "likes": 0,
      "comments": 0
     },
     "short-20261106-010026": {
-     "views": 953,
+     "views": 955,
      "likes": 1,
      "comments": 0
     },
     "short-20261106-021602": {
-     "views": 462,
+     "views": 461,
      "likes": 6,
      "comments": 0
     },
     "short-20261106-035745": {
-     "views": 216,
+     "views": 220,
      "likes": 2,
      "comments": 1
     },
     "short-20261106-035746": {
-     "views": 98,
+     "views": 103,
      "likes": 0,
      "comments": 0
     },
     "short-20261106-042045": {
-     "views": 1214,
+     "views": 1233,
      "likes": 20,
      "comments": 0
     },
     "short-20261106-042433": {
-     "views": 928,
+     "views": 931,
      "likes": 15,
      "comments": 0
     },
     "short-20261106-133143": {
-     "views": 906,
+     "views": 910,
      "likes": 3,
      "comments": 0
     },
     "short-20261106-204310": {
-     "views": 916,
+     "views": 928,
      "likes": 5,
      "comments": 7
     },
     "short-20261106-204453": {
-     "views": 209,
+     "views": 205,
      "likes": 0,
      "comments": 0
     },
@@ -154,7 +154,7 @@
      "comments": 0
     },
     "short-20261106-205012": {
-     "views": 12,
+     "views": 31,
      "likes": 0,
      "comments": 0
     },
@@ -164,7 +164,7 @@
      "comments": 0
     },
     "short-20261106-210533": {
-     "views": 255,
+     "views": 267,
      "likes": 0,
      "comments": 0
     },
@@ -179,76 +179,121 @@
      "comments": 0
     },
     "short-20261106-211406": {
-     "views": 911,
+     "views": 917,
      "likes": 5,
      "comments": 0
     },
     "short-20261106-211742": {
-     "views": 1179,
+     "views": 1212,
      "likes": 10,
      "comments": 0
     },
     "short-20261106-212431": {
-     "views": 2,
+     "views": 5,
      "likes": 0,
      "comments": 0
     },
     "short-20261106-212432": {
-     "views": 6,
-     "likes": 0,
-     "comments": 0
-    },
-    "short-20261106-213920": {
-     "views": 39,
-     "likes": 0,
-     "comments": 0
-    },
-    "short-20261107-234906": {
-     "views": 925,
-     "likes": 5,
-     "comments": 0
-    },
-    "short-20261107-235436": {
-     "views": 808,
-     "likes": 3,
-     "comments": 1
-    },
-    "short-20261108-180356": {
-     "views": 103,
-     "likes": 0,
-     "comments": 0
-    },
-    "short-20261110-095122": {
-     "views": 1599,
-     "likes": 17,
-     "comments": 3
-    },
-    "short-20261110-211659": {
      "views": 9,
      "likes": 0,
      "comments": 0
     },
+    "short-20261106-213920": {
+     "views": 43,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261107-120609": {
+     "views": 59,
+     "likes": 1,
+     "comments": 0
+    },
+    "short-20261107-191636": {
+     "views": 1271,
+     "likes": 9,
+     "comments": 0
+    },
+    "short-20261107-234906": {
+     "views": 934,
+     "likes": 5,
+     "comments": 0
+    },
+    "short-20261107-235223": {
+     "views": 1335,
+     "likes": 3,
+     "comments": 3
+    },
+    "short-20261107-235436": {
+     "views": 812,
+     "likes": 3,
+     "comments": 1
+    },
+    "short-20261108-122750": {
+     "views": 74,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261108-180356": {
+     "views": 110,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261108-192325": {
+     "views": 407,
+     "likes": 5,
+     "comments": 0
+    },
+    "short-20261109-144102": {
+     "views": 622,
+     "likes": 3,
+     "comments": 1
+    },
+    "short-20261110-095122": {
+     "views": 1629,
+     "likes": 17,
+     "comments": 3
+    },
+    "short-20261110-211659": {
+     "views": 12,
+     "likes": 0,
+     "comments": 0
+    },
     "short-20261113-134422": {
-     "views": 90,
+     "views": 98,
      "likes": 0,
      "comments": 0
     },
     "short-20261113-211734": {
-     "views": 8,
+     "views": 13,
      "likes": 0,
+     "comments": 0
+    },
+    "short-20261117-151546": {
+     "views": 121,
+     "likes": 0,
+     "comments": 0
+    },
+    "short-20261119-100743": {
+     "views": 2331,
+     "likes": 14,
+     "comments": 2
+    },
+    "short-20261124-164510": {
+     "views": 1026,
+     "likes": 3,
      "comments": 0
     }
    }
   },
   "instagram": {
    "account": {
-    "followers": 78,
-    "videos": 46,
-    "views": 34521,
-    "likes": 317,
-    "comments": 11,
-    "saves": 67,
-    "shares": 73
+    "followers": 77,
+    "videos": 55,
+    "views": 39435,
+    "likes": 334,
+    "comments": 12,
+    "saves": 72,
+    "shares": 78
    },
    "videos": {
     "short-20261104-1307": {
@@ -280,8 +325,8 @@
      "shares": 19
     },
     "short-20261104-2048": {
-     "views": 1880,
-     "likes": 15,
+     "views": 1886,
+     "likes": 14,
      "comments": 0,
      "saves": 4,
      "shares": 0
@@ -413,7 +458,7 @@
      "shares": 0
     },
     "short-20261106-042045": {
-     "views": 330,
+     "views": 332,
      "likes": 20,
      "comments": 2,
      "saves": 15,
@@ -427,7 +472,7 @@
      "shares": 6
     },
     "short-20261106-133143": {
-     "views": 1262,
+     "views": 1263,
      "likes": 5,
      "comments": 0,
      "saves": 0,
@@ -441,7 +486,7 @@
      "shares": 1
     },
     "short-20261106-204453": {
-     "views": 1447,
+     "views": 1449,
      "likes": 6,
      "comments": 0,
      "saves": 3,
@@ -455,7 +500,7 @@
      "shares": 0
     },
     "short-20261106-205012": {
-     "views": 235,
+     "views": 498,
      "likes": 3,
      "comments": 0,
      "saves": 0,
@@ -511,7 +556,7 @@
      "shares": 0
     },
     "short-20261106-212432": {
-     "views": 122,
+     "views": 133,
      "likes": 0,
      "comments": 0,
      "saves": 0,
@@ -524,6 +569,20 @@
      "saves": 2,
      "shares": 2
     },
+    "short-20261107-120609": {
+     "views": 11,
+     "likes": 0,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261107-191636": {
+     "views": 138,
+     "likes": 2,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
     "short-20261107-234906": {
      "views": 1565,
      "likes": 2,
@@ -531,16 +590,44 @@
      "saves": 0,
      "shares": 0
     },
+    "short-20261107-235223": {
+     "views": 1562,
+     "likes": 9,
+     "comments": 1,
+     "saves": 2,
+     "shares": 3
+    },
     "short-20261107-235436": {
      "views": 1696,
-     "likes": 22,
+     "likes": 21,
      "comments": 0,
      "saves": 1,
      "shares": 0
     },
+    "short-20261108-122750": {
+     "views": 1293,
+     "likes": 1,
+     "comments": 0,
+     "saves": 2,
+     "shares": 2
+    },
     "short-20261108-180356": {
      "views": 125,
      "likes": 0,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261108-192325": {
+     "views": 160,
+     "likes": 1,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261109-144102": {
+     "views": 117,
+     "likes": 1,
      "comments": 0,
      "saves": 0,
      "shares": 0
@@ -572,157 +659,178 @@
      "comments": 0,
      "saves": 1,
      "shares": 0
+    },
+    "short-20261117-151546": {
+     "views": 134,
+     "likes": 0,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
+    },
+    "short-20261119-100743": {
+     "views": 22,
+     "likes": 2,
+     "comments": 0,
+     "saves": 1,
+     "shares": 0
+    },
+    "short-20261124-164510": {
+     "views": 1192,
+     "likes": 3,
+     "comments": 0,
+     "saves": 0,
+     "shares": 0
     }
    }
   },
   "tiktok": {
    "account": {
-    "followers": 84,
-    "likes": 1711,
-    "videos": 46,
-    "views": 22147,
-    "comments": 4,
-    "shares": 1
+    "followers": 92,
+    "likes": 1782,
+    "videos": 53,
+    "views": 8202,
+    "comments": 0,
+    "shares": 2
    },
    "videos": {},
    "list": [
     {
-     "title": "Yapraklar neden sararır? Sarı yaz boyunca oradaydı | Bölüm 2",
-     "views": 8,
+     "title": "Galatasaray Aston Villa: Kupayı 2. Maçındaki Kaleci Kazandır",
+     "views": 263,
+     "likes": 2,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Zeigarnik Etkisi: Garson Ödenen Siparişi Neden Unutur? Zeiga",
+     "views": 351,
+     "likes": 7,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Altın ayarı ne demek? 14 ayarın neredeyse yarısı altın değil",
+     "views": 457,
+     "likes": 2,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Kruvasan Osmanlı hilali yüzünden mi doğdu? Efsane mi, gerçek",
+     "views": 325,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
+     "title": "Öğretmenler Günü neden 24 Kasım? Cevap 1928'de saklı Öğretme",
+     "views": 407,
+     "likes": 16,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Plüton adını kim verdi? Kahvaltıdaki 11 yaşında bir kız Plüt",
+     "views": 365,
+     "likes": 13,
+     "comments": 0,
+     "shares": 1
+    },
+    {
+     "title": "GTA 6 satış rekoru: 13 yıllık GTA V rekoru kırılacak mı? GTA",
+     "views": 397,
+     "likes": 9,
+     "comments": 0,
+     "shares": 0
+    },
+    {
+     "title": "Yapraklar neden sararır? Sarı yaz boyunca oradaydı | Bölüm 2",
+     "views": 300,
+     "likes": 6,
+     "comments": 0,
+     "shares": 0
+    },
+    {
      "title": "Porsche logosundaki at nereden geliyor? Cevap bir şehrin adı",
-     "views": 242,
-     "likes": 3,
+     "views": 493,
+     "likes": 4,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Godzilla kükremesi nasıl yapıldı? Cevap bir kontrbasta saklı",
-     "views": 440,
+     "views": 449,
      "likes": 5,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Houston Rockets adı nereden geliyor? Cevap NASA değil Housto",
-     "views": 385,
+     "views": 388,
      "likes": 1,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Yapraklar neden sararır? Sarı yaz boyunca oradaydı | Bölüm 1",
-     "views": 394,
+     "views": 402,
      "likes": 14,
      "comments": 0,
      "shares": 1
     },
     {
      "title": "Jeremy Bentham: Panoptikon'u Tasarlayan Adam Hâlâ Cam Kutuda",
-     "views": 418,
+     "views": 419,
      "likes": 3,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Duvara dübel nasıl takılır? Tozu yere düşürmeden Duvara dübe",
-     "views": 386,
+     "views": 393,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Lodos ne demek? Adı bir Yunan rüzgâr tanrısından geliyor Lod",
-     "views": 608,
-     "likes": 9,
+     "views": 623,
+     "likes": 10,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Boğaz alt akıntısı: Dipte ters yöne akan gizli nehir Boğaz a",
-     "views": 437,
+     "views": 439,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Napolyon kısa mıydı? Onu bir ölçü birimi küçülttü Napolyon k",
-     "views": 461,
+     "views": 462,
      "likes": 6,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Kanın temizlik yolculuğu: 6 durak | Bölüm 2/2 Mini Belgesel ",
-     "views": 154,
+     "views": 156,
      "likes": 1,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Kırat nereden gelir? Eşit sanılan keçiboynuzu çekirdekleri K",
-     "views": 381,
+     "views": 383,
      "likes": 0,
      "comments": 0,
      "shares": 0
     },
     {
      "title": "Telefonda hızlı yazma: Klavyedeki gizli fare ve 3 kısayol da",
-     "views": 728,
+     "views": 730,
      "likes": 6,
-     "comments": 0,
-     "shares": 0
-    },
-    {
-     "title": "Milli Piyango büyük ikramiye sana çıksaydı eline ne kalırdı?",
-     "views": 15135,
-     "likes": 52,
-     "comments": 4,
-     "shares": 0
-    },
-    {
-     "title": "Avengers Doomsday'in kötü adamı bir zamanlar Avengers'ın kah",
-     "views": 403,
-     "likes": 7,
-     "comments": 0,
-     "shares": 0
-    },
-    {
-     "title": "Hindi kelimesinin kökeni: Biz Hintli dedik, İngilizler Türki",
-     "views": 387,
-     "likes": 1,
-     "comments": 0,
-     "shares": 0
-    },
-    {
-     "title": "Kanın temizlik yolculuğu: 6 durak | Bölüm 1/2 Mini Belgesel ",
-     "views": 391,
-     "likes": 9,
-     "comments": 0,
-     "shares": 0
-    },
-    {
-     "title": "Kış lastiği ne işe yarar? Cevap kar değil, 7 derece Kış last",
-     "views": 41,
-     "likes": 0,
-     "comments": 0,
-     "shares": 0
-    },
-    {
-     "title": "Siyah çay nasıl üretilir? Yeşil çayla aynı yapraktan çıkıyor",
-     "views": 369,
-     "likes": 1,
-     "comments": 0,
-     "shares": 0
-    },
-    {
-     "title": "Dune romanı konusu: Onu ilk basan yayınevi araba kılavuzu ba",
-     "views": 379,
-     "likes": 1,
      "comments": 0,
      "shares": 0
     }
@@ -769,12 +877,21 @@
   "short-20261106-212431": "Yapraklar neden sararır? Sarı yaz boyunca oradaydı | Bölüm 1/2",
   "short-20261106-212432": "Yapraklar neden sararır? Sarı yaz boyunca oradaydı | Bölüm 2/2",
   "short-20261106-213920": "Dune romanı konusu: Onu ilk basan yayınevi araba kılavuzu basıyordu",
+  "short-20261107-120609": "Plüton adını kim verdi? Kahvaltıdaki 11 yaşında bir kız",
+  "short-20261107-191636": "Öğretmenler Günü neden 24 Kasım? Cevap 1928'de saklı",
   "short-20261107-234906": "Hava durumu nasıl ölçülür? Gizli kahraman gökte patlıyor",
+  "short-20261107-235223": "Altın ayarı ne demek? 14 ayarın neredeyse yarısı altın değil",
   "short-20261107-235436": "Euro 2000 Türkiye Belçika: Rakip kalede defansçının durduğu gece",
+  "short-20261108-122750": "Zeigarnik Etkisi: Garson Ödenen Siparişi Neden Unutur?",
   "short-20261108-180356": "Hindi kelimesinin kökeni: Biz Hintli dedik, İngilizler Türkiye",
+  "short-20261108-192325": "10 TL arkasındaki formül: Cahit Arf'ın Arf değişmezi",
+  "short-20261109-144102": "Nutella'nın hikâyesi: Savaş, kakao kıtlığı ve Türk fındığı",
   "short-20261110-095122": "10 Kasım Atatürk: Türkiye onu iki kez uğurladı",
   "short-20261110-211659": "Houston Rockets adı nereden geliyor? Cevap NASA değil",
   "short-20261113-134422": "Lodos ne demek? Adı bir Yunan rüzgâr tanrısından geliyor",
-  "short-20261113-211734": "Boğaz alt akıntısı: Dipte ters yöne akan gizli nehir"
+  "short-20261113-211734": "Boğaz alt akıntısı: Dipte ters yöne akan gizli nehir",
+  "short-20261117-151546": "Kruvasan Osmanlı hilali yüzünden mi doğdu? Efsane mi, gerçek mi?",
+  "short-20261119-100743": "GTA 6 satış rekoru: 13 yıllık GTA V rekoru kırılacak mı?",
+  "short-20261124-164510": "Galatasaray Aston Villa: Kupayı 2. Maçındaki Kaleci Kazandırdı"
  }
 }
