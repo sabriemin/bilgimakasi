@@ -2746,5 +2746,18 @@
       "tiktok": "2026-12-14T14:00:00+00:00"
     },
     "decided": "2026-11-27T02:37:08+03:00"
+  },
+  {
+    "tag": "short-20261127-155318",
+    "title": "Beşiktaş Galatasaray derbisi: 11 gollük maç ve en farklı skorlar",
+    "topic": "Beşiktaş–Galatasaray rekabetinin en uç skorları: 1924'teki ilk resmî derbi (Beşiktaş 2-0), Beşiktaş'ın 2024 Süper Kupa finalinde üçüncü kez yakaladığı 5-0'lık rekor fark ve Galatasaray'ın 30 Haziran 1940'taki 9-2'lik galibiyeti (gündem: 30 Kasım Pazartesi Tüpraş Stadı'ndaki derbi)",
+    "category": "spor",
+    "template": "kart",
+    "structure": "sayac",
+    "created": "2026-11-27T15:53:18",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 601,
+    "aciklama_message_id": 602,
+    "platforms": {}
   }
 ]
