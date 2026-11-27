@@ -2768,9 +2768,16 @@
     "template": "kolaj",
     "structure": "hikaye",
     "created": "2026-11-27T23:17:07",
-    "status": "onay_bekliyor",
+    "status": "zamanlandi",
     "telegram_message_id": 603,
     "aciklama_message_id": 604,
-    "platforms": {}
+    "platforms": {},
+    "publish_at": "2026-12-15T14:00:00+00:00",
+    "schedule": {
+      "youtube": "2026-12-15T14:00:00+00:00",
+      "instagram": "2026-12-15T14:00:00+00:00",
+      "tiktok": "2026-12-15T14:00:00+00:00"
+    },
+    "decided": "2026-11-28T02:18:27+03:00"
   }
 ]
