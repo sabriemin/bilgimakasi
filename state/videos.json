@@ -2759,5 +2759,18 @@
     "telegram_message_id": 601,
     "aciklama_message_id": 602,
     "platforms": {}
+  },
+  {
+    "tag": "short-20261127-231707",
+    "title": "Agatha Christie Kayboluşu: Sır Pera Palas'ın 411'inde mi? (1. Bölüm)",
+    "topic": "Agatha Christie'nin 3 Aralık 1926'da 11 günlüğüne ortadan kaybolması: binden fazla polis ve binlerce gönüllünün katıldığı arama, Harrogate'teki bir otelde kocasının sevgilisinin soyadıyla bulunması ve 1979'da bir medyumun sırrı Pera Palas'ın 411 numaralı odasına bağlaması (gündem: kayboluşun 100. yıl dönümü 3 Aralık, ölümünün 50. yılı)",
+    "category": "tarih",
+    "template": "kolaj",
+    "structure": "hikaye",
+    "created": "2026-11-27T23:17:07",
+    "status": "onay_bekliyor",
+    "telegram_message_id": 603,
+    "aciklama_message_id": 604,
+    "platforms": {}
   }
 ]
