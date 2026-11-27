@@ -2145,17 +2145,38 @@
     "template": "retro",
     "structure": "hikaye",
     "created": "2026-11-09T23:51:46",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 439,
     "aciklama_message_id": 440,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "AFnLcYqbpEk",
+        "url": "https://youtube.com/shorts/AFnLcYqbpEk",
+        "at": "2026-11-27T17:01:35+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18102986816387448",
+        "url": "https://www.instagram.com/reel/DgP2DlnRCuC/",
+        "at": "2026-11-27T17:01:35+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7712850948721051669",
+        "draft": true,
+        "caption": "Türkiye Fransa'yı yendi: Tarihteki tek zafer Konya'da geldi\n\nTürkiye Fransa'yı tarihinde yalnızca bir kez yendi: 2019'da Konya'da, dünya şampiyonuna karşı 2-0. Sence 15 Kasım'da ikincisi gelir mi?\n\n📷 Hüseyin Öcal (CC BY 3.0), Darthvadrouw (CC BY-SA 4.0)\n\n#türkiyefransayıyendi #kaanayhan #cengizünder #millitakım #bilgimakasi",
+        "at": "2026-11-27T17:01:35+03:00"
+      }
+    },
     "publish_at": "2026-11-27T14:00:00+00:00",
     "schedule": {
       "youtube": "2026-11-27T14:00:00+00:00",
       "instagram": "2026-11-27T14:00:00+00:00",
       "tiktok": "2026-11-27T14:00:00+00:00"
     },
-    "decided": "2026-11-10T03:35:39+03:00"
+    "decided": "2026-11-10T03:35:39+03:00",
+    "published": "2026-11-27T17:01:35+03:00"
   },
   {
     "tag": "short-20261110-095122",
