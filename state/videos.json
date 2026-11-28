@@ -2675,17 +2675,38 @@
     "template": "dosya",
     "structure": "efsane",
     "created": "2026-11-25T16:29:13",
-    "status": "zamanlandi",
+    "status": "yayinlandi",
     "telegram_message_id": 579,
     "aciklama_message_id": 580,
-    "platforms": {},
+    "platforms": {
+      "youtube": {
+        "status": "ok",
+        "id": "4yPmem3K0ag",
+        "url": "https://youtube.com/shorts/4yPmem3K0ag",
+        "at": "2026-11-28T11:31:21+03:00"
+      },
+      "instagram": {
+        "status": "ok",
+        "id": "18375966712245528",
+        "url": "https://www.instagram.com/reel/DgR1FQNTOzV/",
+        "at": "2026-11-28T11:31:21+03:00"
+      },
+      "tiktok": {
+        "status": "ok",
+        "id": "v_inbox_file~v2.7713136843562403860",
+        "draft": true,
+        "caption": "Beşiktaş'a neden Kara Kartal deniyor? Lakabı bir balıkçı verdi\n\nBeşiktaş'a neden Kara Kartal deniyor, lakabı 1941'de tribündeki balıkçı Mehmet Galin'in tezahüratı doğurdu. Sence bugün tribünden hangi ses yükselir?\n\n#beşiktaşnedenkarakartal #beşiktaş #karakartal #EfsaneMiGerçekMi #bilgimakasi",
+        "at": "2026-11-28T11:31:21+03:00"
+      }
+    },
     "publish_at": "2026-11-28T08:30:00+00:00",
     "schedule": {
       "youtube": "2026-11-28T08:30:00+00:00",
       "instagram": "2026-11-28T08:30:00+00:00",
       "tiktok": "2026-11-28T08:30:00+00:00"
     },
-    "decided": "2026-11-26T22:15:01+03:00"
+    "decided": "2026-11-26T22:15:01+03:00",
+    "published": "2026-11-28T11:31:21+03:00"
   },
   {
     "tag": "short-20261125-233646",
